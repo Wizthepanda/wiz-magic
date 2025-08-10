@@ -1,0 +1,237 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* WIZ Watch 2 Earn Design System - Magical Pastel Theme */
+
+@layer base {
+  :root {
+    /* Core Background System */
+    --background: 260 60% 98%;
+    --foreground: 260 15% 15%;
+    
+    /* WIZ Brand Colors */
+    --wiz-primary: 280 65% 60%;
+    --wiz-secondary: 220 70% 70%;
+    --wiz-accent: 45 90% 65%;
+    --wiz-magic: 300 80% 75%;
+    
+    /* Gradient System */
+    --gradient-primary: linear-gradient(135deg, hsl(280 65% 60%), hsl(220 70% 70%));
+    --gradient-background: linear-gradient(135deg, hsl(280 30% 95%), hsl(220 40% 96%));
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 100% / 0.9), hsl(280 20% 98% / 0.8));
+    --gradient-glow: radial-gradient(circle, hsl(280 65% 60% / 0.3), transparent 70%);
+    
+    /* Component Colors */
+    --card: 0 0% 100% / 0.9;
+    --card-foreground: 260 15% 15%;
+    --card-border: 280 30% 90%;
+    
+    --popover: 0 0% 100% / 0.95;
+    --popover-foreground: 260 15% 15%;
+    
+    --primary: 280 65% 60%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 220 70% 70%;
+    --secondary-foreground: 0 0% 100%;
+    
+    --muted: 280 25% 94%;
+    --muted-foreground: 260 15% 45%;
+    
+    --accent: 45 90% 65%;
+    --accent-foreground: 260 15% 15%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 280 30% 90%;
+    --input: 280 30% 90%;
+    --ring: 280 65% 60%;
+    
+    /* XP System Colors */
+    --xp-primary: 280 65% 60%;
+    --xp-secondary: 220 70% 70%;
+    --xp-glow: 45 90% 65%;
+    --xp-complete: 120 60% 50%;
+    
+    /* Glow Effects */
+    --glow-primary: 0 0 20px hsl(280 65% 60% / 0.3);
+    --glow-secondary: 0 0 15px hsl(220 70% 70% / 0.3);
+    --glow-accent: 0 0 25px hsl(45 90% 65% / 0.4);
+    
+    --radius: 1rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    background: var(--gradient-background);
+    min-height: 100vh;
+  }
+}
+
+/* WIZ Component Styles */
+@layer components {
+  /* Floating Particles Animation */
+  .wiz-particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+  }
+  
+  .particle {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, hsl(var(--wiz-accent) / 0.6), transparent);
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .particle:nth-child(odd) {
+    animation-direction: reverse;
+    animation-duration: 8s;
+  }
+  
+  /* Play Button Glow Effect */
+  .wiz-play-button {
+    background: var(--gradient-primary);
+    box-shadow: var(--glow-primary), inset 0 1px 0 hsl(0 0% 100% / 0.2);
+    transition: all 0.3s ease;
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+  
+  .wiz-play-button:hover {
+    transform: scale(1.05);
+    box-shadow: var(--glow-accent), inset 0 1px 0 hsl(0 0% 100% / 0.3);
+  }
+  
+  /* XP Progress Bar */
+  .xp-progress {
+    background: var(--gradient-primary);
+    box-shadow: var(--glow-secondary);
+    transition: width 0.5s ease;
+  }
+  
+  /* Glass Effect Cards */
+  .glass-card {
+    background: var(--gradient-card);
+    backdrop-filter: blur(10px);
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 8px 32px hsl(var(--primary) / 0.1);
+  }
+  
+  /* Neon Glow Effect */
+  .neon-glow {
+    box-shadow: var(--glow-primary);
+    transition: box-shadow 0.3s ease;
+  }
+  
+  .neon-glow:hover {
+    box-shadow: var(--glow-accent);
+  }
+  
+  /* Video Card Hover */
+  .video-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .video-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: var(--glow-secondary);
+  }
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-20px) rotate(180deg);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: var(--glow-primary);
+  }
+  50% {
+    box-shadow: var(--glow-accent);
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
