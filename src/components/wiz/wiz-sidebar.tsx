@@ -42,14 +42,20 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
         {isCollapsed ? <Menu className="w-5 h-5" /> : <X className="w-5 h-5" />}
       </Button>
 
-      {/* Sidebar */}
+      {/* Enhanced Sidebar with Gradients */}
       <aside 
         className={cn(
-          "fixed left-0 top-0 h-full bg-gradient-to-b from-slate-900/95 to-slate-800/95 backdrop-blur-xl border-r border-wiz-primary/20 transition-all duration-300 z-40",
-          isCollapsed ? "w-0 md:w-16" : "w-64",
+          "fixed left-0 top-0 h-full bg-gradient-to-b from-purple-900/95 via-slate-900/90 to-purple-800/95 backdrop-blur-xl border-r border-purple-400/30 transition-all duration-300 z-40 shadow-2xl",
+          isCollapsed ? "w-0 md:w-16" : "w-72",
           "md:relative md:translate-x-0",
           isCollapsed ? "-translate-x-full md:translate-x-0" : "translate-x-0"
         )}
+        style={{
+          background: 'linear-gradient(180deg, rgba(76, 29, 149, 0.95) 0%, rgba(15, 23, 42, 0.90) 50%, rgba(88, 28, 135, 0.95) 100%)',
+          backdropFilter: 'blur(20px)',
+          borderRight: '1px solid rgba(168, 85, 247, 0.3)',
+          boxShadow: '0 0 50px rgba(139, 92, 246, 0.2)'
+        }}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
@@ -66,36 +72,93 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
             </div>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2">
+          {/* Enhanced Navigation */}
+          <nav className="flex-1 p-6 space-y-3">
             {navigation.map((item) => (
               <Button
                 key={item.id}
                 variant="ghost"
-                size={isCollapsed ? "sm" : "default"}
+                size={isCollapsed ? "sm" : "lg"}
                 onClick={() => onSectionChange(item.id)}
                 className={cn(
-                  "w-full justify-start relative group transition-all duration-200",
+                  "w-full justify-start relative group transition-all duration-300 rounded-xl",
                   activeSection === item.id 
-                    ? "bg-wiz-primary/20 text-wiz-primary border border-wiz-primary/30 neon-glow" 
-                    : "text-gray-300 hover:text-white hover:bg-wiz-primary/10",
+                    ? item.id === 'premiere'
+                      ? "bg-gradient-to-r from-purple-600/40 to-violet-600/40 text-white border border-purple-400/50 shadow-lg shadow-purple-500/25"
+                      : "bg-gradient-to-r from-wiz-primary/30 to-wiz-secondary/20 text-white border border-wiz-primary/50"
+                    : item.id === 'premiere'
+                      ? "text-purple-200 hover:text-white hover:bg-gradient-to-r hover:from-purple-600/20 hover:to-violet-600/20 hover:border-purple-400/30"
+                      : "text-gray-300 hover:text-white hover:bg-wiz-primary/10",
                   isCollapsed && "justify-center px-2"
                 )}
+                style={{
+                  boxShadow: activeSection === item.id && item.id === 'premiere'
+                    ? '0 0 20px rgba(139, 92, 246, 0.4), inset 0 0 20px rgba(139, 92, 246, 0.1)'
+                    : activeSection === item.id
+                    ? '0 0 15px rgba(168, 85, 247, 0.3)'
+                    : 'none'
+                }}
               >
-                <item.icon className={cn("w-5 h-5", !isCollapsed && "mr-3")} />
+                <div className="relative">
+                  <item.icon 
+                    className={cn(
+                      "w-6 h-6 transition-all duration-300", 
+                      !isCollapsed && "mr-4",
+                      activeSection === item.id && item.id === 'premiere' && "text-yellow-300",
+                      activeSection === item.id && item.id !== 'premiere' && "text-wiz-accent"
+                    )}
+                    style={{
+                      filter: activeSection === item.id 
+                        ? item.id === 'premiere'
+                          ? 'drop-shadow(0 0 8px rgba(252, 211, 77, 0.8))'
+                          : 'drop-shadow(0 0 8px rgba(0, 216, 255, 0.8))'
+                        : 'none'
+                    }}
+                  />
+                  {/* Special glow for WIZ Premiere */}
+                  {item.id === 'premiere' && (
+                    <div 
+                      className="absolute inset-0 rounded-full opacity-50"
+                      style={{
+                        background: activeSection === item.id 
+                          ? 'radial-gradient(circle, rgba(252, 211, 77, 0.3) 0%, transparent 70%)'
+                          : 'radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, transparent 70%)',
+                        animation: activeSection === item.id ? 'pulse 2s infinite' : 'none'
+                      }}
+                    />
+                  )}
+                </div>
+                
                 {!isCollapsed && (
                   <>
-                    <span className="flex-1 text-left">{item.label}</span>
+                    <span className="flex-1 text-left font-medium">{item.label}</span>
                     {item.level && (
-                      <span className="px-2 py-1 text-xs bg-wiz-accent/20 text-wiz-accent rounded-full">
+                      <span 
+                        className="px-3 py-1 text-xs bg-gradient-to-r from-yellow-400 to-orange-500 text-yellow-900 rounded-full font-bold shadow-sm"
+                        style={{
+                          boxShadow: '0 0 10px rgba(251, 191, 36, 0.6)'
+                        }}
+                      >
                         Lv{item.level}+
                       </span>
                     )}
                   </>
                 )}
                 
-                {/* Hover glow effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-wiz-primary/0 via-wiz-primary/5 to-wiz-secondary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-md" />
+                {/* Enhanced hover glow effect */}
+                <div 
+                  className={cn(
+                    "absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-xl",
+                    item.id === 'premiere' 
+                      ? "bg-gradient-to-r from-purple-500/0 via-purple-500/10 to-violet-500/0"
+                      : "bg-gradient-to-r from-wiz-primary/0 via-wiz-primary/10 to-wiz-secondary/0"
+                  )}
+                  style={{
+                    boxShadow: item.id === 'premiere' 
+                      ? '0 0 15px rgba(139, 92, 246, 0.3)'
+                      : '0 0 15px rgba(168, 85, 247, 0.3)'
+                  }}
+                />
               </Button>
             ))}
           </nav>
