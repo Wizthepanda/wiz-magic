@@ -10,12 +10,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const categories = [
-  { id: 'all', label: 'All', color: 'bg-wiz-primary' },
-  { id: 'ai', label: 'AI', color: 'bg-wiz-secondary' },
-  { id: 'tech', label: 'Tech', color: 'bg-wiz-accent' },
-  { id: 'music', label: 'Music', color: 'bg-wiz-magic' },
-  { id: 'money', label: 'Money', color: 'bg-emerald-500' },
-  { id: 'health', label: 'Health', color: 'bg-rose-500' },
+  { id: 'all', label: 'All', color: 'bg-wiz-primary', dot: '' },
+  { id: 'ai', label: 'AI', color: 'bg-wiz-secondary', dot: '🔴' },
+  { id: 'tech', label: 'Tech', color: 'bg-wiz-accent', dot: '🟠' },
+  { id: 'music', label: 'Music', color: 'bg-wiz-magic', dot: '🔴' },
+  { id: 'money', label: 'Money', color: 'bg-emerald-500', dot: '🟢' },
+  { id: 'health', label: 'Health', color: 'bg-rose-500', dot: '🔴' },
 ];
 
 // Exactly 8 video panels with category tags
@@ -299,13 +299,13 @@ export const WizDiscoverSection = () => {
 
   const getCategoryColor = (category: string) => {
     const categoryColors = {
-      'ai': 'bg-blue-500',
-      'tech': 'bg-purple-500',
-      'music': 'bg-pink-500',
-      'money': 'bg-emerald-500',
-      'health': 'bg-rose-500'
+      'ai': 'bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 shadow-lg shadow-blue-500/50',
+      'tech': 'bg-gradient-to-r from-orange-400 via-red-500 to-pink-600 shadow-lg shadow-red-500/50',
+      'music': 'bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 shadow-lg shadow-pink-500/50',
+      'money': 'bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-600 shadow-lg shadow-emerald-500/50',
+      'health': 'bg-gradient-to-r from-red-400 via-rose-500 to-pink-600 shadow-lg shadow-rose-500/50'
     };
-    return categoryColors[category] || 'bg-gray-500';
+    return categoryColors[category] || 'bg-gradient-to-r from-gray-400 to-gray-600';
   };
 
   const getRankColor = (rank: number) => {
@@ -324,15 +324,16 @@ export const WizDiscoverSection = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-12">
-      {/* Category Filter */}
+      {/* Category Filter with Dots */}
       <div className="flex flex-wrap gap-3 mb-8">
         {categories.map((category) => (
           <Button
             key={category.id}
             variant={activeCategory === category.id ? "default" : "outline"}
             onClick={() => setActiveCategory(category.id)}
-            className={`${activeCategory === category.id ? category.color : ''} transition-all duration-200`}
+            className={`${activeCategory === category.id ? category.color : ''} transition-all duration-200 flex items-center gap-2`}
           >
+            {category.dot && <span className="text-sm">{category.dot}</span>}
             {category.label}
           </Button>
         ))}
@@ -345,13 +346,13 @@ export const WizDiscoverSection = () => {
             <CardContent className="p-0">
               <div className="relative aspect-video bg-gradient-to-br from-muted to-muted/50">
                 {/* Category Tag (replaces NEW tag when not new) */}
-                <div className="absolute top-2 left-2 z-20">
+                <div className="absolute top-3 left-3 z-20">
                   {video.isNew ? (
-                    <Badge className="bg-wiz-primary text-white font-semibold px-2 py-1 text-xs">
+                    <Badge className="bg-gradient-to-r from-wiz-primary to-wiz-secondary text-white font-bold px-3 py-1.5 text-xs rounded-lg shadow-lg shadow-wiz-primary/50 border border-white/20">
                       NEW
                     </Badge>
                   ) : (
-                    <Badge className={`${getCategoryColor(video.category)} text-white font-semibold px-2 py-1 text-xs`}>
+                    <Badge className={`${getCategoryColor(video.category)} text-white font-bold px-3 py-1.5 text-xs rounded-lg border border-white/20 backdrop-blur-sm`}>
                       {video.categoryLabel}
                     </Badge>
                   )}
@@ -372,7 +373,7 @@ export const WizDiscoverSection = () => {
                 </div>
 
                 {/* XP Reward */}
-                <div className="absolute top-2 right-2 z-20 flex items-center space-x-1 bg-wiz-primary/80 px-2 py-1 rounded-full text-xs text-white">
+                <div className="absolute top-3 right-3 z-20 flex items-center space-x-1 bg-gradient-to-r from-wiz-primary/90 to-wiz-accent/90 px-3 py-1.5 rounded-lg text-xs text-white font-bold shadow-lg backdrop-blur-sm border border-white/20">
                   <Zap className="w-3 h-3" />
                   <span>{video.xpReward}</span>
                 </div>
@@ -395,13 +396,13 @@ export const WizDiscoverSection = () => {
                 )}
               </div>
 
-              <div className="p-4">
-                <h4 className="font-semibold text-sm line-clamp-2 mb-2 group-hover:text-wiz-primary transition-colors">
+              <div className="p-4 space-y-2">
+                <h4 className="font-semibold text-sm line-clamp-2 leading-tight group-hover:text-wiz-primary transition-colors">
                   {video.title}
                 </h4>
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{video.creator}</span>
-                  <div className="flex items-center space-x-1">
+                  <span className="font-medium truncate">{video.creator}</span>
+                  <div className="flex items-center space-x-1 text-wiz-primary font-semibold">
                     <Eye className="w-3 h-3" />
                     <span>{video.views}</span>
                   </div>
