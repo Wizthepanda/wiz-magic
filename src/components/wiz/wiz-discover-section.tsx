@@ -499,12 +499,27 @@ export const WizDiscoverSection = () => {
         </div>
       </div>
 
-      {/* Meet the Creators Section */}
-      <div className="space-y-6">
-        <div className="text-center space-y-2">
-          <h2 className="text-3xl font-bold text-foreground">Meet the Creators</h2>
-          <p className="text-lg text-muted-foreground italic">Behind the epic AI animation of WIZ</p>
-        </div>
+      {/* Meet the Creators Section with Glassmorphism */}
+      <div className="relative">
+        {/* Glassmorphism Background */}
+        <div 
+          className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/5 to-white/10 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl"
+          style={{
+            backdropFilter: 'blur(20px)',
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.1) 100%)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+          }}
+        />
+        
+        <div className="relative z-10 p-8 space-y-8">
+          <div className="text-center space-y-3">
+            <h2 className="text-4xl font-bold bg-gradient-to-r from-wiz-primary via-wiz-secondary to-wiz-accent bg-clip-text text-transparent">
+              Meet the Creators
+            </h2>
+            <p className="text-xl text-muted-foreground italic font-medium">
+              Behind the epic AI animation of WIZ
+            </p>
+          </div>
 
         {/* Creator Cards with Navigation */}
         <div className="relative">
@@ -537,19 +552,42 @@ export const WizDiscoverSection = () => {
                 key={creator.id}
                 className="flex-shrink-0 w-80 group cursor-pointer"
               >
-                <Card className="h-full bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-sm border-2 border-transparent hover:border-wiz-primary/30 transition-all duration-500 hover:scale-[1.02] hover:shadow-xl">
-                  <CardContent className="p-6 space-y-4">
+                <Card 
+                  className="h-full relative overflow-hidden border-0 shadow-2xl group-hover:shadow-3xl transition-all duration-500 hover:scale-[1.02]"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.15) 100%)',
+                    backdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                  }}
+                >
+                  {/* Animated border gradient */}
+                  <div 
+                    className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    style={{
+                      background: `linear-gradient(135deg, ${creator.gradient.replace('from-', '').replace('to-', '').split(' ').map(color => `var(--${color})`).join(', ')})`,
+                      padding: '2px',
+                      WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                      WebkitMaskComposite: 'exclude',
+                      maskComposite: 'exclude'
+                    }}
+                  />
+                  
+                  <CardContent className="relative z-10 p-6 space-y-4">
                     {/* Creator Avatar */}
                     <div className="flex items-center space-x-4">
                       <div 
-                        className={`w-16 h-16 rounded-full bg-gradient-to-r ${creator.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}
+                        className={`w-16 h-16 rounded-full bg-gradient-to-r ${creator.gradient} flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:shadow-2xl transition-all duration-300`}
+                        style={{
+                          boxShadow: '0 8px 25px rgba(0, 0, 0, 0.2), 0 0 20px rgba(139, 92, 246, 0.3)'
+                        }}
                       >
                         <span className="text-white font-bold text-xl">
                           {creator.name.slice(0, 2)}
                         </span>
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-gray-800 group-hover:text-wiz-primary transition-colors">
+                        <h3 className="text-xl font-bold text-foreground group-hover:text-wiz-primary transition-colors duration-300">
                           {creator.name}
                         </h3>
                         <p className="text-sm text-muted-foreground">{creator.specialization}</p>
@@ -557,29 +595,56 @@ export const WizDiscoverSection = () => {
                     </div>
 
                     {/* Bio */}
-                    <p className="text-sm text-gray-600 leading-relaxed">
+                    <p className="text-sm text-muted-foreground leading-relaxed group-hover:text-foreground transition-colors duration-300">
                       {creator.bio}
                     </p>
 
-                    {/* Stats */}
+                    {/* Stats with glassmorphism */}
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center p-3 bg-wiz-primary/10 rounded-xl">
+                      <div 
+                        className="text-center p-3 rounded-xl border border-white/20 transition-all duration-300 group-hover:bg-wiz-primary/10"
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          backdropFilter: 'blur(10px)'
+                        }}
+                      >
                         <div className="text-xl font-bold text-wiz-primary">{creator.videos}</div>
-                        <div className="text-xs text-gray-600">Videos</div>
+                        <div className="text-xs text-muted-foreground">Videos</div>
                       </div>
-                      <div className="text-center p-3 bg-wiz-secondary/10 rounded-xl">
+                      <div 
+                        className="text-center p-3 rounded-xl border border-white/20 transition-all duration-300 group-hover:bg-wiz-secondary/10"
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          backdropFilter: 'blur(10px)'
+                        }}
+                      >
                         <div className="text-xl font-bold text-wiz-secondary">{creator.views}</div>
-                        <div className="text-xs text-gray-600">Views</div>
+                        <div className="text-xs text-muted-foreground">Views</div>
                       </div>
                     </div>
 
-                    {/* Hidden hover info */}
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 space-y-2">
-                      <div className="text-xs text-gray-500 space-y-1">
-                        <div>Join Date: Jan 2023</div>
-                        <div>Avg Rating: 4.9/5</div>
+                    {/* Enhanced hover info */}
+                    <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 space-y-3">
+                      <div 
+                        className="p-3 rounded-xl border border-white/20 text-xs text-muted-foreground space-y-1"
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          backdropFilter: 'blur(10px)'
+                        }}
+                      >
+                        <div className="flex justify-between">
+                          <span>Join Date:</span>
+                          <span className="text-foreground">Jan 2023</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Rating:</span>
+                          <span className="text-yellow-500">★★★★★ 4.9</span>
+                        </div>
                       </div>
-                      <Button size="sm" className="w-full">
+                      <Button 
+                        size="sm" 
+                        className="w-full bg-gradient-to-r from-wiz-primary to-wiz-secondary hover:from-wiz-secondary hover:to-wiz-primary transition-all duration-300 shadow-lg hover:shadow-xl"
+                      >
                         View Profile
                       </Button>
                     </div>
@@ -590,106 +655,205 @@ export const WizDiscoverSection = () => {
           </div>
         </div>
 
-        {/* WIZ Premiere Button */}
-        <div className="text-center">
-          <Button 
-            size="lg"
-            className="px-8 py-3 bg-gradient-to-r from-wiz-primary to-wiz-secondary hover:from-wiz-secondary hover:to-wiz-primary text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-          >
-            <Crown className="w-5 h-5 mr-2" />
-            Explore WIZ Premiere
-          </Button>
+          {/* WIZ Premiere Button */}
+          <div className="text-center">
+            <Button 
+              size="lg"
+              className="px-8 py-3 bg-gradient-to-r from-wiz-primary to-wiz-secondary hover:from-wiz-secondary hover:to-wiz-primary text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              <Crown className="w-5 h-5 mr-2" />
+              Explore WIZ Premiere
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Leaderboard Section */}
-      <div className="space-y-6">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-foreground mb-6">Leaderboard</h2>
-          
-          {/* Leaderboard Tabs */}
-          <div className="flex justify-center mb-8">
-            <div className="inline-flex bg-muted/30 rounded-lg p-1">
-              <button
-                onClick={() => setLeaderboardTab('creators')}
-                className={`px-6 py-3 rounded-md font-medium transition-all duration-200 ${
-                  leaderboardTab === 'creators'
-                    ? 'bg-wiz-primary text-white shadow-md'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
+      {/* Enhanced Leaderboard Section with Glassmorphism */}
+      <div className="relative">
+        {/* Glassmorphism Background */}
+        <div 
+          className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/5 to-white/10 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl"
+          style={{
+            backdropFilter: 'blur(20px)',
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.1) 100%)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+          }}
+        />
+        
+        <div className="relative z-10 p-8 space-y-8">
+          <div className="text-center space-y-4">
+            <h2 className="text-4xl font-bold bg-gradient-to-r from-wiz-primary via-wiz-secondary to-wiz-accent bg-clip-text text-transparent">
+              Leaderboard
+            </h2>
+            
+            {/* Enhanced Leaderboard Tabs */}
+            <div className="flex justify-center">
+              <div 
+                className="inline-flex p-1 rounded-xl border border-white/20"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(10px)'
+                }}
               >
-                Top Creators
-              </button>
-              <button
-                onClick={() => setLeaderboardTab('wizards')}
-                className={`px-6 py-3 rounded-md font-medium transition-all duration-200 ${
-                  leaderboardTab === 'wizards'
-                    ? 'bg-wiz-secondary text-white shadow-md'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                Top Wizards
-              </button>
+                <button
+                  onClick={() => setLeaderboardTab('creators')}
+                  className={`px-8 py-3 rounded-lg font-medium transition-all duration-300 ${
+                    leaderboardTab === 'creators'
+                      ? 'bg-gradient-to-r from-wiz-primary to-wiz-secondary text-white shadow-lg transform scale-105'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-white/10'
+                  }`}
+                >
+                  🏆 Top Creators
+                </button>
+                <button
+                  onClick={() => setLeaderboardTab('wizards')}
+                  className={`px-8 py-3 rounded-lg font-medium transition-all duration-300 ${
+                    leaderboardTab === 'wizards'
+                      ? 'bg-gradient-to-r from-wiz-secondary to-wiz-magic text-white shadow-lg transform scale-105'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-white/10'
+                  }`}
+                >
+                  ⚡ Top Wizards
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Leaderboard Content */}
-        <div className="max-w-4xl mx-auto">
-          {leaderboardTab === 'creators' && (
-            <div className="space-y-4">
-              {topCreators.map((creator) => (
-                <Card 
-                  key={creator.rank} 
-                  className={`glass-card border bg-gradient-to-r ${getRankColor(creator.rank)} hover:scale-[1.02] transition-transform duration-200`}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center space-x-4">
-                      {/* Rank */}
-                      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-background/50">
-                        {getRankIcon(creator.rank)}
-                        <span className="absolute text-xs font-bold mt-8">{creator.rank}</span>
+          {/* Enhanced Leaderboard Content */}
+          <div className="space-y-6">
+            {leaderboardTab === 'creators' && (
+              <div className="space-y-4">
+                {topCreators.map((creator, index) => (
+                  <Card 
+                    key={creator.rank} 
+                    className="relative overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] group"
+                    style={{
+                      background: creator.rank <= 3 
+                        ? `linear-gradient(135deg, ${
+                            creator.rank === 1 ? 'rgba(255, 215, 0, 0.15)' :
+                            creator.rank === 2 ? 'rgba(192, 192, 192, 0.15)' :
+                            'rgba(205, 127, 50, 0.15)'
+                          } 0%, rgba(255, 255, 255, 0.05) 50%, ${
+                            creator.rank === 1 ? 'rgba(255, 215, 0, 0.15)' :
+                            creator.rank === 2 ? 'rgba(192, 192, 192, 0.15)' :
+                            'rgba(205, 127, 50, 0.15)'
+                          } 100%)`
+                        : 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.1) 100%)',
+                      backdropFilter: 'blur(20px)',
+                      border: creator.rank <= 3 
+                        ? `1px solid ${
+                            creator.rank === 1 ? 'rgba(255, 215, 0, 0.3)' :
+                            creator.rank === 2 ? 'rgba(192, 192, 192, 0.3)' :
+                            'rgba(205, 127, 50, 0.3)'
+                          }`
+                        : '1px solid rgba(255, 255, 255, 0.2)',
+                      boxShadow: creator.rank <= 3 
+                        ? `0 8px 32px ${
+                            creator.rank === 1 ? 'rgba(255, 215, 0, 0.2)' :
+                            creator.rank === 2 ? 'rgba(192, 192, 192, 0.2)' :
+                            'rgba(205, 127, 50, 0.2)'
+                          }, inset 0 1px 0 rgba(255, 255, 255, 0.2)`
+                        : '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                      animationDelay: `${index * 0.1}s`
+                    }}
+                  >
+                    {/* Rank badge with special effects for top 3 */}
+                    {creator.rank <= 3 && (
+                      <div 
+                        className="absolute -top-2 -left-2 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm z-10"
+                        style={{
+                          background: creator.rank === 1 ? 'linear-gradient(135deg, #FFD700, #FFA500)' :
+                                     creator.rank === 2 ? 'linear-gradient(135deg, #C0C0C0, #808080)' :
+                                     'linear-gradient(135deg, #CD7F32, #8B4513)',
+                          boxShadow: `0 0 20px ${
+                            creator.rank === 1 ? 'rgba(255, 215, 0, 0.6)' :
+                            creator.rank === 2 ? 'rgba(192, 192, 192, 0.6)' :
+                            'rgba(205, 127, 50, 0.6)'
+                          }`,
+                          animation: creator.rank === 1 ? 'pulse 2s infinite' : 'none'
+                        }}
+                      >
+                        {creator.rank}
                       </div>
-                      
-                      {/* Avatar */}
-                      <Avatar className="w-12 h-12 border-2 border-wiz-primary/30">
-                        <AvatarFallback className="bg-gradient-to-r from-wiz-primary to-wiz-secondary text-white font-bold">
-                          {creator.name.slice(0, 2)}
-                        </AvatarFallback>
-                      </Avatar>
-                      
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <h3 className="font-semibold truncate">{creator.name}</h3>
-                          <Badge variant="secondary" className="text-xs">
-                            {creator.badge}
-                          </Badge>
+                    )}
+                    
+                    <CardContent className="p-6">
+                      <div className="flex items-center space-x-6">
+                        {/* Rank Icon */}
+                        <div className="flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
+                          {getRankIcon(creator.rank)}
+                          {creator.rank > 3 && (
+                            <span className="absolute text-xs font-bold text-foreground mt-12">{creator.rank}</span>
+                          )}
                         </div>
-                        <div className="flex items-center space-x-4 text-xs text-muted-foreground">
-                          <span>{creator.videos} videos</span>
+                        
+                        {/* Avatar with enhanced styling */}
+                        <Avatar className="w-14 h-14 border-2 border-white/30 shadow-lg">
+                          <AvatarFallback 
+                            className="bg-gradient-to-r from-wiz-primary to-wiz-secondary text-white font-bold text-lg"
+                            style={{
+                              boxShadow: '0 0 15px rgba(139, 92, 246, 0.4)'
+                            }}
+                          >
+                            {creator.name.slice(0, 2)}
+                          </AvatarFallback>
+                        </Avatar>
+                        
+                        {/* Info with enhanced typography */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <h3 className="font-bold text-lg text-foreground truncate group-hover:text-wiz-primary transition-colors">
+                              {creator.name}
+                            </h3>
+                            <Badge 
+                              variant="secondary" 
+                              className="text-xs bg-gradient-to-r from-wiz-primary/20 to-wiz-secondary/20 text-wiz-primary border border-wiz-primary/30"
+                            >
+                              {creator.badge}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                            <span className="flex items-center space-x-1">
+                              <span>📹</span>
+                              <span>{creator.videos} videos</span>
+                            </span>
+                          </div>
                         </div>
+                        
+                        {/* XP with animated progress */}
+                        <div className="text-right space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <Zap className="w-5 h-5 text-wiz-accent" />
+                            <span className="font-bold text-2xl text-foreground">{creator.xp.toLocaleString()}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">Total XP</p>
+                          
+                          {/* XP Progress Bar */}
+                          <div className="w-24 bg-white/20 rounded-full h-2 overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-wiz-primary to-wiz-secondary rounded-full transition-all duration-1000"
+                              style={{ 
+                                width: `${Math.min((creator.xp / 150000) * 100, 100)}%`,
+                                animationDelay: `${index * 0.2}s`
+                              }}
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Enhanced Action Button */}
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-wiz-primary/20 hover:border-wiz-primary/30 transition-all duration-300"
+                        >
+                          View Profile
+                        </Button>
                       </div>
-                      
-                      {/* XP */}
-                      <div className="text-right">
-                        <div className="flex items-center space-x-1 mb-1">
-                          <Zap className="w-4 h-4 text-wiz-accent" />
-                          <span className="font-bold text-lg">{creator.xp.toLocaleString()}</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">Total XP</p>
-                      </div>
-                      
-                      {/* Action */}
-                      <Button size="sm" variant="outline" className="hover:bg-wiz-primary/10">
-                        View Profile
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
 
           {leaderboardTab === 'wizards' && (
             <div className="space-y-4">
@@ -746,14 +910,109 @@ export const WizDiscoverSection = () => {
               ))}
             </div>
           )}
+          </div>
         </div>
       </div>
 
-        {/* Load More */}
-        <div className="text-center pt-6">
-          <Button variant="outline" className="hover:bg-wiz-primary/10 hover:border-wiz-primary/30">
-            Load More Content
-          </Button>
+      {/* Most Viewed Videos Section */}
+      <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-2xl font-bold text-foreground">Most Viewed Videos</h3>
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const container = document.getElementById('most-viewed-container');
+                  if (container) container.scrollBy({ left: -320, behavior: 'smooth' });
+                }}
+                className="h-8 w-8 p-0 hover:bg-wiz-primary/10"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const container = document.getElementById('most-viewed-container');
+                  if (container) container.scrollBy({ left: 320, behavior: 'smooth' });
+                }}
+                className="h-8 w-8 p-0 hover:bg-wiz-primary/10"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="relative">
+            <div 
+              id="most-viewed-container"
+              className="flex space-x-4 overflow-x-auto scrollbar-hide scroll-smooth pb-4"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {videos.sort((a, b) => parseInt(b.views.replace('K', '000')) - parseInt(a.views.replace('K', '000'))).map((video) => (
+                <div key={`most-viewed-${video.id}`} className="flex-shrink-0 w-80">
+                  <Card className="video-card glass-card border-card-border group overflow-hidden hover:scale-[1.02] transition-all duration-300">
+                    <CardContent className="p-0">
+                      <div className="relative aspect-video bg-gradient-to-br from-muted to-muted/50">
+                        {/* Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10" />
+                        
+                        {/* Play Button */}
+                        <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <Button
+                            size="lg"
+                            onClick={() => handleWatchVideo(video.id)}
+                            className="h-14 w-14 rounded-full p-0 bg-white/90 hover:bg-white text-wiz-primary shadow-2xl"
+                          >
+                            <Play className="w-6 h-6 ml-0.5" fill="currentColor" />
+                          </Button>
+                        </div>
+                        
+                        {/* View Count & XP Overlay */}
+                        <div className="absolute bottom-4 left-4 right-4 z-20 text-white">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center space-x-1 bg-black/60 px-2 py-1 rounded-full text-xs">
+                              <Eye className="w-3 h-3" />
+                              <span>{video.views} views</span>
+                            </div>
+                            <div className="flex items-center space-x-1 bg-wiz-primary/80 px-2 py-1 rounded-full text-xs">
+                              <Zap className="w-3 h-3" />
+                              <span>{video.xpReward} XP</span>
+                            </div>
+                          </div>
+                          
+                          {/* Progress indicator */}
+                          {video.progress > 0 && (
+                            <div className="w-full bg-white/20 rounded-full h-1">
+                              <div 
+                                className="bg-wiz-primary h-1 rounded-full transition-all duration-300"
+                                style={{ width: `${video.progress}%` }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="absolute top-2 right-2 z-20 px-2 py-1 bg-black/70 rounded text-xs text-white">
+                          {video.duration}
+                        </div>
+                      </div>
+                      
+                      <div className="p-4">
+                        <h4 className="font-semibold text-sm line-clamp-2 mb-2 group-hover:text-wiz-primary transition-colors">
+                          {video.title}
+                        </h4>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>{video.creator}</span>
+                          <span className="font-medium">{video.views}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
