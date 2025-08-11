@@ -11,12 +11,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { FloatingParticles } from '@/components/ui/floating-particles';
 
 const categories = [
-  { id: 'all', label: 'All', color: 'bg-wiz-primary', dot: '🔵' },
-  { id: 'ai', label: 'AI', color: 'bg-wiz-secondary', dot: '🔴' },
-  { id: 'tech', label: 'Tech', color: 'bg-wiz-accent', dot: '🟠' },
-  { id: 'music', label: 'Music', color: 'bg-wiz-magic', dot: '🔴' },
-  { id: 'money', label: 'Money', color: 'bg-emerald-500', dot: '🟢' },
-  { id: 'health', label: 'Health', color: 'bg-rose-500', dot: '🔴' },
+  { id: 'all', label: 'All', color: 'bg-wiz-primary', dotColor: 'bg-blue-400' },
+  { id: 'ai', label: 'AI', color: 'bg-wiz-secondary', dotColor: 'bg-red-400' },
+  { id: 'tech', label: 'Tech', color: 'bg-wiz-accent', dotColor: 'bg-orange-400' },
+  { id: 'music', label: 'Music', color: 'bg-wiz-magic', dotColor: 'bg-pink-400' },
+  { id: 'money', label: 'Money', color: 'bg-emerald-500', dotColor: 'bg-green-400' },
+  { id: 'health', label: 'Health', color: 'bg-rose-500', dotColor: 'bg-red-400' },
 ];
 
 // Exactly 8 video panels with category tags
@@ -310,20 +310,20 @@ export const WizDiscoverSection = () => {
       <FloatingParticles />
       
       <div className="max-w-7xl mx-auto p-6 space-y-8">
-        {/* Category Filter with Dots */}
+                {/* Category Filter with Subtle Dots */}
         <div className="flex flex-wrap gap-3 mb-8">
-        {categories.map((category) => (
-          <Button
-            key={category.id}
+          {categories.map((category) => (
+            <Button
+              key={category.id}
               variant={activeCategory === category.id ? "default" : "outline"}
               onClick={() => setActiveCategory(category.id)}
-              className={`${activeCategory === category.id ? category.color : ''} transition-all duration-200 flex items-center gap-2`}
+              className={`${activeCategory === category.id ? category.color : ''} transition-all duration-200 flex items-center gap-2 text-sm h-8 px-3`}
             >
-              <span className="text-sm">{category.dot}</span>
-            {category.label}
-          </Button>
-        ))}
-      </div>
+              <div className={`w-2 h-2 rounded-full ${category.dotColor}`} />
+              {category.label}
+            </Button>
+          ))}
+        </div>
 
         {/* Main Video Grid - First 4 Panels */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
