@@ -278,31 +278,32 @@ export const WizDiscoverSection = () => {
   };
 
   return (
-    <div className="p-6 space-y-12">
-      {/* Category Bubbles */}
-      <div className="flex flex-wrap gap-3">
-        {categories.map((category) => (
-          <Button
-            key={category.id}
-            variant={selectedCategory === category.id ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedCategory(category.id)}
-            className={`
-              relative overflow-hidden transition-all duration-300
-              ${selectedCategory === category.id 
-                ? 'neon-glow bg-gradient-to-r from-wiz-primary to-wiz-secondary text-white' 
-                : 'hover:bg-wiz-primary/10 hover:border-wiz-primary/30'
-              }
-            `}
-          >
-            <div className={`w-2 h-2 rounded-full ${category.color} mr-2`} />
-            {category.label}
-            {selectedCategory === category.id && (
-              <div className="absolute inset-0 bg-gradient-to-r from-wiz-accent/20 to-transparent" />
-            )}
-          </Button>
-        ))}
-      </div>
+    <div className="w-full">
+      <div className="max-w-7xl mx-auto p-6 space-y-8">
+        {/* Category Bubbles */}
+        <div className="flex flex-wrap gap-3">
+          {categories.map((category) => (
+            <Button
+              key={category.id}
+              variant={selectedCategory === category.id ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedCategory(category.id)}
+              className={`
+                relative overflow-hidden transition-all duration-300
+                ${selectedCategory === category.id 
+                  ? 'neon-glow bg-gradient-to-r from-wiz-primary to-wiz-secondary text-white' 
+                  : 'hover:bg-wiz-primary/10 hover:border-wiz-primary/30'
+                }
+              `}
+            >
+              <div className={`w-2 h-2 rounded-full ${category.color} mr-2`} />
+              {category.label}
+              {selectedCategory === category.id && (
+                <div className="absolute inset-0 bg-gradient-to-r from-wiz-accent/20 to-transparent" />
+              )}
+            </Button>
+          ))}
+        </div>
 
       {/* Main Video Grid - Discover Content */}
       <div className="space-y-6">
@@ -413,82 +414,86 @@ export const WizDiscoverSection = () => {
           {/* Row 1: AI & Tech Content */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground">AI & Technology</h3>
-            <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide">
-              {videos.filter(v => v.category === 'ai' || v.category === 'tech').map((video) => (
-                <div key={`ai-tech-${video.id}`} className="flex-shrink-0 w-72">
-                  <Card className="video-card glass-card border-card-border group overflow-hidden hover:scale-[1.02] transition-all duration-300">
-                    <CardContent className="p-0">
-                      <div className="relative aspect-video bg-gradient-to-br from-muted to-muted/50">
-                        <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <Button
-                            size="lg"
-                            onClick={() => handleWatchVideo(video.id)}
-                            className="h-12 w-12 rounded-full p-0 bg-white/90 hover:bg-white text-wiz-primary"
-                          >
-                            <Play className="w-5 h-5 ml-0.5" fill="currentColor" />
-                          </Button>
-                        </div>
-                        <div className="absolute bottom-2 right-2 z-20 px-2 py-1 bg-black/70 rounded text-xs text-white">
-                          {video.duration}
-                        </div>
-                      </div>
-                      <div className="p-3">
-                        <h4 className="font-medium text-sm line-clamp-2 mb-2">{video.title}</h4>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>{video.creator}</span>
-                          <span>{video.views}</span>
-                        </div>
-                        {video.progress > 0 && (
-                          <div className="mt-2">
-                            <Progress value={video.progress} className="h-1" />
+            <div className="relative">
+              <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {videos.filter(v => v.category === 'ai' || v.category === 'tech').map((video) => (
+                  <div key={`ai-tech-${video.id}`} className="flex-shrink-0 w-72">
+                    <Card className="video-card glass-card border-card-border group overflow-hidden hover:scale-[1.02] transition-all duration-300">
+                      <CardContent className="p-0">
+                        <div className="relative aspect-video bg-gradient-to-br from-muted to-muted/50">
+                          <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <Button
+                              size="lg"
+                              onClick={() => handleWatchVideo(video.id)}
+                              className="h-12 w-12 rounded-full p-0 bg-white/90 hover:bg-white text-wiz-primary"
+                            >
+                              <Play className="w-5 h-5 ml-0.5" fill="currentColor" />
+                            </Button>
                           </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              ))}
+                          <div className="absolute bottom-2 right-2 z-20 px-2 py-1 bg-black/70 rounded text-xs text-white">
+                            {video.duration}
+                          </div>
+                        </div>
+                        <div className="p-3">
+                          <h4 className="font-medium text-sm line-clamp-2 mb-2">{video.title}</h4>
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>{video.creator}</span>
+                            <span>{video.views}</span>
+                          </div>
+                          {video.progress > 0 && (
+                            <div className="mt-2">
+                              <Progress value={video.progress} className="h-1" />
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
           {/* Row 2: Money & Health Content */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground">Finance & Wellness</h3>
-            <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide">
-              {videos.filter(v => v.category === 'money' || v.category === 'health').map((video) => (
-                <div key={`money-health-${video.id}`} className="flex-shrink-0 w-72">
-                  <Card className="video-card glass-card border-card-border group overflow-hidden hover:scale-[1.02] transition-all duration-300">
-                    <CardContent className="p-0">
-                      <div className="relative aspect-video bg-gradient-to-br from-muted to-muted/50">
-                        <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <Button
-                            size="lg"
-                            onClick={() => handleWatchVideo(video.id)}
-                            className="h-12 w-12 rounded-full p-0 bg-white/90 hover:bg-white text-wiz-primary"
-                          >
-                            <Play className="w-5 h-5 ml-0.5" fill="currentColor" />
-                          </Button>
-                        </div>
-                        <div className="absolute bottom-2 right-2 z-20 px-2 py-1 bg-black/70 rounded text-xs text-white">
-                          {video.duration}
-                        </div>
-                      </div>
-                      <div className="p-3">
-                        <h4 className="font-medium text-sm line-clamp-2 mb-2">{video.title}</h4>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>{video.creator}</span>
-                          <span>{video.views}</span>
-                        </div>
-                        {video.progress > 0 && (
-                          <div className="mt-2">
-                            <Progress value={video.progress} className="h-1" />
+            <div className="relative">
+              <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {videos.filter(v => v.category === 'money' || v.category === 'health').map((video) => (
+                  <div key={`money-health-${video.id}`} className="flex-shrink-0 w-72">
+                    <Card className="video-card glass-card border-card-border group overflow-hidden hover:scale-[1.02] transition-all duration-300">
+                      <CardContent className="p-0">
+                        <div className="relative aspect-video bg-gradient-to-br from-muted to-muted/50">
+                          <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <Button
+                              size="lg"
+                              onClick={() => handleWatchVideo(video.id)}
+                              className="h-12 w-12 rounded-full p-0 bg-white/90 hover:bg-white text-wiz-primary"
+                            >
+                              <Play className="w-5 h-5 ml-0.5" fill="currentColor" />
+                            </Button>
                           </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              ))}
+                          <div className="absolute bottom-2 right-2 z-20 px-2 py-1 bg-black/70 rounded text-xs text-white">
+                            {video.duration}
+                          </div>
+                        </div>
+                        <div className="p-3">
+                          <h4 className="font-medium text-sm line-clamp-2 mb-2">{video.title}</h4>
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>{video.creator}</span>
+                            <span>{video.views}</span>
+                          </div>
+                          {video.progress > 0 && (
+                            <div className="mt-2">
+                              <Progress value={video.progress} className="h-1" />
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -524,7 +529,7 @@ export const WizDiscoverSection = () => {
 
           <div 
             id="creators-container"
-            className="flex space-x-6 overflow-x-auto scrollbar-hide pb-4"
+            className="flex space-x-6 overflow-x-auto scrollbar-hide pb-4 scroll-smooth"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {creators.map((creator) => (
@@ -744,11 +749,12 @@ export const WizDiscoverSection = () => {
         </div>
       </div>
 
-      {/* Load More */}
-      <div className="text-center pt-6">
-        <Button variant="outline" className="hover:bg-wiz-primary/10 hover:border-wiz-primary/30">
-          Load More Content
-        </Button>
+        {/* Load More */}
+        <div className="text-center pt-6">
+          <Button variant="outline" className="hover:bg-wiz-primary/10 hover:border-wiz-primary/30">
+            Load More Content
+          </Button>
+        </div>
       </div>
 
       {/* Video Player Modal */}
