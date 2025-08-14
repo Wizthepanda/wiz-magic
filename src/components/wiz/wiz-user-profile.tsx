@@ -14,6 +14,23 @@ import { useAuth } from '@/hooks/useAuth';
 export const WizUserProfile = () => {
   const { user, signOut, signInWithGoogle, loading } = useAuth();
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      // Force page reload to return to homepage
+      window.location.reload();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  // Debug user state changes
+  console.log('👤 UserProfile render:', { 
+    userId: user?.uid, 
+    totalXP: user?.totalXP, 
+    level: user?.level 
+  });
+
   if (loading) {
     return (
       <div className="h-10 w-32 bg-muted animate-pulse rounded-md" />
@@ -115,7 +132,7 @@ export const WizUserProfile = () => {
             </DropdownMenuItem>
             <DropdownMenuItem 
               className="cursor-pointer text-red-600 focus:text-red-600"
-              onClick={signOut}
+              onClick={handleSignOut}
             >
               <LogOut className="w-4 h-4 mr-2" />
               Sign Out

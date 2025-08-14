@@ -18,7 +18,7 @@ interface WizVideoPlayerProps {
 }
 
 export const WizVideoPlayer = ({ videoId, title, description, xpReward = 25 }: WizVideoPlayerProps) => {
-  const { user } = useAuth();
+  const { user, refreshUserData, addXP } = useAuth();
   const playerRef = useRef<ReactPlayer>(null);
   const [watchTime, setWatchTime] = useState(0);
   const [liked, setLiked] = useState(false);
@@ -26,8 +26,39 @@ export const WizVideoPlayer = ({ videoId, title, description, xpReward = 25 }: W
   const [xpEarned, setXpEarned] = useState(0);
   const [showXpAnimation, setShowXpAnimation] = useState(false);
 
-  const handleProgress = ({ playedSeconds }: { playedSeconds: number }) => {
+  const handleProgress = ({ playedSeconds, played }: { playedSeconds: number, played: number }) => {
     setWatchTime(playedSeconds);
+    
+    // Debug progress
+    if (playerRef.current) {
+      const duration = playerRef.current.getDuration();
+      const progress = (playedSeconds / duration) * 100;
+      console.log('📊 Progress:', { playedSeconds, duration, progress: progress.toFixed(1) + '%' });
+      
+      // Award XP when video is nearly complete (95% or more)
+      if (user && progress >= 95 && xpEarned === 0) {
+        console.log('🎁 Awarding XP for near-completion:', progress.toFixed(1) + '%');
+        setXpEarned(25);
+        setShowXpAnimation(true);
+        setTimeout(() => setShowXpAnimation(false), 2000);
+        
+        console.log('⚡ Calling addXP for near-completion');
+        addXP(25);
+        
+        // Also update Firestore
+        setTimeout(async () => {
+          try {
+            await FirestoreService.updateUserXP(user.uid, 25, 'video_watch', {
+              videoId,
+              reason: 'Near completion',
+            });
+            console.log('✅ Firestore updated for near-completion');
+          } catch (error) {
+            console.error('❌ Error updating Firestore for near-completion:', error);
+          }
+        }, 100);
+      }
+    }
     
     // Award XP for watching milestones
     if (user && playedSeconds > 30 && xpEarned === 0) {
@@ -36,19 +67,57 @@ export const WizVideoPlayer = ({ videoId, title, description, xpReward = 25 }: W
   };
 
   const handleEnded = async () => {
-    if (user) {
-      await FirestoreService.recordVideoEngagement({
-        videoId,
-        userId: user.uid,
-        watchTime,
-        liked,
-        commented,
-        completed: true,
-        xpEarned: xpReward,
-        timestamp: new Date(),
+    console.log('🎬 Video ended!', { videoId, watchTime, user: user?.uid });
+    
+    if (user && playerRef.current) {
+      const duration = playerRef.current.getDuration();
+      const completionPercentage = (watchTime / duration) * 100;
+      console.log('📊 Video stats:', { 
+        duration, 
+        watchTime, 
+        completion: completionPercentage.toFixed(1) + '%',
+        willAwardXP: completionPercentage >= 80
       });
       
-      awardXP(xpReward, 'Completed video');
+      try {
+        // Record view with YouTube service (this awards XP)
+        const xpGained = await YouTubeService.recordVideoView(videoId, watchTime, duration);
+        console.log('🎁 XP gained from YouTube service:', xpGained);
+        
+        // Record engagement without awarding additional XP
+        await FirestoreService.recordVideoEngagement({
+          videoId,
+          userId: user.uid,
+          watchTime,
+          liked,
+          commented,
+          completed: true,
+          xpEarned: xpGained,
+          timestamp: new Date(),
+        });
+        
+        // Show XP animation and update user state instantly
+        setXpEarned(xpGained);
+        setShowXpAnimation(true);
+        setTimeout(() => setShowXpAnimation(false), 2000);
+        
+        console.log('⚡ Calling addXP with:', xpGained);
+        // Update user state instantly for immediate UI feedback
+        addXP(xpGained);
+        
+        // Also refresh from Firestore to ensure consistency
+        setTimeout(async () => {
+          console.log('🔄 Refreshing from Firestore...');
+          await refreshUserData();
+        }, 500);
+        
+        // Update the video card to show as watched with 100% progress
+        // This will be handled by the parent component through state management
+      } catch (error) {
+        console.error('❌ Error in handleEnded:', error);
+      }
+    } else {
+      console.log('⚠️ No user or player ref available');
     }
   };
 
@@ -68,21 +137,36 @@ export const WizVideoPlayer = ({ videoId, title, description, xpReward = 25 }: W
     awardXP(15, 'Commented on video');
   };
 
-  const awardXP = (amount: number, reason: string) => {
+  const awardXP = async (amount: number, reason: string) => {
+    console.log('🎁 Awarding XP:', { amount, reason, userId: user?.uid });
+    
     setXpEarned(prev => prev + amount);
     setShowXpAnimation(true);
     
     setTimeout(() => setShowXpAnimation(false), 2000);
     
     if (user) {
-      FirestoreService.updateUserXP(user.uid, amount, 'video_watch', {
-        videoId,
-        reason,
-      });
+      try {
+        // Update XP in Firestore
+        await FirestoreService.updateUserXP(user.uid, amount, 'video_watch', {
+          videoId,
+          reason,
+        });
+        
+        console.log('✅ XP updated in Firestore, refreshing user data...');
+        
+        // Wait a moment for Firestore to update, then refresh user data
+        setTimeout(async () => {
+          await refreshUserData();
+        }, 500);
+        
+      } catch (error) {
+        console.error('❌ Error awarding XP:', error);
+      }
     }
   };
 
-  const watchProgress = Math.min((watchTime / 60) * 100, 100); // Assume 1 min videos for demo
+  const watchProgress = playerRef.current ? Math.min((watchTime / playerRef.current.getDuration()) * 100, 100) : 0;
 
   return (
     <Card className="glass-card border-card-border overflow-hidden">

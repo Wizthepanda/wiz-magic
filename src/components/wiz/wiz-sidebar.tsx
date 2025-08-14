@@ -25,6 +25,16 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { signOut } = useAuth();
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      // Force page reload to return to homepage
+      window.location.reload();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   const navigation = [
     { id: 'discover', label: 'Discover', icon: Compass },
     { id: 'activate', label: 'Activate', icon: Link2 },
@@ -124,7 +134,7 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
                 <Button
                   variant="ghost"
                   size={isCollapsed ? "sm" : "default"}
-                  onClick={signOut}
+                  onClick={handleLogout}
                   className={cn(
                     "w-full text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-300",
                     isCollapsed ? "justify-center px-2 h-12" : "justify-start"

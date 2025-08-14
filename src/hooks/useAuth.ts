@@ -5,9 +5,10 @@ import {
   signOut as firebaseSignOut,
   onAuthStateChanged 
 } from 'firebase/auth';
-import { auth, googleProvider } from '@/lib/firebase';
+import { auth, googleProvider, googleProviderWithYouTube } from '@/lib/firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { YouTubeService } from '@/lib/youtube';
 
 export interface WizUser extends User {
   level: number;
@@ -45,9 +46,14 @@ export const useAuth = () => {
     return unsubscribe;
   }, []);
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (withYouTube: boolean = false) => {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
+      // Use the appropriate provider based on whether YouTube access is needed
+      const provider = withYouTube ? googleProviderWithYouTube : googleProvider;
+      
+      console.log('Starting Google sign-in with provider:', withYouTube ? 'YouTube' : 'basic');
+      const result = await signInWithPopup(auth, provider);
+      console.log('Google sign-in successful:', result.user.email);
       const user = result.user;
       
       // Create user document in Firestore
@@ -57,14 +63,48 @@ export const useAuth = () => {
         photoURL: user.photoURL,
         level: 1,
         totalXP: 0,
-        youtubeConnected: true,
+        youtubeConnected: withYouTube,
         createdAt: new Date(),
         lastLogin: new Date(),
+        stats: {
+          videosWatched: 0,
+          totalWatchTime: 0,
+        },
+        engagement: {
+          watchCount: 0,
+          likeCount: 0,
+          commentCount: 0,
+        }
       }, { merge: true });
       
       return user;
     } catch (error) {
       console.error('Error signing in with Google:', error);
+      throw error;
+    }
+  };
+
+  const connectYouTube = async () => {
+    try {
+      const success = await YouTubeService.authenticateWithYouTube();
+      if (success && user) {
+        // Update local user state
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        const userData = userDoc.data();
+        
+        const updatedUser: WizUser = {
+          ...user,
+          youtubeConnected: true,
+          level: userData?.level || 1,
+          totalXP: userData?.totalXP || 0,
+          createdAt: userData?.createdAt?.toDate() || new Date(),
+        };
+        
+        setUser(updatedUser);
+      }
+      return success;
+    } catch (error) {
+      console.error('Error connecting YouTube:', error);
       throw error;
     }
   };
@@ -78,10 +118,92 @@ export const useAuth = () => {
     }
   };
 
+  const refreshUserData = async () => {
+    if (user) {
+      try {
+        console.log('🔄 Starting user data refresh...');
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        const userData = userDoc.data();
+        
+        const updatedUser: WizUser = {
+          ...user,
+          level: userData?.level || 1,
+          totalXP: userData?.totalXP || 0,
+          youtubeConnected: userData?.youtubeConnected || false,
+          createdAt: userData?.createdAt?.toDate() || new Date(),
+        };
+        
+        console.log('🔄 Updating user state:', { 
+          oldXP: user.totalXP, 
+          newXP: updatedUser.totalXP, 
+          level: updatedUser.level 
+        });
+        
+        setUser(updatedUser);
+        
+        // Force a re-render by updating the state again after a short delay
+        setTimeout(async () => {
+          const recheckDoc = await getDoc(doc(db, 'users', user.uid));
+          const recheckData = recheckDoc.data();
+          if (recheckData?.totalXP !== user.totalXP) {
+            const finalUser: WizUser = {
+              ...user,
+              level: recheckData?.level || 1,
+              totalXP: recheckData?.totalXP || 0,
+              youtubeConnected: recheckData?.youtubeConnected || false,
+              createdAt: recheckData?.createdAt?.toDate() || new Date(),
+            };
+            setUser(finalUser);
+            console.log('🔄 Final user data update:', { totalXP: finalUser.totalXP });
+          }
+        }, 1000);
+        
+      } catch (error) {
+        console.error('Error refreshing user data:', error);
+      }
+    }
+  };
+
+  const addXP = (amount: number) => {
+    console.log('🎯 addXP called with amount:', amount, 'current user:', user?.uid);
+    
+    if (user) {
+      const newTotalXP = user.totalXP + amount;
+      const newLevel = Math.floor(newTotalXP / 1000) + 1;
+      
+      const updatedUser: WizUser = {
+        ...user,
+        totalXP: newTotalXP,
+        level: newLevel,
+      };
+      
+      console.log('⚡ Instant XP update:', { 
+        oldXP: user.totalXP, 
+        newXP: newTotalXP, 
+        oldLevel: user.level, 
+        newLevel: newLevel 
+      });
+      
+      // Force a new object reference to ensure React detects the change
+      setUser({ ...updatedUser });
+      console.log('✅ User state updated with new XP');
+      
+      // Force a re-render by updating state again after a micro-delay
+      setTimeout(() => {
+        setUser(prevUser => prevUser ? { ...prevUser } : null);
+      }, 10);
+    } else {
+      console.log('❌ No user found for addXP');
+    }
+  };
+
   return {
     user,
     loading,
     signInWithGoogle,
+    connectYouTube,
     signOut,
+    refreshUserData,
+    addXP,
   };
 };

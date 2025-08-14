@@ -23,18 +23,18 @@ const categories = [
 const videos = [
   {
     id: 1,
-    title: 'Master AI Prompting in 2024',
-    creator: 'AIGuru42',
+    title: 'WIZ Magic Demo Video',
+    creator: 'WIZ Magic',
     avatar: '',
     thumbnail: '',
-    duration: '12:45',
-    xpReward: 150,
+    duration: '0:27',
+    xpReward: 25,
     category: 'ai',
     categoryLabel: 'AI',
-    views: '45K',
+    views: '1K',
     watched: false,
     progress: 0,
-    videoId: 'dQw4w9WgXcQ',
+    videoId: '2M4asXviuoo',
     isNew: true
   },
   {

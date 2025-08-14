@@ -77,19 +77,13 @@ export class FirestoreService {
       timestamp: serverTimestamp(),
     });
     
-    // Award XP based on engagement
-    let xpAmount = 0;
-    if (engagement.watchTime > 30) xpAmount += 10; // Base watch XP
-    if (engagement.liked) xpAmount += 5;
-    if (engagement.commented) xpAmount += 15;
-    if (engagement.completed) xpAmount += 25;
-    
-    if (xpAmount > 0) {
-      await this.updateUserXP(engagement.userId, xpAmount, 'video_watch', {
-        videoId: engagement.videoId,
-        watchTime: engagement.watchTime,
-      });
-    }
+    // Don't award additional XP here since it's already awarded by YouTubeService
+    // This function now only records the engagement data
+    console.log('📊 Video engagement recorded:', {
+      videoId: engagement.videoId,
+      xpEarned: engagement.xpEarned,
+      completed: engagement.completed
+    });
   }
   
   // Leaderboard

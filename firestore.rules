@@ -21,13 +21,26 @@ service cloud.firestore {
     // XP transactions
     match /xp_transactions/{transactionId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == resource.data.userId;
+      // Use request.resource for creates/updates (resource is undefined on create)
+      allow write: if request.auth != null && request.auth.uid == request.resource.data.userId;
     }
     
-    // Video engagements
+    // Engagement events collection used by app (YouTube actions)
+    match /engagements/{engagementId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+
+    // Detailed video view records used by app
+    match /video_views/{viewId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+    
+    // Video engagements collection
     match /video_engagements/{engagementId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow write: if request.auth != null && request.auth.uid == request.resource.data.userId;
     }
   }
 }

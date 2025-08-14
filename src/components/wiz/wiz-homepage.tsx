@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Play, Star, TrendingUp, Users, Sparkles, Zap, Award, DollarSign, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Play, Star, TrendingUp, Users, Sparkles, Zap, Award, DollarSign, ChevronLeft, ChevronRight, Target, BarChart3, Gift, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion } from 'framer-motion';
@@ -9,8 +9,8 @@ interface WizHomepageProps {
   onEnterPlatform: () => void;
 }
 
-// Ultra Premium Background Component
-const PremiumBackground = () => {
+// Hero Background Component
+const HeroBackground = () => {
   return (
     <div className="absolute inset-0 overflow-hidden">
       <div 
@@ -26,22 +26,124 @@ const PremiumBackground = () => {
   );
 };
 
+// Why WIZ Section Background
+const WhyWizBackground = () => {
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      <div 
+        className="absolute inset-0"
+        style={{
+          background: `
+            radial-gradient(circle at 50% 50%, rgba(249, 246, 255, 0.6) 0%, transparent 80%),
+            linear-gradient(135deg, #F9F6FF 0%, rgba(255, 255, 255, 0.95) 100%)
+          `,
+          backdropFilter: 'blur(1px)'
+        }}
+      />
+    </div>
+  );
+};
+
+// Featured Content Background
+const FeaturedBackground = () => {
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      <div 
+        className="absolute inset-0"
+        style={{
+          background: `
+            radial-gradient(circle at 50% 30%, rgba(245, 247, 255, 0.7) 0%, transparent 85%),
+            linear-gradient(135deg, #F5F7FF 0%, rgba(255, 255, 255, 0.92) 100%)
+          `,
+          backdropFilter: 'blur(2px)'
+        }}
+      />
+      {/* Subtle glassmorphic depth */}
+      <div 
+        className="absolute inset-0"
+        style={{
+          background: 'rgba(255, 255, 255, 0.02)',
+          backdropFilter: 'blur(20px)'
+        }}
+      />
+    </div>
+  );
+};
+
+// Apple-Style Minimal Icons Component
+const MinimalIcon = ({ type, color }: { type: string; color: string }) => {
+  const iconStyle = {
+    color: color,
+    filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))'
+  };
+
+  switch (type) {
+    case 'target':
+      return <Target className="w-7 h-7" style={iconStyle} strokeWidth={1.5} />;
+    case 'graph':
+      return <BarChart3 className="w-7 h-7" style={iconStyle} strokeWidth={1.5} />;
+    case 'gift':
+      return <Gift className="w-7 h-7" style={iconStyle} strokeWidth={1.5} />;
+    case 'lightning':
+      return <Zap className="w-7 h-7" style={iconStyle} strokeWidth={1.5} />;
+    default:
+      return <Target className="w-7 h-7" style={iconStyle} strokeWidth={1.5} />;
+  }
+};
+
 export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
   const [isHovering, setIsHovering] = useState(false);
   const [animatedValues, setAnimatedValues] = useState({ wizards: 0, xp: 0, creators: 0 });
   const carouselRef = useRef<HTMLDivElement>(null);
-  const { user, signInWithGoogle } = useAuth();
+  const { user, signInWithGoogle, connectYouTube } = useAuth();
 
-  const handleEnterPlatform = () => {
-    if (user) {
+  const handleEnterPlatform = async () => {
+    console.log('🎯 handleEnterPlatform called');
+    console.log('🔍 Current user state:', user ? `${user.email} (YouTube: ${user.youtubeConnected})` : 'No user');
+
+    try {
+      // 1) If not signed in, require Google sign-in (with YouTube scopes)
+      if (!user) {
+        console.log('🚀 User not signed in, triggering Google OAuth with YouTube scopes...');
+        const signedIn = await signInWithGoogle(true);
+        if (!signedIn) {
+          throw new Error('Google sign-in did not return a user.');
+        }
+        console.log('✅ Authentication successful');
+      }
+
+      // 2) If signed in but not connected to YouTube, try to connect (non-blocking)
+      if (user && !user.youtubeConnected) {
+        console.log('🔗 User signed in but YouTube not connected, connecting...');
+        try {
+          await connectYouTube();
+          console.log('✅ YouTube connection attempted');
+        } catch (ytError) {
+          console.warn('⚠️ YouTube connection failed (continuing signed-in):', ytError);
+        }
+      }
+
+      // 3) Only now proceed to the platform
+      console.log('🏁 Proceeding to platform...');
       onEnterPlatform();
-    } else {
-      signInWithGoogle().catch(() => {
-        console.log('Authentication not configured, entering as demo user');
-        onEnterPlatform();
-      });
+    } catch (error: any) {
+      console.error('❌ Authentication error:', error);
+      alert('Authentication failed. Please configure Firebase Authentication and Google sign-in, then try again.');
+      // Do NOT navigate to dashboard on auth failure
     }
   };
+
+  // Handle Enter key press
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === 'Enter') {
+        handleEnterPlatform();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [user]);
 
   // Animate stats numbers on load
   useEffect(() => {
@@ -108,28 +210,32 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
 
   const features = [
     {
-      icon: '🎯',
+      icon: 'target',
       title: 'Earn While You Learn',
       description: 'Turn your curiosity into rewards. Every second counts toward your XP journey.',
-      gradient: 'from-purple-400 via-pink-400 to-rose-400'
+      gradient: 'linear-gradient(135deg, #C29FFF 0%, #A855F7 50%, #9333EA 100%)',
+      iconColor: '#C29FFF'
     },
     {
-      icon: '📈',
-      title: 'Track Your Journey',
+      icon: 'graph',
+      title: 'Track Your Journey', 
       description: 'Visualize your progress with beautiful, live XP dashboards.',
-      gradient: 'from-blue-400 via-purple-400 to-indigo-400'
+      gradient: 'linear-gradient(135deg, #A855F7 0%, #8B5CF6 50%, #7C3AED 100%)',
+      iconColor: '#A855F7'
     },
     {
-      icon: '🎁',
+      icon: 'gift',
       title: 'Unlock Creator Perks',
       description: 'Exclusive drops, private streams, and community recognition await.',
-      gradient: 'from-emerald-400 via-teal-400 to-cyan-400'
+      gradient: 'linear-gradient(135deg, #EC4899 0%, #DB2777 50%, #BE185D 100%)',
+      iconColor: '#EC4899'
     },
     {
-      icon: '⚡',
+      icon: 'lightning',
       title: 'Cash Out Instantly',
       description: 'From XP to currency — instant, seamless withdrawals.',
-      gradient: 'from-yellow-400 via-orange-400 to-red-400'
+      gradient: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 50%, #6D28D9 100%)',
+      iconColor: '#8B5CF6'
     }
   ];
 
@@ -196,8 +302,161 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Ultra Premium Background */}
-      <PremiumBackground />
+      {/* Premium Top Navigation */}
+      <motion.div 
+        className="fixed top-6 right-6 z-50 flex items-center space-x-4"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.3 }}
+      >
+        {/* Privacy Policy Link for Google Verification */}
+        <motion.a
+          href="https://wizxp.com/privacypolicy.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex items-center px-4 py-2 rounded-2xl transition-all duration-500 text-sm font-medium"
+          style={{
+            background: `
+              linear-gradient(135deg, rgba(246, 240, 255, 0.6) 0%, rgba(255, 255, 255, 0.4) 100%),
+              rgba(255, 255, 255, 0.15)
+            `,
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.25)',
+            boxShadow: '0 6px 24px rgba(194, 159, 255, 0.06), 0 3px 12px rgba(194, 159, 255, 0.03)',
+            color: '#7C3AED'
+          }}
+          whileHover={{ 
+            y: -1,
+            boxShadow: '0 8px 32px rgba(194, 159, 255, 0.08), 0 4px 16px rgba(194, 159, 255, 0.04)',
+            transition: { duration: 0.3 }
+          }}
+          whileTap={{ scale: 0.98 }}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
+          Privacy Policy
+          
+          {/* Prismatic Edge Glow on Hover */}
+          <div 
+            className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+            style={{
+              background: 'linear-gradient(135deg, rgba(194, 159, 255, 0.08) 0%, rgba(157, 78, 221, 0.04) 100%)',
+              filter: 'blur(0.5px)'
+            }}
+          />
+        </motion.a>
+        <motion.button
+          onClick={handleEnterPlatform}
+          className="group flex items-center px-6 py-3 rounded-3xl transition-all duration-500"
+          style={{
+            background: `
+              linear-gradient(135deg, rgba(246, 240, 255, 0.8) 0%, rgba(255, 255, 255, 0.6) 100%),
+              rgba(255, 255, 255, 0.2)
+            `,
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            boxShadow: '0 8px 32px rgba(194, 159, 255, 0.08), 0 4px 16px rgba(194, 159, 255, 0.04)'
+          }}
+          whileHover={{ 
+            y: -2,
+            boxShadow: '0 12px 40px rgba(194, 159, 255, 0.12), 0 6px 20px rgba(194, 159, 255, 0.08)',
+            transition: { duration: 0.3 }
+          }}
+          whileTap={{ scale: 0.98 }}
+        >
+          {/* Magic Wand Icon */}
+          <motion.div 
+            className="relative mr-3"
+            animate={{ 
+              rotate: [0, 5, -5, 0],
+              scale: [1, 1.05, 1]
+            }}
+            transition={{ 
+              duration: 4, 
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          >
+            <Wand2 
+              className="w-5 h-5"
+              style={{ 
+                color: '#7C3AED',
+                filter: 'drop-shadow(0 2px 4px rgba(124, 58, 237, 0.2))'
+              }} 
+            />
+            
+            {/* Magical Sparkles */}
+            {Array.from({ length: 3 }).map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-1 h-1 rounded-full"
+                style={{
+                  background: 'linear-gradient(45deg, #C29FFF, #9D4EDD)',
+                  boxShadow: '0 0 4px rgba(194, 159, 255, 0.6)',
+                  top: `${-2 + i * 2}px`,
+                  right: `${-4 + i * 1}px`
+                }}
+                animate={{ 
+                  scale: [0, 1, 0],
+                  opacity: [0, 1, 0],
+                  rotate: [0, 180, 360]
+                }}
+                transition={{ 
+                  duration: 2, 
+                  repeat: Infinity,
+                  delay: i * 0.3
+                }}
+              />
+            ))}
+          </motion.div>
+          
+          {/* Enter Text */}
+          <span 
+            className="font-bold text-lg"
+            style={{
+              background: 'linear-gradient(135deg, #7C3AED 0%, #9D4EDD 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
+            }}
+          >
+            Enter
+          </span>
+          
+          {/* Prismatic Edge Glow on Hover */}
+          <div 
+            className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+            style={{
+              background: 'linear-gradient(135deg, rgba(194, 159, 255, 0.1) 0%, rgba(157, 78, 221, 0.05) 100%)',
+              filter: 'blur(0.5px)'
+            }}
+          />
+          
+          {/* Glowing Edge Sweep */}
+          <motion.div
+            className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 pointer-events-none"
+            animate={{
+              background: [
+                'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent)',
+                'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent)'
+              ],
+              x: ['-100%', '100%']
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              repeatDelay: 3
+            }}
+            style={{ transform: 'skewX(-10deg)' }}
+          />
+        </motion.button>
+      </motion.div>
+
+      {/* Hero Section with dedicated background */}
+      <div className="relative">
+        <HeroBackground />
 
       {/* Ultra Premium Hero Section */}
       <main className="relative z-10 flex flex-col items-center justify-center min-h-screen px-8">
@@ -308,6 +567,41 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
             </motion.div>
           </motion.div>
 
+          {/* YouTube Connection Status */}
+          {user && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.2 }}
+              className="flex justify-center mt-6"
+            >
+              <div className="flex items-center space-x-2 px-4 py-2 rounded-full"
+                style={{
+                  background: user.youtubeConnected 
+                    ? 'rgba(34, 197, 94, 0.1)' 
+                    : 'rgba(239, 68, 68, 0.1)',
+                  border: `1px solid ${user.youtubeConnected ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
+                  backdropFilter: 'blur(10px)'
+                }}
+              >
+                <div 
+                  className="w-2 h-2 rounded-full"
+                  style={{
+                    background: user.youtubeConnected ? '#22C55E' : '#EF4444'
+                  }}
+                />
+                <span 
+                  className="text-sm font-medium"
+                  style={{
+                    color: user.youtubeConnected ? '#22C55E' : '#EF4444'
+                  }}
+                >
+                  {user.youtubeConnected ? 'YouTube Connected' : 'YouTube Disconnected'}
+                </span>
+              </div>
+            </motion.div>
+          )}
+
                     {/* Ultra Premium Stats */}
           <motion.div 
             className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20 max-w-4xl mx-auto"
@@ -401,10 +695,14 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
           </motion.div>
         </div>
       </main>
+      </div>
 
-                  {/* Liquid Glassmorphism "Why WIZ is Different" Section */}
-      <section className="relative z-20 py-32 px-8">
-        <div className="max-w-6xl mx-auto">
+      {/* Why WIZ is Different Section with dedicated background */}
+      <div className="relative">
+        <WhyWizBackground />
+        
+        <section className="relative z-20 py-32 px-8">
+          <div className="max-w-6xl mx-auto">
           <motion.div
             className="text-center mb-20"
             initial={{ opacity: 0, y: 30 }}
@@ -423,150 +721,131 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
                 filter: 'drop-shadow(0 4px 8px rgba(194, 159, 255, 0.1))'
               }}
             >
-              Why WIZ is Different
+              Why WIZ
             </h3>
             <p 
               className="text-xl max-w-2xl mx-auto leading-relaxed"
               style={{ 
-                color: '#2B2B2B',
-                fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
+                color: '#5C5C5C',
+                fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+                lineHeight: '1.7'
               }}
             >
               Experience the future of content consumption with rewards
             </p>
           </motion.div>
 
-          {/* Liquid Glass Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          {/* Premium Glass Grid - 2x2 Desktop */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {features.map((feature, index) => (
               <motion.div
                 key={index}
                 className="group relative"
-                initial={{ opacity: 0, y: 40 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: index * 0.15 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
-                whileHover={{ 
+            whileHover={{ 
                   y: -5,
-                  transition: { duration: 0.3, ease: "easeOut" }
+                  transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] }
                 }}
               >
-                {/* Liquid Glass Panel */}
+                {/* Floating Glassmorphic Panel */}
                 <div 
-                  className="relative p-8 rounded-3xl overflow-hidden transition-all duration-500"
+                  className="relative p-8 rounded-2xl overflow-hidden transition-all duration-500"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    backdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    boxShadow: '0 20px 80px rgba(194, 159, 255, 0.08), 0 8px 32px rgba(194, 159, 255, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                    background: `
+                      linear-gradient(135deg, rgba(246, 240, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%),
+                      rgba(255, 255, 255, 0.12)
+                    `,
+                    backdropFilter: 'blur(25px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    boxShadow: '0 12px 40px rgba(194, 159, 255, 0.06), 0 4px 16px rgba(194, 159, 255, 0.04)'
                   }}
                 >
-                  {/* Prismatic Edge Lighting */}
+                  {/* Subtle Prismatic Edge Highlights */}
                   <div 
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-3xl"
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-2xl pointer-events-none"
                     style={{
-                      background: `linear-gradient(135deg, ${feature.gradient.replace('from-', '').replace('via-', '').replace('to-', '').split(' ').map(color => {
-                        const colorMap: { [key: string]: string } = {
-                          'purple-400': 'rgba(168, 85, 247, 0.1)',
-                          'pink-400': 'rgba(244, 114, 182, 0.1)',
-                          'rose-400': 'rgba(251, 113, 133, 0.1)',
-                          'blue-400': 'rgba(96, 165, 250, 0.1)',
-                          'indigo-400': 'rgba(129, 140, 248, 0.1)',
-                          'emerald-400': 'rgba(52, 211, 153, 0.1)',
-                          'teal-400': 'rgba(45, 212, 191, 0.1)',
-                          'cyan-400': 'rgba(34, 211, 238, 0.1)',
-                          'yellow-400': 'rgba(250, 204, 21, 0.1)',
-                          'orange-400': 'rgba(251, 146, 60, 0.1)',
-                          'red-400': 'rgba(248, 113, 113, 0.1)'
-                        };
-                        return colorMap[color] || 'rgba(168, 85, 247, 0.1)';
-                      }).join(', ')})`,
-                      filter: 'blur(1px)'
+                      background: 'linear-gradient(135deg, rgba(194, 159, 255, 0.06) 0%, rgba(236, 72, 153, 0.03) 50%, transparent 100%)',
+                      filter: 'blur(0.5px)'
                     }}
                   />
                   
-                  {/* Shimmer Animation */}
+                  {/* Gentle Shimmer on Hover */}
                   <motion.div
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100"
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 rounded-2xl pointer-events-none"
                     animate={{
-                      background: [
-                        'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)',
-                        'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)'
-                      ],
                       x: ['-100%', '100%']
                     }}
                     transition={{
-                      duration: 1.5,
+                      duration: 2,
                       repeat: Infinity,
-                      repeatDelay: 3
+                      repeatDelay: 4,
+                      ease: "easeInOut"
                     }}
-                    style={{ transform: 'skewX(-20deg)' }}
+                    style={{
+                      background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent)',
+                      transform: 'skewX(-15deg)'
+                    }}
                   />
 
-                  {/* Floating 3D Icon */}
+                  {/* Floating Apple-Style Icon */}
                   <motion.div
                     className="relative mb-6"
                     animate={{ 
-                      y: [0, -3, 0],
-                      rotateY: [0, 5, 0]
+                      y: [0, -2, 0]
                     }}
                     transition={{ 
-                      duration: 4, 
+                      duration: 6, 
                       repeat: Infinity,
-                      delay: index * 0.5
+                      delay: index * 1.5,
+                      ease: "easeInOut"
                     }}
                   >
                     <div 
-                      className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center text-3xl relative"
+                      className="w-16 h-16 mx-auto rounded-xl flex items-center justify-center relative"
                       style={{
-                        background: `linear-gradient(135deg, ${feature.gradient.replace('from-', '').replace('via-', '').replace('to-', '').split(' ').map(color => {
-                          const colorMap: { [key: string]: string } = {
-                            'purple-400': '#A855F7',
-                            'pink-400': '#F472B6',
-                            'rose-400': '#FB7185',
-                            'blue-400': '#60A5FA',
-                            'indigo-400': '#818CF8',
-                            'emerald-400': '#34D399',
-                            'teal-400': '#2DD4BF',
-                            'cyan-400': '#22D3EE',
-                            'yellow-400': '#FACC15',
-                            'orange-400': '#FB923C',
-                            'red-400': '#F87171'
-                          };
-                          return colorMap[color] || '#A855F7';
-                        }).join(', ')})`,
-                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.1)',
-                        filter: 'drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15))'
+                        background: feature.gradient,
+                        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                        transform: 'translateY(-4px)'
                       }}
                     >
-                      <span className="relative z-10 filter drop-shadow-sm">
-                        {feature.icon}
-                      </span>
+                      <MinimalIcon type={feature.icon} color="rgba(255, 255, 255, 0.9)" />
                       
-                      {/* Icon glow */}
+                      {/* Icon Floating Shadow */}
+                      <div 
+                        className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-12 h-3 rounded-full opacity-20"
+                        style={{
+                          background: 'radial-gradient(ellipse, rgba(194, 159, 255, 0.4) 0%, transparent 70%)',
+                          filter: 'blur(4px)'
+                        }}
+                      />
+                      
+                      {/* Subtle Icon Pulse on Hover */}
                       <motion.div
-                        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100"
+                        className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100"
                         animate={{ 
-                          scale: [1, 1.1, 1],
-                          opacity: [0, 0.3, 0]
+                          scale: [1, 1.05, 1],
+                          opacity: [0, 0.2, 0]
                         }}
                         transition={{ 
-                          duration: 2, 
+                          duration: 1.5, 
                           repeat: Infinity,
                           delay: index * 0.3
                         }}
                         style={{
-                          background: `radial-gradient(circle, ${feature.gradient.replace('from-', '').split(' ')[0].replace('purple-400', '#A855F7').replace('blue-400', '#60A5FA').replace('emerald-400', '#34D399').replace('yellow-400', '#FACC15')} 0%, transparent 70%)`,
+                          background: feature.gradient,
                           filter: 'blur(8px)'
                         }}
                       />
                     </div>
                   </motion.div>
 
-                  {/* Content */}
-                  <div className="relative z-10">
+                  {/* Clean Typography */}
+                  <div className="relative z-10 text-center">
                     <h4 
-                      className="text-2xl font-bold mb-4"
+                      className="text-xl font-semibold mb-4"
                       style={{ 
                         color: '#2B2B2B',
                         fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
@@ -576,11 +855,11 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
                     </h4>
                     
                     <p 
-                      className="text-base leading-relaxed"
+                      className="text-sm leading-relaxed"
                       style={{ 
-                        color: '#2B2B2B',
-                        opacity: 0.8,
-                        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
+                        color: '#5C5C5C',
+                        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+                        lineHeight: '1.6'
                       }}
                     >
                       {feature.description}
@@ -591,39 +870,34 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
             ))}
           </div>
         </div>
-      </section>
+        </section>
+      </div>
 
-      {/* Cinematic Video Showcase */}
-      <section className="relative z-30 py-32 px-8 overflow-hidden">
-        {/* Animated Background Streaks */}
-        <div className="absolute inset-0">
-          <div 
-            className="absolute inset-0"
-            style={{
-              background: 'rgba(255, 255, 255, 0.02)',
-              backdropFilter: 'blur(40px)'
-            }}
-          />
-          {/* Light Streaks */}
-          {Array.from({ length: 3 }).map((_, i) => (
+      {/* Featured Content Section with dedicated background */}
+      <div className="relative">
+        <FeaturedBackground />
+        
+        <section className="relative z-30 py-32 px-8 overflow-hidden">
+          {/* Very Subtle Drifting Light Streaks */}
+          {Array.from({ length: 2 }).map((_, i) => (
             <motion.div
               key={i}
-              className="absolute inset-0 opacity-30"
+              className="absolute inset-0 opacity-15"
               animate={{
                 background: [
-                  `linear-gradient(${45 + i * 30}deg, transparent 0%, rgba(194, 159, 255, 0.03) 50%, transparent 100%)`,
-                  `linear-gradient(${45 + i * 30}deg, transparent 30%, rgba(194, 159, 255, 0.03) 70%, transparent 100%)`,
-                  `linear-gradient(${45 + i * 30}deg, transparent 0%, rgba(194, 159, 255, 0.03) 50%, transparent 100%)`
+                  `linear-gradient(${60 + i * 40}deg, transparent 0%, rgba(245, 247, 255, 0.2) 50%, transparent 100%)`,
+                  `linear-gradient(${60 + i * 40}deg, transparent 40%, rgba(245, 247, 255, 0.2) 60%, transparent 100%)`,
+                  `linear-gradient(${60 + i * 40}deg, transparent 0%, rgba(245, 247, 255, 0.2) 50%, transparent 100%)`
                 ]
               }}
               transition={{
-                duration: 8 + i * 2,
+                duration: 15 + i * 5,
                 repeat: Infinity,
-                delay: i * 2
+                delay: i * 4,
+                ease: "easeInOut"
               }}
             />
           ))}
-        </div>
 
         <div className="relative max-w-7xl mx-auto">
           <motion.div
@@ -657,84 +931,106 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
             </p>
           </motion.div>
 
-          {/* Cinematic Content Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-            {showcaseItems.map((item, index) => (
-              <motion.div
-                key={index}
-                className="group cursor-pointer"
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                whileHover={{ 
-                  y: -8,
-                  transition: { duration: 0.3, ease: "easeOut" }
-                }}
-              >
-                {/* Liquid Glass Frame */}
-                <div 
-                  className="relative rounded-3xl overflow-hidden transition-all duration-500"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    backdropFilter: 'blur(25px)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    boxShadow: '0 25px 100px rgba(194, 159, 255, 0.1), 0 12px 48px rgba(194, 159, 255, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+          {/* 1x4 Cinematic Strip - Netflix Originals Style */}
+          <div className="relative">
+            {/* Horizontal Scroll Container */}
+            <div
+              ref={carouselRef}
+              className="flex overflow-x-auto scrollbar-hide gap-8 px-8 py-4 snap-x snap-mandatory"
+              style={{ 
+                scrollbarWidth: 'none', 
+                msOverflowStyle: 'none',
+                scrollBehavior: 'smooth'
+              }}
+            >
+              {showcaseItems.map((item, index) => (
+                <motion.div
+                  key={index}
+                  className="group cursor-pointer flex-shrink-0 w-80 snap-start"
+                  initial={{ opacity: 0, x: 50 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  whileHover={{ 
+                    y: -8,
+                    scale: 1.02,
+                    transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] }
                   }}
                 >
-                  {/* Video Thumbnail with Bloom Effect */}
+                {/* Glassmorphic Poster Frame */}
+                <div 
+                  className="relative rounded-2xl overflow-hidden transition-all duration-500"
+                  style={{
+                    background: `
+                      linear-gradient(135deg, rgba(246, 240, 255, 0.08) 0%, rgba(255, 255, 255, 0.05) 100%),
+                      rgba(255, 255, 255, 0.08)
+                    `,
+                    backdropFilter: 'blur(30px)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    boxShadow: '0 16px 64px rgba(194, 159, 255, 0.04), 0 8px 32px rgba(194, 159, 255, 0.02)'
+                  }}
+                >
+                  {/* Cinematic Thumbnail with Screen Effect */}
                   <div className="relative aspect-video overflow-hidden">
                     <div 
-                      className="w-full h-full bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100 flex items-center justify-center text-8xl relative"
+                      className="w-full h-full bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 flex items-center justify-center text-7xl relative"
+                      style={{
+                        background: `
+                          linear-gradient(135deg, rgba(246, 240, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%),
+                          linear-gradient(45deg, #F6F0FF 0%, #FFEEF8 50%, #F0F8FF 100%)
+                        `
+                      }}
                     >
                       <motion.span
                         animate={{ 
-                          scale: [1, 1.05, 1],
-                          rotate: [0, 2, 0]
+                          scale: [1, 1.02, 1]
                         }}
                         transition={{ 
-                          duration: 4, 
+                          duration: 8, 
                           repeat: Infinity,
-                          delay: index * 0.5
+                          delay: index * 1,
+                          ease: "easeInOut"
                         }}
+                        className="relative z-10"
                       >
                         {item.thumbnail}
                       </motion.span>
                       
-                      {/* Soft Light Bloom */}
+                      {/* Light Bloom on Edges */}
                       <div 
-                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"
                         style={{
-                          background: 'radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%)'
+                          background: 'radial-gradient(ellipse at center, transparent 40%, rgba(255, 255, 255, 0.06) 100%)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)'
                         }}
                       />
                       
-                      {/* Play Icon on Hover */}
+                      {/* Subtle Play Icon Fade-in */}
                       <motion.div
                         className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100"
-                        initial={{ scale: 0.8 }}
+                        initial={{ scale: 0.9 }}
                         whileHover={{ scale: 1 }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.4 }}
                       >
                         <div 
-                          className="w-20 h-20 rounded-full flex items-center justify-center"
+                          className="w-16 h-16 rounded-full flex items-center justify-center"
                           style={{
-                            background: 'rgba(255, 255, 255, 0.9)',
-                            backdropFilter: 'blur(10px)',
-                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+                            background: 'rgba(255, 255, 255, 0.95)',
+                            backdropFilter: 'blur(15px)',
+                            boxShadow: '0 4px 24px rgba(194, 159, 255, 0.15)'
                           }}
                         >
-                          <Play className="w-8 h-8 text-purple-600 ml-1" fill="currentColor" />
+                          <Play className="w-6 h-6 text-purple-600 ml-0.5" fill="currentColor" />
                         </div>
                       </motion.div>
                       
-                      {/* Duration Pill */}
+                      {/* Tiny Frosted Duration Pill */}
                       <div 
-                        className="absolute bottom-4 right-4 px-3 py-1 rounded-full text-sm font-medium"
+                        className="absolute bottom-3 right-3 px-2 py-1 rounded-full text-xs font-medium"
                         style={{
-                          background: 'rgba(0, 0, 0, 0.7)',
-                          backdropFilter: 'blur(10px)',
-                          color: 'white'
+                          background: 'rgba(0, 0, 0, 0.6)',
+                          backdropFilter: 'blur(8px)',
+                          color: 'rgba(255, 255, 255, 0.9)'
                         }}
                       >
                         {item.duration}
@@ -742,37 +1038,48 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
                     </div>
                   </div>
 
-                  {/* Content Section */}
+                  {/* Clean Content Section */}
                   <div className="p-6 relative">
-                    {/* Category & XP Pills */}
+                    {/* Floating Category & XP Pills */}
                     <div className="flex items-center justify-between mb-4">
+                      {/* Light Gradient Category */}
                       <span 
-                        className={`px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r ${item.categoryColor} text-white`}
+                        className="px-3 py-1 rounded-full text-xs font-medium text-white"
                         style={{
-                          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
+                          background: item.category === 'AI & Tech' 
+                            ? 'linear-gradient(135deg, rgba(194, 159, 255, 0.8) 0%, rgba(147, 197, 253, 0.8) 100%)'
+                            : item.category === 'Finance'
+                            ? 'linear-gradient(135deg, rgba(52, 211, 153, 0.8) 0%, rgba(16, 185, 129, 0.8) 100%)'
+                            : item.category === 'Programming'
+                            ? 'linear-gradient(135deg, rgba(168, 85, 247, 0.8) 0%, rgba(236, 72, 153, 0.8) 100%)'
+                            : 'linear-gradient(135deg, rgba(139, 92, 246, 0.8) 0%, rgba(168, 85, 247, 0.8) 100%)',
+                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
                         }}
                       >
                         {item.category}
                       </span>
+                      
+                      {/* Jewel-like XP Reward */}
                       <div 
-                        className="px-3 py-1 rounded-full text-sm font-bold"
+                        className="px-3 py-1 rounded-full text-xs font-bold"
                         style={{
                           background: item.featured 
-                            ? 'linear-gradient(135deg, #E6C87E 0%, #D4AF37 100%)' 
-                            : 'rgba(194, 159, 255, 0.2)',
+                            ? 'linear-gradient(135deg, rgba(230, 200, 126, 0.9) 0%, rgba(212, 175, 55, 0.9) 100%)' 
+                            : 'linear-gradient(135deg, rgba(194, 159, 255, 0.15) 0%, rgba(168, 85, 247, 0.1) 100%)',
                           color: item.featured ? '#8B4513' : '#5A2D82',
                           boxShadow: item.featured 
-                            ? '0 4px 16px rgba(230, 200, 126, 0.3)' 
-                            : '0 4px 16px rgba(194, 159, 255, 0.2)'
+                            ? '0 2px 12px rgba(230, 200, 126, 0.2)' 
+                            : '0 2px 8px rgba(194, 159, 255, 0.1)',
+                          backdropFilter: 'blur(10px)'
                         }}
                       >
                         {item.xpValue}
                       </div>
                     </div>
 
-                    {/* Title & Creator */}
+                    {/* Large Clean Typography */}
                     <h4 
-                      className="text-xl font-bold mb-2 group-hover:text-purple-600 transition-colors"
+                      className="text-lg font-bold mb-2 group-hover:text-purple-600 transition-colors duration-300"
                       style={{ 
                         color: '#2B2B2B',
                         fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
@@ -784,8 +1091,7 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
                     <p 
                       className="text-sm mb-3"
                       style={{ 
-                        color: '#2B2B2B',
-                        opacity: 0.7,
+                        color: '#5C5C5C',
                         fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
                       }}
                     >
@@ -795,9 +1101,9 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
                     <p 
                       className="text-sm leading-relaxed mb-4"
                       style={{ 
-                        color: '#2B2B2B',
-                        opacity: 0.8,
-                        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
+                        color: '#5C5C5C',
+                        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+                        lineHeight: '1.6'
                       }}
                     >
                       {item.description}
@@ -807,7 +1113,7 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
                     <div className="flex items-center justify-between">
                       <span 
                         className="text-sm font-medium"
-                        style={{ color: '#2B2B2B', opacity: 0.6 }}
+                        style={{ color: '#5C5C5C', opacity: 0.8 }}
                       >
                         {item.views} views
                       </span>
@@ -826,20 +1132,73 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
                     </div>
                   </div>
 
-                  {/* Prismatic Edge Lighting on Hover */}
+                  {/* Faint Prismatic Glow on Hover */}
                   <div 
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-3xl pointer-events-none"
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-2xl pointer-events-none"
                     style={{
-                      background: 'linear-gradient(135deg, rgba(194, 159, 255, 0.1) 0%, rgba(168, 85, 247, 0.05) 50%, transparent 100%)',
-                      filter: 'blur(1px)'
+                      background: 'linear-gradient(135deg, rgba(194, 159, 255, 0.04) 0%, rgba(236, 72, 153, 0.02) 50%, transparent 100%)',
+                      filter: 'blur(0.5px)'
+                    }}
+                  />
+
+                  {/* Subtle Prismatic Sweep Animation */}
+                  <motion.div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 rounded-2xl pointer-events-none"
+                    animate={{
+                      x: ['-100%', '100%']
+                    }}
+                    transition={{
+                      duration: 2.5,
+                      repeat: Infinity,
+                      repeatDelay: 5,
+                      ease: "easeInOut"
+                    }}
+                    style={{
+                      background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.04), transparent)',
+                      transform: 'skewX(-10deg)'
                     }}
                   />
                 </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))}
+            </div>
+            
+            {/* Cinematic Navigation Arrows */}
+            <button
+              onClick={() => scrollCarousel('left')}
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-14 h-14 rounded-full transition-all duration-300 flex items-center justify-center group"
+              style={{
+                background: `
+                  linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(245, 247, 255, 0.8) 100%),
+                  rgba(255, 255, 255, 0.3)
+                `,
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.4)',
+                boxShadow: '0 8px 32px rgba(194, 159, 255, 0.08)'
+              }}
+            >
+              <ChevronLeft className="w-6 h-6 text-purple-600 group-hover:text-purple-700 transition-colors" />
+            </button>
+            
+            <button
+              onClick={() => scrollCarousel('right')}
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-14 h-14 rounded-full transition-all duration-300 flex items-center justify-center group"
+              style={{
+                background: `
+                  linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(245, 247, 255, 0.8) 100%),
+                  rgba(255, 255, 255, 0.3)
+                `,
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.4)',
+                boxShadow: '0 8px 32px rgba(194, 159, 255, 0.08)'
+              }}
+            >
+              <ChevronRight className="w-6 h-6 text-purple-600 group-hover:text-purple-700 transition-colors" />
+            </button>
           </div>
         </div>
-      </section>
+        </section>
+      </div>
 
             {/* Liquid Glass Footer */}
       <footer className="relative z-40 py-20 px-8">
@@ -959,8 +1318,31 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
                   }}
                 />
               </div>
-            </motion.div>
           </motion.div>
+          
+          {/* Legal links */}
+          <div className="pt-6 text-sm">
+            <a
+              href="/privacypolicy.html"
+              className="underline hover:no-underline"
+              style={{ color: '#5A2D82' }}
+              target="_blank"
+              rel="noopener"
+            >
+              Privacy Policy
+            </a>
+            <span className="mx-2" style={{ color: '#A78BFA' }}>•</span>
+            <a
+              href="/terms.html"
+              className="underline hover:no-underline"
+              style={{ color: '#5A2D82' }}
+              target="_blank"
+              rel="noopener"
+            >
+              Terms of Service
+            </a>
+          </div>
+        </motion.div>
         </div>
       </footer>
     </div>
