@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About WIZ — Watch YouTube, Earn Rewards</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #2B2B2B;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #F6F0FF 0%, #FFFFFF 100%);
+            min-height: 100vh;
+        }
+        
+        /* Subtle background animation */
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+        
+        .background::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 40%, rgba(246, 240, 255, 0.4) 0%, transparent 70%);
+        }
+        
+        /* Floating sparkles */
+        .sparkle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #C29FFF;
+            border-radius: 50%;
+            animation: float 8s ease-in-out infinite;
+            opacity: 0.6;
+        }
+        
+        .sparkle:nth-child(1) { left: 10%; top: 20%; animation-delay: 0s; }
+        .sparkle:nth-child(2) { left: 80%; top: 60%; animation-delay: 2s; }
+        .sparkle:nth-child(3) { left: 60%; top: 80%; animation-delay: 4s; }
+        .sparkle:nth-child(4) { left: 30%; top: 70%; animation-delay: 6s; }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.6; }
+            50% { transform: translateY(-20px) rotate(180deg); opacity: 1; }
+        }
+        
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(194, 159, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(194, 159, 255, 0.2);
+            border-radius: 50px;
+            padding: 12px 24px;
+            color: #7C3AED;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+        
+        .back-link:hover {
+            background: rgba(194, 159, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(194, 159, 255, 0.08);
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 100px 20px 60px;
+        }
+        
+        .hero-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .hero-title {
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #C29FFF 0%, #5A2D82 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.8rem;
+            }
+        }
+        
+        .hero-subtitle {
+            font-size: 1.5rem;
+            color: #7C3AED;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+        
+        .hero-description {
+            font-size: 1.25rem;
+            color: #5C5C5C;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .content-section {
+            margin-bottom: 50px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 12px 40px rgba(194, 159, 255, 0.06);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 48px rgba(194, 159, 255, 0.1);
+        }
+        
+        .card h2 {
+            color: #5A2D82;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card p {
+            font-size: 1.1rem;
+            color: #2B2B2B;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+        
+        .highlight {
+            background: rgba(194, 159, 255, 0.15);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            color: #5A2D82;
+        }
+        
+        .steps-container {
+            background: rgba(194, 159, 255, 0.05);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 25px 0;
+        }
+        
+        .steps-title {
+            color: #7C3AED;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        
+        .steps-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .steps-list li {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+            color: #2B2B2B;
+        }
+        
+        .step-label {
+            background: linear-gradient(135deg, #C29FFF 0%, #5A2D82 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            min-width: 80px;
+            margin-right: 15px;
+        }
+        
+        .cta-section {
+            text-align: center;
+            margin-top: 60px;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: rgba(194, 159, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            color: #7C3AED;
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 40px rgba(194, 159, 255, 0.3);
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 48px rgba(194, 159, 255, 0.4);
+            background: rgba(194, 159, 255, 0.2);
+        }
+        
+        .final-message {
+            background: rgba(194, 159, 255, 0.08);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            margin-top: 40px;
+            border: 1px solid rgba(194, 159, 255, 0.15);
+        }
+        
+        .final-message h3 {
+            color: #7C3AED;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .final-message p {
+            font-size: 1.2rem;
+            color: #5A2D82;
+            font-weight: 600;
+        }
+        
+        .emoji {
+            font-size: 1.5em;
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background with subtle animations -->
+    <div class="background">
+        <div class="sparkle"></div>
+        <div class="sparkle"></div>
+        <div class="sparkle"></div>
+        <div class="sparkle"></div>
+    </div>
+    
+    <!-- Back to Home Link -->
+    <a href="/" class="back-link">← Back to WIZ</a>
+    
+    <div class="container">
+        <!-- Hero Header -->
+        <div class="hero-header">
+            <h1 class="hero-title">About WIZ</h1>
+            <p class="hero-subtitle">🎥 Watch YouTube. Earn Rewards.</p>
+            <p class="hero-description">That's it. That's the magic.</p>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="content-section">
+            <div class="card">
+                <p>
+                    WIZ is the place where your screen time finally pays you back. We turn the hours you spend watching YouTube into <span class="highlight">XP (experience points)</span> you can cash out or use for cool rewards.
+                </p>
+                
+                <p>
+                    No boring rules. No weird hoops to jump through. Just keep watching the videos you already love—whether it's gaming streams, music videos, tutorials, or cat compilations—and WIZ does the rest.
+                </p>
+            </div>
+            
+            <div class="card">
+                <h2>
+                    <span class="emoji">⚡</span>
+                    Here's how it works:
+                </h2>
+                
+                <div class="steps-container">
+                    <ul class="steps-list">
+                        <li>
+                            <span class="step-label">Watch</span>
+                            Play YouTube videos right on WIZ.
+                        </li>
+                        <li>
+                            <span class="step-label">Earn</span>
+                            Every minute you watch earns XP.
+                        </li>
+                        <li>
+                            <span class="step-label">Get Paid</span>
+                            Trade your XP for cash or rewards.
+                        </li>
+                    </ul>
+                </div>
+                
+                <p>
+                    It's simple. It's fun. And yes—<span class="highlight">it's totally real</span>.
+                </p>
+                
+                <p>
+                    If you've ever thought, "I wish I got paid for this" while watching YouTube… well, now you do.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Call to Action -->
+        <div class="cta-section">
+            <a href="/" class="cta-button">
+                Start Watching & Earning
+            </a>
+        </div>
+        
+        <!-- Final Message -->
+        <div class="final-message">
+            <h3>Welcome to WIZ</h3>
+            <p>Your watch time just leveled up. <span class="emoji">🚀</span></p>
+        </div>
+    </div>
+</body>
+</html>

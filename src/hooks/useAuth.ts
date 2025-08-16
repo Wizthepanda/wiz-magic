@@ -175,7 +175,9 @@ export const useAuth = () => {
         ...user,
         totalXP: newTotalXP,
         level: newLevel,
-      };
+        // Add a timestamp to force React to detect the change
+        lastUpdate: new Date(),
+      } as WizUser;
       
       console.log('⚡ Instant XP update:', { 
         oldXP: user.totalXP, 
@@ -184,14 +186,37 @@ export const useAuth = () => {
         newLevel: newLevel 
       });
       
-      // Force a new object reference to ensure React detects the change
-      setUser({ ...updatedUser });
-      console.log('✅ User state updated with new XP');
+      // Force immediate state update
+      setUser(updatedUser);
+      console.log('✅ User state updated with new XP immediately');
       
-      // Force a re-render by updating state again after a micro-delay
+      // Force React to re-render by triggering multiple state changes
       setTimeout(() => {
-        setUser(prevUser => prevUser ? { ...prevUser } : null);
+        setUser(prevUser => {
+          if (!prevUser) return null;
+          return {
+            ...prevUser,
+            totalXP: newTotalXP,
+            level: newLevel,
+            lastUpdate: new Date(),
+          } as WizUser;
+        });
+        console.log('🔄 Secondary state update for React re-render');
       }, 10);
+      
+      // Third update to ensure all components re-render
+      setTimeout(() => {
+        setUser(prevUser => {
+          if (!prevUser) return null;
+          return {
+            ...prevUser,
+            totalXP: newTotalXP,
+            level: newLevel,
+            lastUpdate: new Date(),
+          } as WizUser;
+        });
+        console.log('🔄 Final state update to ensure UI consistency');
+      }, 50);
     } else {
       console.log('❌ No user found for addXP');
     }

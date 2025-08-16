@@ -31,6 +31,20 @@ export const WizUserProfile = () => {
     level: user?.level 
   });
 
+  // Debug progress calculation
+  if (user) {
+    const xpForCurrentLevel = (user.level - 1) * 1000;
+    const currentLevelXP = user.totalXP - xpForCurrentLevel;
+    const progressPercentage = (currentLevelXP / 1000) * 100;
+    console.log('📊 Progress calculation:', {
+      totalXP: user.totalXP,
+      level: user.level,
+      xpForCurrentLevel,
+      currentLevelXP,
+      progressPercentage: progressPercentage.toFixed(1) + '%'
+    });
+  }
+
   if (loading) {
     return (
       <div className="h-10 w-32 bg-muted animate-pulse rounded-md" />
@@ -54,8 +68,9 @@ export const WizUserProfile = () => {
     );
   }
 
+  const xpForCurrentLevel = (user.level - 1) * 1000;
   const xpForNextLevel = user.level * 1000;
-  const currentLevelXP = user.totalXP % 1000;
+  const currentLevelXP = user.totalXP - xpForCurrentLevel;
   const progressPercentage = (currentLevelXP / 1000) * 100;
 
   return (
@@ -106,9 +121,13 @@ export const WizUserProfile = () => {
                 <Zap className="w-4 h-4 text-wiz-accent" />
                 <span>Level {user.level}</span>
               </div>
-              <span>{currentLevelXP}/{xpForNextLevel} XP</span>
+              <span>{currentLevelXP}/1000 XP</span>
             </div>
-            <Progress value={progressPercentage} className="h-2" />
+            <Progress 
+              key={`progress-${user.totalXP}-${user.level}-${progressPercentage.toFixed(1)}`} 
+              value={progressPercentage} 
+              className="h-2" 
+            />
           </div>
           
           {/* YouTube Connection Status */}

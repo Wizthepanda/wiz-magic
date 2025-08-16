@@ -3,6 +3,10 @@ import { WizSidebar } from './wiz-sidebar';
 import { WizUserProfile } from './wiz-user-profile';
 import { WizDiscoverSection } from './wiz-discover-section';
 import { WizLeaderboard } from './wiz-leaderboard';
+import { WizActivatePage } from './wiz-activate-page';
+import { WizPremierePage } from './wiz-premiere-page';
+import { WizLeaderboardPage } from './wiz-leaderboard-page';
+import { WizProfilePage } from './wiz-profile-page';
 import { FloatingParticles } from '@/components/ui/floating-particles';
 
 interface WizDashboardProps {
@@ -17,28 +21,13 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
       case 'discover':
         return <WizDiscoverSection />;
       case 'leaderboard':
-        return <WizLeaderboard />;
+        return <WizLeaderboardPage />;
       case 'activate':
-        return (
-          <div className="p-8 text-center">
-            <h2 className="text-2xl font-bold mb-4">Link Your YouTube Content</h2>
-            <p className="text-muted-foreground">Connect your YouTube account to start earning XP from your watch time.</p>
-          </div>
-        );
+        return <WizActivatePage />;
       case 'premiere':
-        return (
-          <div className="p-8 text-center">
-            <h2 className="text-2xl font-bold mb-4">WIZ Premiere</h2>
-            <p className="text-muted-foreground">Unlock premium features at Level 5+</p>
-          </div>
-        );
+        return <WizPremierePage />;
       case 'profile':
-        return (
-          <div className="p-8 text-center">
-            <h2 className="text-2xl font-bold mb-4">Your Profile</h2>
-            <p className="text-muted-foreground">Manage your WIZ wizard profile and achievements.</p>
-          </div>
-        );
+        return <WizProfilePage />;
       case 'settings':
         return (
           <div className="p-8 text-center">
@@ -55,10 +44,6 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
     <div className="min-h-screen flex bg-gradient-to-br from-background to-muted/20 relative">
       <FloatingParticles />
       
-      {/* Testing Helper - Remove in production */}
-      <div className="fixed top-4 left-4 z-50 bg-blue-500/90 text-white px-3 py-2 rounded-lg text-sm backdrop-blur-sm">
-        Press <kbd className="bg-white/20 px-1 rounded font-mono">H</kbd> to test YouTube authentication
-      </div>
       
       {/* Sidebar */}
       <WizSidebar 
@@ -74,7 +59,7 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
             <div className="min-w-0 flex-1">
               <h1 className="text-2xl font-bold capitalize truncate">
                 {activeSection === 'discover' ? 'Discover Content' : 
-                 activeSection === 'leaderboard' ? 'Leaderboard' :
+                 activeSection === 'leaderboard' ? 'Leaderboards' :
                  activeSection === 'activate' ? 'Activate YouTube' :
                  activeSection === 'premiere' ? 'WIZ Premiere' :
                  activeSection === 'profile' ? 'Your Profile' :
@@ -82,11 +67,11 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
               </h1>
               <p className="text-muted-foreground text-sm">
                 {activeSection === 'discover' && 'Watch content and earn XP'}
-                {activeSection === 'leaderboard' && 'Top creators and wizards'}
-                {activeSection === 'activate' && 'Connect your YouTube account'}
-                {activeSection === 'premiere' && 'Premium features for Level 5+ wizards'}
-                {activeSection === 'profile' && 'Your wizard journey and stats'}
-                {activeSection === 'settings' && 'Customize your experience'}
+                {activeSection === 'leaderboard' && 'Compete with top creators and wizards'}
+                {activeSection === 'activate' && 'Connect your YouTube account to start earning'}
+                {activeSection === 'premiere' && 'Unlock premium features and exclusive content'}
+                {activeSection === 'profile' && 'Track your learning journey and achievements'}
+                {activeSection === 'settings' && 'Customize your WIZ experience'}
               </p>
             </div>
             

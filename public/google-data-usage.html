@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How WIZ Uses Your Google Data — WIZXP Platform</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #2B2B2B;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #F6F0FF 0%, #FFFFFF 100%);
+            min-height: 100vh;
+        }
+        
+        h1 {
+            color: #7C3AED;
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #C29FFF 0%, #5A2D82 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        h2 {
+            color: #5A2D82;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        h3 {
+            color: #7C3AED;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-top: 1.5rem;
+            margin-bottom: 0.8rem;
+        }
+        
+        .meta-info {
+            background: rgba(194, 159, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(194, 159, 255, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(194, 159, 255, 0.08);
+        }
+        
+        .meta-info p {
+            margin: 8px 0;
+            font-weight: 500;
+        }
+        
+        .contact-email {
+            color: #7C3AED;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .contact-email:hover {
+            text-decoration: underline;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 12px 40px rgba(194, 159, 255, 0.06);
+        }
+        
+        .card h2 {
+            margin-top: 0;
+        }
+        
+        ul {
+            padding-left: 20px;
+        }
+        
+        li {
+            margin-bottom: 10px;
+        }
+        
+        .highlight {
+            background: rgba(194, 159, 255, 0.15);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            color: #5A2D82;
+        }
+        
+        .scope-code {
+            background: rgba(124, 58, 237, 0.1);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #5A2D82;
+            font-size: 0.95em;
+        }
+        
+        .security-box {
+            background: rgba(59, 130, 246, 0.08);
+            border-left: 4px solid #3B82F6;
+            padding: 18px;
+            border-radius: 8px;
+            margin: 18px 0;
+        }
+        
+        .controls-box {
+            background: rgba(168, 85, 247, 0.08);
+            border-left: 4px solid #A855F7;
+            padding: 18px;
+            border-radius: 8px;
+            margin: 18px 0;
+        }
+        
+        .footer-contact {
+            background: rgba(194, 159, 255, 0.08);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+            text-align: center;
+            border: 1px solid rgba(194, 159, 255, 0.15);
+        }
+        
+        .footer-contact h2 {
+            margin-top: 0;
+            font-size: 1.3rem;
+        }
+        
+        .email-contact {
+            font-size: 1.1rem;
+            color: #7C3AED;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .email-contact:hover {
+            text-decoration: underline;
+        }
+        
+        a {
+            color: #7C3AED;
+            text-decoration: underline;
+        }
+        
+        a:hover {
+            color: #5A2D82;
+        }
+        
+        p {
+            margin-bottom: 16px;
+        }
+        
+        .emphasis {
+            font-weight: 600;
+            color: #5A2D82;
+        }
+        
+        .icon {
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>How WIZ Uses Your Google Data</h1>
+    
+    <div class="meta-info">
+        <p><strong>Last Updated:</strong> 15 August 2025</p>
+        <p><strong>Contact:</strong> <a href="mailto:wizsparkles@gmail.com" class="contact-email">wizsparkles@gmail.com</a></p>
+        <p><strong>Website:</strong> <a href="https://wizxp.com">https://wizxp.com</a></p>
+    </div>
+    
+    <div class="card">
+        <h2>About WIZ Magic & Google Sign-In</h2>
+        <p>WIZ Magic uses Google Sign-In with read-only YouTube access to verify quest completions and award XP. We do not post, edit, or manage your YouTube account.</p>
+    </div>
+    
+    
+    <div class="card">
+        <h2><span class="icon">📄</span> Scopes Requested</h2>
+        <p><strong>Google Scope:</strong> <span class="scope-code">youtube.readonly</span></p>
+        <p><strong>What this means in plain terms:</strong></p>
+        <ul>
+            <li>We can see your YouTube watch history and public engagement (likes, comments you've made)</li>
+            <li>We can verify which videos you've watched to confirm quest completions</li>
+            <li>We <span class="highlight">CANNOT</span> post videos, edit your content, or manage your channel</li>
+            <li>We <span class="highlight">CANNOT</span> access private messages, subscriber lists, or upload content on your behalf</li>
+        </ul>
+    </div>
+    
+    <div class="card">
+        <h2><span class="icon">🎯</span> Why They're Needed</h2>
+        <p><strong>Primary Purpose:</strong> Verify video quest completion and award XP</p>
+        <ul>
+            <li><strong>Quest Verification:</strong> When you complete a watching quest, we check your YouTube history to confirm you watched the required video</li>
+            <li><strong>XP Awards:</strong> Based on verified watch activity, we award the appropriate XP to your WIZ account</li>
+            <li><strong>Progress Tracking:</strong> Monitor your engagement with featured content to unlock rewards and achievements</li>
+        </ul>
+        <p><span class="emphasis">We never use this data for advertising, marketing, or selling to third parties.</span></p>
+    </div>
+    
+    <div class="card">
+        <h2><span class="icon">🔐</span> Data Storage & Security</h2>
+        <div class="security-box">
+            <ul>
+                <li><strong>Storage Location:</strong> All data is securely stored in Firebase Firestore with Google Cloud encryption</li>
+                <li><strong>Access Control:</strong> Only you and authorized WIZ administrators can access your data</li>
+                <li><strong>Limited Admin Access:</strong> Administrators access data only for technical support and platform maintenance</li>
+                <li><strong>Encryption:</strong> Data is encrypted both at rest and in transit using industry-standard protocols</li>
+                <li><strong>Retention Policy:</strong> Data is automatically deleted after 12 months of account inactivity</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h2><span class="icon">⚡</span> User Controls</h2>
+        <div class="controls-box">
+            <ul>
+                <li><strong>Revoke Access Anytime:</strong> Visit <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer">Google Account Permissions</a> and remove "WIZ Magic" to instantly revoke all access</li>
+                <li><strong>Request Data Deletion:</strong> Email us at <a href="mailto:wizsparkles@gmail.com">wizsparkles@gmail.com</a> to request immediate deletion of all your data (completed within 7 business days)</li>
+                <li><strong>Data Access Requests:</strong> You can request a copy of all data we have about you via the same email</li>
+                <li><strong>Questions & Support:</strong> Contact us anytime with questions about how your data is used</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="footer-contact">
+        <h2>Need More Information?</h2>
+        <p>For detailed privacy practices, visit our <a href="/privacypolicy.html">Privacy Policy</a></p>
+        <p>Questions about your data? Contact us:</p>
+        <p>📧 <a href="mailto:wizsparkles@gmail.com" class="email-contact">wizsparkles@gmail.com</a></p>
+    </div>
+</body>
+</html>

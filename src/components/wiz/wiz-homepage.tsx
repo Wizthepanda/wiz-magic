@@ -302,16 +302,16 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Premium Top Navigation */}
+      {/* Top Left Navigation Links */}
       <motion.div 
-        className="fixed top-6 right-6 z-50 flex items-center space-x-4"
+        className="fixed top-4 left-4 sm:top-6 sm:left-6 z-50 flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-1"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.3 }}
       >
-        {/* Privacy Policy Link for Google Verification */}
+        {/* About Link */}
         <motion.a
-          href="https://wizxp.com/privacypolicy.html"
+          href="/about.html"
           target="_blank"
           rel="noopener noreferrer"
           className="group flex items-center px-4 py-2 rounded-2xl transition-all duration-500 text-sm font-medium"
@@ -331,11 +331,11 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
             transition: { duration: 0.3 }
           }}
           whileTap={{ scale: 0.98 }}
-          initial={{ opacity: 0, x: 20 }}
+          initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
-          Privacy Policy
+          About
           
           {/* Prismatic Edge Glow on Hover */}
           <div 
@@ -346,6 +346,97 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
             }}
           />
         </motion.a>
+
+        {/* Separator - hidden on mobile */}
+        <span className="hidden sm:inline" style={{ color: '#A78BFA', fontSize: '14px' }}>|</span>
+
+        {/* Privacy Link */}
+        <motion.a
+          href="/privacypolicy.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex items-center px-4 py-2 rounded-2xl transition-all duration-500 text-sm font-medium"
+          style={{
+            background: `
+              linear-gradient(135deg, rgba(246, 240, 255, 0.6) 0%, rgba(255, 255, 255, 0.4) 100%),
+              rgba(255, 255, 255, 0.15)
+            `,
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.25)',
+            boxShadow: '0 6px 24px rgba(194, 159, 255, 0.06), 0 3px 12px rgba(194, 159, 255, 0.03)',
+            color: '#7C3AED'
+          }}
+          whileHover={{ 
+            y: -1,
+            boxShadow: '0 8px 32px rgba(194, 159, 255, 0.08), 0 4px 16px rgba(194, 159, 255, 0.04)',
+            transition: { duration: 0.3 }
+          }}
+          whileTap={{ scale: 0.98 }}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+        >
+          Privacy
+          
+          {/* Prismatic Edge Glow on Hover */}
+          <div 
+            className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+            style={{
+              background: 'linear-gradient(135deg, rgba(194, 159, 255, 0.08) 0%, rgba(157, 78, 221, 0.04) 100%)',
+              filter: 'blur(0.5px)'
+            }}
+          />
+        </motion.a>
+
+        {/* Separator - hidden on mobile */}
+        <span className="hidden sm:inline" style={{ color: '#A78BFA', fontSize: '14px' }}>|</span>
+
+        {/* Learn More Link */}
+        <motion.a
+          href="/google-data-usage.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex items-center px-4 py-2 rounded-2xl transition-all duration-500 text-sm font-medium"
+          style={{
+            background: `
+              linear-gradient(135deg, rgba(246, 240, 255, 0.6) 0%, rgba(255, 255, 255, 0.4) 100%),
+              rgba(255, 255, 255, 0.15)
+            `,
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.25)',
+            boxShadow: '0 6px 24px rgba(194, 159, 255, 0.06), 0 3px 12px rgba(194, 159, 255, 0.03)',
+            color: '#7C3AED'
+          }}
+          whileHover={{ 
+            y: -1,
+            boxShadow: '0 8px 32px rgba(194, 159, 255, 0.08), 0 4px 16px rgba(194, 159, 255, 0.04)',
+            transition: { duration: 0.3 }
+          }}
+          whileTap={{ scale: 0.98 }}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+        >
+          Google Auth
+          
+          {/* Prismatic Edge Glow on Hover */}
+          <div 
+            className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+            style={{
+              background: 'linear-gradient(135deg, rgba(194, 159, 255, 0.08) 0%, rgba(157, 78, 221, 0.04) 100%)',
+              filter: 'blur(0.5px)'
+            }}
+          />
+        </motion.a>
+      </motion.div>
+
+      {/* Top Right Enter Button */}
+      <motion.div 
+        className="fixed top-4 right-4 sm:top-6 sm:right-6 z-50"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.3 }}
+      >
         <motion.button
           onClick={handleEnterPlatform}
           className="group flex items-center px-6 py-3 rounded-3xl transition-all duration-500"
@@ -1330,6 +1421,16 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
               rel="noopener"
             >
               Privacy Policy
+            </a>
+            <span className="mx-2" style={{ color: '#A78BFA' }}>•</span>
+            <a
+              href="/google-data-usage.html"
+              className="underline hover:no-underline"
+              style={{ color: '#5A2D82' }}
+              target="_blank"
+              rel="noopener"
+            >
+              Google Data Usage
             </a>
             <span className="mx-2" style={{ color: '#A78BFA' }}>•</span>
             <a
