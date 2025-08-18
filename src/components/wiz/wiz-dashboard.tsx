@@ -53,34 +53,34 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
       
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0">
-        {/* Top Header */}
-        <header className="p-6 border-b border-border/50 backdrop-blur-sm bg-background/80">
-          <div className="flex justify-between items-center max-w-full">
-            <div className="min-w-0 flex-1">
-              <h1 className="text-2xl font-bold capitalize truncate">
-                {activeSection === 'discover' ? 'Discover Content' : 
-                 activeSection === 'leaderboard' ? 'Leaderboards' :
-                 activeSection === 'activate' ? 'Activate YouTube' :
-                 activeSection === 'premiere' ? 'WIZ Premiere' :
-                 activeSection === 'profile' ? 'Your Profile' :
-                 'Settings'}
+        {/* Header with User Profile */}
+        <header className="sticky top-0 z-30 border-b border-white/10 backdrop-blur-lg">
+          <div 
+            className="flex items-center justify-between px-6 py-4"
+            style={{
+              background: `
+                linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)
+              `,
+              backdropFilter: 'blur(20px)',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            <div className="flex items-center space-x-4">
+              <h1 className="text-2xl font-bold text-gray-800">
+                {activeSection === 'discover' && 'Discover'}
+                {activeSection === 'leaderboard' && 'Leaderboard'}
+                {activeSection === 'activate' && 'Activate'}
+                {activeSection === 'premiere' && 'WIZ Premiere'}
+                {activeSection === 'profile' && 'Profile'}
+                {activeSection === 'settings' && 'Settings'}
               </h1>
-              <p className="text-muted-foreground text-sm">
-                {activeSection === 'discover' && 'Watch content and earn XP'}
-                {activeSection === 'leaderboard' && 'Compete with top creators and wizards'}
-                {activeSection === 'activate' && 'Connect your YouTube account to start earning'}
-                {activeSection === 'premiere' && 'Unlock premium features and exclusive content'}
-                {activeSection === 'profile' && 'Track your learning journey and achievements'}
-                {activeSection === 'settings' && 'Customize your WIZ experience'}
-              </p>
             </div>
             
-            <div className="ml-4 flex-shrink-0">
-              <WizUserProfile />
-            </div>
+            {/* User Profile Component */}
+            <WizUserProfile />
           </div>
         </header>
-        
+
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
           <div className="max-w-full">

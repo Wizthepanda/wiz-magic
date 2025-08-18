@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Play, Star, TrendingUp, Users, Sparkles, Zap, Award, DollarSign, ChevronLeft, ChevronRight, Target, BarChart3, Gift, Wand2 } from 'lucide-react';
+import { Play, Star, TrendingUp, Users, Sparkles, Zap, Award, DollarSign, ChevronLeft, ChevronRight, Target, BarChart3, Gift, Wand2, ExternalLink, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 
 interface WizHomepageProps {
@@ -94,8 +94,67 @@ const MinimalIcon = ({ type, color }: { type: string; color: string }) => {
 export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
   const [isHovering, setIsHovering] = useState(false);
   const [animatedValues, setAnimatedValues] = useState({ wizards: 0, xp: 0, creators: 0 });
+  const [selectedCreator, setSelectedCreator] = useState(null);
   const carouselRef = useRef<HTMLDivElement>(null);
   const { user, signInWithGoogle, connectYouTube } = useAuth();
+
+  // Creators data for Meet the Creators section
+  const creators = [
+    {
+      id: 1,
+      name: 'AIGuru42',
+      username: '@aiguru42',
+      specialty: 'AI & Machine Learning',
+      thumbnail: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
+      verified: true,
+    },
+    {
+      id: 2,
+      name: 'MoneyWizard',
+      username: '@moneywizard',
+      specialty: 'Finance & Investment',
+      thumbnail: 'https://images.unsplash.com/photo-1556157382-97eda2d62296?w=400&h=300&fit=crop',
+      avatar: 'https://images.unsplash.com/photo-1556157382-97eda2d62296?w=100&h=100&fit=crop',
+      verified: true,
+    },
+    {
+      id: 3,
+      name: 'CodeMaster',
+      username: '@codemaster',
+      specialty: 'Web Development',
+      thumbnail: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=300&fit=crop',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop',
+      verified: true,
+    },
+    {
+      id: 4,
+      name: 'BeatCreator',
+      username: '@beatcreator',
+      specialty: 'Music Production',
+      thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop',
+      avatar: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=100&h=100&fit=crop',
+      verified: true,
+    },
+    {
+      id: 5,
+      name: 'HealthGuru',
+      username: '@healthguru',
+      specialty: 'Health & Fitness',
+      thumbnail: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=300&fit=crop',
+      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop',
+      verified: true,
+    },
+    {
+      id: 6,
+      name: 'TechVision',
+      username: '@techvision',
+      specialty: 'Future Tech',
+      thumbnail: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=400&h=300&fit=crop',
+      avatar: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=100&h=100&fit=crop',
+      verified: true,
+    }
+  ];
 
   const handleEnterPlatform = async () => {
     console.log('🎯 handleEnterPlatform called');
@@ -352,7 +411,7 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
 
         {/* Privacy Link */}
         <motion.a
-          href="/privacypolicy.html"
+          href="/privacy.html"
           target="_blank"
           rel="noopener noreferrer"
           className="group flex items-center px-4 py-2 rounded-2xl transition-all duration-500 text-sm font-medium"
@@ -964,6 +1023,598 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
         </section>
       </div>
 
+      {/* ✨ Meet the Creators — Elevated Abstract UI */}
+      <motion.div 
+        className="relative mb-16 min-h-screen overflow-hidden"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.5, delay: 0.3 }}
+      >
+        {/* Abstract Cosmic Background */}
+        <div
+          className="absolute inset-0 -z-10"
+          style={{
+            background: `
+              #0d0d0f,
+              linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(126, 34, 206, 0.3) 30%, rgba(139, 92, 246, 0.2) 70%, rgba(76, 29, 149, 0.4) 100%)
+            `
+          }}
+        />
+
+        {/* Particle Field */}
+        <motion.div className="absolute inset-0 -z-8 pointer-events-none">
+          {[...Array(30)].map((_, i) => (
+            <motion.div
+              key={`particle-${i}`}
+              className="absolute w-1 h-1 bg-white rounded-full opacity-20"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                y: [0, -100, 0],
+                opacity: [0.2, 0.8, 0.2],
+                scale: [1, 1.5, 1],
+              }}
+              transition={{
+                duration: 8 + Math.random() * 4,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: Math.random() * 5
+              }}
+            />
+          ))}
+        </motion.div>
+
+        {/* Floating Glass Orbs */}
+        <motion.div className="absolute inset-0 -z-5 pointer-events-none">
+          {[...Array(6)].map((_, i) => (
+            <motion.div
+              key={`orb-${i}`}
+              className="absolute rounded-full"
+              style={{
+                width: `${80 + i * 30}px`,
+                height: `${80 + i * 30}px`,
+                background: `
+                  radial-gradient(circle, 
+                    rgba(${i % 3 === 0 ? '168, 85, 247' : i % 3 === 1 ? '99, 102, 241' : '139, 92, 246'}, 0.08) 0%, 
+                    transparent 70%
+                  )
+                `,
+                backdropFilter: 'blur(40px)',
+                border: '1px solid rgba(168, 85, 247, 0.1)',
+                left: `${15 + (i * 15)}%`,
+                top: `${10 + (i * 12)}%`,
+              }}
+              animate={{
+                y: [0, -40, 0],
+                x: [0, 20, 0],
+                scale: [1, 1.2, 1],
+                opacity: [0.3, 0.6, 0.3]
+              }}
+              transition={{
+                duration: 12 + i * 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: i * 1.5
+              }}
+            />
+          ))}
+        </motion.div>
+
+        {/* Flowing Waveforms */}
+        <motion.div
+          className="absolute inset-0 -z-6 pointer-events-none"
+          style={{
+            background: `
+              repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 100px,
+                rgba(168, 85, 247, 0.02) 101px,
+                rgba(168, 85, 247, 0.02) 103px
+              ),
+              repeating-linear-gradient(
+                -45deg,
+                transparent,
+                transparent 150px,
+                rgba(99, 102, 241, 0.02) 151px,
+                rgba(99, 102, 241, 0.02) 153px
+              )
+            `
+          }}
+          animate={{
+            backgroundPosition: ['0% 0%', '100% 100%'],
+          }}
+          transition={{
+            duration: 30,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+        />
+
+        <div className="relative z-10 p-8 max-w-7xl mx-auto">
+          {/* Hero Header */}
+          <motion.div 
+            className="text-center mb-20 relative"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.5 }}
+          >
+            {/* Glowing Arc Separator */}
+            <motion.div
+              className="absolute -top-8 left-1/2 transform -translate-x-1/2 w-96 h-24 pointer-events-none"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1.5, delay: 0.7 }}
+            >
+              <svg viewBox="0 0 400 100" className="w-full h-full">
+                <defs>
+                  <linearGradient id="arcGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="rgba(168, 85, 247, 0)" />
+                    <stop offset="25%" stopColor="rgba(168, 85, 247, 0.6)" />
+                    <stop offset="50%" stopColor="rgba(99, 102, 241, 0.8)" />
+                    <stop offset="75%" stopColor="rgba(168, 85, 247, 0.6)" />
+                    <stop offset="100%" stopColor="rgba(168, 85, 247, 0)" />
+                  </linearGradient>
+                </defs>
+                <motion.path
+                  d="M50 80 Q200 20 350 80"
+                  stroke="url(#arcGradient)"
+                  strokeWidth="2"
+                  fill="none"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 1 }}
+                  transition={{ duration: 2, delay: 1, ease: "easeInOut" }}
+                />
+              </svg>
+            </motion.div>
+
+            <motion.h2 
+              className="text-7xl font-bold mb-4 relative z-10"
+              style={{
+                background: 'linear-gradient(135deg, #ffffff 0%, #a855f7 40%, #6366f1 80%, #ffffff 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                filter: 'drop-shadow(0 4px 12px rgba(168, 85, 247, 0.3))'
+              }}
+              animate={{
+                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+              }}
+              transition={{
+                duration: 6,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+            >
+              WIZ Premiere
+            </motion.h2>
+            
+            <motion.p 
+              className="text-2xl text-gray-400 font-medium relative z-10 mb-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 }}
+            >
+              A Hollywood-level AI animation brought to life by 6 visionary animators.
+            </motion.p>
+
+            {/* Join the Watch Party Button */}
+            <motion.button
+              className="relative px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-500 overflow-hidden group z-10"
+              style={{
+                background: `
+                  linear-gradient(135deg, rgba(147, 51, 234, 0.9) 0%, rgba(99, 102, 241, 0.9) 50%, rgba(139, 92, 246, 0.9) 100%)
+                `,
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 8px 32px rgba(147, 51, 234, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                color: '#ffffff'
+              }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.2, duration: 0.6 }}
+              whileHover={{ 
+                scale: 1.05,
+                boxShadow: '0 12px 40px rgba(147, 51, 234, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
+                transition: { duration: 0.3 }
+              }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {/* Button Background Shimmer */}
+              <motion.div
+                className="absolute inset-0 -top-2 -bottom-2"
+                style={{
+                  background: `
+                    linear-gradient(45deg, 
+                      transparent 30%, 
+                      rgba(255, 255, 255, 0.2) 50%, 
+                      transparent 70%
+                    )
+                  `
+                }}
+                animate={{
+                  x: ['-100%', '200%']
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatDelay: 3,
+                  ease: "easeInOut"
+                }}
+              />
+              
+              <div className="flex items-center space-x-3 relative z-10">
+                <motion.div
+                  animate={{ 
+                    rotate: [0, 15, -15, 0],
+                    scale: [1, 1.1, 1]
+                  }}
+                  transition={{ 
+                    duration: 2, 
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <Bell className="w-6 h-6" />
+                </motion.div>
+                <span>Join the Watch Party</span>
+              </div>
+
+              {/* Glow Effect on Hover */}
+              <motion.div
+                className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 pointer-events-none"
+                style={{
+                  background: 'radial-gradient(circle at center, rgba(147, 51, 234, 0.3) 0%, transparent 70%)',
+                  filter: 'blur(20px)'
+                }}
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [0, 0.3, 0]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeOut"
+                }}
+              />
+            </motion.button>
+          </motion.div>
+
+          {/* Creator Constellation Grid */}
+          <div className="relative min-h-[900px]">
+            {/* Navigation Arrows */}
+            <motion.button
+              onClick={() => {
+                // Scroll or navigate logic for creators can be implemented here
+                console.log('Previous creators');
+              }}
+              className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-6 z-20 w-12 h-12 rounded-full flex items-center justify-center text-white/80"
+              style={{
+                background: `
+                  linear-gradient(135deg, 
+                    rgba(16, 16, 16, 0.9) 0%, 
+                    rgba(32, 32, 32, 0.8) 100%
+                  ),
+                  rgba(255, 255, 255, 0.15)
+                `
+              }}
+              whileHover={{
+                scale: 1.1,
+                background: `
+                  linear-gradient(135deg, 
+                    rgba(147, 51, 234, 0.9) 0%, 
+                    rgba(99, 102, 241, 0.8) 100%
+                  ),
+                  rgba(255, 255, 255, 0.15)
+                `
+              }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </motion.button>
+
+            <motion.button
+              onClick={() => {
+                // Scroll or navigate logic for creators can be implemented here
+                console.log('Next creators');
+              }}
+              className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-6 z-20 w-12 h-12 rounded-full flex items-center justify-center text-white/80"
+              style={{
+                background: `
+                  linear-gradient(135deg, 
+                    rgba(16, 16, 16, 0.9) 0%, 
+                    rgba(32, 32, 32, 0.8) 100%
+                  ),
+                  rgba(255, 255, 255, 0.15)
+                `
+              }}
+              whileHover={{
+                scale: 1.1,
+                background: `
+                  linear-gradient(135deg, 
+                    rgba(147, 51, 234, 0.9) 0%, 
+                    rgba(99, 102, 241, 0.8) 100%
+                  ),
+                  rgba(255, 255, 255, 0.15)
+                `
+              }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <ChevronRight className="w-6 h-6" />
+            </motion.button>
+            {/* Dynamic Constellation Map */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none z-5">
+              <defs>
+                <linearGradient id="constellationGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="rgba(168, 85, 247, 0.4)" />
+                  <stop offset="50%" stopColor="rgba(99, 102, 241, 0.3)" />
+                  <stop offset="100%" stopColor="rgba(139, 92, 246, 0.4)" />
+                </linearGradient>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                  <feMerge> 
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+              
+              {/* Constellation Connection Lines */}
+              <motion.path
+                d="M180,200 L420,150 L650,280 L480,450 L250,400 L180,200"
+                stroke="url(#constellationGrad)"
+                strokeWidth="1.5"
+                fill="none"
+                filter="url(#glow)"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 0.6 }}
+                transition={{ duration: 4, delay: 2, ease: "easeInOut" }}
+              />
+              
+              <motion.path
+                d="M780,180 L650,280 L820,380 L950,320"
+                stroke="url(#constellationGrad)"
+                strokeWidth="1.5"
+                fill="none"
+                filter="url(#glow)"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 0.4 }}
+                transition={{ duration: 3, delay: 2.5, ease: "easeInOut" }}
+              />
+
+              <motion.path
+                d="M420,150 L780,180 M250,400 L820,380"
+                stroke="url(#constellationGrad)"
+                strokeWidth="1"
+                fill="none"
+                filter="url(#glow)"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 0.3 }}
+                transition={{ duration: 2.5, delay: 3, ease: "easeInOut" }}
+              />
+            </svg>
+
+            {/* Living Digital Art Tiles */}
+            {creators.slice(0, 6).map((creator, index) => {
+              // Asymmetrical constellation positions
+              const positions = [
+                { x: '12%', y: '15%', size: 280 },
+                { x: '65%', y: '8%', size: 260 },
+                { x: '45%', y: '28%', size: 300 },
+                { x: '18%', y: '55%', size: 270 },
+                { x: '70%', y: '48%', size: 290 },
+                { x: '85%', y: '25%', size: 250 }
+              ];
+              
+              const pos = positions[index];
+              
+              return (
+                <motion.div
+                  key={`constellation-${creator.id}`}
+                  className="absolute group cursor-pointer z-10"
+                  style={{
+                    left: pos.x,
+                    top: pos.y,
+                    width: `${pos.size}px`,
+                    height: `${pos.size}px`,
+                  }}
+                  initial={{ 
+                    opacity: 0, 
+                    scale: 0,
+                    y: 100
+                  }}
+                  animate={{ 
+                    opacity: 1, 
+                    scale: 1,
+                    y: 0
+                  }}
+                  transition={{ 
+                    duration: 1.2, 
+                    delay: 1.5 + index * 0.3,
+                    type: "spring",
+                    bounce: 0.3
+                  }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    transition: { duration: 0.4, ease: "easeOut" }
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setSelectedCreator(creator)}
+                >
+                  {/* Main Video Showcase */}
+                  <div
+                    className="relative w-full h-full rounded-3xl overflow-hidden transition-all duration-700"
+                    style={{
+                      background: `
+                        linear-gradient(135deg, 
+                          rgba(0, 0, 0, 0.8) 0%, 
+                          rgba(168, 85, 247, 0.1) 30%,
+                          rgba(99, 102, 241, 0.1) 70%,
+                          rgba(0, 0, 0, 0.8) 100%
+                        )
+                      `,
+                      backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(168, 85, 247, 0.2)',
+                      boxShadow: '0 8px 40px rgba(168, 85, 247, 0.15)',
+                    }}
+                  >
+                    {/* Video Content */}
+                    <div className="absolute inset-6 rounded-2xl overflow-hidden">
+                      <img 
+                        src={creator.thumbnail} 
+                        alt={`${creator.name}'s showcase`}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                      
+                      {/* Glass Glow Overlay */}
+                      <motion.div
+                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                        style={{
+                          background: `
+                            radial-gradient(circle at center, 
+                              rgba(168, 85, 247, 0.2) 0%, 
+                              rgba(99, 102, 241, 0.1) 40%, 
+                              transparent 70%
+                            )
+                          `
+                        }}
+                      />
+                    </div>
+
+                    {/* Overlapping Profile Picture */}
+                    <motion.div 
+                      className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 z-20"
+                      animate={{
+                        boxShadow: [
+                          '0 0 30px rgba(168, 85, 247, 0.6)',
+                          '0 0 50px rgba(168, 85, 247, 0.8)',
+                          '0 0 30px rgba(168, 85, 247, 0.6)'
+                        ]
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                      whileHover={{
+                        scale: 1.1,
+                        boxShadow: '0 0 60px rgba(168, 85, 247, 1)'
+                      }}
+                    >
+                      <div
+                        className="w-24 h-24 rounded-full overflow-hidden border-4 border-white/20"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(99, 102, 241, 0.2))',
+                          backdropFilter: 'blur(10px)',
+                          boxShadow: '0 0 30px rgba(168, 85, 247, 0.6)'
+                        }}
+                      >
+                        {creator.avatar ? (
+                          <img 
+                            src={creator.avatar} 
+                            alt={creator.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div 
+                            className="w-full h-full flex items-center justify-center text-white font-bold text-2xl"
+                            style={{
+                              background: 'linear-gradient(135deg, #a855f7 0%, #6366f1 100%)'
+                            }}
+                          >
+                            {creator.name.charAt(0)}
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+
+                    {/* Twitter/X Icon */}
+                    <motion.button
+                      className="absolute top-4 right-4 p-3 rounded-xl transition-all duration-300 z-20"
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.08)',
+                        backdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(255, 255, 255, 0.15)'
+                      }}
+                      whileHover={{
+                        scale: 1.1,
+                        background: 'rgba(29, 155, 240, 0.2)',
+                        boxShadow: '0 0 20px rgba(29, 155, 240, 0.5)'
+                      }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(`https://twitter.com/${creator.username.replace('@', '')}`, '_blank');
+                      }}
+                    >
+                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                      </svg>
+                    </motion.button>
+
+                    {/* Ripple Glow Effect */}
+                    <motion.div
+                      className="absolute inset-0 rounded-3xl pointer-events-none opacity-0 group-hover:opacity-100"
+                      style={{
+                        background: 'radial-gradient(circle at center, rgba(168, 85, 247, 0.1) 0%, transparent 70%)',
+                        filter: 'blur(20px)'
+                      }}
+                      animate={{
+                        scale: [1, 1.3, 1],
+                        opacity: [0, 0.3, 0]
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeOut"
+                      }}
+                    />
+                  </div>
+
+                  {/* Name + Role */}
+                  <motion.div 
+                    className="text-center mt-8"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 2 + index * 0.3 }}
+                  >
+                    <motion.h3 
+                      className="text-2xl font-bold text-white mb-2"
+                      whileHover={{
+                        background: 'linear-gradient(90deg, #ffffff, #a855f7, #6366f1, #ffffff)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                      }}
+                      animate={{
+                        backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                      }}
+                      transition={{
+                        backgroundPosition: {
+                          duration: 3,
+                          repeat: Infinity,
+                          ease: "linear"
+                        }
+                      }}
+                    >
+                      {creator.name}
+                    </motion.h3>
+                    <motion.p 
+                      className="text-gray-400 font-medium"
+                      whileHover={{ color: '#a855f7' }}
+                    >
+                      AI Animation Artist
+                    </motion.p>
+                  </motion.div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </motion.div>
+
       {/* Featured Content Section with dedicated background */}
       <div className="relative">
         <FeaturedBackground />
@@ -1414,7 +2065,7 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
           {/* Legal links */}
           <div className="pt-6 text-sm">
             <a
-              href="/privacypolicy.html"
+              href="/privacy.html"
               className="underline hover:no-underline"
               style={{ color: '#5A2D82' }}
               target="_blank"

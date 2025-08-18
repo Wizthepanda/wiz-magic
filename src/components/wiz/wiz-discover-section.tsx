@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { Play, Eye, Heart, Share2, CheckCircle, Zap, ChevronLeft, ChevronRight, Crown, Medal, Trophy, Star, Users, Award } from 'lucide-react';
+import { Play, Eye, Heart, Share2, CheckCircle, Zap, ChevronLeft, ChevronRight, Crown, Medal, Trophy, Star, Users, Award, X } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { WizVideoPlayer } from './wiz-video-player';
+import { VideoPanel } from './VideoPanel';
 import { useAuth } from '@/hooks/useAuth';
+import { useXp } from '@/context/XpContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FloatingParticles } from '@/components/ui/floating-particles';
 
 const categories = [
@@ -299,25 +301,27 @@ export const WizDiscoverSection = () => {
       <FloatingParticles />
       
       <div className="max-w-7xl mx-auto p-6 space-y-8">
-                {/* Category Filter with Subtle Dots */}
-        <div className="flex flex-wrap gap-3 mb-8">
-          {categories.map((category) => (
-            <Button
-              key={category.id}
-              variant={activeCategory === category.id ? "default" : "outline"}
-              onClick={() => setActiveCategory(category.id)}
-              className={`${activeCategory === category.id ? category.color : ''} transition-all duration-200 flex items-center gap-2 text-sm h-8 px-3`}
-            >
-              <div className={`w-2 h-2 rounded-full ${category.dotColor}`} />
-              {category.label}
-            </Button>
-          ))}
+        {/* Category Filter Section */}
+        <div className="mb-8">
+          <div className="flex justify-center flex-wrap gap-3">
+            {categories.map((category) => (
+              <Button
+                key={category.id}
+                variant={activeCategory === category.id ? "default" : "outline"}
+                onClick={() => setActiveCategory(category.id)}
+                className={`${activeCategory === category.id ? category.color : ''} transition-all duration-200 flex items-center gap-2 text-sm h-8 px-3`}
+              >
+                <div className={`w-2 h-2 rounded-full ${category.dotColor}`} />
+                {category.label}
+              </Button>
+            ))}
+          </div>
         </div>
 
         {/* Discover Content - 8 Panels with Horizontal Scrolling */}
         <div className="relative mb-12">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-bold text-foreground">Discover Content</h3>
+            <div></div> {/* Empty div for spacing */}
             <div className="flex space-x-2">
               <Button
                 variant="outline"
@@ -500,634 +504,1155 @@ export const WizDiscoverSection = () => {
           </div>
         </div>
 
-        {/* Most Viewed Section - VIP Style */}
-        <div className="relative mb-12">
-          {/* VIP Background with Particles */}
-          <div
-            className="absolute inset-0 rounded-3xl"
+        {/* 🔥 Most Viewed - Glassmorphic Purple-to-Indigo Design */}
+        <div className="relative mb-20">
+          {/* Glassmorphic Container */}
+          <motion.div
+            className="relative rounded-xl overflow-hidden p-8"
             style={{
-              background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(51, 65, 85, 0.95) 50%, rgba(30, 41, 59, 0.95) 100%)',
+              background: `
+                linear-gradient(135deg, 
+                  rgba(147, 51, 234, 0.15) 0%, 
+                  rgba(99, 102, 241, 0.12) 50%, 
+                  rgba(79, 70, 229, 0.15) 100%
+                ),
+                rgba(255, 255, 255, 0.1)
+              `,
               backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 215, 0, 0.2)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+              border: '1px solid rgba(147, 51, 234, 0.3)',
+              boxShadow: '0 20px 60px rgba(147, 51, 234, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
             }}
-          />
-          
-          {/* Floating Particles for VIP Effect */}
-          <div className="absolute inset-0 overflow-hidden rounded-3xl">
-            {[...Array(12)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute animate-pulse"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            {/* Enhanced Section Title */}
+            <div className="text-center mb-10">
+              <motion.h2 
+                className="text-4xl md:text-5xl font-bold mb-4 relative"
                 style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                  animationDelay: `${Math.random() * 3}s`,
-                  animationDuration: `${3 + Math.random() * 2}s`
+                  background: 'linear-gradient(135deg, #e879f9 0%, #a855f7 30%, #6366f1 70%, #c4b5fd 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  filter: 'drop-shadow(0 4px 12px rgba(168, 85, 247, 0.4))'
                 }}
+                whileHover={{ scale: 1.02 }}
               >
-                <div className="w-1 h-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full opacity-70" />
-              </div>
-            ))}
-          </div>
-
-          <div className="relative z-10 p-8 space-y-8">
-            {/* VIP Section Title */}
-            <div className="text-center space-y-3">
-              <h2 className="text-4xl font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-400 bg-clip-text text-transparent">
-                Most Viewed
-              </h2>
-              <div className="w-24 h-1 bg-gradient-to-r from-yellow-400 to-orange-500 mx-auto rounded-full" />
-              <p className="text-lg text-gray-300">
-                🔥 The content everyone is watching right now
+                🔥 Most Viewed
+                
+                {/* Pulsing Glowing Underline */}
+                <motion.div 
+                  className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 h-1 rounded-full"
+                  style={{
+                    width: '80%',
+                    background: 'linear-gradient(90deg, rgba(232, 121, 249, 0.6) 0%, rgba(147, 51, 234, 0.8) 50%, rgba(232, 121, 249, 0.6) 100%)',
+                    boxShadow: '0 0 20px rgba(147, 51, 234, 0.8)'
+                  }}
+                  animate={{
+                    opacity: [0.6, 1, 0.6],
+                    boxShadow: [
+                      '0 0 20px rgba(147, 51, 234, 0.8)',
+                      '0 0 30px rgba(147, 51, 234, 1)',
+                      '0 0 20px rgba(147, 51, 234, 0.8)'
+                    ]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
+              </motion.h2>
+              <p className="text-xl text-purple-200">
+                The content everyone is watching right now
               </p>
+            </div>
+
+            {/* Navigation Arrows */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex space-x-3">
+                <motion.button
+                  onClick={() => {
+                    const container = document.getElementById('most-viewed-container');
+                    if (container) container.scrollBy({ left: -400, behavior: 'smooth' });
+                  }}
+                  className="h-12 w-12 rounded-full flex items-center justify-center text-white"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.8) 0%, rgba(99, 102, 241, 0.8) 100%)',
+                    backdropFilter: 'blur(15px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    boxShadow: '0 4px 16px rgba(147, 51, 234, 0.3)'
+                  }}
+                  whileHover={{ 
+                    scale: 1.1,
+                    boxShadow: '0 8px 32px rgba(147, 51, 234, 0.5)'
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </motion.button>
+                <motion.button
+                  onClick={() => {
+                    const container = document.getElementById('most-viewed-container');
+                    if (container) container.scrollBy({ left: 400, behavior: 'smooth' });
+                  }}
+                  className="h-12 w-12 rounded-full flex items-center justify-center text-white"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.8) 0%, rgba(99, 102, 241, 0.8) 100%)',
+                    backdropFilter: 'blur(15px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    boxShadow: '0 4px 16px rgba(147, 51, 234, 0.3)'
+                  }}
+                  whileHover={{ 
+                    scale: 1.1,
+                    boxShadow: '0 8px 32px rgba(147, 51, 234, 0.5)'
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </motion.button>
+              </div>
             </div>
 
             {/* Most Viewed Cards - Horizontal Scroll */}
-            <div className="relative">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const container = document.getElementById('most-viewed-container');
-                      if (container) container.scrollBy({ left: -400, behavior: 'smooth' });
+            <div
+              id="most-viewed-container"
+              className="flex space-x-6 overflow-x-auto scrollbar-hide pb-4 scroll-smooth"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {videos.slice(0, 6).map((video, index) => (
+                <motion.div 
+                  key={`mv-${video.id}`} 
+                  className="flex-shrink-0 w-80 group"
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 + index * 0.1 }}
+                  whileHover={{ y: -8, scale: 1.02 }}
+                >
+                  <div 
+                    className="h-96 overflow-hidden border-0 shadow-xl group-hover:shadow-2xl transition-all duration-500 rounded-xl"
+                    style={{
+                      background: `
+                        linear-gradient(135deg, 
+                          rgba(147, 51, 234, 0.1) 0%, 
+                          rgba(99, 102, 241, 0.08) 50%, 
+                          rgba(79, 70, 229, 0.1) 100%
+                        ),
+                        rgba(255, 255, 255, 0.05)
+                      `,
+                      backdropFilter: 'blur(15px)',
+                      border: '1px solid rgba(147, 51, 234, 0.2)',
+                      boxShadow: '0 8px 32px rgba(147, 51, 234, 0.15)'
                     }}
-                    className="h-10 w-10 p-0 bg-yellow-400/10 border-yellow-400/30 hover:bg-yellow-400/20 text-yellow-400 rounded-full"
                   >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const container = document.getElementById('most-viewed-container');
-                      if (container) container.scrollBy({ left: 400, behavior: 'smooth' });
-                    }}
-                    className="h-10 w-10 p-0 bg-yellow-400/10 border-yellow-400/30 hover:bg-yellow-400/20 text-yellow-400 rounded-full"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-
-              <div
-                id="most-viewed-container"
-                className="flex space-x-6 overflow-x-auto scrollbar-hide pb-4 scroll-smooth"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-              >
-                {videos.slice(0, 6).map((video, index) => (
-                  <div key={`mv-${video.id}`} className="flex-shrink-0 w-80 group">
-                    <Card className="h-96 overflow-hidden border-0 shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1"
-                          style={{
-                            background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(51, 65, 85, 0.9) 100%)',
-                            backdropFilter: 'blur(15px)',
-                            border: '1.5px solid rgba(255, 215, 0, 0.3)',
-                            borderRadius: '20px',
-                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
-                          }}>
-                      <CardContent className="p-0 h-full flex flex-col">
-                        {/* VIP Thumbnail Section */}
-                        <div className="relative h-48 bg-gradient-to-br from-slate-700 to-slate-800 overflow-hidden"
-                             style={{ borderRadius: '20px 20px 0 0' }}>
-                          
-                          {/* VIP Ribbon */}
-                          {index < 3 && (
-                            <div className="absolute top-3 left-3 z-30">
-                              <div className="flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-bold"
-                                   style={{
-                                     background: index === 0 ? 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)' :
-                                                index === 1 ? 'linear-gradient(135deg, #C0C0C0 0%, #808080 100%)' :
-                                                'linear-gradient(135deg, #CD7F32 0%, #8B4513 100%)',
-                                     color: '#000',
-                                     boxShadow: '0 2px 8px rgba(255, 215, 0, 0.4)'
-                                   }}>
-                                <Crown className="w-3 h-3" />
-                                <span>#{index + 1}</span>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Category Badge */}
-                          <div className="absolute top-3 right-3 z-20">
-                            <Badge className="px-3 py-1 text-xs font-bold text-white uppercase tracking-wide"
-                                   style={{
-                                     background: getCategoryGradient(video.category),
-                                     borderRadius: '12px',
-                                     boxShadow: getCategoryShadow(video.category)
-                                   }}>
-                              {video.categoryLabel}
-                            </Badge>
-                          </div>
-
-                          {/* XP Badge */}
-                          <div className="absolute bottom-3 left-3 z-20">
-                            <div className="flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-bold"
-                                 style={{
-                                   background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.9) 0%, rgba(255, 165, 0, 0.9) 100%)',
-                                   color: '#1F2937',
-                                   boxShadow: '0 2px 8px rgba(255, 215, 0, 0.4)'
-                                 }}>
-                              <Zap className="w-3 h-3" />
-                              <span>{video.xpReward}</span>
-                            </div>
-                          </div>
-
-                          {/* Duration */}
-                          <div className="absolute bottom-3 right-3 z-20 px-2 py-1 bg-black/80 rounded-lg text-xs text-white font-semibold">
-                            {video.duration}
-                          </div>
-
-                          {/* VIP Play Button */}
-                          <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                            <Button
-                              size="lg"
-                              onClick={() => handleWatchVideo(video.id)}
-                              className="h-16 w-16 rounded-full p-0 text-yellow-600 shadow-2xl hover:scale-110 transition-transform duration-300"
+                    <div className="p-0 h-full flex flex-col">
+                      {/* Thumbnail Section */}
+                      <div className="relative h-48 bg-gradient-to-br from-purple-500/20 to-indigo-500/20 overflow-hidden rounded-t-xl">
+                        
+                        {/* Ranking Badge */}
+                        {index < 3 && (
+                          <motion.div 
+                            className="absolute top-3 left-3 z-30"
+                            whileHover={{ scale: 1.1 }}
+                          >
+                            <div 
+                              className="flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-bold shadow-lg"
                               style={{
-                                background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.95) 0%, rgba(255, 165, 0, 0.95) 100%)',
-                                backdropFilter: 'blur(10px)'
+                                background: index === 0 ? 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)' :
+                                           index === 1 ? 'linear-gradient(135deg, #C0C0C0 0%, #A0A0A0 100%)' :
+                                           'linear-gradient(135deg, #CD7F32 0%, #B8860B 100%)',
+                                color: '#000',
+                                boxShadow: `0 4px 12px ${index === 0 ? 'rgba(255, 215, 0, 0.4)' : 'rgba(192, 192, 192, 0.4)'}`
                               }}
                             >
-                              <Play className="w-7 h-7 ml-0.5" fill="currentColor" />
-                            </Button>
-                          </div>
-
-                          {/* Dark Gradient Overlay */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10" />
-                        </div>
-
-                        {/* VIP Content Section */}
-                        <div className="flex-1 p-5 flex flex-col">
-                          <h4 className="font-bold text-lg text-white line-clamp-2 mb-3 group-hover:text-yellow-400 transition-colors leading-tight">
-                            {video.title}
-                          </h4>
-                          
-                          <div className="flex items-center justify-between text-sm text-gray-300 mb-4">
-                            <span className="font-medium text-gray-200">{video.creator}</span>
-                            <div className="flex items-center space-x-1">
-                              <Eye className="w-4 h-4" />
-                              <span>{video.views}</span>
+                              <Crown className="w-3 h-3" />
+                              <span>#{index + 1}</span>
                             </div>
-                          </div>
-                          
-                          {/* VIP Action Button */}
-                          <div className="mt-auto">
-                            <Button 
-                              className="w-full font-semibold text-black shadow-lg hover:shadow-xl transition-all duration-300"
-                              style={{
-                                background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
-                                borderRadius: '12px'
-                              }}
-                              onClick={() => handleWatchVideo(video.id)}
-                            >
-                              <Play className="w-4 h-4 mr-2" />
-                              Watch Now
-                            </Button>
+                          </motion.div>
+                        )}
+
+                        {/* Category Badge */}
+                        <div className="absolute top-3 right-3 z-20">
+                          <div className="px-2 py-1 text-xs font-bold text-white uppercase tracking-wide rounded-lg"
+                               style={{
+                                 background: getCategoryGradient(video.category),
+                                 boxShadow: getCategoryShadow(video.category)
+                               }}>
+                            {video.categoryLabel}
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
+
+                        {/* XP Badge */}
+                        <motion.div 
+                          className="absolute bottom-3 left-3 z-20"
+                          whileHover={{ scale: 1.05 }}
+                        >
+                          <div className="flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-bold"
+                               style={{
+                                 background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.9) 0%, rgba(255, 165, 0, 0.9) 100%)',
+                                 color: '#1F2937',
+                                 boxShadow: '0 2px 8px rgba(255, 215, 0, 0.4)'
+                               }}>
+                            <Zap className="w-3 h-3" />
+                            <span>{video.xpReward}</span>
+                          </div>
+                        </motion.div>
+
+                        {/* Duration */}
+                        <div className="absolute bottom-3 right-3 z-20 px-2 py-1 bg-black/70 rounded-lg text-xs text-white font-semibold">
+                          {video.duration}
+                        </div>
+
+                        {/* Glassmorphic Play Button */}
+                        <motion.div 
+                          className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-all duration-300"
+                          whileHover={{ scale: 1.1 }}
+                        >
+                          <motion.button
+                            onClick={() => handleWatchVideo(video.id)}
+                            className="h-16 w-16 rounded-full flex items-center justify-center text-white shadow-2xl"
+                            style={{
+                              background: `
+                                linear-gradient(135deg, 
+                                  rgba(255, 215, 0, 0.9) 0%, 
+                                  rgba(255, 165, 0, 0.9) 100%
+                                )
+                              `,
+                              backdropFilter: 'blur(10px)',
+                              border: '1px solid rgba(255, 255, 255, 0.3)'
+                            }}
+                            whileHover={{ 
+                              boxShadow: '0 0 30px rgba(255, 215, 0, 0.6)',
+                              scale: 1.1
+                            }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <Play className="w-6 h-6 ml-0.5 text-black" fill="currentColor" />
+                          </motion.button>
+                        </motion.div>
+
+                        {/* Subtle Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-purple-900/20 via-transparent to-transparent z-10" />
+                      </div>
+
+                      {/* Content Section */}
+                      <div className="flex-1 p-5 flex flex-col">
+                        <h4 className="font-bold text-lg text-gray-800 line-clamp-2 mb-3 group-hover:text-purple-600 transition-colors leading-tight">
+                          {video.title}
+                        </h4>
+                        
+                        <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+                          <span className="font-medium">{video.creator}</span>
+                          <div className="flex items-center space-x-1">
+                            <Eye className="w-4 h-4" />
+                            <span>{video.views}</span>
+                          </div>
+                        </div>
+                        
+                        {/* Glassmorphic CTA Button */}
+                        <div className="mt-auto">
+                          <motion.button 
+                            className="w-full font-semibold text-white shadow-lg py-3 rounded-xl"
+                            style={{
+                              background: `
+                                linear-gradient(135deg, 
+                                  rgba(255, 215, 0, 0.9) 0%, 
+                                  rgba(255, 165, 0, 0.9) 100%
+                                )
+                              `,
+                              backdropFilter: 'blur(10px)',
+                              border: '1px solid rgba(255, 255, 255, 0.2)'
+                            }}
+                            onClick={() => handleWatchVideo(video.id)}
+                            whileHover={{ 
+                              scale: 1.02,
+                              boxShadow: '0 0 25px rgba(255, 215, 0, 0.4)'
+                            }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <div className="flex items-center justify-center space-x-2 text-black">
+                              <Play className="w-4 h-4" />
+                              <span>Watch Now</span>
+                            </div>
+                          </motion.button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                ))}
-              </div>
+                </motion.div>
+              ))}
             </div>
-          </div>
+          </motion.div>
         </div>
 
-        {/* Meet the Creators Section - Horizontal Card Stack with Vertical Tiles */}
-        <div className="relative">
-          {/* Glassmorphism Background */}
+        {/* Meet the Creators - Minimal Highlight Bar */}
+        <motion.div 
+          className="relative w-full mb-16"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+        >
           <div
-            className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/5 to-white/10 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl"
+            className="relative rounded-2xl overflow-hidden py-8 px-6"
             style={{
-              backdropFilter: 'blur(20px)',
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.1) 100%)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+              background: `
+                linear-gradient(135deg, #0d0d0f 0%, #1a0b2d 100%),
+                radial-gradient(circle at 20% 50%, rgba(147, 51, 234, 0.1) 0%, transparent 70%),
+                radial-gradient(circle at 80% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 70%)
+              `,
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
             }}
-          />
-          <div className="relative z-10 p-8 space-y-8">
-            <div className="text-center space-y-3">
-              <h2 className="text-4xl font-bold bg-gradient-to-r from-wiz-primary via-wiz-secondary to-wiz-accent bg-clip-text text-transparent">
-                Meet the Creators
-              </h2>
-              <p className="text-xl text-muted-foreground italic font-medium">
-                Behind the epic content of WIZ
-              </p>
-            </div>
-
-            {/* Horizontal Scrolling Creator Cards */}
-            <div className="relative">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const container = document.getElementById('creators-container');
-                      if (container) container.scrollBy({ left: -300, behavior: 'smooth' });
-                    }}
-                    className="h-10 w-10 p-0 hover:bg-wiz-primary/10"
+          >
+            {/* Content Container */}
+            <div className="flex items-center justify-between max-w-7xl mx-auto">
+              
+              {/* Left - Mini Avatar Grid */}
+              <div className="flex items-center space-x-3">
+                {creators.slice(0, 6).map((creator, index) => (
+                  <motion.div
+                    key={creator.id}
+                    className="group relative"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.5 + index * 0.1 }}
+                    whileHover={{ scale: 1.1 }}
                   >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const container = document.getElementById('creators-container');
-                      if (container) container.scrollBy({ left: 300, behavior: 'smooth' });
-                    }}
-                    className="h-10 w-10 p-0 hover:bg-wiz-primary/10"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </div>
+                    <div
+                      className="w-12 h-12 rounded-full bg-cover bg-center border-2 border-purple-400/30 transition-all duration-300 group-hover:border-purple-400/80 group-hover:shadow-lg group-hover:shadow-purple-400/30"
+                      style={{
+                        backgroundImage: `url(${creator.avatar})`,
+                        boxShadow: '0 0 15px rgba(147, 51, 234, 0.2)'
+                      }}
+                    />
+                    
+                    {/* Tooltip */}
+                    <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-black/80 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                      {creator.name}
+                    </div>
+                  </motion.div>
+                ))}
               </div>
 
-              <div
-                id="creators-container"
-                className="flex space-x-6 overflow-x-auto scrollbar-hide pb-4 scroll-smooth"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              {/* Middle - Cinematic Tagline */}
+              <div className="flex-1 text-center px-8">
+                <motion.h3 
+                  className="text-lg md:text-xl font-medium text-white leading-relaxed"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.8 }}
+                >
+                  <span className="bg-gradient-to-r from-purple-300 to-indigo-300 bg-clip-text text-transparent font-semibold">
+                    WIZ Premiere:
+                  </span>
+                  <br className="md:hidden" />
+                  <span className="text-gray-300">
+                    A Hollywood-level AI animation brought to life by 6 visionary animators.
+                  </span>
+                </motion.h3>
+              </div>
+
+              {/* Right - CTA Button */}
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 1.0 }}
               >
-                {creators.map((creator) => (
-                  <div
-                    key={creator.id}
-                    className="flex-shrink-0 w-72 group cursor-pointer"
-                  >
-                    <Card
-                      className="h-96 relative overflow-hidden border-0 shadow-2xl group-hover:shadow-3xl transition-all duration-500 hover:scale-[1.02]"
-                      style={{
-                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.15) 100%)',
-                        backdropFilter: 'blur(20px)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                <motion.button
+                  className="group relative px-6 py-3 font-semibold text-white rounded-xl overflow-hidden"
+                  style={{
+                    background: `
+                      linear-gradient(135deg, 
+                        rgba(147, 51, 234, 0.9) 0%, 
+                        rgba(99, 102, 241, 0.9) 50%, 
+                        rgba(139, 92, 246, 0.9) 100%
+                      )
+                    `,
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    boxShadow: '0 4px 16px rgba(147, 51, 234, 0.3)'
+                  }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    boxShadow: '0 8px 32px rgba(147, 51, 234, 0.5)'
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {/* Shimmer Effect */}
+                  <motion.div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100"
+                    style={{
+                      background: `
+                        linear-gradient(45deg, 
+                          transparent 30%, 
+                          rgba(255, 255, 255, 0.2) 50%, 
+                          transparent 70%
+                        )
+                      `
+                    }}
+                    animate={{
+                      x: ['-100%', '100%']
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      repeatDelay: 2,
+                      ease: "easeInOut"
+                    }}
+                  />
+                  
+                  <div className="relative flex items-center space-x-2">
+                    <motion.div
+                      animate={{
+                        scale: [1, 1.2, 1]
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
                       }}
                     >
-                      <CardContent className="p-0 h-full">
-                        {/* Thumbnail Image */}
-                        <div 
-                          className="h-64 bg-cover bg-center relative"
-                          style={{ backgroundImage: `url(${creator.thumbnail})` }}
-                        >
-                          {/* Gradient Overlay */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                          
-                          {/* Verified Badge */}
-                          {creator.verified && (
-                            <div className="absolute top-3 right-3 bg-blue-500 rounded-full p-1">
-                              <CheckCircle className="w-4 h-4 text-white" />
-                            </div>
-                          )}
-
-                          {/* Hover Overlay with Profile Info */}
-                          <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                            <div className="flex items-center space-x-3">
-                              <Avatar className="w-12 h-12 border-2 border-white">
-                                <AvatarImage src={creator.avatar} alt={creator.name} />
-                                <AvatarFallback className="bg-wiz-primary text-white">
-                                  {creator.name.slice(0, 2)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <h3 className="font-bold text-white">{creator.name}</h3>
-                                <p className="text-white/80 text-sm">{creator.username}</p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Creator Stats */}
-                        <div className="p-4 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-1">
-                              <h3 className="font-bold text-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                {creator.name}
-                              </h3>
-                              <p className="text-sm text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                {creator.specialty}
-                              </p>
-                            </div>
-                            <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                              <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                              <span className="font-semibold">{creator.rating}</span>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-3 gap-2 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <div>
-                              <div className="font-bold text-wiz-primary">{creator.followers}</div>
-                              <div className="text-xs text-muted-foreground">Followers</div>
-                            </div>
-                            <div>
-                              <div className="font-bold text-wiz-secondary">{creator.videos}</div>
-                              <div className="text-xs text-muted-foreground">Videos</div>
-                            </div>
-                            <div>
-                              <div className="font-bold text-wiz-accent">{creator.totalViews}</div>
-                              <div className="text-xs text-muted-foreground">Views</div>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                      🎬
+                    </motion.div>
+                    <span>Join the Watch Party</span>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* WIZ Premiere Button */}
-            <div className="text-center">
-              <Button
-                size="lg"
-                className="px-8 py-3 bg-gradient-to-r from-wiz-primary to-wiz-secondary hover:from-wiz-secondary hover:to-wiz-primary text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                <Crown className="w-5 h-5 mr-2" />
-                Explore WIZ Premiere
-              </Button>
+                </motion.button>
+              </motion.div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Enhanced Leaderboard Section with Equal Sizing */}
-        <div className="relative">
-          {/* Glassmorphism Background */}
-          <div
-            className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/5 to-white/10 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl"
+        {/* 🏆 Prestigious Leaderboard - Hall of Fame Design */}
+        <div className="relative mb-20">
+        <motion.div 
+          className="relative"
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.6 }}
+        >
+          {/* Glassmorphic Container */}
+          <div 
+            className="relative rounded-2xl overflow-hidden p-8"
             style={{
-              backdropFilter: 'blur(20px)',
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.1) 100%)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+              background: `
+                linear-gradient(135deg, rgba(230, 230, 250, 0.3) 0%, rgba(147, 51, 234, 0.15) 50%, rgba(99, 102, 241, 0.2) 100%),
+                rgba(255, 255, 255, 0.1)
+              `,
+              backdropFilter: 'blur(25px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              boxShadow: `
+                0 25px 50px rgba(147, 51, 234, 0.15),
+                0 0 80px rgba(230, 230, 250, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3)
+              `
             }}
-          />
-          <div className="relative z-10 p-8 space-y-8">
-            <div className="text-center space-y-4">
-              <h2 className="text-4xl font-bold bg-gradient-to-r from-wiz-primary via-wiz-secondary to-wiz-accent bg-clip-text text-transparent">
-                Leaderboard
-              </h2>
-              {/* Enhanced Leaderboard Tabs */}
-              <div className="flex justify-center">
-                <div
-                  className="inline-flex p-1 rounded-xl border border-white/20"
+          >
+            {/* Animated Background Particles */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              {[...Array(12)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-1 h-1 rounded-full"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(10px)'
+                    background: 'linear-gradient(45deg, rgba(255, 215, 0, 0.6), rgba(147, 51, 234, 0.4))',
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                  }}
+                  animate={{
+                    y: [0, -30, 0],
+                    x: [0, Math.random() * 20 - 10, 0],
+                    opacity: [0.3, 0.8, 0.3],
+                    scale: [1, 1.5, 1]
+                  }}
+                  transition={{
+                    duration: 4 + Math.random() * 2,
+                    repeat: Infinity,
+                    delay: Math.random() * 2,
+                    ease: "easeInOut"
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Prismatic Light Edges */}
+            <motion.div
+              className="absolute inset-0 rounded-2xl opacity-30"
+              style={{
+                background: `
+                  linear-gradient(45deg, 
+                    transparent 0%, 
+                    rgba(255, 0, 150, 0.1) 25%, 
+                    rgba(0, 255, 255, 0.1) 50%, 
+                    rgba(255, 255, 0, 0.1) 75%, 
+                    transparent 100%
+                  )
+                `
+              }}
+              animate={{
+                rotate: [0, 360]
+              }}
+              transition={{
+                duration: 20,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+            />
+            
+            {/* Header - Hall of Fame Style */}
+            <motion.div 
+              className="text-center mb-10 relative z-10"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8, duration: 0.8 }}
+            >
+              {/* Gradient Crown Icon */}
+              <motion.div 
+                className="w-16 h-16 mx-auto mb-4 flex items-center justify-center"
+                animate={{ 
+                  scale: [1, 1.05, 1],
+                  rotate: [0, 1, -1, 0]
+                }}
+                transition={{ 
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                <Crown 
+                  className="w-12 h-12"
+                  style={{
+                    background: 'linear-gradient(135deg, #E6E6FA 0%, #FFD700 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    filter: 'drop-shadow(0 4px 8px rgba(255, 215, 0, 0.3))'
+                  }}
+                />
+              </motion.div>
+              
+              {/* Title */}
+              <motion.h2 
+                className="text-4xl font-bold mb-3"
+                style={{
+                  background: 'linear-gradient(135deg, #E6E6FA 0%, #6d28d9 50%, #9333EA 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  filter: 'drop-shadow(0 2px 4px rgba(147, 51, 234, 0.3))'
+                }}
+                animate={{
+                  backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                }}
+                transition={{
+                  duration: 6,
+                  repeat: Infinity,
+                  ease: "linear"
+                }}
+              >
+                Leaderboard
+              </motion.h2>
+              
+              {/* Subtitle */}
+              <p className="text-lg text-gray-600/90 font-medium mb-6">
+                This Week's Top Wizards & Creators
+              </p>
+
+              {/* Pill Toggle Tabs */}
+              <div 
+                className="inline-flex p-2 rounded-full"
+                style={{
+                  background: `
+                    linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(230, 230, 250, 0.1) 100%),
+                    rgba(0, 0, 0, 0.1)
+                  `,
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  boxShadow: `
+                    0 8px 32px rgba(147, 51, 234, 0.1),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.3)
+                  `
+                }}
+              >
+                {[{ id: 'creators', label: 'Creators', icon: Trophy }, { id: 'wizards', label: 'Wizards', icon: Zap }].map((tab) => (
+                  <motion.button
+                    key={tab.id}
+                    onClick={() => setLeaderboardTab(tab.id)}
+                    className={`
+                      relative px-8 py-3 text-sm font-semibold rounded-full transition-all duration-300 z-10
+                      ${leaderboardTab === tab.id 
+                        ? 'text-white' 
+                        : 'text-gray-600 hover:text-gray-800'
+                      }
+                    `}
+                    style={{ minWidth: '120px' }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {/* Glowing Active Background */}
+                    {leaderboardTab === tab.id && (
+                      <motion.div
+                        className="absolute inset-0 rounded-full"
+                        style={{
+                          background: `
+                            linear-gradient(135deg, 
+                              rgba(147, 51, 234, 0.9) 0%, 
+                              rgba(99, 102, 241, 0.8) 50%, 
+                              rgba(139, 92, 246, 0.9) 100%
+                            )
+                          `,
+                          boxShadow: '0 8px 32px rgba(147, 51, 234, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                        }}
+                        layoutId="activeLeaderboardTab"
+                        initial={false}
+                        transition={{
+                          type: "spring",
+                          stiffness: 400,
+                          damping: 25
+                        }}
+                      />
+                    )}
+                    
+                    {/* Shimmer Effect */}
+                    {leaderboardTab === tab.id && (
+                      <motion.div
+                        className="absolute inset-0 rounded-full overflow-hidden"
+                        initial={{ x: '-100%' }}
+                        animate={{ x: '100%' }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          repeatDelay: 4,
+                          ease: "easeInOut"
+                        }}
+                        style={{
+                          background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%)'
+                        }}
+                      />
+                    )}
+                    
+                    {/* Tab Content */}
+                    <div className="relative z-10 flex items-center justify-center space-x-2">
+                      <motion.div
+                        animate={leaderboardTab === tab.id ? { 
+                          scale: [1, 1.1, 1],
+                          rotate: [0, 3, -3, 0]
+                        } : {}}
+                        transition={leaderboardTab === tab.id ? { 
+                          duration: 3,
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        } : {}}
+                      >
+                        <tab.icon className="w-4 h-4" />
+                      </motion.div>
+                      <span className="font-semibold">{tab.label}</span>
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Leaderboard Cards */}
+            <div className="space-y-3 relative z-10">
+              {leaderboardTab === 'creators' && topCreators.map((creator, index) => (
+                <motion.div
+                  key={creator.rank}
+                  className="group relative"
+                  initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ 
+                    duration: 0.5, 
+                    delay: 1.0 + index * 0.1,
+                    ease: "easeOut"
+                  }}
+                  whileHover={{ 
+                    scale: 1.02,
+                    y: -2,
+                    transition: { duration: 0.2, ease: "easeOut" }
                   }}
                 >
-                  <button
-                    onClick={() => setLeaderboardTab('creators')}
-                    className={`px-8 py-3 rounded-lg font-medium transition-all duration-300 ${
-                      leaderboardTab === 'creators'
-                        ? 'bg-gradient-to-r from-wiz-primary to-wiz-secondary text-white shadow-lg transform scale-105'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-white/10'
-                    }`}
+                  {/* Rank Card */}
+                  <div
+                    className="relative p-5 rounded-xl overflow-hidden transition-all duration-300"
+                    style={{
+                      background: creator.rank === 1
+                        ? 'linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 193, 7, 0.08) 100%)'
+                        : creator.rank === 2
+                        ? 'linear-gradient(135deg, rgba(192, 192, 192, 0.15) 0%, rgba(169, 169, 169, 0.08) 100%)'
+                        : creator.rank === 3
+                        ? 'linear-gradient(135deg, rgba(205, 127, 50, 0.15) 0%, rgba(184, 115, 51, 0.08) 100%)'
+                        : 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(230, 230, 250, 0.05) 100%)',
+                      backdropFilter: 'blur(15px)',
+                      border: creator.rank <= 3
+                        ? `1px solid ${
+                            creator.rank === 1 ? 'rgba(255, 215, 0, 0.3)' :
+                            creator.rank === 2 ? 'rgba(192, 192, 192, 0.3)' :
+                            'rgba(205, 127, 50, 0.3)'
+                          }`
+                        : '1px solid rgba(255, 255, 255, 0.15)',
+                      boxShadow: creator.rank <= 3
+                        ? `0 4px 20px ${
+                            creator.rank === 1 ? 'rgba(255, 215, 0, 0.1)' :
+                            creator.rank === 2 ? 'rgba(192, 192, 192, 0.1)' :
+                            'rgba(205, 127, 50, 0.1)'
+                          }`
+                        : '0 4px 20px rgba(147, 51, 234, 0.05)'
+                    }}
                   >
-                    🏆 Top Creators
-                  </button>
-                  <button
-                    onClick={() => setLeaderboardTab('wizards')}
-                    className={`px-8 py-3 rounded-lg font-medium transition-all duration-300 ${
-                      leaderboardTab === 'wizards'
-                        ? 'bg-gradient-to-r from-wiz-secondary to-wiz-magic text-white shadow-lg transform scale-105'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-white/10'
-                    }`}
+                    {/* Hover Glass Effect */}
+                    <motion.div
+                      className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-300"
+                      style={{
+                        background: 'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%)',
+                        borderRadius: '12px'
+                      }}
+                    />
+
+                    <div className="flex items-center justify-between relative z-10">
+                      {/* Left: Rank + Avatar + Info */}
+                      <div className="flex items-center gap-4">
+                        {/* Ranking Badge */}
+                        <motion.div 
+                          className="relative flex-shrink-0"
+                          whileHover={{ scale: 1.1 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {creator.rank === 1 ? (
+                            <motion.div
+                              className="relative"
+                              animate={{ 
+                                scale: [1, 1.05, 1]
+                              }}
+                              transition={{ 
+                                duration: 2,
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                              }}
+                            >
+                              <Crown 
+                                className="w-10 h-10"
+                                style={{
+                                  background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                                  WebkitBackgroundClip: 'text',
+                                  WebkitTextFillColor: 'transparent',
+                                  backgroundClip: 'text',
+                                  filter: 'drop-shadow(0 0 10px rgba(255, 215, 0, 0.6))'
+                                }}
+                              />
+                              {/* Glowing Aura */}
+                              <motion.div
+                                className="absolute inset-0 rounded-full"
+                                style={{
+                                  background: 'radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, transparent 70%)',
+                                  transform: 'scale(1.5)'
+                                }}
+                                animate={{ 
+                                  opacity: [0.3, 0.6, 0.3]
+                                }}
+                                transition={{ 
+                                  duration: 2,
+                                  repeat: Infinity,
+                                  ease: "easeInOut"
+                                }}
+                              />
+                            </motion.div>
+                          ) : creator.rank === 2 ? (
+                            <Medal 
+                              className="w-10 h-10"
+                              style={{
+                                background: 'linear-gradient(135deg, #C0C0C0 0%, #A8A8A8 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text',
+                                filter: 'drop-shadow(0 0 8px rgba(192, 192, 192, 0.5))'
+                              }}
+                            />
+                          ) : creator.rank === 3 ? (
+                            <Trophy 
+                              className="w-10 h-10"
+                              style={{
+                                background: 'linear-gradient(135deg, #CD7F32 0%, #B8860B 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text',
+                                filter: 'drop-shadow(0 0 8px rgba(205, 127, 50, 0.5))'
+                              }}
+                            />
+                          ) : (
+                            <div 
+                              className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold text-white"
+                              style={{
+                                background: 'linear-gradient(135deg, #9333EA 0%, #7C3AED 100%)',
+                                boxShadow: '0 4px 15px rgba(147, 51, 234, 0.3)'
+                              }}
+                            >
+                              {creator.rank}
+                            </div>
+                          )}
+                        </motion.div>
+
+                        {/* Avatar */}
+                        <motion.div
+                          className="relative flex-shrink-0"
+                          whileHover={{ scale: 1.1 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <div
+                            className="w-16 h-16 rounded-full border-2 border-white/40 shadow-lg"
+                            style={{
+                              boxShadow: creator.rank <= 3
+                                ? `0 0 15px ${
+                                    creator.rank === 1 ? 'rgba(255, 215, 0, 0.3)' :
+                                    creator.rank === 2 ? 'rgba(192, 192, 192, 0.3)' :
+                                    'rgba(205, 127, 50, 0.3)'
+                                  }`
+                                : '0 0 10px rgba(147, 51, 234, 0.2)'
+                            }}
+                          >
+                            <Avatar className="w-full h-full">
+                              <AvatarImage src={creator.avatar} alt={creator.name} />
+                              <AvatarFallback
+                                className="w-full h-full rounded-full flex items-center justify-center text-white font-bold text-xl"
+                                style={{
+                                  background: 'linear-gradient(135deg, #9333EA 0%, #7C3AED 100%)'
+                                }}
+                              >
+                                {creator.name.slice(0, 2)}
+                              </AvatarFallback>
+                            </Avatar>
+                          </div>
+                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white">
+                            <CheckCircle className="w-4 h-4 text-white" />
+                          </div>
+                        </motion.div>
+
+                        {/* User Info */}
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-xl font-bold text-gray-800 truncate">
+                              {creator.name}
+                            </h3>
+                          </div>
+                          <p className="text-sm text-gray-600 truncate">
+                            @{creator.name.toLowerCase().replace(/\s+/g, '')}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Right: XP with Animated Shimmer */}
+                      <motion.div
+                        className="text-right flex-shrink-0"
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <motion.div 
+                          className="text-2xl font-bold mb-1 relative"
+                          style={{
+                            background: creator.rank <= 3
+                              ? `linear-gradient(135deg, ${
+                                  creator.rank === 1 ? '#FFD700, #FFA500' :
+                                  creator.rank === 2 ? '#C0C0C0, #A8A8A8' :
+                                  '#CD7F32, #B8860B'
+                                })`
+                              : 'linear-gradient(135deg, #9333EA 0%, #7C3AED 100%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            backgroundClip: 'text'
+                          }}
+                          animate={{
+                            backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                          }}
+                          transition={{
+                            duration: 4,
+                            repeat: Infinity,
+                            ease: "linear"
+                          }}
+                        >
+                          {creator.xp.toLocaleString()}
+                          
+                          {/* Animated Shimmer */}
+                          <motion.div
+                            className="absolute inset-0 opacity-20"
+                            style={{
+                              background: 'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.6) 50%, transparent 70%)'
+                            }}
+                            animate={{
+                              x: ['-100%', '100%']
+                            }}
+                            transition={{
+                              duration: 3,
+                              repeat: Infinity,
+                              repeatDelay: 4,
+                              ease: "easeInOut"
+                            }}
+                          />
+                        </motion.div>
+                        <div className="text-sm text-gray-500 font-medium">XP</div>
+                      </motion.div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+
+              {leaderboardTab === 'wizards' && topWizards.map((wizard, index) => (
+                <motion.div
+                  key={wizard.rank}
+                  className="group relative"
+                  initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ 
+                    duration: 0.5, 
+                    delay: 1.0 + index * 0.1,
+                    ease: "easeOut"
+                  }}
+                  whileHover={{ 
+                    scale: 1.02,
+                    y: -2,
+                    transition: { duration: 0.2, ease: "easeOut" }
+                  }}
+                >
+                  {/* Rank Card */}
+                  <div
+                    className="relative p-5 rounded-xl overflow-hidden transition-all duration-300"
+                    style={{
+                      background: wizard.rank === 1
+                        ? 'linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 193, 7, 0.08) 100%)'
+                        : wizard.rank === 2
+                        ? 'linear-gradient(135deg, rgba(192, 192, 192, 0.15) 0%, rgba(169, 169, 169, 0.08) 100%)'
+                        : wizard.rank === 3
+                        ? 'linear-gradient(135deg, rgba(205, 127, 50, 0.15) 0%, rgba(184, 115, 51, 0.08) 100%)'
+                        : 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(230, 230, 250, 0.05) 100%)',
+                      backdropFilter: 'blur(15px)',
+                      border: wizard.rank <= 3
+                        ? `1px solid ${
+                            wizard.rank === 1 ? 'rgba(255, 215, 0, 0.3)' :
+                            wizard.rank === 2 ? 'rgba(192, 192, 192, 0.3)' :
+                            'rgba(205, 127, 50, 0.3)'
+                          }`
+                        : '1px solid rgba(255, 255, 255, 0.15)',
+                      boxShadow: wizard.rank <= 3
+                        ? `0 4px 20px ${
+                            wizard.rank === 1 ? 'rgba(255, 215, 0, 0.1)' :
+                            wizard.rank === 2 ? 'rgba(192, 192, 192, 0.1)' :
+                            'rgba(205, 127, 50, 0.1)'
+                          }`
+                        : '0 4px 20px rgba(147, 51, 234, 0.05)'
+                    }}
                   >
-                    ⚡ Top Wizards
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Enhanced Leaderboard Content - Equal Sizing */}
-            <div className="space-y-6">
-              {leaderboardTab === 'creators' && (
-                <div className="space-y-4">
-                  {topCreators.map((creator, index) => (
-                    <Card
-                      key={creator.rank}
-                      className="relative overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] group"
+                    {/* Hover Glass Effect */}
+                    <motion.div
+                      className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-300"
                       style={{
-                        background: creator.rank <= 3
-                          ? `linear-gradient(135deg, ${
-                              creator.rank === 1 ? 'rgba(255, 215, 0, 0.15)' :
-                              creator.rank === 2 ? 'rgba(192, 192, 192, 0.15)' :
-                              'rgba(205, 127, 50, 0.15)'
-                            } 0%, rgba(255, 255, 255, 0.05) 50%, ${
-                              creator.rank === 1 ? 'rgba(255, 215, 0, 0.15)' :
-                              creator.rank === 2 ? 'rgba(192, 192, 192, 0.15)' :
-                              'rgba(205, 127, 50, 0.15)'
-                            } 100%)`
-                          : 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.1) 100%)',
-                        backdropFilter: 'blur(20px)',
-                        border: creator.rank <= 3
-                          ? `1px solid ${
-                              creator.rank === 1 ? 'rgba(255, 215, 0, 0.3)' :
-                              creator.rank === 2 ? 'rgba(192, 192, 192, 0.3)' :
-                              'rgba(205, 127, 50, 0.3)'
-                            }`
-                          : '1px solid rgba(255, 255, 255, 0.2)',
-                        boxShadow: creator.rank <= 3
-                          ? `0 8px 32px ${
-                              creator.rank === 1 ? 'rgba(255, 215, 0, 0.2)' :
-                              creator.rank === 2 ? 'rgba(192, 192, 192, 0.2)' :
-                              'rgba(205, 127, 50, 0.2)'
-                            }, inset 0 1px 0 rgba(255, 255, 255, 0.2)`
-                          : '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-                        animationDelay: `${index * 0.1}s`
+                        background: 'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%)',
+                        borderRadius: '12px'
                       }}
-                    >
-                      <CardContent className="p-6">
-                        <div className="flex items-center space-x-6">
-                          {/* Rank Badge */}
-                          <div className="relative">
-                            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-white/20 to-white/10 border border-white/30">
-                              {getRankIcon(creator.rank)}
-                            </div>
-                            {creator.rank === 1 && (
-                              <div className="absolute inset-0 rounded-full animate-pulse bg-yellow-400/20"></div>
-                            )}
-                          </div>
+                    />
 
-                          {/* Creator Info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center space-x-3 mb-2">
-                              <h3 className="text-xl font-bold truncate">{creator.name}</h3>
-                              <Badge 
-                                variant="secondary" 
-                                className="bg-wiz-primary/20 text-wiz-primary border-wiz-primary/30"
-                              >
-                                Lv{creator.level}
-                              </Badge>
-                              <CheckCircle className="w-5 h-5 text-blue-500" />
-                            </div>
-                            <p className="text-sm text-muted-foreground mb-3">{creator.specialty}</p>
-                            
-                            {/* Stats Grid */}
-                            <div className="grid grid-cols-3 gap-4 text-sm">
-                              <div>
-                                <div className="font-semibold text-wiz-primary">{creator.videos}</div>
-                                <div className="text-muted-foreground">Videos</div>
-                              </div>
-                              <div>
-                                <div className="font-semibold text-wiz-secondary">{creator.views}</div>
-                                <div className="text-muted-foreground">Views</div>
-                              </div>
-                              <div>
-                                <div className="font-semibold text-wiz-accent">{creator.xp.toLocaleString()}</div>
-                                <div className="text-muted-foreground">Total XP</div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* XP Progress */}
-                          <div className="text-right space-y-2">
-                            <div className="flex items-center space-x-2">
-                              <Zap className="w-5 h-5 text-wiz-accent" />
-                              <span className="text-2xl font-bold">{creator.xp.toLocaleString()}</span>
-                            </div>
-                            <div className="w-32">
-                              <Progress 
-                                value={(creator.xp / 150000) * 100} 
-                                className="h-2"
+                    <div className="flex items-center justify-between relative z-10">
+                      {/* Left: Rank + Avatar + Info */}
+                      <div className="flex items-center gap-4">
+                        {/* Ranking Badge */}
+                        <motion.div 
+                          className="relative flex-shrink-0"
+                          whileHover={{ scale: 1.1 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {wizard.rank === 1 ? (
+                            <motion.div
+                              className="relative"
+                              animate={{ 
+                                scale: [1, 1.05, 1]
+                              }}
+                              transition={{ 
+                                duration: 2,
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                              }}
+                            >
+                              <Crown 
+                                className="w-10 h-10"
+                                style={{
+                                  background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                                  WebkitBackgroundClip: 'text',
+                                  WebkitTextFillColor: 'transparent',
+                                  backgroundClip: 'text',
+                                  filter: 'drop-shadow(0 0 10px rgba(255, 215, 0, 0.6))'
+                                }}
                               />
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-
-              {leaderboardTab === 'wizards' && (
-                <div className="space-y-4">
-                  {topWizards.map((wizard, index) => (
-                    <Card
-                      key={wizard.rank}
-                      className="relative overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] group"
-                      style={{
-                        background: wizard.rank <= 3
-                          ? `linear-gradient(135deg, ${
-                              wizard.rank === 1 ? 'rgba(255, 215, 0, 0.15)' :
-                              wizard.rank === 2 ? 'rgba(192, 192, 192, 0.15)' :
-                              'rgba(205, 127, 50, 0.15)'
-                            } 0%, rgba(255, 255, 255, 0.05) 50%, ${
-                              wizard.rank === 1 ? 'rgba(255, 215, 0, 0.15)' :
-                              wizard.rank === 2 ? 'rgba(192, 192, 192, 0.15)' :
-                              'rgba(205, 127, 50, 0.15)'
-                            } 100%)`
-                          : 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.1) 100%)',
-                        backdropFilter: 'blur(20px)',
-                        border: wizard.rank <= 3
-                          ? `1px solid ${
-                              wizard.rank === 1 ? 'rgba(255, 215, 0, 0.3)' :
-                              wizard.rank === 2 ? 'rgba(192, 192, 192, 0.3)' :
-                              'rgba(205, 127, 50, 0.3)'
-                            }`
-                          : '1px solid rgba(255, 255, 255, 0.2)',
-                        boxShadow: wizard.rank <= 3
-                          ? `0 8px 32px ${
-                              wizard.rank === 1 ? 'rgba(255, 215, 0, 0.2)' :
-                              wizard.rank === 2 ? 'rgba(192, 192, 192, 0.2)' :
-                              'rgba(205, 127, 50, 0.2)'
-                            }, inset 0 1px 0 rgba(255, 255, 255, 0.2)`
-                          : '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-                        animationDelay: `${index * 0.1}s`
-                      }}
-                    >
-                      <CardContent className="p-6">
-                        <div className="flex items-center space-x-6">
-                          {/* Rank Badge */}
-                          <div className="relative">
-                            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-white/20 to-white/10 border border-white/30">
-                              {getRankIcon(wizard.rank)}
-                            </div>
-                            {wizard.rank === 1 && (
-                              <div className="absolute inset-0 rounded-full animate-pulse bg-yellow-400/20"></div>
-                            )}
-                          </div>
-
-                          {/* Avatar */}
-                          <Avatar className="w-16 h-16 border-2 border-wiz-secondary/30">
-                            <AvatarFallback className="bg-gradient-to-r from-wiz-secondary to-wiz-magic text-white font-bold text-lg">
-                              {wizard.name.slice(0, 2)}
-                            </AvatarFallback>
-                          </Avatar>
-
-                          {/* Wizard Info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center space-x-3 mb-2">
-                              <h3 className="text-xl font-bold truncate">{wizard.name}</h3>
-                              <Badge 
-                                variant="secondary" 
-                                className="bg-wiz-secondary/20 text-wiz-secondary border-wiz-secondary/30"
-                              >
-                                Lv{wizard.level}
-                              </Badge>
-                            </div>
-                            
-                            {/* Stats Grid */}
-                            <div className="grid grid-cols-3 gap-4 text-sm">
-                              <div>
-                                <div className="font-semibold text-wiz-primary">{wizard.watchTime}</div>
-                                <div className="text-muted-foreground">Watch Time</div>
-                              </div>
-                              <div>
-                                <div className="font-semibold text-wiz-secondary">{wizard.streak} days</div>
-                                <div className="text-muted-foreground">Streak</div>
-                              </div>
-                              <div>
-                                <div className="font-semibold text-wiz-accent">{wizard.xp.toLocaleString()}</div>
-                                <div className="text-muted-foreground">Total XP</div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* XP Progress */}
-                          <div className="text-right space-y-2">
-                            <div className="flex items-center space-x-2">
-                              <Zap className="w-5 h-5 text-wiz-accent" />
-                              <span className="text-2xl font-bold">{wizard.xp.toLocaleString()}</span>
-                            </div>
-                            <div className="w-32">
-                              <Progress 
-                                value={(wizard.xp / 50000) * 100} 
-                                className="h-2"
+                              {/* Glowing Aura */}
+                              <motion.div
+                                className="absolute inset-0 rounded-full"
+                                style={{
+                                  background: 'radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, transparent 70%)',
+                                  transform: 'scale(1.5)'
+                                }}
+                                animate={{ 
+                                  opacity: [0.3, 0.6, 0.3]
+                                }}
+                                transition={{ 
+                                  duration: 2,
+                                  repeat: Infinity,
+                                  ease: "easeInOut"
+                                }}
                               />
+                            </motion.div>
+                          ) : wizard.rank === 2 ? (
+                            <Medal 
+                              className="w-10 h-10"
+                              style={{
+                                background: 'linear-gradient(135deg, #C0C0C0 0%, #A8A8A8 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text',
+                                filter: 'drop-shadow(0 0 8px rgba(192, 192, 192, 0.5))'
+                              }}
+                            />
+                          ) : wizard.rank === 3 ? (
+                            <Trophy 
+                              className="w-10 h-10"
+                              style={{
+                                background: 'linear-gradient(135deg, #CD7F32 0%, #B8860B 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text',
+                                filter: 'drop-shadow(0 0 8px rgba(205, 127, 50, 0.5))'
+                              }}
+                            />
+                          ) : (
+                            <div 
+                              className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold text-white"
+                              style={{
+                                background: 'linear-gradient(135deg, #9333EA 0%, #7C3AED 100%)',
+                                boxShadow: '0 4px 15px rgba(147, 51, 234, 0.3)'
+                              }}
+                            >
+                              {wizard.rank}
                             </div>
+                          )}
+                        </motion.div>
+
+                        {/* Avatar */}
+                        <motion.div
+                          className="relative flex-shrink-0"
+                          whileHover={{ scale: 1.1 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <div
+                            className="w-16 h-16 rounded-full border-2 border-white/40 shadow-lg"
+                            style={{
+                              boxShadow: wizard.rank <= 3
+                                ? `0 0 15px ${
+                                    wizard.rank === 1 ? 'rgba(255, 215, 0, 0.3)' :
+                                    wizard.rank === 2 ? 'rgba(192, 192, 192, 0.3)' :
+                                    'rgba(205, 127, 50, 0.3)'
+                                  }`
+                                : '0 0 10px rgba(147, 51, 234, 0.2)'
+                            }}
+                          >
+                            <Avatar className="w-full h-full">
+                              <AvatarImage src={wizard.avatar} alt={wizard.name} />
+                              <AvatarFallback
+                                className="w-full h-full rounded-full flex items-center justify-center text-white font-bold text-xl"
+                                style={{
+                                  background: 'linear-gradient(135deg, #9333EA 0%, #7C3AED 100%)'
+                                }}
+                              >
+                                {wizard.name.slice(0, 2)}
+                              </AvatarFallback>
+                            </Avatar>
                           </div>
+                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center border-2 border-white">
+                            <Zap className="w-4 h-4 text-white" />
+                          </div>
+                        </motion.div>
+
+                        {/* User Info */}
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-xl font-bold text-gray-800 truncate">
+                              {wizard.name}
+                            </h3>
+                          </div>
+                          <p className="text-sm text-gray-600 truncate">
+                            @{wizard.name.toLowerCase().replace(/\s+/g, '')}
+                          </p>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
+                      </div>
+
+                      {/* Right: XP with Animated Shimmer */}
+                      <motion.div
+                        className="text-right flex-shrink-0"
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <motion.div 
+                          className="text-2xl font-bold mb-1 relative"
+                          style={{
+                            background: wizard.rank <= 3
+                              ? `linear-gradient(135deg, ${
+                                  wizard.rank === 1 ? '#FFD700, #FFA500' :
+                                  wizard.rank === 2 ? '#C0C0C0, #A8A8A8' :
+                                  '#CD7F32, #B8860B'
+                                })`
+                              : 'linear-gradient(135deg, #9333EA 0%, #7C3AED 100%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            backgroundClip: 'text'
+                          }}
+                          animate={{
+                            backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                          }}
+                          transition={{
+                            duration: 4,
+                            repeat: Infinity,
+                            ease: "linear"
+                          }}
+                        >
+                          {wizard.xp.toLocaleString()}
+                          
+                          {/* Animated Shimmer */}
+                          <motion.div
+                            className="absolute inset-0 opacity-20"
+                            style={{
+                              background: 'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.6) 50%, transparent 70%)'
+                            }}
+                            animate={{
+                              x: ['-100%', '100%']
+                            }}
+                            transition={{
+                              duration: 3,
+                              repeat: Infinity,
+                              repeatDelay: 4,
+                              ease: "easeInOut"
+                            }}
+                          />
+                        </motion.div>
+                        <div className="text-sm text-gray-500 font-medium">XP</div>
+                      </motion.div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </div>
+        </motion.div>
         </div>
-      </div>
 
-      {/* Video Player Dialog */}
-      <Dialog open={!!selectedVideo} onOpenChange={() => setSelectedVideo(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
-          <DialogHeader className="p-6 pb-0">
-            <DialogTitle className="text-xl font-bold">
-              {selectedVideo?.title}
-            </DialogTitle>
-          </DialogHeader>
-          {selectedVideo && (
-            <div className="px-6 pb-6">
-              <WizVideoPlayer
-                videoId={selectedVideo.videoId}
-                title={selectedVideo.title}
-                creator={selectedVideo.creator}
-                xpReward={selectedVideo.xpReward}
-              />
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Video Panel - Clean Dark Design */}
+      <VideoPanel
+        videoId={selectedVideo?.videoId || ''}
+        title={selectedVideo?.title || ''}
+        creator={selectedVideo?.creator || ''}
+        xpReward={selectedVideo?.xpReward || 0}
+        isOpen={!!selectedVideo}
+        onClose={() => setSelectedVideo(null)}
+        onReward={(xp: number) => {
+          // Handle XP reward - you can integrate this with your XP system
+          console.log(`Earned ${xp} XP for watching ${selectedVideo?.title}`);
+          // Example: updateUserXP(xp);
+          // Example: showXPNotification(xp);
+        }}
+      />
+      </div>
     </div>
   );
 };

@@ -10,9 +10,12 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { LogOut, Settings, User, Youtube, Crown, Zap } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { ProfileProgress } from '@/components/ProfileProgress';
+import { useXp } from '@/context/XpContext';
 
 export const WizUserProfile = () => {
   const { user, signOut, signInWithGoogle, loading } = useAuth();
+  const { xp, level } = useXp();
 
   const handleSignOut = async () => {
     try {
@@ -82,10 +85,10 @@ export const WizUserProfile = () => {
             <div className="flex items-center space-x-2">
               <Badge variant="secondary" className="bg-wiz-primary/20 text-wiz-primary">
                 <Crown className="w-3 h-3 mr-1" />
-                Level {user.level}
+                Level {level}
               </Badge>
               <span className="text-xs text-muted-foreground">
-                {user.totalXP.toLocaleString()} XP
+                {xp} XP
               </span>
             </div>
           </div>
@@ -114,21 +117,8 @@ export const WizUserProfile = () => {
             </div>
           </div>
           
-          {/* XP Progress */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <div className="flex items-center space-x-1">
-                <Zap className="w-4 h-4 text-wiz-accent" />
-                <span>Level {user.level}</span>
-              </div>
-              <span>{currentLevelXP}/1000 XP</span>
-            </div>
-            <Progress 
-              key={`progress-${user.totalXP}-${user.level}-${progressPercentage.toFixed(1)}`} 
-              value={progressPercentage} 
-              className="h-2" 
-            />
-          </div>
+          {/* Real-time XP Progress */}
+          <ProfileProgress />
           
           {/* YouTube Connection Status */}
           <div className="flex items-center justify-between">

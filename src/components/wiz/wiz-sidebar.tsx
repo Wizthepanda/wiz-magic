@@ -10,11 +10,14 @@ import {
   Menu,
   X,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Sparkles,
+  Wand2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface WizSidebarProps {
   activeSection: string;
@@ -46,131 +49,459 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
 
   return (
     <>
-      {/* Mobile Toggle */}
-      <Button
-        variant="ghost"
-        size="sm"
+      {/* Mobile Toggle with Liquid Glass Styling */}
+      <motion.div
         className="fixed top-4 left-4 z-50 md:hidden"
-        onClick={() => setIsCollapsed(!isCollapsed)}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
       >
-        {isCollapsed ? <Menu className="w-5 h-5" /> : <X className="w-5 h-5" />}
-      </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="h-12 w-12 p-0 rounded-full transition-all duration-300"
+          style={{
+            background: `
+              linear-gradient(135deg, rgba(230, 230, 250, 0.3) 0%, rgba(147, 51, 234, 0.1) 100%),
+              rgba(255, 255, 255, 0.1)
+            `,
+            backdropFilter: 'blur(25px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: '0 8px 32px rgba(147, 51, 234, 0.1)'
+          }}
+        >
+          <motion.div
+            animate={{ rotate: isCollapsed ? 0 : 180 }}
+            transition={{ duration: 0.3 }}
+          >
+            {isCollapsed ? <Menu className="w-5 h-5 text-indigo-600" /> : <X className="w-5 h-5 text-indigo-600" />}
+          </motion.div>
+        </Button>
+      </motion.div>
 
-      {/* Sticky Professional Sidebar */}
-      <aside 
+      {/* Liquid Glassmorphic Sidebar */}
+      <motion.aside 
         className={cn(
-          "sticky top-0 left-0 h-screen bg-gradient-to-b from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl border-r border-slate-700/50 transition-all duration-300 z-40 shadow-2xl",
-          isCollapsed ? "w-16" : "w-64",
+          "sticky top-0 left-0 h-screen transition-all duration-500 z-40 overflow-hidden",
+          isCollapsed ? "w-20" : "w-72",
           "md:translate-x-0",
           "max-md:fixed max-md:left-0 max-md:top-0",
           isCollapsed ? "max-md:-translate-x-full" : "max-md:translate-x-0"
         )}
         style={{
-          backdropFilter: 'blur(20px)',
-          borderRight: '1px solid rgba(148, 163, 184, 0.3)',
-          boxShadow: '0 0 50px rgba(0, 0, 0, 0.3)'
+          background: `
+            linear-gradient(135deg, rgba(230, 230, 250, 0.15) 0%, rgba(25, 25, 112, 0.05) 100%),
+            rgba(255, 255, 255, 0.08)
+          `,
+          backdropFilter: 'blur(40px)',
+          borderRight: '1px solid rgba(255, 255, 255, 0.2)',
+          boxShadow: '0 20px 60px rgba(147, 51, 234, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
         }}
+        initial={{ x: -100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
       >
-        <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className={cn("p-6 border-b border-slate-700/50", isCollapsed && "px-3")}>
+        {/* Liquid Glass Background Pattern */}
+        <motion.div
+          className="absolute inset-0 opacity-30"
+          style={{
+            background: `
+              radial-gradient(circle at 20% 30%, rgba(147, 51, 234, 0.1) 0%, transparent 50%),
+              radial-gradient(circle at 80% 70%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+              radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.06) 0%, transparent 50%)
+            `
+          }}
+          animate={{
+            background: [
+              `radial-gradient(circle at 20% 30%, rgba(147, 51, 234, 0.1) 0%, transparent 50%),
+               radial-gradient(circle at 80% 70%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+               radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.06) 0%, transparent 50%)`,
+              `radial-gradient(circle at 30% 80%, rgba(147, 51, 234, 0.1) 0%, transparent 50%),
+               radial-gradient(circle at 70% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+               radial-gradient(circle at 40% 60%, rgba(139, 92, 246, 0.06) 0%, transparent 50%)`,
+              `radial-gradient(circle at 20% 30%, rgba(147, 51, 234, 0.1) 0%, transparent 50%),
+               radial-gradient(circle at 80% 70%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+               radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.06) 0%, transparent 50%)`
+            ]
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <div className="relative flex flex-col h-full z-10">
+          {/* Liquid Glass Logo Section */}
+          <motion.div 
+            className={cn("p-6 relative", isCollapsed && "px-4")}
+            style={{
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+            }}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
             <div className={cn("flex items-center", isCollapsed ? "justify-center" : "space-x-3")}>
-              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-wiz-primary to-wiz-secondary flex items-center justify-center shadow-lg">
-                <Crown className="w-5 h-5 text-white" />
-              </div>
-              {!isCollapsed && (
-                <span className="text-xl font-bold text-white">
-                  WIZ
-                </span>
-              )}
+              <motion.div 
+                className="relative"
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div 
+                  className="w-10 h-10 rounded-full flex items-center justify-center shadow-2xl border border-white/20"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.9) 0%, rgba(99, 102, 241, 0.9) 100%)',
+                    backdropFilter: 'blur(20px)',
+                    boxShadow: '0 8px 32px rgba(147, 51, 234, 0.3)'
+                  }}
+                >
+                  <Wand2 className="w-5 h-5 text-white" />
+                </div>
+                
+                {/* Sparkle Effect */}
+                <motion.div
+                  className="absolute -top-1 -right-1"
+                  animate={{ 
+                    scale: [1, 1.2, 1],
+                    rotate: [0, 180, 360]
+                  }}
+                  transition={{ 
+                    duration: 2, 
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <Sparkles className="w-3 h-3 text-yellow-400" />
+                </motion.div>
+              </motion.div>
+              
+              <AnimatePresence>
+                {!isCollapsed && (
+                  <motion.span 
+                    className="text-2xl font-bold text-gray-800"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.9) 0%, rgba(99, 102, 241, 0.8) 50%, rgba(139, 92, 246, 0.9) 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text'
+                    }}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    WIZ
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </div>
-          </div>
+          </motion.div>
 
-          {/* Navigation */}
-          <nav className={cn("flex-1 space-y-2", isCollapsed ? "p-2" : "p-4")}>
-            {navigation.map((item) => (
-              <div key={item.id} className="relative group">
-                <Button
-                  variant="ghost"
-                  size={isCollapsed ? "sm" : "default"}
+          {/* Liquid Glass Navigation */}
+          <nav className={cn("flex-1 space-y-3", isCollapsed ? "p-3" : "p-6")}>
+            {navigation.map((item, index) => (
+              <motion.div 
+                key={item.id} 
+                className="relative group"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, delay: 0.3 + index * 0.1 }}
+              >
+                <motion.button
                   onClick={() => onSectionChange(item.id)}
                   className={cn(
-                    "w-full relative transition-all duration-300",
-                    activeSection === item.id 
-                      ? "bg-wiz-primary/20 text-wiz-primary border border-wiz-primary/30 shadow-lg" 
-                      : "text-gray-300 hover:text-white hover:bg-slate-700/50",
-                    isCollapsed ? "justify-center px-2 h-12" : "justify-start"
+                    "w-full relative transition-all duration-500 overflow-hidden",
+                    isCollapsed ? "h-14 px-0 rounded-xl" : "h-12 px-4 rounded-2xl"
                   )}
+                  style={{
+                    background: activeSection === item.id 
+                      ? `
+                          linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(99, 102, 241, 0.15) 100%),
+                          rgba(255, 255, 255, 0.1)
+                        `
+                      : `
+                          linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)
+                        `,
+                    backdropFilter: 'blur(20px)',
+                    border: activeSection === item.id 
+                      ? '1px solid rgba(147, 51, 234, 0.3)' 
+                      : '1px solid rgba(255, 255, 255, 0.1)',
+                    boxShadow: activeSection === item.id 
+                      ? '0 8px 32px rgba(147, 51, 234, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                      : '0 4px 16px rgba(0, 0, 0, 0.05)'
+                  }}
+                  whileHover={{ 
+                    scale: 1.02,
+                    y: -2,
+                    transition: { duration: 0.3 }
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                  onMouseEnter={(e) => {
+                    if (activeSection !== item.id) {
+                      e.currentTarget.style.background = `
+                        linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(99, 102, 241, 0.08) 100%),
+                        rgba(255, 255, 255, 0.08)
+                      `;
+                      e.currentTarget.style.border = '1px solid rgba(147, 51, 234, 0.2)';
+                      e.currentTarget.style.boxShadow = '0 8px 32px rgba(147, 51, 234, 0.1)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (activeSection !== item.id) {
+                      e.currentTarget.style.background = `
+                        linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)
+                      `;
+                      e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+                      e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.05)';
+                    }
+                  }}
                 >
-                  <item.icon className={cn("w-5 h-5", !isCollapsed && "mr-3")} />
-                  {!isCollapsed && (
-                    <>
-                      <span className="flex-1 text-left">{item.label}</span>
+                  {/* Active Background Shimmer */}
+                  {activeSection === item.id && (
+                    <motion.div
+                      className="absolute inset-0"
+                      style={{
+                        background: `
+                          linear-gradient(45deg, 
+                            transparent 30%, 
+                            rgba(255, 255, 255, 0.1) 50%, 
+                            transparent 70%
+                          )
+                        `
+                      }}
+                      animate={{
+                        x: ['-100%', '100%']
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        repeatDelay: 3,
+                        ease: "easeInOut"
+                      }}
+                    />
+                  )}
+
+                  <div className={cn(
+                    "flex items-center relative z-10",
+                    isCollapsed ? "justify-center" : "justify-start space-x-3"
+                  )}>
+                    <motion.div
+                      className="relative"
+                      whileHover={{ scale: 1.1 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <item.icon 
+                        className={cn(
+                          "w-5 h-5 transition-colors duration-300",
+                          activeSection === item.id 
+                            ? "text-indigo-600" 
+                            : "text-gray-600 group-hover:text-indigo-500"
+                        )} 
+                      />
+                    </motion.div>
+                    
+                    <AnimatePresence>
+                      {!isCollapsed && (
+                        <motion.div 
+                          className="flex-1 flex items-center justify-between"
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -10 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <span className={cn(
+                            "font-medium transition-colors duration-300",
+                            activeSection === item.id 
+                              ? "text-gray-800" 
+                              : "text-gray-600 group-hover:text-gray-800"
+                          )}>
+                            {item.label}
+                          </span>
+                          {item.level && (
+                            <motion.span 
+                              className="px-2 py-1 text-xs font-bold text-white rounded-full"
+                              style={{
+                                background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.9) 0%, rgba(255, 193, 7, 0.9) 100%)',
+                                boxShadow: '0 2px 8px rgba(255, 215, 0, 0.3)'
+                              }}
+                              whileHover={{ scale: 1.05 }}
+                            >
+                              Lv{item.level}+
+                            </motion.span>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </motion.button>
+                
+                {/* Enhanced Tooltip for collapsed state */}
+                <AnimatePresence>
+                  {isCollapsed && (
+                    <motion.div 
+                      className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-2 text-sm rounded-xl pointer-events-none whitespace-nowrap z-50 opacity-0 group-hover:opacity-100"
+                      style={{
+                        background: `
+                          linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(50, 50, 50, 0.9) 100%)
+                        `,
+                        backdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+                      }}
+                      initial={{ opacity: 0, x: -10, scale: 0.9 }}
+                      animate={{ opacity: 1, x: 0, scale: 1 }}
+                      exit={{ opacity: 0, x: -10, scale: 0.9 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <span className="text-gray-200 font-medium">{item.label}</span>
                       {item.level && (
-                        <span className="px-2 py-1 text-xs bg-wiz-accent/20 text-wiz-accent rounded-full">
+                        <span className="ml-2 px-1.5 py-0.5 text-xs bg-yellow-500/20 text-yellow-400 rounded">
                           Lv{item.level}+
                         </span>
                       )}
-                    </>
+                    </motion.div>
                   )}
-                </Button>
-                
-                {/* Tooltip for collapsed state */}
-                {isCollapsed && (
-                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-slate-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                    {item.label}
-                    {item.level && <span className="ml-1 text-wiz-accent">Lv{item.level}+</span>}
-                  </div>
-                )}
-              </div>
+                </AnimatePresence>
+              </motion.div>
             ))}
           </nav>
 
-          {/* Bottom Section - Logout and Collapse */}
-          <div className="border-t border-slate-700/50">
-            {/* Logout */}
-            <div className={cn(isCollapsed ? "p-2" : "p-4")}>
-              <div className="relative group">
-                <Button
-                  variant="ghost"
-                  size={isCollapsed ? "sm" : "default"}
+          {/* Liquid Glass Bottom Section */}
+          <motion.div 
+            className="relative"
+            style={{
+              borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+          >
+            {/* Logout Button */}
+            <div className={cn(isCollapsed ? "p-3" : "p-6 pb-3")}>
+              <motion.div className="relative group">
+                <motion.button
                   onClick={handleLogout}
                   className={cn(
-                    "w-full text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-300",
-                    isCollapsed ? "justify-center px-2 h-12" : "justify-start"
+                    "w-full relative transition-all duration-500 overflow-hidden",
+                    isCollapsed ? "h-14 px-0 rounded-xl" : "h-12 px-4 rounded-2xl"
                   )}
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                    backdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)'
+                  }}
+                  whileHover={{ 
+                    scale: 1.02,
+                    y: -2,
+                    transition: { duration: 0.3 }
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = `
+                      linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.08) 100%),
+                      rgba(255, 255, 255, 0.08)
+                    `;
+                    e.currentTarget.style.border = '1px solid rgba(239, 68, 68, 0.2)';
+                    e.currentTarget.style.boxShadow = '0 8px 32px rgba(239, 68, 68, 0.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = `
+                      linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)
+                    `;
+                    e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.05)';
+                  }}
                 >
-                  <LogOut className={cn("w-5 h-5", !isCollapsed && "mr-3")} />
-                  {!isCollapsed && <span>Logout</span>}
-                </Button>
-                
-                {/* Tooltip for collapsed logout */}
-                {isCollapsed && (
-                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-slate-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                    Logout
+                  <div className={cn(
+                    "flex items-center relative z-10",
+                    isCollapsed ? "justify-center" : "justify-start space-x-3"
+                  )}>
+                    <motion.div
+                      className="relative"
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <LogOut className="w-5 h-5 text-gray-600 group-hover:text-red-500 transition-colors duration-300" />
+                    </motion.div>
+                    
+                    <AnimatePresence>
+                      {!isCollapsed && (
+                        <motion.span 
+                          className="font-medium text-gray-600 group-hover:text-red-500 transition-colors duration-300"
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -10 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          Logout
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
                   </div>
-                )}
-              </div>
+                </motion.button>
+                
+                {/* Enhanced Logout Tooltip */}
+                <AnimatePresence>
+                  {isCollapsed && (
+                    <motion.div 
+                      className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-2 text-sm rounded-xl pointer-events-none whitespace-nowrap z-50 opacity-0 group-hover:opacity-100"
+                      style={{
+                        background: `
+                          linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(50, 50, 50, 0.9) 100%)
+                        `,
+                        backdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+                      }}
+                      initial={{ opacity: 0, x: -10, scale: 0.9 }}
+                      animate={{ opacity: 1, x: 0, scale: 1 }}
+                      exit={{ opacity: 0, x: -10, scale: 0.9 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <span className="text-red-400 font-medium">Logout</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             </div>
 
             {/* Collapse Toggle (Desktop) */}
-            <div className={cn("hidden md:block", isCollapsed ? "p-2 pt-0" : "p-4 pt-0")}>
-              <Button
-                variant="ghost"
-                size="sm"
+            <div className={cn("hidden md:block", isCollapsed ? "p-3 pt-0" : "p-6 pt-3")}>
+              <motion.button
                 onClick={() => setIsCollapsed(!isCollapsed)}
-                className="w-full text-gray-500 hover:text-gray-300 transition-all duration-300"
+                className="w-full h-10 relative transition-all duration-500 overflow-hidden rounded-xl"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)'
+                }}
+                whileHover={{ 
+                  scale: 1.02,
+                  boxShadow: '0 8px 32px rgba(147, 51, 234, 0.1)',
+                  transition: { duration: 0.3 }
+                }}
+                whileTap={{ scale: 0.98 }}
               >
-                {isCollapsed ? (
+                <motion.div
+                  className="flex items-center justify-center text-gray-500 hover:text-indigo-500 transition-colors duration-300"
+                  animate={{ 
+                    rotate: isCollapsed ? 0 : 180,
+                    scale: [1, 1.1, 1]
+                  }}
+                  transition={{ 
+                    rotate: { duration: 0.3 },
+                    scale: { duration: 2, repeat: Infinity }
+                  }}
+                >
                   <ChevronRight className="w-4 h-4" />
-                ) : (
-                  <ChevronLeft className="w-4 h-4" />
-                )}
-              </Button>
+                </motion.div>
+              </motion.button>
             </div>
-          </div>
+          </motion.div>
         </div>
-      </aside>
+      </motion.aside>
 
       {/* Overlay for mobile */}
       {!isCollapsed && (

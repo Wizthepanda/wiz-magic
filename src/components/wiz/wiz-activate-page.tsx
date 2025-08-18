@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react';
-import { Youtube, CheckCircle, Video, Users, Gift, Zap, Play, Eye, ToggleLeft, ToggleRight, Clock, Shield } from 'lucide-react';
+import { Youtube, CheckCircle, Video, Users, Gift, Zap, Play, Eye, ToggleLeft, ToggleRight, Clock, Shield, Crown, Star, Sparkles, TrendingUp, Lock, Unlock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const WizActivatePage = () => {
   const { user, connectYouTube, loading } = useAuth();
   const [isConnecting, setIsConnecting] = useState(false);
   const [featuredVideos, setFeaturedVideos] = useState(new Set());
   const [xpCounter, setXpCounter] = useState(0);
+  const [activeContentTab, setActiveContentTab] = useState('free');
 
   // Mock YouTube channel data
   const mockChannelData = {
@@ -408,6 +409,437 @@ export const WizActivatePage = () => {
           </Card>
         </motion.div>
 
+        {/* Enhanced Free/Paid Content Tabs Section */}
+        <motion.div
+          className="space-y-8"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 1.4 }}
+        >
+          <div className="text-center space-y-4">
+            <motion.h2 
+              className="text-4xl font-bold"
+              style={{
+                background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.9) 0%, rgba(99, 102, 241, 0.8) 50%, rgba(139, 92, 246, 0.9) 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}
+              animate={{
+                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+              }}
+              transition={{
+                duration: 4,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+            >
+              Choose Your Creator Journey
+            </motion.h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Start with our free tools or unlock premium features to maximize your creator potential
+            </p>
+          </div>
+
+          {/* Tab Navigation */}
+          <motion.div 
+            className="flex justify-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.6 }}
+          >
+            <div
+              className="inline-flex p-2 rounded-3xl"
+              style={{
+                background: `
+                  linear-gradient(135deg, rgba(230, 230, 250, 0.2) 0%, rgba(147, 51, 234, 0.1) 100%),
+                  rgba(255, 255, 255, 0.1)
+                `,
+                backdropFilter: 'blur(25px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 8px 32px rgba(147, 51, 234, 0.1)'
+              }}
+            >
+              <motion.button
+                onClick={() => setActiveContentTab('free')}
+                className={`px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-500 relative overflow-hidden ${
+                  activeContentTab === 'free'
+                    ? 'text-white shadow-2xl'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-white/10'
+                }`}
+                style={{
+                  background: activeContentTab === 'free' 
+                    ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.9) 0%, rgba(16, 185, 129, 0.9) 100%)'
+                    : 'transparent'
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {activeContentTab === 'free' && (
+                  <motion.div
+                    className="absolute inset-0"
+                    style={{
+                      background: `
+                        linear-gradient(45deg, 
+                          transparent 30%, 
+                          rgba(255, 255, 255, 0.2) 50%, 
+                          transparent 70%
+                        )
+                      `
+                    }}
+                    animate={{
+                      x: ['-100%', '100%']
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      repeatDelay: 3,
+                      ease: "easeInOut"
+                    }}
+                  />
+                )}
+                <div className="relative flex items-center space-x-2">
+                  <Unlock className="w-6 h-6" />
+                  <span>Free Features</span>
+                </div>
+              </motion.button>
+              
+              <motion.button
+                onClick={() => setActiveContentTab('premium')}
+                className={`px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-500 relative overflow-hidden ${
+                  activeContentTab === 'premium'
+                    ? 'text-white shadow-2xl'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-white/10'
+                }`}
+                style={{
+                  background: activeContentTab === 'premium' 
+                    ? 'linear-gradient(135deg, rgba(255, 215, 0, 0.9) 0%, rgba(255, 193, 7, 0.9) 100%)'
+                    : 'transparent'
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {activeContentTab === 'premium' && (
+                  <motion.div
+                    className="absolute inset-0"
+                    style={{
+                      background: `
+                        linear-gradient(45deg, 
+                          transparent 30%, 
+                          rgba(255, 255, 255, 0.3) 50%, 
+                          transparent 70%
+                        )
+                      `
+                    }}
+                    animate={{
+                      x: ['-100%', '100%']
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      repeatDelay: 3,
+                      ease: "easeInOut"
+                    }}
+                  />
+                )}
+                <div className="relative flex items-center space-x-2">
+                  <Crown className="w-6 h-6" />
+                  <span>Premium Features</span>
+                </div>
+              </motion.button>
+            </div>
+          </motion.div>
+
+          {/* Content Tabs */}
+          <AnimatePresence mode="wait">
+            {activeContentTab === 'free' ? (
+              <motion.div
+                key="free"
+                className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -30 }}
+                transition={{ duration: 0.5 }}
+              >
+                {[
+                  {
+                    icon: Video,
+                    title: 'Basic Video Integration',
+                    description: 'Connect your YouTube channel and showcase up to 5 featured videos',
+                    features: ['YouTube sync', 'Basic analytics', 'Community access'],
+                    highlight: 'Always Free'
+                  },
+                  {
+                    icon: Users,
+                    title: 'Community Access',
+                    description: 'Join the WIZ creator community and engage with your audience',
+                    features: ['Creator forums', 'Fan interactions', 'Basic XP tracking'],
+                    highlight: 'No Limits'
+                  },
+                  {
+                    icon: TrendingUp,
+                    title: 'Growth Insights',
+                    description: 'Basic analytics to understand your audience and content performance',
+                    features: ['View metrics', 'Engagement stats', 'Monthly reports'],
+                    highlight: 'Essential Data'
+                  }
+                ].map((item, index) => (
+                  <motion.div
+                    key={index}
+                    className="group"
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 1.8 + index * 0.1 }}
+                    whileHover={{ y: -8 }}
+                  >
+                    <div
+                      className="h-full p-8 rounded-3xl transition-all duration-500 group-hover:shadow-2xl border"
+                      style={{
+                        background: `
+                          linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(16, 185, 129, 0.05) 100%),
+                          rgba(255, 255, 255, 0.9)
+                        `,
+                        backdropFilter: 'blur(25px)',
+                        border: '1px solid rgba(34, 197, 94, 0.2)',
+                        boxShadow: '0 12px 40px rgba(34, 197, 94, 0.1)'
+                      }}
+                    >
+                      <div className="space-y-6">
+                        <div className="flex items-center space-x-4">
+                          <motion.div 
+                            className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                            style={{
+                              background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.9) 0%, rgba(16, 185, 129, 0.9) 100%)',
+                              boxShadow: '0 8px 32px rgba(34, 197, 94, 0.3)'
+                            }}
+                            whileHover={{ scale: 1.1, rotate: 5 }}
+                          >
+                            <item.icon className="w-7 h-7 text-white" />
+                          </motion.div>
+                          <div>
+                            <h3 className="text-xl font-bold text-gray-800">{item.title}</h3>
+                            <span 
+                              className="text-sm font-bold px-3 py-1 rounded-full text-white"
+                              style={{
+                                background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.9) 0%, rgba(16, 185, 129, 0.9) 100%)'
+                              }}
+                            >
+                              {item.highlight}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <p className="text-gray-600 leading-relaxed">{item.description}</p>
+                        
+                        <div className="space-y-3">
+                          {item.features.map((feature, fIndex) => (
+                            <div key={fIndex} className="flex items-center space-x-3">
+                              <CheckCircle className="w-5 h-5 text-green-500" />
+                              <span className="text-gray-700">{feature}</span>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        <motion.button
+                          className="w-full py-4 font-bold text-white rounded-2xl transition-all duration-300"
+                          style={{
+                            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.9) 0%, rgba(16, 185, 129, 0.9) 100%)',
+                            boxShadow: '0 8px 32px rgba(34, 197, 94, 0.3)'
+                          }}
+                          whileHover={{ 
+                            scale: 1.02,
+                            boxShadow: '0 12px 40px rgba(34, 197, 94, 0.4)'
+                          }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          Get Started Free
+                        </motion.button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="premium"
+                className="grid md:grid-cols-2 gap-8"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -30 }}
+                transition={{ duration: 0.5 }}
+              >
+                {[
+                  {
+                    title: 'Creator Pro',
+                    price: '$19',
+                    period: '/month',
+                    description: 'Advanced tools for growing creators',
+                    features: [
+                      'Unlimited video integration',
+                      'Advanced analytics dashboard',
+                      'Custom branding options',
+                      'Priority community access',
+                      'Advanced XP customization',
+                      'Monthly strategy sessions'
+                    ],
+                    highlight: 'Most Popular',
+                    popular: true
+                  },
+                  {
+                    title: 'Creator Elite',
+                    price: '$49',
+                    period: '/month',
+                    description: 'Premium features for serious creators',
+                    features: [
+                      'Everything in Creator Pro',
+                      'AI-powered content insights',
+                      'Direct fan monetization tools',
+                      '24/7 priority support',
+                      'Exclusive creator events',
+                      'Personal account manager',
+                      'Early access to new features'
+                    ],
+                    highlight: 'Premium',
+                    popular: false
+                  }
+                ].map((plan, index) => (
+                  <motion.div
+                    key={index}
+                    className="group relative"
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 1.8 + index * 0.2 }}
+                    whileHover={{ y: -12, scale: 1.02 }}
+                  >
+                    <div
+                      className="h-full p-8 rounded-3xl transition-all duration-500 group-hover:shadow-2xl border relative overflow-hidden"
+                      style={{
+                        background: `
+                          linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%),
+                          rgba(255, 255, 255, 0.95)
+                        `,
+                        backdropFilter: 'blur(25px)',
+                        border: plan.popular ? '2px solid rgba(255, 215, 0, 0.4)' : '1px solid rgba(255, 215, 0, 0.2)',
+                        boxShadow: plan.popular 
+                          ? '0 20px 60px rgba(255, 215, 0, 0.2)' 
+                          : '0 12px 40px rgba(255, 215, 0, 0.1)'
+                      }}
+                    >
+                      {plan.popular && (
+                        <motion.div
+                          className="absolute -top-4 left-1/2 transform -translate-x-1/2"
+                          animate={{ 
+                            y: [0, -4, 0],
+                            rotate: [0, 2, -2, 0]
+                          }}
+                          transition={{ 
+                            duration: 3, 
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                        >
+                          <div 
+                            className="px-6 py-2 rounded-full text-sm font-bold text-white"
+                            style={{
+                              background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.9) 0%, rgba(255, 193, 7, 0.9) 100%)',
+                              boxShadow: '0 8px 32px rgba(255, 215, 0, 0.4)'
+                            }}
+                          >
+                            <Crown className="w-4 h-4 inline mr-1" />
+                            {plan.highlight}
+                          </div>
+                        </motion.div>
+                      )}
+
+                      <div className="space-y-6">
+                        <div className="text-center space-y-4">
+                          <h3 className="text-2xl font-bold text-gray-800">{plan.title}</h3>
+                          <div className="flex items-baseline justify-center space-x-2">
+                            <span 
+                              className="text-5xl font-bold"
+                              style={{
+                                background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.9) 0%, rgba(255, 193, 7, 0.9) 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text'
+                              }}
+                            >
+                              {plan.price}
+                            </span>
+                            <span className="text-gray-600 text-lg">{plan.period}</span>
+                          </div>
+                          <p className="text-gray-600">{plan.description}</p>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          {plan.features.map((feature, fIndex) => (
+                            <motion.div 
+                              key={fIndex} 
+                              className="flex items-center space-x-3"
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 2 + index * 0.2 + fIndex * 0.05 }}
+                            >
+                              <div 
+                                className="w-6 h-6 rounded-full flex items-center justify-center"
+                                style={{
+                                  background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.9) 0%, rgba(255, 193, 7, 0.9) 100%)'
+                                }}
+                              >
+                                <CheckCircle className="w-4 h-4 text-white" />
+                              </div>
+                              <span className="text-gray-700 font-medium">{feature}</span>
+                            </motion.div>
+                          ))}
+                        </div>
+                        
+                        <motion.button
+                          className="w-full py-4 font-bold text-white rounded-2xl transition-all duration-300 relative overflow-hidden"
+                          style={{
+                            background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.9) 0%, rgba(255, 193, 7, 0.9) 100%)',
+                            boxShadow: '0 8px 32px rgba(255, 215, 0, 0.3)'
+                          }}
+                          whileHover={{ 
+                            scale: 1.02,
+                            boxShadow: '0 12px 40px rgba(255, 215, 0, 0.4)'
+                          }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <motion.div
+                            className="absolute inset-0"
+                            style={{
+                              background: `
+                                linear-gradient(45deg, 
+                                  transparent 30%, 
+                                  rgba(255, 255, 255, 0.3) 50%, 
+                                  transparent 70%
+                                )
+                              `
+                            }}
+                            animate={{
+                              x: ['-100%', '100%']
+                            }}
+                            transition={{
+                              duration: 2,
+                              repeat: Infinity,
+                              repeatDelay: 4,
+                              ease: "easeInOut"
+                            }}
+                          />
+                          <span className="relative flex items-center justify-center space-x-2">
+                            <Sparkles className="w-5 h-5" />
+                            <span>Upgrade Now</span>
+                          </span>
+                        </motion.button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+
         {/* Footer Disclaimer */}
         <motion.div
           className="text-center space-y-4"
@@ -422,7 +854,7 @@ export const WizActivatePage = () => {
           
           <div className="flex items-center justify-center space-x-6 text-sm">
             <a 
-              href="/privacypolicy.html" 
+              href="/privacy.html" 
               target="_blank"
               className="text-purple-600 hover:text-purple-700 underline hover:no-underline transition-colors"
             >
