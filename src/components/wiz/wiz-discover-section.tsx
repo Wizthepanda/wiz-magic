@@ -1657,10 +1657,7 @@ export const WizDiscoverSection = () => {
         isOpen={!!selectedVideo}
         onClose={() => setSelectedVideo(null)}
         onReward={(xp: number) => {
-          // Handle XP reward - you can integrate this with your XP system
-          console.log(`Earned ${xp} XP for watching ${selectedVideo?.title}`);
-          // Example: updateUserXP(xp);
-          // Example: showXPNotification(xp);
+          console.log(`🎯 Earned ${xp} XP for watching ${selectedVideo?.title}`);
         }}
       />
       </div>

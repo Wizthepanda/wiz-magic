@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { doc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { isYouTubeAPIEnabled } from '@/lib/feature-flags';
+import { LocalXPService } from '@/lib/local-xp-service';
 
 interface LocalVideoPlayerProps {
   url: string;
@@ -35,7 +36,7 @@ export const LocalVideoPlayer: React.FC<LocalVideoPlayerProps> = ({
         totalXP: increment(amount),
         lastActivity: new Date(),
         'stats.videosWatched': increment(0), // Don't increment for time-based XP
-        'stats.totalWatchTime': increment(1)
+        'stats.totalWatchTime': increment(30) // Add 30 seconds for each milestone
       });
 
       // Update local state
@@ -104,13 +105,22 @@ export const LocalVideoPlayer: React.FC<LocalVideoPlayerProps> = ({
     setIsWatching(false);
     
     if (!hasCompletionBonus && user) {
-      // Final completion bonus if not already awarded
-      const bonusXP = Math.floor(watchTime / 30 * 0.1) || 5; // At least 5 XP bonus
-      await awardXP(bonusXP, 'video completion');
+      // Extract video ID from URL for proper tracking
+      const videoId = url.includes('watch?v=') ? url.split('watch?v=')[1].split('&')[0] : 'unknown';
+      
+      // Use LocalXPService for comprehensive completion tracking
+      const completionXP = await LocalXPService.recordLocalVideoView(videoId, watchTime, duration);
+      const engagementXP = await LocalXPService.trackLocalVideoEngagement(videoId, 'completion', watchTime);
+      
+      const totalXP = completionXP + engagementXP;
+      
+      // Update local state
+      addXP(totalXP);
+      onXpEarned?.(totalXP, 'video completion');
+      
       setHasCompletionBonus(true);
+      console.log(`🏁 Video completed - ${totalXP} XP earned (${completionXP} view + ${engagementXP} completion)`);
     }
-    
-    console.log('🏁 Video completed');
   };
 
   // Show feature flag status

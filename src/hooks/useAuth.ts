@@ -23,44 +23,64 @@ export interface WizUser extends User {
 export const useAuth = () => {
   const [user, setUser] = useState<WizUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     console.log('🔧 Setting up auth state listener...');
+    let isMounted = true;
+    
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log('🔄 Auth state changed:', firebaseUser ? `${firebaseUser.email} (uid: ${firebaseUser.uid})` : 'No user');
+      if (!isMounted) return; // Prevent state updates if component unmounted
       
-      if (firebaseUser) {
-        // Get user data from Firestore
-        console.log('📥 Fetching user data from Firestore...');
-        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-        const userData = userDoc.data();
-        console.log('📄 User data from Firestore:', userData);
-        
-        const wizUser: WizUser = {
-          ...firebaseUser,
-          level: userData?.level || 1,
-          totalXP: userData?.totalXP || 0,
-          youtubeConnected: userData?.youtubeConnected || false,
-          createdAt: userData?.createdAt?.toDate() || new Date(),
-        };
-        
-        console.log('✅ Setting user state:', { email: wizUser.email, level: wizUser.level, totalXP: wizUser.totalXP });
-        setUser(wizUser);
-      } else {
+      // Only log the first auth state change to reduce noise
+      if (!isInitialized) {
+        console.log('🔄 Auth state changed:', firebaseUser ? `${firebaseUser.email} (uid: ${firebaseUser.uid})` : 'No user');
+      }
+      
+      if (firebaseUser && !user) {
+        // Only fetch user data if we don't already have it
+        try {
+          console.log('📥 Fetching user data from Firestore...');
+          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          const userData = userDoc.data();
+          
+          if (!isMounted) return; // Check again after async operation
+          
+          const wizUser: WizUser = {
+            ...firebaseUser,
+            level: userData?.level || 1,
+            totalXP: userData?.totalXP || 0,
+            youtubeConnected: userData?.youtubeConnected || false,
+            createdAt: userData?.createdAt?.toDate() || new Date(),
+          };
+          
+          console.log('✅ Setting user state:', { email: wizUser.email, level: wizUser.level, totalXP: wizUser.totalXP });
+          setUser(wizUser);
+        } catch (error) {
+          console.error('❌ Error fetching user data:', error);
+          if (isMounted) {
+            setUser(null);
+          }
+        }
+      } else if (!firebaseUser) {
         console.log('❌ No Firebase user, setting user state to null');
         setUser(null);
       }
-      setLoading(false);
+      
+      if (isMounted) {
+        setLoading(false);
+        setIsInitialized(true);
+      }
     });
 
-    // Handle redirect result on app initialization
+    // Handle redirect result on app initialization (only once)
     const handleRedirectResult = async () => {
+      if (isInitialized) return; // Skip if already initialized
+      
       try {
-        console.log('🔄 Checking for redirect result...');
-        
         // Add timeout to prevent hanging
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('getRedirectResult timeout')), 10000);
+          setTimeout(() => reject(new Error('getRedirectResult timeout')), 5000);
         });
         
         const result = await Promise.race([
@@ -101,8 +121,6 @@ export const useAuth = () => {
             await LocalXPService.initializeLocalUser(user.uid, userData);
             console.log('✅ User data saved locally');
           }
-        } else {
-          console.log('ℹ️ No redirect result found');
         }
       } catch (error) {
         console.error('❌ Error handling redirect result:', error);
@@ -111,7 +129,11 @@ export const useAuth = () => {
     };
 
     handleRedirectResult();
-    return unsubscribe;
+    
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, []);
 
   const signInWithGoogle = async (withYouTube: boolean = false) => {
