@@ -300,29 +300,40 @@ export const WizDiscoverSection = () => {
       {/* Floating Particles Background */}
       <FloatingParticles />
       
-      <div className="max-w-7xl mx-auto p-6 space-y-8">
-        {/* Category Filter Section */}
-        <div className="mb-8">
-          <div className="flex justify-center flex-wrap gap-3">
+      <div className="max-w-7xl mx-auto p-3 sm:p-6 space-y-6 sm:space-y-8">
+        {/* Category Filter Section - Mobile responsive */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex justify-center flex-wrap gap-2 sm:gap-3 px-2">
             {categories.map((category) => (
               <Button
                 key={category.id}
                 variant={activeCategory === category.id ? "default" : "outline"}
                 onClick={() => setActiveCategory(category.id)}
-                className={`${activeCategory === category.id ? category.color : ''} transition-all duration-200 flex items-center gap-2 text-sm h-8 px-3`}
+                className={`${activeCategory === category.id ? category.color : ''} transition-all duration-200 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3`}
               >
-                <div className={`w-2 h-2 rounded-full ${category.dotColor}`} />
-                {category.label}
+                <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${category.dotColor}`} />
+                <span className="truncate">{category.label}</span>
               </Button>
             ))}
           </div>
         </div>
 
-        {/* Discover Content - 8 Panels with Horizontal Scrolling */}
-        <div className="relative mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <div></div> {/* Empty div for spacing */}
-            <div className="flex space-x-2">
+        {/* Discover Content - Mobile responsive scrolling */}
+        <div className="relative mb-8 sm:mb-12">
+          <div className="flex items-center justify-between mb-4 sm:mb-6 px-2 sm:px-0">
+            <h3 
+              className="text-lg sm:text-2xl font-bold"
+              style={{
+                background: 'linear-gradient(135deg, #e879f9 0%, #a855f7 30%, #6366f1 70%, #c4b5fd 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                filter: 'drop-shadow(0 4px 12px rgba(168, 85, 247, 0.4))'
+              }}
+            >
+              Latest Videos
+            </h3>
+            <div className="hidden sm:flex space-x-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -330,9 +341,9 @@ export const WizDiscoverSection = () => {
                   const container = document.getElementById('discover-container');
                   if (container) container.scrollBy({ left: -400, behavior: 'smooth' });
                 }}
-                className="h-10 w-10 p-0 hover:bg-wiz-primary/10 rounded-full"
+                className="h-8 w-8 sm:h-10 sm:w-10 p-0 hover:bg-wiz-primary/10 rounded-full"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
               </Button>
               <Button
                 variant="outline"
@@ -341,21 +352,21 @@ export const WizDiscoverSection = () => {
                   const container = document.getElementById('discover-container');
                   if (container) container.scrollBy({ left: 400, behavior: 'smooth' });
                 }}
-                className="h-10 w-10 p-0 hover:bg-wiz-primary/10 rounded-full"
+                className="h-8 w-8 sm:h-10 sm:w-10 p-0 hover:bg-wiz-primary/10 rounded-full"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
               </Button>
             </div>
           </div>
           
           <div
             id="discover-container"
-            className="flex space-x-6 overflow-x-auto scrollbar-hide pb-4 scroll-smooth"
+            className="flex space-x-3 sm:space-x-6 overflow-x-auto scrollbar-hide pb-4 scroll-smooth px-2 sm:px-0"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
                         {filteredVideos.map((video) => (
-              <div key={video.id} className="flex-shrink-0 w-80 group">
-                <Card className="h-96 overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1"
+              <div key={video.id} className="flex-shrink-0 w-64 sm:w-80 group">
+                <Card className="h-80 sm:h-96 overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1"
                       style={{
                         background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
                         backdropFilter: 'blur(8px)',

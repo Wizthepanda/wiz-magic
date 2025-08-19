@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { 
   User, 
-  signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult, 
   signOut as firebaseSignOut,
   onAuthStateChanged 
 } from 'firebase/auth';
@@ -9,6 +10,8 @@ import { auth, googleProvider, googleProviderWithYouTube } from '@/lib/firebase'
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { YouTubeService } from '@/lib/youtube';
+import { LocalXPService } from '@/lib/local-xp-service';
+import { isYouTubeAPIEnabled, logFeatureFlag } from '@/lib/feature-flags';
 
 export interface WizUser extends User {
   level: number;
@@ -22,11 +25,16 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('🔧 Setting up auth state listener...');
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      console.log('🔄 Auth state changed:', firebaseUser ? `${firebaseUser.email} (uid: ${firebaseUser.uid})` : 'No user');
+      
       if (firebaseUser) {
         // Get user data from Firestore
+        console.log('📥 Fetching user data from Firestore...');
         const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
         const userData = userDoc.data();
+        console.log('📄 User data from Firestore:', userData);
         
         const wizUser: WizUser = {
           ...firebaseUser,
@@ -36,48 +44,90 @@ export const useAuth = () => {
           createdAt: userData?.createdAt?.toDate() || new Date(),
         };
         
+        console.log('✅ Setting user state:', { email: wizUser.email, level: wizUser.level, totalXP: wizUser.totalXP });
         setUser(wizUser);
       } else {
+        console.log('❌ No Firebase user, setting user state to null');
         setUser(null);
       }
       setLoading(false);
     });
 
+    // Handle redirect result on app initialization
+    const handleRedirectResult = async () => {
+      try {
+        console.log('🔄 Checking for redirect result...');
+        
+        // Add timeout to prevent hanging
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('getRedirectResult timeout')), 10000);
+        });
+        
+        const result = await Promise.race([
+          getRedirectResult(auth),
+          timeoutPromise
+        ]) as any;
+        
+        if (result) {
+          console.log('✅ Redirect auth successful:', result.user.email);
+          const user = result.user;
+          
+          // Initialize user with appropriate service
+          const userData = {
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL,
+            level: 1,
+            totalXP: 0,
+            youtubeConnected: false,
+            createdAt: new Date(),
+            lastLogin: new Date(),
+            stats: {
+              videosWatched: 0,
+              totalWatchTime: 0,
+            },
+            engagement: {
+              watchCount: 0,
+              likeCount: 0,
+              commentCount: 0,
+            }
+          };
+          
+          console.log('💾 Saving user data...', userData);
+          if (isYouTubeAPIEnabled()) {
+            await setDoc(doc(db, 'users', user.uid), userData, { merge: true });
+            console.log('✅ User data saved to Firestore');
+          } else {
+            await LocalXPService.initializeLocalUser(user.uid, userData);
+            console.log('✅ User data saved locally');
+          }
+        } else {
+          console.log('ℹ️ No redirect result found');
+        }
+      } catch (error) {
+        console.error('❌ Error handling redirect result:', error);
+        // Don't let redirect result errors block the auth state listener
+      }
+    };
+
+    handleRedirectResult();
     return unsubscribe;
   }, []);
 
   const signInWithGoogle = async (withYouTube: boolean = false) => {
     try {
-      // Use the appropriate provider based on whether YouTube access is needed
-      const provider = withYouTube ? googleProviderWithYouTube : googleProvider;
+      // Always use basic Google provider when YouTube API is disabled
+      const shouldUseYouTube = withYouTube && isYouTubeAPIEnabled();
+      const provider = shouldUseYouTube ? googleProviderWithYouTube : googleProvider;
       
-      console.log('Starting Google sign-in with provider:', withYouTube ? 'YouTube' : 'basic');
-      const result = await signInWithPopup(auth, provider);
-      console.log('Google sign-in successful:', result.user.email);
-      const user = result.user;
+      if (withYouTube && !isYouTubeAPIEnabled()) {
+        logFeatureFlag('YouTube OAuth Scope', false, 'using basic Google Auth instead');
+      }
       
-      // Create user document in Firestore
-      await setDoc(doc(db, 'users', user.uid), {
-        email: user.email,
-        displayName: user.displayName,
-        photoURL: user.photoURL,
-        level: 1,
-        totalXP: 0,
-        youtubeConnected: withYouTube,
-        createdAt: new Date(),
-        lastLogin: new Date(),
-        stats: {
-          videosWatched: 0,
-          totalWatchTime: 0,
-        },
-        engagement: {
-          watchCount: 0,
-          likeCount: 0,
-          commentCount: 0,
-        }
-      }, { merge: true });
+      console.log('Starting Google sign-in with redirect, provider:', shouldUseYouTube ? 'YouTube' : 'basic');
       
-      return user;
+      await signInWithRedirect(auth, provider);
+      // Note: This function doesn't return as the page will redirect
     } catch (error) {
       console.error('Error signing in with Google:', error);
       throw error;
@@ -85,6 +135,11 @@ export const useAuth = () => {
   };
 
   const connectYouTube = async () => {
+    if (!isYouTubeAPIEnabled()) {
+      logFeatureFlag('YouTube Connection', false, 'feature temporarily disabled');
+      return false;
+    }
+    
     try {
       const success = await YouTubeService.authenticateWithYouTube();
       if (success && user) {

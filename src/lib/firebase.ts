@@ -14,6 +14,10 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
+// Log the current domain and auth domain for debugging
+console.log('🌐 Current domain:', window.location.hostname);
+console.log('🔐 Firebase auth domain:', firebaseConfig.authDomain);
+
 // Guard: fail loudly if required env vars are missing to avoid using wrong config
 const requiredKeys: Array<keyof typeof firebaseConfig> = [
   'apiKey',

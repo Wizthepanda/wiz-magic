@@ -41,22 +41,21 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
   };
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-background to-muted/20 relative">
+    <div className="min-h-screen flex flex-col lg:flex-row bg-gradient-to-br from-background to-muted/20 relative">
       <FloatingParticles />
       
-      
-      {/* Sidebar */}
+      {/* Sidebar - Mobile responsive */}
       <WizSidebar 
         activeSection={activeSection} 
         onSectionChange={setActiveSection} 
       />
       
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0">
-        {/* Header with User Profile */}
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Header with User Profile - Mobile responsive */}
         <header className="sticky top-0 z-30 border-b border-white/10 backdrop-blur-lg">
           <div 
-            className="flex items-center justify-between px-6 py-4"
+            className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4"
             style={{
               background: `
                 linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)
@@ -65,8 +64,8 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
               boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
             }}
           >
-            <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-gray-800">
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
+              <h1 className="text-lg sm:text-2xl font-bold text-gray-800 truncate">
                 {activeSection === 'discover' && 'Discover'}
                 {activeSection === 'leaderboard' && 'Leaderboard'}
                 {activeSection === 'activate' && 'Activate'}
@@ -74,19 +73,73 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
                 {activeSection === 'profile' && 'Profile'}
                 {activeSection === 'settings' && 'Settings'}
               </h1>
+              
+              {/* Privacy Policy Link - Desktop only */}
+              <div className="hidden lg:flex items-center space-x-2 text-xs">
+                <a 
+                  href="https://wizxp.com/privacypolicy.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-purple-600 transition-colors"
+                >
+                  Privacy
+                </a>
+                <span className="text-gray-400">·</span>
+                <a 
+                  href="https://wizxp.com/terms.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-purple-600 transition-colors"
+                >
+                  Terms
+                </a>
+              </div>
             </div>
             
             {/* User Profile Component */}
-            <WizUserProfile />
+            <div className="flex-shrink-0">
+              <WizUserProfile />
+            </div>
           </div>
         </header>
 
-        {/* Content Area */}
+        {/* Content Area - Mobile responsive */}
         <div className="flex-1 overflow-auto">
-          <div className="max-w-full">
+          <div className="w-full">
             {renderActiveSection()}
           </div>
         </div>
+        
+        {/* Mobile Footer with Privacy Links */}
+        <footer className="lg:hidden border-t border-white/10 backdrop-blur-lg">
+          <div 
+            className="flex items-center justify-center px-4 py-2 space-x-4 text-xs"
+            style={{
+              background: `
+                linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)
+              `,
+              backdropFilter: 'blur(20px)'
+            }}
+          >
+            <a 
+              href="https://wizxp.com/privacypolicy.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-600 hover:text-purple-600 transition-colors"
+            >
+              Privacy Policy
+            </a>
+            <span className="text-gray-400">·</span>
+            <a 
+              href="https://wizxp.com/terms.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-600 hover:text-purple-600 transition-colors"
+            >
+              Terms of Service
+            </a>
+          </div>
+        </footer>
       </main>
     </div>
   );

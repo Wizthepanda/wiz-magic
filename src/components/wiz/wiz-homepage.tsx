@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
+import { isYouTubeAPIEnabled, isGoogleAuthEnabled, logFeatureFlag } from '@/lib/feature-flags';
 
 interface WizHomepageProps {
   onEnterPlatform: () => void;
@@ -161,34 +162,35 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
     console.log('🔍 Current user state:', user ? `${user.email} (YouTube: ${user.youtubeConnected})` : 'No user');
 
     try {
-      // 1) If not signed in, require Google sign-in (with YouTube scopes)
-      if (!user) {
-        console.log('🚀 User not signed in, triggering Google OAuth with YouTube scopes...');
-        const signedIn = await signInWithGoogle(true);
-        if (!signedIn) {
-          throw new Error('Google sign-in did not return a user.');
-        }
-        console.log('✅ Authentication successful');
+      // Check if Google Auth is disabled
+      if (!isGoogleAuthEnabled()) {
+        logFeatureFlag('Google Authentication', false, 'bypassing auth for testing');
+        console.log('🚀 Google Auth disabled, proceeding directly to dashboard');
+        onEnterPlatform();
+        return;
       }
 
-      // 2) If signed in but not connected to YouTube, try to connect (non-blocking)
-      if (user && !user.youtubeConnected) {
-        console.log('🔗 User signed in but YouTube not connected, connecting...');
-        try {
-          await connectYouTube();
-          console.log('✅ YouTube connection attempted');
-        } catch (ytError) {
-          console.warn('⚠️ YouTube connection failed (continuing signed-in):', ytError);
-        }
+      // 1) If user is already signed in, proceed to platform
+      if (user) {
+        console.log('✅ User already authenticated, proceeding to platform');
+        onEnterPlatform();
+        return;
       }
 
-      // 3) Only now proceed to the platform
-      console.log('🏁 Proceeding to platform...');
-      onEnterPlatform();
+      // 2) If not signed in, trigger Google sign-in (redirect-based)
+      const useYouTubeScope = isYouTubeAPIEnabled();
+      console.log(`🚀 User not signed in, triggering Google OAuth ${useYouTubeScope ? 'with YouTube scopes' : 'basic auth'}...`);
+      
+      // Note: This will redirect the user away from the page
+      // After successful auth, they'll return and the Index component will auto-navigate to dashboard
+      await signInWithGoogle(useYouTubeScope);
+      
+      // This code won't execute due to redirect
+      console.log('🔄 Sign-in initiated, redirecting...');
+      
     } catch (error: any) {
       console.error('❌ Authentication error:', error);
-      alert('Authentication failed. Please configure Firebase Authentication and Google sign-in, then try again.');
-      // Do NOT navigate to dashboard on auth failure
+      alert('Authentication failed. Please try again or check your network connection.');
     }
   };
 
@@ -411,7 +413,7 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
 
         {/* Privacy Link */}
         <motion.a
-          href="/privacy.html"
+          href="https://wizxp.com/privacypolicy.html"
           target="_blank"
           rel="noopener noreferrer"
           className="group flex items-center px-4 py-2 rounded-2xl transition-all duration-500 text-sm font-medium"
@@ -2062,34 +2064,24 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
               </div>
           </motion.div>
           
-          {/* Legal links */}
+          {/* Crawlable Legal Links - Google Optimized */}
           <div className="pt-6 text-sm">
             <a
-              href="/privacy.html"
+              href="https://wizxp.com/privacypolicy.html"
               className="underline hover:no-underline"
               style={{ color: '#5A2D82' }}
               target="_blank"
-              rel="noopener"
+              rel="noopener noreferrer"
             >
               Privacy Policy
             </a>
-            <span className="mx-2" style={{ color: '#A78BFA' }}>•</span>
+            <span className="mx-2" style={{ color: '#A78BFA' }}>·</span>
             <a
-              href="/google-data-usage.html"
+              href="https://wizxp.com/terms.html"
               className="underline hover:no-underline"
               style={{ color: '#5A2D82' }}
               target="_blank"
-              rel="noopener"
-            >
-              Google Data Usage
-            </a>
-            <span className="mx-2" style={{ color: '#A78BFA' }}>•</span>
-            <a
-              href="/terms.html"
-              className="underline hover:no-underline"
-              style={{ color: '#5A2D82' }}
-              target="_blank"
-              rel="noopener"
+              rel="noopener noreferrer"
             >
               Terms of Service
             </a>

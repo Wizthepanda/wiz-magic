@@ -25,7 +25,7 @@ interface WizSidebarProps {
 }
 
 export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true); // Start collapsed on mobile
   const { signOut } = useAuth();
 
   const handleLogout = async () => {
@@ -51,7 +51,7 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
     <>
       {/* Mobile Toggle with Liquid Glass Styling */}
       <motion.div
-        className="fixed top-4 left-4 z-50 md:hidden"
+        className="fixed top-4 left-4 z-50 lg:hidden"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
@@ -59,22 +59,22 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
           variant="ghost"
           size="sm"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="h-12 w-12 p-0 rounded-full transition-all duration-300"
+          className="h-10 w-10 p-0 rounded-full transition-all duration-300"
           style={{
             background: `
-              linear-gradient(135deg, rgba(230, 230, 250, 0.3) 0%, rgba(147, 51, 234, 0.1) 100%),
-              rgba(255, 255, 255, 0.1)
+              linear-gradient(135deg, rgba(230, 230, 250, 0.9) 0%, rgba(147, 51, 234, 0.8) 100%),
+              rgba(255, 255, 255, 0.9)
             `,
             backdropFilter: 'blur(25px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            boxShadow: '0 8px 32px rgba(147, 51, 234, 0.1)'
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            boxShadow: '0 4px 16px rgba(147, 51, 234, 0.2)'
           }}
         >
           <motion.div
             animate={{ rotate: isCollapsed ? 0 : 180 }}
             transition={{ duration: 0.3 }}
           >
-            {isCollapsed ? <Menu className="w-5 h-5 text-indigo-600" /> : <X className="w-5 h-5 text-indigo-600" />}
+            {isCollapsed ? <Menu className="w-4 h-4 text-indigo-700" /> : <X className="w-4 h-4 text-indigo-700" />}
           </motion.div>
         </Button>
       </motion.div>
@@ -82,11 +82,13 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
       {/* Liquid Glassmorphic Sidebar */}
       <motion.aside 
         className={cn(
-          "sticky top-0 left-0 h-screen transition-all duration-500 z-40 overflow-hidden",
-          isCollapsed ? "w-20" : "w-72",
-          "md:translate-x-0",
-          "max-md:fixed max-md:left-0 max-md:top-0",
-          isCollapsed ? "max-md:-translate-x-full" : "max-md:translate-x-0"
+          "h-screen transition-all duration-500 z-40 overflow-hidden",
+          // Desktop: always visible, collapsible width
+          "hidden lg:block lg:sticky lg:top-0 lg:left-0",
+          isCollapsed ? "lg:w-20" : "lg:w-72",
+          // Mobile: full overlay when open, hidden when closed
+          "lg:translate-x-0",
+          isCollapsed ? "max-lg:hidden" : "max-lg:fixed max-lg:inset-y-0 max-lg:left-0 max-lg:w-72 max-lg:translate-x-0"
         )}
         style={{
           background: `
@@ -504,12 +506,18 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
       </motion.aside>
 
       {/* Overlay for mobile */}
-      {!isCollapsed && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-30 md:hidden"
-          onClick={() => setIsCollapsed(true)}
-        />
-      )}
+      <AnimatePresence>
+        {!isCollapsed && (
+          <motion.div 
+            className="fixed inset-0 bg-black/60 z-30 lg:hidden backdrop-blur-sm"
+            onClick={() => setIsCollapsed(true)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 };

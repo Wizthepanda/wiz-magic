@@ -1,12 +1,18 @@
 import { auth, googleProviderWithYouTube } from './firebase';
-import { signInWithPopup } from 'firebase/auth';
+import { signInWithRedirect } from 'firebase/auth';
 import { doc, updateDoc, increment, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
+import { isYouTubeAPIEnabled, logFeatureFlag } from './feature-flags';
 
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
 
 export class YouTubeService {
   private static async getAccessToken(): Promise<string> {
+    if (!isYouTubeAPIEnabled()) {
+      logFeatureFlag('YouTube API', false, 'using fallback mode');
+      throw new Error('YouTube API disabled - using fallback mode');
+    }
+    
     const user = auth.currentUser;
     if (!user) throw new Error('User not authenticated');
     
@@ -25,25 +31,17 @@ export class YouTubeService {
   }
 
   static async authenticateWithYouTube(): Promise<boolean> {
-    try {
-      console.log('Authenticating with YouTube...');
-      const result = await signInWithPopup(auth, googleProviderWithYouTube);
-      console.log('YouTube authentication successful');
-      const credential = result.credential;
-      
-      if (credential) {
-        // Update user document with YouTube connection status
-        const user = result.user;
-        await updateDoc(doc(db, 'users', user.uid), {
-          youtubeConnected: true,
-          youtubeAccessToken: credential.accessToken,
-          lastYouTubeAuth: new Date(),
-        });
-        
-        return true;
-      }
-      
+    if (!isYouTubeAPIEnabled()) {
+      logFeatureFlag('YouTube OAuth', false, 'feature disabled during API verification');
       return false;
+    }
+    
+    try {
+      console.log('Authenticating with YouTube using redirect...');
+      localStorage.setItem('wizxp_youtube_connect', 'true');
+      await signInWithRedirect(auth, googleProviderWithYouTube);
+      // Note: This function doesn't return as the page will redirect
+      return true;
     } catch (error) {
       console.error('Error authenticating with YouTube:', error);
       throw error;
@@ -51,6 +49,11 @@ export class YouTubeService {
   }
   
   static async getUserChannel() {
+    if (!isYouTubeAPIEnabled()) {
+      logFeatureFlag('YouTube Channel API', false, 'returning mock data');
+      return null;
+    }
+    
     try {
       const token = await this.getAccessToken();
       const response = await fetch(
@@ -71,6 +74,24 @@ export class YouTubeService {
   }
   
   static async getVideoDetails(videoId: string) {
+    if (!isYouTubeAPIEnabled()) {
+      logFeatureFlag('YouTube Video Details API', false, 'returning basic video data');
+      return {
+        id: videoId,
+        snippet: {
+          title: 'Video Title (API Disabled)',
+          description: 'Video description unavailable - using fallback mode',
+          thumbnails: {
+            medium: { url: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` }
+          }
+        },
+        statistics: {
+          viewCount: '0',
+          likeCount: '0'
+        }
+      };
+    }
+    
     try {
       const response = await fetch(
         `${YOUTUBE_API_BASE}/videos?part=snippet,statistics&id=${videoId}&key=${import.meta.env.VITE_YOUTUBE_API_KEY}`

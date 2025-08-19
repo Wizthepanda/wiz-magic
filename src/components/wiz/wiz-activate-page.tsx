@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
 import { motion, AnimatePresence } from 'framer-motion';
+import { isYouTubeAPIEnabled } from '@/lib/feature-flags';
 
 export const WizActivatePage = () => {
   const { user, connectYouTube, loading } = useAuth();
@@ -60,6 +61,11 @@ export const WizActivatePage = () => {
   }, []);
 
   const handleConnectYouTube = async () => {
+    if (!isYouTubeAPIEnabled()) {
+      console.log('🎬 YouTube API disabled - YouTube connection not available');
+      return;
+    }
+    
     setIsConnecting(true);
     try {
       await connectYouTube();
@@ -854,16 +860,18 @@ export const WizActivatePage = () => {
           
           <div className="flex items-center justify-center space-x-6 text-sm">
             <a 
-              href="/privacy.html" 
+              href="https://wizxp.com/privacypolicy.html" 
               target="_blank"
+              rel="noopener noreferrer"
               className="text-purple-600 hover:text-purple-700 underline hover:no-underline transition-colors"
             >
               Privacy Policy
             </a>
             <span className="text-gray-400">•</span>
             <a 
-              href="/terms.html" 
+              href="https://wizxp.com/terms.html" 
               target="_blank"
+              rel="noopener noreferrer"
               className="text-purple-600 hover:text-purple-700 underline hover:no-underline transition-colors"
             >
               Terms of Service
