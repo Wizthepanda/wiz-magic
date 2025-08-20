@@ -12,6 +12,7 @@ import { db } from '@/lib/firebase';
 import { YouTubeService } from '@/lib/youtube';
 import { LocalXPService } from '@/lib/local-xp-service';
 import { isYouTubeAPIEnabled, logFeatureFlag } from '@/lib/feature-flags';
+// Note: We'll import useXp dynamically to avoid circular dependency
 
 export interface WizUser extends User {
   level: number;
@@ -56,6 +57,13 @@ export const useAuth = () => {
           
           console.log('✅ Setting user state:', { email: wizUser.email, level: wizUser.level, totalXP: wizUser.totalXP });
           setUser(wizUser);
+          
+          // Dispatch event to sync XP context with Firebase data
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('xpUpdated', { 
+              detail: { totalXP: wizUser.totalXP } 
+            }));
+          }
         } catch (error) {
           console.error('❌ Error fetching user data:', error);
           if (isMounted) {
@@ -145,6 +153,34 @@ export const useAuth = () => {
       if (withYouTube && !isYouTubeAPIEnabled()) {
         logFeatureFlag('YouTube OAuth Scope', false, 'using basic Google Auth instead');
       }
+      
+      // 🔍 FIREBASE AUTH DEBUG: Extract and verify client_id
+      console.group('🔍 FIREBASE AUTH DEBUG');
+      console.log('Auth Domain from config:', auth.config?.authDomain || 'undefined');
+      console.log('Current origin:', window.location.origin);
+      console.log('Expected redirect URI:', `${window.location.origin}/__/auth/handler`);
+      
+      // Extract client_id from Firebase appId 
+      const appId = auth.app?.options?.appId || '';
+      console.log('Firebase App ID:', appId);
+      
+      // Client ID derivation logic: appId format is "1:PROJECT_NUMBER:web:APP_HASH"
+      // Client ID format is "PROJECT_NUMBER-APP_HASH.apps.googleusercontent.com"
+      if (appId.includes(':')) {
+        const parts = appId.split(':');
+        if (parts.length >= 4) {
+          const projectNumber = parts[1]; // "485151111726"
+          const appHash = parts[3];       // "914f4e974eae0f49e23dbf"
+          const derivedClientId = `${projectNumber}-${appHash}.apps.googleusercontent.com`;
+          console.log('🔑 Derived Client ID:', derivedClientId);
+          console.log('🎯 Expected Client ID (from Google Cloud Console): 543256047502-4fdauu19uj3t63kf5saclcg597niecsh.apps.googleusercontent.com');
+          console.log('✅ Client ID Match:', derivedClientId === '543256047502-4fdauu19uj3t63kf5saclcg597niecsh.apps.googleusercontent.com' ? '✅ YES - PERFECT MATCH!' : '❌ NO - MISMATCH DETECTED!');
+        }
+      }
+      
+      console.log('Provider custom params:', provider.customParameters || 'none');
+      console.log('Firebase auth app name:', auth.app?.name);
+      console.groupEnd();
       
       console.log('Starting Google sign-in with redirect, provider:', shouldUseYouTube ? 'YouTube' : 'basic');
       
@@ -265,6 +301,14 @@ export const useAuth = () => {
       
       // Force immediate state update
       setUser(updatedUser);
+      
+      // Dispatch custom event to sync XP context
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('xpUpdated', { 
+          detail: { totalXP: newTotalXP } 
+        }));
+      }
+      
       console.log('✅ User state updated with new XP immediately');
       
       // Force React to re-render by triggering multiple state changes

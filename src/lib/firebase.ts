@@ -14,9 +14,26 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// Log the current domain and auth domain for debugging
-console.log('🌐 Current domain:', window.location.hostname);
-console.log('🔐 Firebase auth domain:', firebaseConfig.authDomain);
+// 🔥 Firebase Config Debug - Let Firebase handle client ID automatically
+console.group("🔥 Firebase Config Debug");
+console.log("🌐 Current domain:", window.location.hostname);
+console.log("🌐 Current origin:", window.location.origin);
+console.log("🔐 Auth Domain:", firebaseConfig.authDomain);
+console.log("🔑 Client ID will be derived from appId:", firebaseConfig.appId);
+console.log("📋 Full Firebase config:", {
+  apiKey: firebaseConfig.apiKey ? `${firebaseConfig.apiKey.substring(0, 10)}...` : 'missing',
+  authDomain: firebaseConfig.authDomain,
+  projectId: firebaseConfig.projectId,
+  storageBucket: firebaseConfig.storageBucket,
+  messagingSenderId: firebaseConfig.messagingSenderId,
+  appId: firebaseConfig.appId ? `${firebaseConfig.appId.substring(0, 20)}...` : 'missing'
+});
+console.log("🔧 Environment variables:", {
+  VITE_FIREBASE_AUTH_DOMAIN: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  NODE_ENV: import.meta.env.NODE_ENV,
+  MODE: import.meta.env.MODE
+});
+console.groupEnd();
 
 // Guard: fail loudly if required env vars are missing to avoid using wrong config
 const requiredKeys: Array<keyof typeof firebaseConfig> = [
@@ -57,11 +74,38 @@ try {
 }
 export { analytics };
 
-// Configure Google Auth Provider
+// Configure Google Auth Provider - Let Firebase handle redirect URI automatically
 export const googleProvider = new GoogleAuthProvider();
+// Remove custom redirect_uri - Firebase handles this based on authDomain
 
 // Create a separate provider for YouTube scopes
 export const googleProviderWithYouTube = new GoogleAuthProvider();
 googleProviderWithYouTube.addScope('https://www.googleapis.com/auth/youtube.readonly');
+// Remove custom redirect_uri - Firebase handles this based on authDomain
+
+// 🔍 Debug Google Auth Provider Configuration
+console.group("🔍 Google Auth Provider Debug");
+console.log("🔑 Firebase will derive client ID from appId:", firebaseConfig.appId);
+console.log("🔄 Firebase will auto-construct redirect URI from authDomain:", firebaseConfig.authDomain);
+console.log("🎯 Expected redirect URI:", `https://${firebaseConfig.authDomain}/__/auth/handler`);
+console.log("📋 Basic Provider Custom Params:", googleProvider.customParameters || 'none');
+console.log("📋 YouTube Provider Custom Params:", googleProviderWithYouTube.customParameters || 'none');
+console.log("🚨 CRITICAL: If auth still fails with old client ID:");
+console.log("   - Clear browser cache completely (Ctrl+Shift+Delete)");
+console.log("   - Try incognito/private mode");
+console.log("   - Check for other Google Cloud projects");
+console.log("   - Old client ID might be in different project:");
+console.log("     485151111726-56bglso73que2ilprb8mvqm3iioq3k9m.apps.googleusercontent.com");
+
+// Clear any potential service worker cache
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(registration => {
+      console.log('🧹 Clearing service worker registration');
+      registration.unregister();
+    });
+  });
+}
+console.groupEnd();
 
 export default app;

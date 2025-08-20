@@ -21,6 +21,7 @@ export const XpProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     return 0;
   });
 
+
   // Calculate level and progress based on 1000 XP per level
   const level = Math.floor(totalXp / 1000) + 1;
   const xpInCurrentLevel = totalXp % 1000;
@@ -41,6 +42,21 @@ export const XpProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       return newTotalXp;
     });
   };
+
+  // Listen for XP updates from Firebase (dispatched by useAuth)
+  useEffect(() => {
+    const handleXpUpdate = (event: CustomEvent) => {
+      const { totalXP } = event.detail;
+      console.log(`🔄 XP Context received Firebase update: ${totalXP}, current: ${totalXp}`);
+      setTotalXp(totalXP);
+      console.log(`📊 XP Context updated to: ${totalXP}`);
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('xpUpdated', handleXpUpdate as EventListener);
+      return () => window.removeEventListener('xpUpdated', handleXpUpdate as EventListener);
+    }
+  }, []);
 
   // Save XP to localStorage whenever it changes
   useEffect(() => {

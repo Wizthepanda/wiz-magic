@@ -3,8 +3,10 @@ import YouTube, { YouTubeEvent } from "react-youtube";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { useXp } from "@/context/XpContext";
+import { useAuth } from "@/hooks/useAuth";
 import { LocalVideoPlayer } from "@/components/ui/local-video-player";
 import { isYouTubeAPIEnabled } from "@/lib/feature-flags";
+import { VideoCompletionService } from "@/lib/video-completion-service";
 
 interface VideoPanelProps {
   videoId: string;
@@ -26,25 +28,49 @@ export const VideoPanel: React.FC<VideoPanelProps> = ({
   onReward,
 }) => {
   const { addXp } = useXp();
+  const { user } = useAuth();
   const [progress, setProgress] = useState(0);
   const [player, setPlayer] = useState<any>(null);
   const [rewarded, setRewarded] = useState(false);
   const [useLocalPlayer] = useState(!isYouTubeAPIEnabled());
+  const [isVideoCompleted, setIsVideoCompleted] = useState(false);
 
   // Handle local video player XP
   const handleLocalXpEarned = (xp: number, reason: string) => {
     if (!rewarded) {
       setRewarded(true);
-      addXp(xp);
+      // Don't call addXp here - LocalVideoPlayer already handles it
       onReward(xp);
       console.log(`🎯 Local XP: ${xp} earned for ${reason}`);
     }
   };
 
+  // Handle local video player progress updates
+  const handleLocalProgress = (progressPercentage: number) => {
+    setProgress(progressPercentage);
+  };
+
+  // Check if video is already completed
+  useEffect(() => {
+    const checkCompletion = async () => {
+      if (!user || !videoId) return;
+      
+      const completed = await VideoCompletionService.isVideoCompleted(videoId);
+      setIsVideoCompleted(completed);
+      if (completed) {
+        setRewarded(true);
+        console.log(`📹 Video ${videoId} already completed in VideoPanel`);
+      }
+    };
+    
+    checkCompletion();
+  }, [user, videoId]);
+
   // Reset rewarded state when video changes
   useEffect(() => {
     setRewarded(false);
     setProgress(0);
+    setIsVideoCompleted(false);
     
     if (useLocalPlayer) {
       console.log('🎬 VideoPanel using local player mode (YouTube API disabled)');
@@ -54,8 +80,8 @@ export const VideoPanel: React.FC<VideoPanelProps> = ({
   // Poll progress every second
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (player) {
-      interval = setInterval(() => {
+    if (player && !isVideoCompleted) {
+      interval = setInterval(async () => {
         const duration = player.getDuration();
         const currentTime = player.getCurrentTime();
         if (duration > 0) {
@@ -63,20 +89,30 @@ export const VideoPanel: React.FC<VideoPanelProps> = ({
           setProgress(percent);
 
           // Reward XP when fully watched (≥ 95% to account for edge cases)
-          if (percent >= 95 && !rewarded) {
+          if (percent >= 95 && !rewarded && !isVideoCompleted) {
             setRewarded(true);
             
-            // Add XP to global context (triggers real-time UI updates)
-            addXp(xpReward);
+            // Mark video as completed to prevent future XP farming
+            const marked = await VideoCompletionService.markVideoCompleted(videoId, xpReward, currentTime);
             
-            // Optional callback for additional handling
-            onReward(xpReward);
+            if (marked) {
+              // Add XP to global context (triggers real-time UI updates)
+              addXp(xpReward);
+              
+              // Optional callback for additional handling
+              onReward(xpReward);
+              
+              setIsVideoCompleted(true);
+              console.log(`🏁 YouTube video ${videoId} completed and marked - ${xpReward} XP earned`);
+            } else {
+              console.log(`⚠️ YouTube video ${videoId} was already completed - no XP awarded`);
+            }
           }
         }
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [player, rewarded, xpReward, onReward]);
+  }, [player, rewarded, xpReward, onReward, videoId, addXp, isVideoCompleted]);
 
   const onReady = (event: YouTubeEvent) => {
     setPlayer(event.target);
@@ -95,14 +131,26 @@ export const VideoPanel: React.FC<VideoPanelProps> = ({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-2 sm:p-4"
+          className="fixed z-50 flex items-center justify-center bg-black backdrop-blur-sm"
+          style={{ 
+            position: 'fixed',
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0,
+            width: '100vw',
+            height: '100vh',
+            margin: 0,
+            padding: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.85)'
+          }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose} // click outside to close
         >
           <motion.div
-            className="relative w-full max-w-sm sm:max-w-2xl rounded-xl sm:rounded-2xl bg-[#0d0d0f] shadow-xl overflow-hidden"
+            className="relative w-full max-w-sm sm:max-w-2xl rounded-xl sm:rounded-2xl bg-[#0d0d0f] shadow-xl overflow-hidden mx-4 my-4"
             initial={{ opacity: 0, scale: 0.9, y: 40 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 40 }}
@@ -123,6 +171,7 @@ export const VideoPanel: React.FC<VideoPanelProps> = ({
                 <LocalVideoPlayer
                   url={`https://www.youtube.com/watch?v=${videoId}`}
                   onXpEarned={handleLocalXpEarned}
+                  onProgress={handleLocalProgress}
                   className="w-full h-full rounded-t-xl sm:rounded-t-2xl"
                 />
               ) : (
@@ -157,12 +206,14 @@ export const VideoPanel: React.FC<VideoPanelProps> = ({
               </div>
               <span
                 className={`px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-full whitespace-nowrap ${
-                  rewarded
+                  isVideoCompleted
+                    ? "bg-gray-500 text-white"
+                    : rewarded
                     ? "bg-green-500 text-white"
                     : "bg-gradient-to-r from-purple-500 to-purple-700 text-white"
                 } shadow-md shadow-purple-500/30`}
               >
-                {rewarded ? `+${xpReward} XP Earned` : `+${xpReward} XP`}
+                {isVideoCompleted ? "Already Completed" : rewarded ? `+${xpReward} XP Earned` : `+${xpReward} XP`}
               </span>
             </div>
           </motion.div>

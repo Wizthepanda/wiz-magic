@@ -15,7 +15,7 @@ import { useXp } from '@/context/XpContext';
 
 export const WizUserProfile = () => {
   const { user, signOut, signInWithGoogle, loading } = useAuth();
-  const { xp, level } = useXp();
+  const { xp, totalXp, level, progressPercent } = useXp();
 
   const handleSignOut = async () => {
     try {
@@ -27,26 +27,14 @@ export const WizUserProfile = () => {
     }
   };
 
-  // Debug user state changes
+  // Debug user state changes - using XP context for real-time updates
   console.log('👤 UserProfile render:', { 
     userId: user?.uid, 
-    totalXP: user?.totalXP, 
-    level: user?.level 
+    totalXP: totalXp, 
+    level: level,
+    xpInCurrentLevel: xp,
+    progressPercent: progressPercent.toFixed(1) + '%'
   });
-
-  // Debug progress calculation
-  if (user) {
-    const xpForCurrentLevel = (user.level - 1) * 1000;
-    const currentLevelXP = user.totalXP - xpForCurrentLevel;
-    const progressPercentage = (currentLevelXP / 1000) * 100;
-    console.log('📊 Progress calculation:', {
-      totalXP: user.totalXP,
-      level: user.level,
-      xpForCurrentLevel,
-      currentLevelXP,
-      progressPercentage: progressPercentage.toFixed(1) + '%'
-    });
-  }
 
   if (loading) {
     return (

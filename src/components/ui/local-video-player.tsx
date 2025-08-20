@@ -1,33 +1,61 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import ReactPlayer from 'react-player/youtube';
 import { useAuth } from '@/hooks/useAuth';
+import { useXp } from '@/context/XpContext';
 import { doc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { isYouTubeAPIEnabled } from '@/lib/feature-flags';
 import { LocalXPService } from '@/lib/local-xp-service';
+import { VideoCompletionService } from '@/lib/video-completion-service';
 
 interface LocalVideoPlayerProps {
   url: string;
   onXpEarned?: (xp: number, reason: string) => void;
+  onProgress?: (progress: number) => void;
   className?: string;
 }
 
 export const LocalVideoPlayer: React.FC<LocalVideoPlayerProps> = ({
   url,
   onXpEarned,
+  onProgress,
   className = "w-full h-full"
 }) => {
   const playerRef = useRef<ReactPlayer>(null);
-  const { user, addXP } = useAuth();
+  const { user } = useAuth();
+  const { addXp } = useXp();
   const [watchTime, setWatchTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [lastXpTime, setLastXpTime] = useState(0);
   const [isWatching, setIsWatching] = useState(false);
   const [hasCompletionBonus, setHasCompletionBonus] = useState(false);
+  const [isVideoCompleted, setIsVideoCompleted] = useState(false);
+  const [videoId, setVideoId] = useState<string>('');
 
-  // Award XP for watching
+  // Check if video is already completed
+  useEffect(() => {
+    const checkVideoCompletion = async () => {
+      if (!user || !url) return;
+      
+      const extractedVideoId = url.includes('watch?v=') ? url.split('watch?v=')[1].split('&')[0] : 'unknown';
+      setVideoId(extractedVideoId);
+      
+      if (extractedVideoId !== 'unknown') {
+        const completed = await VideoCompletionService.isVideoCompleted(extractedVideoId);
+        setIsVideoCompleted(completed);
+        if (completed) {
+          setHasCompletionBonus(true);
+          console.log(`📹 Video ${extractedVideoId} already completed - no XP will be awarded`);
+        }
+      }
+    };
+    
+    checkVideoCompletion();
+  }, [user, url]);
+
+  // Award XP for watching (only if video not completed)
   const awardXP = useCallback(async (amount: number, reason: string) => {
-    if (!user) return;
+    if (!user || isVideoCompleted) return;
 
     try {
       // Update Firestore
@@ -39,8 +67,8 @@ export const LocalVideoPlayer: React.FC<LocalVideoPlayerProps> = ({
         'stats.totalWatchTime': increment(30) // Add 30 seconds for each milestone
       });
 
-      // Update local state
-      addXP(amount);
+      // Update XP context (this will update the progress bar immediately)
+      addXp(amount);
       
       // Notify parent component
       onXpEarned?.(amount, reason);
@@ -49,7 +77,7 @@ export const LocalVideoPlayer: React.FC<LocalVideoPlayerProps> = ({
     } catch (error) {
       console.error('Error awarding XP:', error);
     }
-  }, [user, addXP, onXpEarned]);
+  }, [user, addXp, onXpEarned, isVideoCompleted]);
 
   // Track watch time and award XP
   useEffect(() => {
@@ -62,10 +90,17 @@ export const LocalVideoPlayer: React.FC<LocalVideoPlayerProps> = ({
         
         setWatchTime(Math.floor(currentTime));
         
-        // Award +1 XP every 30 seconds
-        if (Math.floor(currentTime) > 0 && Math.floor(currentTime) % 30 === 0 && Math.floor(currentTime) !== lastXpTime) {
+        // Update progress for parent component
+        if (currentDuration > 0) {
+          const progressPercentage = (currentTime / currentDuration) * 100;
+          onProgress?.(progressPercentage);
+        }
+        
+        // Award +1 XP every 10 seconds for short videos (under 60s) or every 30s for longer videos
+        const interval = currentDuration <= 60 ? 10 : 30;
+        if (Math.floor(currentTime) > 0 && Math.floor(currentTime) % interval === 0 && Math.floor(currentTime) !== lastXpTime) {
           setLastXpTime(Math.floor(currentTime));
-          awardXP(1, 'watching (30s milestone)');
+          awardXP(1, `watching (${interval}s milestone)`);
         }
         
         // Check for completion bonus (90% watched)
@@ -73,7 +108,13 @@ export const LocalVideoPlayer: React.FC<LocalVideoPlayerProps> = ({
           const completionPercentage = (currentTime / currentDuration) * 100;
           if (completionPercentage >= 90) {
             setHasCompletionBonus(true);
-            const bonusXP = Math.floor(Math.floor(currentTime) / 30 * 0.1); // 10% bonus
+            // Give meaningful completion bonus based on video length
+            let bonusXP;
+            if (currentDuration <= 60) {
+              bonusXP = Math.max(5, Math.floor(currentDuration / 10)); // At least 5 XP, or 1 XP per 10 seconds
+            } else {
+              bonusXP = Math.max(10, Math.floor(currentTime / 30 * 0.5)); // At least 10 XP, or 50% of time-based XP
+            }
             awardXP(bonusXP, 'completion bonus (90%+ watched)');
           }
         }
@@ -85,7 +126,7 @@ export const LocalVideoPlayer: React.FC<LocalVideoPlayerProps> = ({
         clearInterval(interval);
       }
     };
-  }, [isWatching, lastXpTime, hasCompletionBonus, awardXP]);
+  }, [isWatching, lastXpTime, hasCompletionBonus, awardXP, onProgress]);
 
   const handlePlay = () => {
     setIsWatching(true);
@@ -104,22 +145,33 @@ export const LocalVideoPlayer: React.FC<LocalVideoPlayerProps> = ({
   const handleEnded = async () => {
     setIsWatching(false);
     
-    if (!hasCompletionBonus && user) {
-      // Extract video ID from URL for proper tracking
-      const videoId = url.includes('watch?v=') ? url.split('watch?v=')[1].split('&')[0] : 'unknown';
-      
-      // Use LocalXPService for comprehensive completion tracking
-      const completionXP = await LocalXPService.recordLocalVideoView(videoId, watchTime, duration);
-      const engagementXP = await LocalXPService.trackLocalVideoEngagement(videoId, 'completion', watchTime);
-      
-      const totalXP = completionXP + engagementXP;
-      
-      // Update local state
-      addXP(totalXP);
-      onXpEarned?.(totalXP, 'video completion');
-      
-      setHasCompletionBonus(true);
-      console.log(`🏁 Video completed - ${totalXP} XP earned (${completionXP} view + ${engagementXP} completion)`);
+    // Ensure progress shows 100% completion
+    onProgress?.(100);
+    
+    if (!hasCompletionBonus && user && !isVideoCompleted && videoId !== 'unknown') {
+      try {
+        // Use LocalXPService for comprehensive completion tracking
+        const completionXP = await LocalXPService.recordLocalVideoView(videoId, watchTime, duration);
+        const engagementXP = await LocalXPService.trackLocalVideoEngagement(videoId, 'completion', watchTime);
+        const totalXP = completionXP + engagementXP;
+        
+        // Mark video as completed to prevent future XP farming
+        const marked = await VideoCompletionService.markVideoCompleted(videoId, totalXP, watchTime);
+        
+        if (marked) {
+          // Update XP context (this will update the progress bar immediately)
+          addXp(totalXP);
+          onXpEarned?.(totalXP, 'video completion');
+          
+          setHasCompletionBonus(true);
+          setIsVideoCompleted(true);
+          console.log(`🏁 Video completed - ${totalXP} XP earned and marked as completed (${completionXP} view + ${engagementXP} completion)`);
+        } else {
+          console.log(`⚠️ Video ${videoId} was already completed - no XP awarded`);
+        }
+      } catch (error) {
+        console.error('Error handling video completion:', error);
+      }
     }
   };
 
@@ -153,12 +205,22 @@ export const LocalVideoPlayer: React.FC<LocalVideoPlayerProps> = ({
         }}
       />
       
+      {/* Completed Video Overlay */}
+      {isVideoCompleted && (
+        <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
+          <div className="bg-green-500 text-white px-4 py-2 rounded-lg font-semibold">
+            ✅ Video Completed - No XP Available
+          </div>
+        </div>
+      )}
+      
       {/* Debug info in development */}
       {import.meta.env.DEV && (
         <div className="absolute top-2 right-2 bg-black bg-opacity-70 text-white text-xs p-2 rounded">
           <div>Watch: {watchTime}s</div>
           <div>Duration: {Math.floor(duration)}s</div>
           <div>Status: {isWatching ? 'Watching' : 'Paused'}</div>
+          <div>Completed: {isVideoCompleted ? 'Yes' : 'No'}</div>
           <div>API: {isYouTubeAPIEnabled() ? 'Enabled' : 'Local Mode'}</div>
         </div>
       )}
