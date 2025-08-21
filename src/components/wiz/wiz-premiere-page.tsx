@@ -10,6 +10,7 @@ import { FloatingParticles } from '@/components/ui/floating-particles';
 export const WizPremierePage = () => {
   const { user } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState('monthly');
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   const isEligible = user && user.level >= 5;
   const currentLevel = user?.level || 1;
@@ -127,9 +128,106 @@ export const WizPremierePage = () => {
               WIZ Premiere
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto mt-4">
-              Unlock the ultimate learning experience with exclusive content, premium features, and VIP access to top creators.
+              A Hollywood-level AI animation brought to life by 6 visionary animators
             </p>
           </div>
+        </div>
+
+        {/* Premiere Trailer */}
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-yellow-400/10 to-purple-500/10 rounded-3xl blur-2xl"></div>
+          <Card className="border-0 shadow-2xl overflow-hidden relative" style={{
+            background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(51, 65, 85, 0.95) 100%)',
+            backdropFilter: 'blur(8px)',
+            borderRadius: '24px',
+            border: '2px solid rgba(139, 92, 246, 0.3)'
+          }}>
+            <div className="absolute top-4 left-4 z-10">
+              <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold px-4 py-2">
+                <Video className="w-4 h-4 mr-2" />
+                PREMIERE TRAILER
+              </Badge>
+            </div>
+            
+            <CardContent className="p-0">
+              <div className="aspect-video relative group cursor-pointer" onClick={() => setIsVideoPlaying(!isVideoPlaying)}>
+                {!isVideoPlaying ? (
+                  <>
+                    {/* Panda Thumbnail */}
+                    <div 
+                      className="w-full h-full bg-cover bg-center rounded-t-3xl"
+                      style={{
+                        backgroundImage: 'url("/wiz-premiere-panda.svg")',
+                        borderRadius: '24px 24px 0 0'
+                      }}
+                    >
+                      {/* Play Button Overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/60 transition-all duration-300 rounded-t-3xl">
+                        <div className="w-20 h-20 rounded-full bg-white/90 group-hover:bg-white flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-all duration-300">
+                          <Play className="w-10 h-10 text-black ml-1" />
+                        </div>
+                      </div>
+                      
+                      {/* Duration Badge */}
+                      <div className="absolute bottom-4 right-4">
+                        <div className="px-2 py-1 bg-black/80 text-white text-xs font-semibold rounded">
+                          2:45
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <iframe
+                    src="https://www.youtube.com/embed/2M4asXviuoo?autoplay=1&enablejsapi=1&origin=wizxp.com&rel=0&showinfo=0&modestbranding=1"
+                    title="WIZ Premiere Trailer - The Future of AI Animation"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="w-full h-full rounded-t-3xl"
+                    style={{
+                      border: 'none',
+                      borderRadius: '24px 24px 0 0'
+                    }}
+                  />
+                )}
+              </div>
+              
+              <div className="p-6 space-y-4" style={{
+                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.98) 100%)'
+              }}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-2xl font-bold text-white mb-2">The Future of AI Animation</h3>
+                    <p className="text-gray-300">Witness stunning AI-generated visuals and Hollywood-level storytelling</p>
+                  </div>
+                  <div className="flex items-center space-x-3 text-yellow-400">
+                    <div className="flex items-center space-x-1">
+                      <Star className="w-5 h-5 fill-current" />
+                      <span className="font-bold">4.9</span>
+                    </div>
+                    <div className="flex items-center space-x-1 px-3 py-1 rounded-full bg-yellow-400/10 border border-yellow-400/30">
+                      <Crown className="w-4 h-4" />
+                      <span className="font-semibold">Premium</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-6 text-sm text-gray-400">
+                  <span className="flex items-center space-x-1">
+                    <Users className="w-4 h-4" />
+                    <span>2.1M views</span>
+                  </span>
+                  <span className="flex items-center space-x-1">
+                    <Sparkles className="w-4 h-4" />
+                    <span>4K Ultra HD</span>
+                  </span>
+                  <span className="flex items-center space-x-1">
+                    <Award className="w-4 h-4" />
+                    <span>Award Winning</span>
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Eligibility Status */}

@@ -12,6 +12,7 @@ import { db } from '@/lib/firebase';
 import { YouTubeService } from '@/lib/youtube';
 import { LocalXPService } from '@/lib/local-xp-service';
 import { isYouTubeAPIEnabled, logFeatureFlag } from '@/lib/feature-flags';
+import { isAdmin, getUserPermissions, TEST_USER_DEMO_DATA } from '@/config/admin-config';
 // Note: We'll import useXp dynamically to avoid circular dependency
 
 export interface WizUser extends User {
@@ -19,6 +20,9 @@ export interface WizUser extends User {
   totalXP: number;
   youtubeConnected: boolean;
   createdAt: Date;
+  isAdmin?: boolean;
+  permissions?: string[];
+  testUserData?: any;
 }
 
 export const useAuth = () => {
@@ -47,12 +51,19 @@ export const useAuth = () => {
           
           if (!isMounted) return; // Check again after async operation
           
+          // Check if user is admin and get permissions
+          const userPermissions = getUserPermissions(firebaseUser.email || '');
+          const adminTestData = userPermissions.isAdmin ? TEST_USER_DEMO_DATA : null;
+          
           const wizUser: WizUser = {
             ...firebaseUser,
-            level: userData?.level || 1,
-            totalXP: userData?.totalXP || 0,
+            level: userData?.level || (userPermissions.isAdmin ? adminTestData?.level : 1),
+            totalXP: userData?.totalXP || (userPermissions.isAdmin ? adminTestData?.xp : 0),
             youtubeConnected: userData?.youtubeConnected || false,
             createdAt: userData?.createdAt?.toDate() || new Date(),
+            isAdmin: userPermissions.isAdmin,
+            permissions: userPermissions.permissions,
+            testUserData: adminTestData,
           };
           
           console.log('✅ Setting user state:', { email: wizUser.email, level: wizUser.level, totalXP: wizUser.totalXP });

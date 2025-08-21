@@ -8,6 +8,7 @@ import { WizPremierePage } from './wiz-premiere-page';
 import { WizLeaderboardPage } from './wiz-leaderboard-page';
 import { WizProfilePage } from './wiz-profile-page';
 import { FloatingParticles } from '@/components/ui/floating-particles';
+import { AdminTestPanel } from '@/components/admin/AdminTestPanel';
 
 interface WizDashboardProps {
   onBackToHomepage?: () => void;
@@ -73,27 +74,6 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
                 {activeSection === 'profile' && 'Profile'}
                 {activeSection === 'settings' && 'Settings'}
               </h1>
-              
-              {/* Privacy Policy Link - Desktop only */}
-              <div className="hidden lg:flex items-center space-x-2 text-xs">
-                <a 
-                  href="https://wizxp.com/privacypolicy.html"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-600 hover:text-purple-600 transition-colors"
-                >
-                  Privacy
-                </a>
-                <span className="text-gray-400">·</span>
-                <a 
-                  href="https://wizxp.com/terms.html"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-600 hover:text-purple-600 transition-colors"
-                >
-                  Terms
-                </a>
-              </div>
             </div>
             
             {/* User Profile Component */}
@@ -109,38 +89,10 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
             {renderActiveSection()}
           </div>
         </div>
-        
-        {/* Mobile Footer with Privacy Links */}
-        <footer className="lg:hidden border-t border-white/10 backdrop-blur-lg">
-          <div 
-            className="flex items-center justify-center px-4 py-2 space-x-4 text-xs"
-            style={{
-              background: `
-                linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)
-              `,
-              backdropFilter: 'blur(20px)'
-            }}
-          >
-            <a 
-              href="https://wizxp.com/privacypolicy.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-600 hover:text-purple-600 transition-colors"
-            >
-              Privacy Policy
-            </a>
-            <span className="text-gray-400">·</span>
-            <a 
-              href="https://wizxp.com/terms.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-600 hover:text-purple-600 transition-colors"
-            >
-              Terms of Service
-            </a>
-          </div>
-        </footer>
       </main>
+      
+      {/* Admin Test Panel - Available on all dashboard pages */}
+      <AdminTestPanel />
     </div>
   );
 };

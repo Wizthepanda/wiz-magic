@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WIZ - Watch YouTube, Earn Rewards</title>
+    <link rel="icon" type="image/png" href="/WIZ Favicon.png" />
     <meta name="description" content="Turn your watch time into XP & cash - just keep watching what you love on WIZ Watch 2 Earn platform" />
     <meta name="author" content="WIZ Platform" />
 
@@ -15,10 +16,97 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    
+    <style>
+      /* Hide static header - only for Google crawling */
+      body > header {
+        position: absolute;
+        left: -9999px;
+        top: -9999px;
+        visibility: hidden;
+      }
+      
+      /* Style footer to blend with design */
+      body > footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 8px 4px;
+        text-align: center;
+        font-size: 11px;
+        z-index: 1000;
+      }
+      
+      body > footer p {
+        margin: 0;
+        color: #8B5CF6;
+        line-height: 1.4;
+      }
+      
+      body > footer a {
+        color: #8B5CF6;
+        text-decoration: none;
+        font-weight: 500;
+        white-space: nowrap;
+      }
+      
+      body > footer a:hover {
+        text-decoration: underline;
+      }
+      
+      /* Mobile responsive footer */
+      @media (max-width: 768px) {
+        body > footer {
+          font-size: 10px;
+          padding: 6px 2px;
+        }
+        
+        body > footer p {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          align-items: center;
+          gap: 4px;
+        }
+        
+        body > footer a {
+          font-size: 9px;
+        }
+      }
+    </style>
   </head>
 
   <body>
+    <header>
+      <nav>
+        <a href="https://wizxp.com/privacy.html" target="_blank" rel="noopener noreferrer">
+          Privacy Policy
+        </a>
+      </nav>
+    </header>
+
     <div id="root"></div>
+
+    <footer>
+      <p>
+        <a href="/about" rel="noopener noreferrer">
+          About
+        </a> ·
+        <a href="https://wizxp.com/privacy.html" target="_blank" rel="noopener noreferrer">
+          Privacy Policy
+        </a> ·
+        <a href="https://wizxp.com/terms.html" target="_blank" rel="noopener noreferrer">
+          Terms of Service
+        </a> ·
+        <a href="/auth" rel="noopener noreferrer">
+          Google Auth
+        </a>
+      </p>
+    </footer>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
