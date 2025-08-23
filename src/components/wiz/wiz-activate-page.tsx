@@ -141,10 +141,18 @@ export const WizActivatePage = () => {
             </h1>
             
             <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-              Connect your YouTube channel and share your content with your most dedicated fans. 
-              They'll earn XP for every minute they watch, while unlocking exclusive rewards, 
-              free learning opportunities, and access to premium content.
+              Connect your YouTube channel safely and securely. We only request read-only 
+              permissions to track watch progress and help your fans earn XP rewards. 
+              Your content and channel remain completely under your control.
             </p>
+
+            {/* Security Badge */}
+            <div className="flex items-center justify-center space-x-3 mt-6 p-3 bg-green-50 rounded-full max-w-lg mx-auto">
+              <div className="w-2 h-2 rounded-full bg-green-500"></div>
+              <span className="text-sm font-medium text-green-700">
+                YouTube Approved • Read-Only Access • Fully Secure
+              </span>
+            </div>
           </div>
 
           {/* Center CTA Button */}
@@ -169,8 +177,8 @@ export const WizActivatePage = () => {
               }}
             >
               <Youtube className="w-6 h-6 mr-3" />
-              {user?.youtubeConnected ? '✅ Connected' : 
-               isConnecting ? 'Connecting...' : '🔴 Connect YouTube'}
+              {user?.youtubeConnected ? '✅ YouTube Connected' : 
+               isConnecting ? 'Connecting Securely...' : '🔗 Connect Safely'}
               
               {/* Hover glow effect */}
               <div 

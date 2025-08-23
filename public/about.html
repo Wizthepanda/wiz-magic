@@ -8,14 +8,14 @@
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
-            color: #2B2B2B;
+            color: #2D2D2D;
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #F6F0FF 0%, #FFFFFF 100%);
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%, #f8fafc 100%);
             min-height: 100vh;
         }
         
-        /* Subtle background animation */
+        /* White glassmorphism background */
         .background {
             position: fixed;
             top: 0;
@@ -33,235 +33,452 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle at 50% 40%, rgba(246, 240, 255, 0.4) 0%, transparent 70%);
+            background: radial-gradient(ellipse at 30% 20%, rgba(167, 139, 250, 0.08) 0%, transparent 50%),
+                       radial-gradient(ellipse at 70% 80%, rgba(14, 165, 233, 0.06) 0%, transparent 50%);
         }
         
-        /* Floating sparkles */
+        /* Floating sparkles for white theme */
         .sparkle {
             position: absolute;
             width: 4px;
             height: 4px;
-            background: #C29FFF;
+            background: radial-gradient(circle, rgba(167, 139, 250, 0.6) 0%, rgba(14, 165, 233, 0.3) 50%, transparent 100%);
             border-radius: 50%;
-            animation: float 8s ease-in-out infinite;
-            opacity: 0.6;
+            animation: floatWhite 12s ease-in-out infinite;
+            opacity: 0.4;
+            filter: blur(0.5px);
         }
         
-        .sparkle:nth-child(1) { left: 10%; top: 20%; animation-delay: 0s; }
-        .sparkle:nth-child(2) { left: 80%; top: 60%; animation-delay: 2s; }
-        .sparkle:nth-child(3) { left: 60%; top: 80%; animation-delay: 4s; }
-        .sparkle:nth-child(4) { left: 30%; top: 70%; animation-delay: 6s; }
+        .sparkle:nth-child(1) { left: 15%; top: 25%; animation-delay: 0s; }
+        .sparkle:nth-child(2) { left: 85%; top: 15%; animation-delay: 3s; }
+        .sparkle:nth-child(3) { left: 70%; top: 75%; animation-delay: 6s; }
+        .sparkle:nth-child(4) { left: 25%; top: 65%; animation-delay: 9s; }
+        .sparkle:nth-child(5) { left: 50%; top: 40%; animation-delay: 12s; }
+        .sparkle:nth-child(6) { left: 90%; top: 50%; animation-delay: 15s; }
         
-        @keyframes float {
-            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.6; }
-            50% { transform: translateY(-20px) rotate(180deg); opacity: 1; }
+        @keyframes floatWhite {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
+            33% { transform: translateY(-15px) scale(1.2); opacity: 0.6; }
+            66% { transform: translateY(-8px) scale(0.8); opacity: 0.4; }
         }
         
         .back-link {
             position: fixed;
             top: 20px;
             left: 20px;
-            background: rgba(194, 159, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(194, 159, 255, 0.2);
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(167, 139, 250, 0.3);
             border-radius: 50px;
             padding: 12px 24px;
-            color: #7C3AED;
+            color: #6366f1;
             text-decoration: none;
             font-weight: 600;
             font-size: 14px;
             transition: all 0.3s ease;
             z-index: 100;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5);
         }
         
         .back-link:hover {
-            background: rgba(194, 159, 255, 0.15);
+            background: rgba(255, 255, 255, 0.35);
             transform: translateY(-2px);
-            box-shadow: 0 8px 32px rgba(194, 159, 255, 0.08);
+            box-shadow: 0 8px 24px rgba(167, 139, 250, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            border-color: rgba(167, 139, 250, 0.5);
         }
         
         .container {
-            max-width: 900px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 100px 20px 60px;
         }
         
         .hero-header {
             text-align: center;
-            margin-bottom: 60px;
+            margin-bottom: 80px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(167, 139, 250, 0.2);
+            border-radius: 32px;
+            padding: 60px 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6);
         }
         
         .hero-title {
-            font-size: 4rem;
+            font-size: 4.5rem;
             font-weight: 900;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, #C29FFF 0%, #5A2D82 100%);
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #a855f7 0%, #06b6d4 25%, #8b5cf6 50%, #06b6d4 75%, #a855f7 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             line-height: 1.1;
+            filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.3));
+            background-size: 300% 100%;
+            animation: gradientShiftWhite 4s ease-in-out infinite;
+        }
+        
+        @keyframes gradientShiftWhite {
+            0%, 100% { background-position: 0% 50%; }
+            25% { background-position: 100% 50%; }
+            50% { background-position: 200% 50%; }
+            75% { background-position: 300% 50%; }
         }
         
         @media (max-width: 768px) {
             .hero-title {
-                font-size: 2.8rem;
+                font-size: 3rem;
             }
         }
         
         .hero-subtitle {
-            font-size: 1.5rem;
-            color: #7C3AED;
-            font-weight: 600;
-            margin-bottom: 30px;
-        }
-        
-        .hero-description {
             font-size: 1.25rem;
-            color: #5C5C5C;
+            color: #64748b;
+            font-weight: 400;
+            margin-bottom: 0;
             max-width: 600px;
             margin: 0 auto;
             line-height: 1.6;
         }
         
-        .content-section {
-            margin-bottom: 50px;
+        .section {
+            margin-bottom: 80px;
         }
         
-        .card {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 40px;
-            margin-bottom: 30px;
-            box-shadow: 0 12px 40px rgba(194, 159, 255, 0.06);
-            transition: all 0.3s ease;
-        }
-        
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 16px 48px rgba(194, 159, 255, 0.1);
-        }
-        
-        .card h2 {
-            color: #5A2D82;
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .card p {
-            font-size: 1.1rem;
-            color: #2B2B2B;
-            line-height: 1.7;
-            margin-bottom: 20px;
-        }
-        
-        .highlight {
-            background: rgba(194, 159, 255, 0.15);
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-weight: 600;
-            color: #5A2D82;
-        }
-        
-        .steps-container {
-            background: rgba(194, 159, 255, 0.05);
-            border-radius: 16px;
-            padding: 30px;
-            margin: 25px 0;
-        }
-        
-        .steps-title {
-            color: #7C3AED;
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-        }
-        
-        .steps-list {
-            list-style: none;
-            padding: 0;
-        }
-        
-        .steps-list li {
-            font-size: 1.1rem;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: flex-start;
-            color: #2B2B2B;
-        }
-        
-        .step-label {
-            background: linear-gradient(135deg, #C29FFF 0%, #5A2D82 100%);
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 48px;
+            background: linear-gradient(135deg, #a855f7 0%, #06b6d4 50%, #8b5cf6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            filter: drop-shadow(0 0 15px rgba(168, 85, 247, 0.2));
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 16px 40px rgba(168, 85, 247, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+            border-color: rgba(168, 85, 247, 0.4);
+        }
+        
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%);
+            transition: left 0.5s ease;
+        }
+        
+        .glass-card:hover::before {
+            left: 100%;
+        }
+        
+        .three-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+        
+        .four-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 4rem;
+        }
+        
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+            text-align: center;
+            filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.3));
+        }
+        
+        .card-title {
+            color: #1e293b;
+            font-size: 1.5rem;
             font-weight: 700;
-            min-width: 80px;
-            margin-right: 15px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .card-description {
+            font-size: 1rem;
+            color: #64748b;
+            line-height: 1.6;
+            text-align: center;
+            margin: 0;
+        }
+        
+        .mini-card {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+        
+        .mini-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(168, 85, 247, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+        
+        .mini-card .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .mini-card .card-title {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .mini-card .card-description {
+            font-size: 0.875rem;
+        }
+        
+        .xp-progress-container {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 24px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            position: relative;
+        }
+        
+        .xp-progress-bar {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            height: 16px;
+            overflow: hidden;
+            margin: 1.5rem 0;
+            position: relative;
+        }
+        
+        .xp-fill {
+            background: linear-gradient(90deg, #a855f7 0%, #06b6d4 50%, #8b5cf6 100%);
+            height: 100%;
+            width: 75%;
+            border-radius: 12px;
+            position: relative;
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+            animation: progressGlow 2s ease-in-out infinite;
+        }
+        
+        @keyframes progressGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(6, 182, 212, 0.6); }
+        }
+        
+        .xp-shimmer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 20px;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.8) 50%, transparent 100%);
+            border-radius: 12px;
+            animation: shimmer 2s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(300%); }
+        }
+        
+        .level-markers {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        .level-marker {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .level-marker.active {
+            color: #8b5cf6;
         }
         
         .cta-section {
             text-align: center;
-            margin-top: 60px;
+            margin-top: 80px;
         }
         
         .cta-button {
             display: inline-block;
-            background: rgba(194, 159, 255, 0.15);
-            backdrop-filter: blur(15px);
-            border: 2px solid rgba(255, 255, 255, 0.8);
-            color: #7C3AED;
-            padding: 18px 40px;
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            color: #fff;
+            padding: 1rem 3rem;
             border-radius: 50px;
-            font-size: 1.2rem;
+            font-size: 1.25rem;
             font-weight: 700;
             text-decoration: none;
             transition: all 0.3s ease;
-            box-shadow: 0 8px 40px rgba(194, 159, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(168, 85, 247, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
         }
         
         .cta-button:hover {
             transform: translateY(-3px);
-            box-shadow: 0 12px 48px rgba(194, 159, 255, 0.4);
-            background: rgba(194, 159, 255, 0.2);
+            box-shadow: 0 16px 40px rgba(168, 85, 247, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(6, 182, 212, 0.25) 100%);
+            border-color: rgba(168, 85, 247, 0.6);
         }
         
-        .final-message {
-            background: rgba(194, 159, 255, 0.08);
-            border-radius: 20px;
-            padding: 40px;
+        .cta-arrow {
+            margin-left: 0.5rem;
+            animation: arrowMove 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes arrowMove {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(5px); }
+        }
+        
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+            margin-bottom: 4rem;
+        }
+        
+        .reward-token {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #fbbf24 0%, #10b981 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 0 40px rgba(251, 191, 36, 0.3);
+            animation: tokenGlow 3s ease-in-out infinite;
+        }
+        
+        @keyframes tokenGlow {
+            0%, 100% { 
+                box-shadow: 0 0 40px rgba(251, 191, 36, 0.3);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 0 60px rgba(16, 185, 129, 0.5);
+                transform: scale(1.05);
+            }
+        }
+        
+        .community-cta {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(25px);
+            border-radius: 32px;
+            padding: 4rem 2rem;
             text-align: center;
-            margin-top: 40px;
-            border: 1px solid rgba(194, 159, 255, 0.15);
+            margin-top: 4rem;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            position: relative;
+            overflow: hidden;
         }
         
-        .final-message h3 {
-            color: #7C3AED;
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 15px;
+        .community-cta::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(168, 85, 247, 0.05) 0%, transparent 70%);
+            animation: communityPulse 4s ease-in-out infinite;
         }
         
-        .final-message p {
-            font-size: 1.2rem;
-            color: #5A2D82;
-            font-weight: 600;
+        @keyframes communityPulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.02); }
         }
         
-        .emoji {
-            font-size: 1.5em;
-            margin: 0 5px;
+        .community-title {
+            color: #1e293b;
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #a855f7 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .community-subtitle {
+            font-size: 1.25rem;
+            color: #64748b;
+            font-weight: 500;
+            margin-bottom: 2rem;
+            position: relative;
+            z-index: 10;
+        }
+        
+        @media (max-width: 768px) {
+            .three-cards {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            .four-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .two-column {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            .hero-title {
+                font-size: 2.5rem !important;
+            }
+            .section-title {
+                font-size: 2rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Background with subtle animations -->
+    <!-- White glassmorphism background -->
     <div class="background">
+        <div class="sparkle"></div>
+        <div class="sparkle"></div>
         <div class="sparkle"></div>
         <div class="sparkle"></div>
         <div class="sparkle"></div>
@@ -274,67 +491,140 @@
     <div class="container">
         <!-- Hero Header -->
         <div class="hero-header">
-            <h1 class="hero-title">About WIZ</h1>
-            <p class="hero-subtitle">🎥 Watch YouTube. Earn Rewards.</p>
-            <p class="hero-description">That's it. That's the magic.</p>
+            <h1 class="hero-title">⚡ WIZ: Watch. Earn. Evolve.</h1>
+            <p class="hero-subtitle">Your screen time finally works for you. WIZ transforms every minute you spend watching YouTube into XP, rewards, and $WIZ tokens—giving value back to your time.</p>
         </div>
         
-        <!-- Main Content -->
-        <div class="content-section">
-            <div class="card">
-                <p>
-                    WIZ is the place where your screen time finally pays you back. We turn the hours you spend watching YouTube into <span class="highlight">XP (experience points)</span> you can cash out or use for cool rewards.
-                </p>
-                
-                <p>
-                    No boring rules. No weird hoops to jump through. Just keep watching the videos you already love—whether it's gaming streams, music videos, tutorials, or cat compilations—and WIZ does the rest.
-                </p>
-            </div>
-            
-            <div class="card">
-                <h2>
-                    <span class="emoji">⚡</span>
-                    Here's how it works:
-                </h2>
-                
-                <div class="steps-container">
-                    <ul class="steps-list">
-                        <li>
-                            <span class="step-label">Watch</span>
-                            Play YouTube videos right on WIZ.
-                        </li>
-                        <li>
-                            <span class="step-label">Earn</span>
-                            Every minute you watch earns XP.
-                        </li>
-                        <li>
-                            <span class="step-label">Get Paid</span>
-                            Trade your XP for cash or rewards.
-                        </li>
-                    </ul>
+        <!-- How WIZ Works Section -->
+        <div class="section">
+            <h2 class="section-title">How WIZ Works</h2>
+            <div class="three-cards">
+                <div class="glass-card">
+                    <div class="card-icon">⏱</div>
+                    <h3 class="card-title">Watch Content</h3>
+                    <p class="card-description">Every 30 seconds of YouTube watch time earns you XP. Whether you're learning, vibing, or bingeing, your time is always rewarded.</p>
                 </div>
                 
-                <p>
-                    It's simple. It's fun. And yes—<span class="highlight">it's totally real</span>.
-                </p>
+                <div class="glass-card">
+                    <div class="card-icon">🏆</div>
+                    <h3 class="card-title">Earn XP & Level Up</h3>
+                    <p class="card-description">Complete videos, keep streaks, and unlock completion bonuses. Every milestone makes your profile stronger, with perks to match.</p>
+                </div>
                 
-                <p>
-                    If you've ever thought, "I wish I got paid for this" while watching YouTube… well, now you do.
-                </p>
+                <div class="glass-card">
+                    <div class="card-icon">💎</div>
+                    <h3 class="card-title">Convert to Rewards</h3>
+                    <p class="card-description">Turn XP into $WIZ tokens, redeem for exclusive creator content, free courses, and marketplace perks.</p>
+                </div>
             </div>
         </div>
         
-        <!-- Call to Action -->
-        <div class="cta-section">
+        <!-- Why WIZ is Different Section -->
+        <div class="section">
+            <h2 class="section-title">Why WIZ is Different</h2>
+            <div class="four-grid">
+                <div class="mini-card">
+                    <div class="card-icon">✨</div>
+                    <h4 class="card-title">Transparent Rewards</h4>
+                    <p class="card-description">No gimmicks, no hidden walls. Your XP is tracked clearly in real-time.</p>
+                </div>
+                
+                <div class="mini-card">
+                    <div class="card-icon">🎥</div>
+                    <h4 class="card-title">Creator-first Economy</h4>
+                    <p class="card-description">Creators can share free & premium content, while fans earn XP for engaging.</p>
+                </div>
+                
+                <div class="mini-card">
+                    <div class="card-icon">🔥</div>
+                    <h4 class="card-title">Daily Motivation</h4>
+                    <p class="card-description">Streak bonuses, level-ups, and limited rewards keep watching exciting.</p>
+                </div>
+                
+                <div class="mini-card">
+                    <div class="card-icon">🌍</div>
+                    <h4 class="card-title">Community-driven</h4>
+                    <p class="card-description">Every Wizard fuels a bigger ecosystem where fans and creators thrive together.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- XP Progression Section -->
+        <div class="section">
+            <h2 class="section-title">XP Progression & Levels</h2>
+            <div class="xp-progress-container">
+                <h3 class="card-title">Every Wizard starts at Level 1</h3>
+                <p class="card-description">With daily watch time, you'll climb levels, unlock badges, and flex your progress. The more you watch, the faster you evolve.</p>
+                
+                <div class="xp-progress-bar">
+                    <div class="xp-fill">
+                        <div class="xp-shimmer"></div>
+                    </div>
+                </div>
+                
+                <div class="level-markers">
+                    <div class="level-marker active">
+                        <div>Level 1</div>
+                        <div>100 XP</div>
+                    </div>
+                    <div class="level-marker active">
+                        <div>Level 3</div>
+                        <div>500 XP</div>
+                    </div>
+                    <div class="level-marker">
+                        <div>Level 5</div>
+                        <div>2,000 XP</div>
+                    </div>
+                    <div class="level-marker">
+                        <div>Level 7</div>
+                        <div>8,000 XP</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Rewards & Tokens Section -->
+        <div class="section">
+            <div class="glass-card" style="text-align: center;">
+                <div class="reward-token">💎</div>
+                <h2 class="section-title">From XP to $WIZ Tokens</h2>
+                <p class="card-description" style="font-size: 1.25rem; max-width: 600px; margin: 0 auto;">XP isn't just points—it's real value. Trade XP for $WIZ tokens that unlock courses, discounts, creator exclusives, or rewards across our ecosystem. Your time = your currency.</p>
+            </div>
+        </div>
+        
+        <!-- Built for Everyone Section -->
+        <div class="section">
+            <h2 class="section-title">Built for Everyone</h2>
+            <div class="two-column">
+                <div class="glass-card">
+                    <h3 class="card-title">For Viewers (Wizards)</h3>
+                    <p class="card-description">Watch, earn XP, level up, and unlock exclusive rewards. Every minute is a step closer to your next perk.</p>
+                </div>
+                
+                <div class="glass-card">
+                    <h3 class="card-title">For Creators</h3>
+                    <p class="card-description">Feature your YouTube content, share premium tutorials or courses, and reward your most loyal fans with XP-backed engagement.</p>
+                </div>
+            </div>
+        </div>
+            
+        <!-- Community Call to Action -->
+        <div class="community-cta">
+            <h2 class="community-title">Join thousands of Wizards turning screen time into XP</h2>
+            <p class="community-subtitle">Don't just watch—elevate.</p>
             <a href="/" class="cta-button">
-                Start Watching & Earning
+                Join WIZ Now
+                <span class="cta-arrow">→</span>
             </a>
         </div>
         
-        <!-- Final Message -->
-        <div class="final-message">
-            <h3>Welcome to WIZ</h3>
-            <p>Your watch time just leveled up. <span class="emoji">🚀</span></p>
+        <!-- Final CTA Button -->
+        <div class="cta-section">
+            <a href="/" class="cta-button">
+                Start Earning XP
+                <span class="cta-arrow">→</span>
+            </a>
+            <p style="margin-top: 1.5rem; color: #64748b; font-size: 1rem; font-weight: 400;">Your watch time just leveled up ✨</p>
         </div>
     </div>
 </body>

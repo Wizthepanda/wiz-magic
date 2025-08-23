@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { isYouTubeAPIEnabled, isGoogleAuthEnabled, logFeatureFlag } from '@/lib/feature-flags';
 import { AdminTestPanel } from '@/components/admin/AdminTestPanel';
+import { YouTubeAuthModal } from './YouTubeAuthModal';
 
 interface WizHomepageProps {
   onEnterPlatform: () => void;
@@ -98,6 +99,8 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
   const [animatedValues, setAnimatedValues] = useState({ wizards: 0, xp: 0, creators: 0 });
   const [selectedCreator, setSelectedCreator] = useState(null);
   const [isTrailerOpen, setIsTrailerOpen] = useState(false);
+  const [showYouTubeModal, setShowYouTubeModal] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
   const { user, signInWithGoogle, connectYouTube } = useAuth();
 
@@ -185,20 +188,38 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
         return;
       }
 
-      // 2) If not signed in, trigger Google sign-in (redirect-based)
-      const useYouTubeScope = isYouTubeAPIEnabled();
-      console.log(`🚀 User not signed in, triggering Google OAuth ${useYouTubeScope ? 'with YouTube scopes' : 'basic auth'}...`);
+      // 2) If not signed in, show the pre-auth modal for YouTube connection
+      if (isYouTubeAPIEnabled()) {
+        console.log('🎬 Showing YouTube auth modal');
+        setShowYouTubeModal(true);
+      } else {
+        // Fallback to basic Google auth
+        console.log('🚀 Basic Google auth fallback');
+        await signInWithGoogle(false);
+      }
       
-      // Note: This will redirect the user away from the page
-      // After successful auth, they'll return and the Index component will auto-navigate to dashboard
-      await signInWithGoogle(useYouTubeScope);
+    } catch (error: any) {
+      console.error('❌ Authentication error:', error);
+      alert('Unable to connect right now. Please refresh the page and try again.');
+    }
+  };
+
+  const handleYouTubeAuthConfirm = async () => {
+    try {
+      setIsAuthLoading(true);
+      console.log('🚀 User confirmed YouTube auth, triggering OAuth...');
+      
+      // This will redirect to Google OAuth with YouTube scopes
+      await signInWithGoogle(true);
       
       // This code won't execute due to redirect
       console.log('🔄 Sign-in initiated, redirecting...');
       
     } catch (error: any) {
-      console.error('❌ Authentication error:', error);
-      alert('Authentication failed. Please try again or check your network connection.');
+      console.error('❌ YouTube authentication error:', error);
+      setIsAuthLoading(false);
+      setShowYouTubeModal(false);
+      alert('Unable to connect YouTube right now. Please try again.');
     }
   };
 
@@ -558,6 +579,7 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
             >
               Wiz turns your watch time into XP & cash — just keep watching what you love
             </motion.p>
+
           </motion.div>
 
           {/* Ultra Premium Glassmorphic CTA */}
@@ -2112,6 +2134,17 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
       
       {/* Admin Test Panel - Only visible to admin users */}
       <AdminTestPanel />
+
+      {/* YouTube Auth Modal */}
+      <YouTubeAuthModal
+        isOpen={showYouTubeModal}
+        onClose={() => {
+          setShowYouTubeModal(false);
+          setIsAuthLoading(false);
+        }}
+        onConfirm={handleYouTubeAuthConfirm}
+        isLoading={isAuthLoading}
+      />
     </div>
   );
 };

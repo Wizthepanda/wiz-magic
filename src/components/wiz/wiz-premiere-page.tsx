@@ -157,7 +157,7 @@ export const WizPremierePage = () => {
                     <div 
                       className="w-full h-full bg-cover bg-center rounded-t-3xl"
                       style={{
-                        backgroundImage: 'url("/wiz-premiere-panda.svg")',
+                        backgroundImage: 'url("/assets/wiz-premiere-panda-thumbnail.png")',
                         borderRadius: '24px 24px 0 0'
                       }}
                     >
