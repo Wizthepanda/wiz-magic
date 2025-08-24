@@ -11,6 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { FloatingParticles } from '@/components/ui/floating-particles';
+import { WizShorts } from './WizShorts';
+import { EnhancedMostViewed } from './EnhancedMostViewed';
 
 const categories = [
   { id: 'all', label: 'All', color: 'bg-wiz-primary', dotColor: 'bg-blue-400' },
@@ -19,6 +21,10 @@ const categories = [
   { id: 'music', label: 'Music', color: 'bg-wiz-magic', dotColor: 'bg-pink-400' },
   { id: 'money', label: 'Money', color: 'bg-emerald-500', dotColor: 'bg-green-400' },
   { id: 'health', label: 'Health', color: 'bg-rose-500', dotColor: 'bg-red-400' },
+  { id: 'gaming', label: 'Gaming', color: 'bg-purple-500', dotColor: 'bg-purple-400' },
+  { id: 'movies', label: 'Movies', color: 'bg-indigo-500', dotColor: 'bg-indigo-400' },
+  { id: 'news', label: 'News', color: 'bg-cyan-500', dotColor: 'bg-cyan-400' },
+  { id: 'podcast', label: 'Podcast', color: 'bg-teal-500', dotColor: 'bg-teal-400' },
 ];
 
 // Exactly 8 video panels with category tags
@@ -323,7 +329,7 @@ export const WizDiscoverSection = () => {
       <div className="max-w-7xl mx-auto p-3 sm:p-6 space-y-6 sm:space-y-8">
         {/* Category Filter Section - Mobile responsive */}
         <div className="mb-6 sm:mb-8">
-          <div className="flex justify-center flex-wrap gap-2 sm:gap-3 px-2">
+          <div className="flex justify-start flex-wrap gap-2 sm:gap-3 px-2 sm:px-0">
             {categories.map((category) => (
               <Button
                 key={category.id}
@@ -535,287 +541,11 @@ export const WizDiscoverSection = () => {
           </div>
         </div>
 
-        {/* 🔥 Most Viewed - Glassmorphic Purple-to-Indigo Design */}
-        <div className="relative mb-20">
-          {/* Glassmorphic Container */}
-          <motion.div
-            className="relative rounded-xl overflow-hidden p-8"
-            style={{
-              background: `
-                linear-gradient(135deg, 
-                  rgba(147, 51, 234, 0.15) 0%, 
-                  rgba(99, 102, 241, 0.12) 50%, 
-                  rgba(79, 70, 229, 0.15) 100%
-                ),
-                rgba(255, 255, 255, 0.1)
-              `,
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(147, 51, 234, 0.3)',
-              boxShadow: '0 20px 60px rgba(147, 51, 234, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-            }}
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            {/* Enhanced Section Title */}
-            <div className="text-center mb-10">
-              <motion.h2 
-                className="text-4xl md:text-5xl font-bold mb-4 relative"
-                style={{
-                  background: 'linear-gradient(135deg, #e879f9 0%, #a855f7 30%, #6366f1 70%, #c4b5fd 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  filter: 'drop-shadow(0 4px 12px rgba(168, 85, 247, 0.4))'
-                }}
-                whileHover={{ scale: 1.02 }}
-              >
-                🔥 Most Viewed
-                
-                {/* Pulsing Glowing Underline */}
-                <motion.div 
-                  className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 h-1 rounded-full"
-                  style={{
-                    width: '80%',
-                    background: 'linear-gradient(90deg, rgba(232, 121, 249, 0.6) 0%, rgba(147, 51, 234, 0.8) 50%, rgba(232, 121, 249, 0.6) 100%)',
-                    boxShadow: '0 0 20px rgba(147, 51, 234, 0.8)'
-                  }}
-                  animate={{
-                    opacity: [0.6, 1, 0.6],
-                    boxShadow: [
-                      '0 0 20px rgba(147, 51, 234, 0.8)',
-                      '0 0 30px rgba(147, 51, 234, 1)',
-                      '0 0 20px rgba(147, 51, 234, 0.8)'
-                    ]
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                />
-              </motion.h2>
-              <p className="text-xl text-purple-200">
-                The content everyone is watching right now
-              </p>
-            </div>
+        {/* 🎬 Shorts Section */}
+        <WizShorts />
 
-            {/* Navigation Arrows */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex space-x-3">
-                <motion.button
-                  onClick={() => {
-                    const container = document.getElementById('most-viewed-container');
-                    if (container) container.scrollBy({ left: -400, behavior: 'smooth' });
-                  }}
-                  className="h-12 w-12 rounded-full flex items-center justify-center text-white"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.8) 0%, rgba(99, 102, 241, 0.8) 100%)',
-                    backdropFilter: 'blur(15px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    boxShadow: '0 4px 16px rgba(147, 51, 234, 0.3)'
-                  }}
-                  whileHover={{ 
-                    scale: 1.1,
-                    boxShadow: '0 8px 32px rgba(147, 51, 234, 0.5)'
-                  }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </motion.button>
-                <motion.button
-                  onClick={() => {
-                    const container = document.getElementById('most-viewed-container');
-                    if (container) container.scrollBy({ left: 400, behavior: 'smooth' });
-                  }}
-                  className="h-12 w-12 rounded-full flex items-center justify-center text-white"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.8) 0%, rgba(99, 102, 241, 0.8) 100%)',
-                    backdropFilter: 'blur(15px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    boxShadow: '0 4px 16px rgba(147, 51, 234, 0.3)'
-                  }}
-                  whileHover={{ 
-                    scale: 1.1,
-                    boxShadow: '0 8px 32px rgba(147, 51, 234, 0.5)'
-                  }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </motion.button>
-              </div>
-            </div>
-
-            {/* Most Viewed Cards - Horizontal Scroll */}
-            <div
-              id="most-viewed-container"
-              className="flex space-x-6 overflow-x-auto scrollbar-hide pb-4 scroll-smooth"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-              {videos.slice(0, 6).map((video, index) => (
-                <motion.div 
-                  key={`mv-${video.id}`} 
-                  className="flex-shrink-0 w-80 group"
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 + index * 0.1 }}
-                  whileHover={{ y: -8, scale: 1.02 }}
-                >
-                  <div 
-                    className="h-96 overflow-hidden border-0 shadow-xl group-hover:shadow-2xl transition-all duration-500 rounded-xl"
-                    style={{
-                      background: `
-                        linear-gradient(135deg, 
-                          rgba(147, 51, 234, 0.1) 0%, 
-                          rgba(99, 102, 241, 0.08) 50%, 
-                          rgba(79, 70, 229, 0.1) 100%
-                        ),
-                        rgba(255, 255, 255, 0.05)
-                      `,
-                      backdropFilter: 'blur(15px)',
-                      border: '1px solid rgba(147, 51, 234, 0.2)',
-                      boxShadow: '0 8px 32px rgba(147, 51, 234, 0.15)'
-                    }}
-                  >
-                    <div className="p-0 h-full flex flex-col">
-                      {/* Thumbnail Section */}
-                      <div className="relative h-48 bg-gradient-to-br from-purple-500/20 to-indigo-500/20 overflow-hidden rounded-t-xl">
-                        
-                        {/* Ranking Badge */}
-                        {index < 3 && (
-                          <motion.div 
-                            className="absolute top-3 left-3 z-30"
-                            whileHover={{ scale: 1.1 }}
-                          >
-                            <div 
-                              className="flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-bold shadow-lg"
-                              style={{
-                                background: index === 0 ? 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)' :
-                                           index === 1 ? 'linear-gradient(135deg, #C0C0C0 0%, #A0A0A0 100%)' :
-                                           'linear-gradient(135deg, #CD7F32 0%, #B8860B 100%)',
-                                color: '#000',
-                                boxShadow: `0 4px 12px ${index === 0 ? 'rgba(255, 215, 0, 0.4)' : 'rgba(192, 192, 192, 0.4)'}`
-                              }}
-                            >
-                              <Crown className="w-3 h-3" />
-                              <span>#{index + 1}</span>
-                            </div>
-                          </motion.div>
-                        )}
-
-                        {/* Category Badge */}
-                        <div className="absolute top-3 right-3 z-20">
-                          <div className="px-2 py-1 text-xs font-bold text-white uppercase tracking-wide rounded-lg"
-                               style={{
-                                 background: getCategoryGradient(video.category),
-                                 boxShadow: getCategoryShadow(video.category)
-                               }}>
-                            {video.categoryLabel}
-                          </div>
-                        </div>
-
-                        {/* XP Badge */}
-                        <motion.div 
-                          className="absolute bottom-3 left-3 z-20"
-                          whileHover={{ scale: 1.05 }}
-                        >
-                          <div className="flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-bold"
-                               style={{
-                                 background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.9) 0%, rgba(255, 165, 0, 0.9) 100%)',
-                                 color: '#1F2937',
-                                 boxShadow: '0 2px 8px rgba(255, 215, 0, 0.4)'
-                               }}>
-                            <Zap className="w-3 h-3" />
-                            <span>{video.xpReward}</span>
-                          </div>
-                        </motion.div>
-
-                        {/* Duration */}
-                        <div className="absolute bottom-3 right-3 z-20 px-2 py-1 bg-black/70 rounded-lg text-xs text-white font-semibold">
-                          {video.duration}
-                        </div>
-
-                        {/* Glassmorphic Play Button */}
-                        <motion.div 
-                          className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-all duration-300"
-                          whileHover={{ scale: 1.1 }}
-                        >
-                          <motion.button
-                            onClick={() => handleWatchVideo(video.id)}
-                            className="h-16 w-16 rounded-full flex items-center justify-center text-white shadow-2xl"
-                            style={{
-                              background: `
-                                linear-gradient(135deg, 
-                                  rgba(255, 215, 0, 0.9) 0%, 
-                                  rgba(255, 165, 0, 0.9) 100%
-                                )
-                              `,
-                              backdropFilter: 'blur(10px)',
-                              border: '1px solid rgba(255, 255, 255, 0.3)'
-                            }}
-                            whileHover={{ 
-                              boxShadow: '0 0 30px rgba(255, 215, 0, 0.6)',
-                              scale: 1.1
-                            }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <Play className="w-6 h-6 ml-0.5 text-black" fill="currentColor" />
-                          </motion.button>
-                        </motion.div>
-
-                        {/* Subtle Gradient Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-purple-900/20 via-transparent to-transparent z-10" />
-                      </div>
-
-                      {/* Content Section */}
-                      <div className="flex-1 p-5 flex flex-col">
-                        <h4 className="font-bold text-lg text-gray-800 line-clamp-2 mb-3 group-hover:text-purple-600 transition-colors leading-tight">
-                          {video.title}
-                        </h4>
-                        
-                        <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-                          <span className="font-medium">{video.creator}</span>
-                          <div className="flex items-center space-x-1">
-                            <Eye className="w-4 h-4" />
-                            <span>{video.views}</span>
-                          </div>
-                        </div>
-                        
-                        {/* Glassmorphic CTA Button */}
-                        <div className="mt-auto">
-                          <motion.button 
-                            className="w-full font-semibold text-white shadow-lg py-3 rounded-xl"
-                            style={{
-                              background: `
-                                linear-gradient(135deg, 
-                                  rgba(255, 215, 0, 0.9) 0%, 
-                                  rgba(255, 165, 0, 0.9) 100%
-                                )
-                              `,
-                              backdropFilter: 'blur(10px)',
-                              border: '1px solid rgba(255, 255, 255, 0.2)'
-                            }}
-                            onClick={() => handleWatchVideo(video.id)}
-                            whileHover={{ 
-                              scale: 1.02,
-                              boxShadow: '0 0 25px rgba(255, 215, 0, 0.4)'
-                            }}
-                            whileTap={{ scale: 0.98 }}
-                          >
-                            <div className="flex items-center justify-center space-x-2 text-black">
-                              <Play className="w-4 h-4" />
-                              <span>Watch Now</span>
-                            </div>
-                          </motion.button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
+        {/* 🔥 Enhanced Most Viewed Section */}
+        <EnhancedMostViewed />
 
         {/* WIZ Premiere — Elevated Abstract UI */}
         <motion.div 
