@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import ReactPlayer from 'react-player/youtube';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { useXp } from '@/context/XpContext';
 import { doc, updateDoc, increment } from 'firebase/firestore';
@@ -207,11 +208,109 @@ export const LocalVideoPlayer: React.FC<LocalVideoPlayerProps> = ({
       
       {/* Completed Video Overlay */}
       {isVideoCompleted && (
-        <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
-          <div className="bg-green-500 text-white px-4 py-2 rounded-lg font-semibold">
-            ✅ Video Completed - No XP Available
-          </div>
-        </div>
+        <motion.div 
+          className="absolute inset-0 flex items-center justify-center"
+          style={{
+            background: 'rgba(0, 0, 0, 0.7)',
+            backdropFilter: 'blur(8px)',
+          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <motion.div
+            className="relative overflow-hidden px-6 py-3 rounded-full flex items-center space-x-3"
+            style={{
+              background: `
+                linear-gradient(135deg, rgba(147, 51, 234, 0.9) 0%, rgba(59, 130, 246, 0.9) 100%),
+                rgba(30, 41, 59, 0.6)
+              `,
+              backdropFilter: 'blur(16px)',
+              border: '1px solid rgba(147, 51, 234, 0.3)',
+              boxShadow: `
+                0 8px 32px rgba(147, 51, 234, 0.3),
+                0 4px 16px rgba(59, 130, 246, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2)
+              `,
+            }}
+            initial={{ scale: 0.8, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.2 }}
+            whileHover={{
+              scale: 1.05,
+              boxShadow: `
+                0 12px 40px rgba(147, 51, 234, 0.4),
+                0 6px 20px rgba(59, 130, 246, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3)
+              `,
+            }}
+          >
+            {/* Glassmorphic Glow Effect */}
+            <motion.div
+              className="absolute inset-0 rounded-full opacity-30"
+              style={{
+                background: 'linear-gradient(45deg, rgba(147, 51, 234, 0.6) 0%, rgba(59, 130, 246, 0.6) 100%)',
+                filter: 'blur(8px)',
+              }}
+              animate={{
+                scale: [1, 1.1, 1],
+                opacity: [0.3, 0.5, 0.3],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+            
+            {/* XP Spark Particles */}
+            {[...Array(4)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-1 h-1 bg-white rounded-full"
+                style={{
+                  left: `${15 + i * 20}%`,
+                  top: `${15 + i * 15}%`,
+                }}
+                animate={{
+                  y: [-3, -12, -3],
+                  x: [0, Math.sin(i) * 6, 0],
+                  opacity: [0.8, 0.2, 0.8],
+                  scale: [0.5, 1.2, 0.5],
+                }}
+                transition={{
+                  duration: 1.8 + i * 0.4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: i * 0.3,
+                }}
+              />
+            ))}
+            
+            {/* Content */}
+            <div className="relative z-10 flex items-center space-x-3">
+              <motion.span
+                className="text-lg"
+                animate={{ 
+                  rotate: [0, 15, -5, 0],
+                  scale: [1, 1.1, 1]
+                }}
+                transition={{
+                  duration: 1,
+                  repeat: Infinity,
+                  repeatDelay: 3,
+                  ease: "easeInOut",
+                }}
+              >
+                ✅
+              </motion.span>
+              <div className="text-white">
+                <div className="font-bold text-base">Video Watched</div>
+                <div className="text-xs opacity-80">XP already earned</div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
       )}
       
       {/* Debug info in development */}

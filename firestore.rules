@@ -42,5 +42,22 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == request.resource.data.userId;
     }
+    
+    // Creator profiles and tokens
+    match /creators/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Creator videos collection
+    match /creator_videos/{videoId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == request.resource.data.creatorId;
+    }
+    
+    // Creator videos collection (alternative naming)
+    match /creatorVideos/{videoId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == request.resource.data.creatorId;
+    }
   }
 }

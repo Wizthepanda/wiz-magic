@@ -16,7 +16,15 @@ export const XpProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     // Load from localStorage on initialization
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('wizXp');
-      return saved ? parseInt(saved, 10) : 0;
+      const initialXp = saved ? parseInt(saved, 10) : 0;
+      console.log('🎯 XpContext: Initial XP from localStorage:', initialXp);
+      
+      // Also listen for any pending xpUpdated events immediately
+      setTimeout(() => {
+        console.log('🔄 XpContext: Initialized, ready to receive xpUpdated events');
+      }, 0);
+      
+      return initialXp;
     }
     return 0;
   });
@@ -29,18 +37,27 @@ export const XpProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const progressPercent = (xpInCurrentLevel / xpToNextLevel) * 100;
 
   const addXp = (amount: number) => {
+    console.log(`📈 XpContext.addXp called with: ${amount}, current total: ${totalXp}`);
     setTotalXp((prev) => {
       const newTotalXp = prev + amount;
+      console.log(`📈 XpContext: ${prev} + ${amount} = ${newTotalXp}`);
+      
       // Save to localStorage
       if (typeof window !== 'undefined') {
         localStorage.setItem('wizXp', newTotalXp.toString());
+        console.log(`💾 XpContext: Saved ${newTotalXp} to localStorage`);
       }
-      
-      // Show XP notification
-      console.log(`🎉 +${amount} XP earned! Total: ${newTotalXp}`);
       
       return newTotalXp;
     });
+    
+    // Force re-render all components consuming this context after XP update
+    setTimeout(() => {
+      setTotalXp((prev) => {
+        console.log(`🔄 XpContext: Forced refresh with totalXp: ${prev}`);
+        return prev; // Don't change value, just trigger re-render
+      });
+    }, 10);
   };
 
   // Listen for XP updates from Firebase (dispatched by useAuth)
@@ -48,15 +65,31 @@ export const XpProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     const handleXpUpdate = (event: CustomEvent) => {
       const { totalXP } = event.detail;
       console.log(`🔄 XP Context received Firebase update: ${totalXP}, current: ${totalXp}`);
-      setTotalXp(totalXP);
-      console.log(`📊 XP Context updated to: ${totalXP}`);
+      
+      // Always sync from Firebase if it's different (trust Firebase as source of truth)
+      if (totalXP !== totalXp) {
+        console.log(`📊 XP Context syncing with Firebase: ${totalXp} → ${totalXP}`);
+        setTotalXp(totalXP);
+        
+        // Update localStorage to match Firebase
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('wizXp', totalXP.toString());
+          console.log(`💾 XP Context: Synced localStorage to ${totalXP}`);
+        }
+        
+        // Force additional re-render to ensure UI updates
+        setTimeout(() => {
+          setTotalXp(totalXP);
+          console.log(`🔄 XP Context: Additional sync confirmation with ${totalXP}`);
+        }, 50);
+      }
     };
 
     if (typeof window !== 'undefined') {
       window.addEventListener('xpUpdated', handleXpUpdate as EventListener);
       return () => window.removeEventListener('xpUpdated', handleXpUpdate as EventListener);
     }
-  }, []);
+  }, [totalXp]);
 
   // Save XP to localStorage whenever it changes
   useEffect(() => {

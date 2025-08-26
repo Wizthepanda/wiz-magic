@@ -3,10 +3,10 @@ import { WizSidebar } from './wiz-sidebar';
 import { WizUserProfile } from './wiz-user-profile';
 import { WizDiscoverSection } from './wiz-discover-section';
 import { WizLeaderboard } from './wiz-leaderboard';
-import { WizActivatePage } from './wiz-activate-page';
 import { WizPremierePage } from './wiz-premiere-page';
 import { WizLeaderboardPage } from './wiz-leaderboard-page';
 import { WizProfilePage } from './wiz-profile-page';
+import { WizCreatePage } from './WizCreatePage';
 import { FloatingParticles } from '@/components/ui/floating-particles';
 import { AdminTestPanel } from '@/components/admin/AdminTestPanel';
 
@@ -21,10 +21,10 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
     switch (activeSection) {
       case 'discover':
         return <WizDiscoverSection />;
+      case 'create':
+        return <WizCreatePage />;
       case 'leaderboard':
         return <WizLeaderboardPage />;
-      case 'activate':
-        return <WizActivatePage />;
       case 'premiere':
         return <WizPremierePage />;
       case 'profile':
@@ -68,8 +68,8 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
             <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
               <h1 className="text-lg sm:text-2xl font-bold text-gray-800 truncate">
                 {activeSection === 'discover' && 'Discover'}
+                {activeSection === 'create' && 'Create'}
                 {activeSection === 'leaderboard' && 'Leaderboard'}
-                {activeSection === 'activate' && 'Activate'}
                 {activeSection === 'premiere' && 'WIZ Premiere'}
                 {activeSection === 'profile' && 'Profile'}
                 {activeSection === 'settings' && 'Settings'}

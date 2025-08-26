@@ -77,6 +77,14 @@ export const WizVideoPlayer = ({ videoId, title, description, xpReward = 25 }: W
         // Update user state instantly for immediate UI feedback
         addXP(xpGained);
         
+        // Also dispatch event to sync XP context immediately
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('xpUpdated', { 
+            detail: { totalXP: (user?.totalXP || 0) + xpGained } 
+          }));
+          console.log('🔄 Dispatched xpUpdated event with new total:', (user?.totalXP || 0) + xpGained);
+        }
+        
         // Update XP in Firestore manually (without using YouTube service that also awards XP)
         await FirestoreService.updateUserXP(user.uid, xpGained, 'video_completion', {
           videoId,

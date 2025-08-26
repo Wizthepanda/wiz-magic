@@ -77,33 +77,44 @@ export const VideoPanel: React.FC<VideoPanelProps> = ({
     }
   }, [videoId, useLocalPlayer]);
 
-  // Poll progress every second
+  // Track progress without continuous XP rewards
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (player && !isVideoCompleted) {
       interval = setInterval(async () => {
         const duration = player.getDuration();
         const currentTime = player.getCurrentTime();
+        
         if (duration > 0) {
           const percent = (currentTime / duration) * 100;
           setProgress(percent);
 
-          // Reward XP when fully watched (≥ 95% to account for edge cases)
+          // Only reward XP ONCE when video is completed (≥ 95%)
           if (percent >= 95 && !rewarded && !isVideoCompleted) {
             setRewarded(true);
             
+            // Fixed XP reward based on video's designated XP value
+            const earnedXp = xpReward;
+            
             // Mark video as completed to prevent future XP farming
-            const marked = await VideoCompletionService.markVideoCompleted(videoId, xpReward, currentTime);
+            const marked = await VideoCompletionService.markVideoCompleted(videoId, earnedXp, currentTime);
             
             if (marked) {
-              // Add XP to global context (triggers real-time UI updates)
-              addXp(xpReward);
+              // Use callback to handle XP (prevents double-adding)
+              onReward(earnedXp);
               
-              // Optional callback for additional handling
-              onReward(xpReward);
+              // Also directly dispatch event to ensure XP Context gets updated
+              if (typeof window !== 'undefined') {
+                // Get current user XP and add the earned amount
+                const event = new CustomEvent('xpUpdated', { 
+                  detail: { totalXP: (user?.totalXP || 0) + earnedXp } 
+                });
+                window.dispatchEvent(event);
+                console.log('🔄 VideoPanel dispatched xpUpdated event with earnedXp:', earnedXp);
+              }
               
               setIsVideoCompleted(true);
-              console.log(`🏁 YouTube video ${videoId} completed and marked - ${xpReward} XP earned`);
+              console.log(`🏁 Video completed: ${videoId} - Earned ${earnedXp} XP`);
             } else {
               console.log(`⚠️ YouTube video ${videoId} was already completed - no XP awarded`);
             }
@@ -112,7 +123,7 @@ export const VideoPanel: React.FC<VideoPanelProps> = ({
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [player, rewarded, xpReward, onReward, videoId, addXp, isVideoCompleted]);
+  }, [player, rewarded, xpReward, onReward, videoId, isVideoCompleted]);
 
   const onReady = (event: YouTubeEvent) => {
     setPlayer(event.target);
@@ -204,17 +215,117 @@ export const VideoPanel: React.FC<VideoPanelProps> = ({
                 <h3 className="text-base sm:text-lg font-semibold text-white truncate">{title}</h3>
                 <p className="text-xs sm:text-sm text-gray-400 truncate">{creator}</p>
               </div>
-              <span
-                className={`px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-full whitespace-nowrap ${
+              <motion.div
+                className={`px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-full whitespace-nowrap flex items-center space-x-2 ${
                   isVideoCompleted
-                    ? "bg-gray-500 text-white"
+                    ? "relative overflow-hidden"
                     : rewarded
-                    ? "bg-green-500 text-white"
-                    : "bg-gradient-to-r from-purple-500 to-purple-700 text-white"
-                } shadow-md shadow-purple-500/30`}
+                    ? "bg-green-500 text-white shadow-md shadow-green-500/30"
+                    : "bg-gradient-to-r from-purple-500 to-purple-700 text-white shadow-md shadow-purple-500/30"
+                }`}
+                style={
+                  isVideoCompleted
+                    ? {
+                        background: `
+                          linear-gradient(135deg, rgba(147, 51, 234, 0.9) 0%, rgba(59, 130, 246, 0.9) 100%),
+                          rgba(30, 41, 59, 0.6)
+                        `,
+                        backdropFilter: 'blur(16px)',
+                        border: '1px solid rgba(147, 51, 234, 0.3)',
+                        boxShadow: `
+                          0 8px 32px rgba(147, 51, 234, 0.3),
+                          0 4px 16px rgba(59, 130, 246, 0.2),
+                          inset 0 1px 0 rgba(255, 255, 255, 0.2)
+                        `,
+                      }
+                    : {}
+                }
+                whileHover={
+                  isVideoCompleted
+                    ? {
+                        scale: 1.05,
+                        boxShadow: `
+                          0 12px 40px rgba(147, 51, 234, 0.4),
+                          0 6px 20px rgba(59, 130, 246, 0.3),
+                          inset 0 1px 0 rgba(255, 255, 255, 0.3)
+                        `,
+                      }
+                    : { scale: 1.02 }
+                }
+                whileTap={isVideoCompleted ? { scale: 0.98 } : { scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
-                {isVideoCompleted ? "Already Completed" : rewarded ? `+${xpReward} XP Earned` : `+${xpReward} XP`}
-              </span>
+                {isVideoCompleted && (
+                  <>
+                    {/* Glassmorphic Glow Effect */}
+                    <motion.div
+                      className="absolute inset-0 rounded-full opacity-30"
+                      style={{
+                        background: 'linear-gradient(45deg, rgba(147, 51, 234, 0.6) 0%, rgba(59, 130, 246, 0.6) 100%)',
+                        filter: 'blur(8px)',
+                      }}
+                      animate={{
+                        scale: [1, 1.1, 1],
+                        opacity: [0.3, 0.5, 0.3],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    />
+                    
+                    {/* XP Spark Particles */}
+                    {[...Array(3)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        className="absolute w-1 h-1 bg-white rounded-full"
+                        style={{
+                          left: `${20 + i * 20}%`,
+                          top: `${20 + i * 10}%`,
+                        }}
+                        animate={{
+                          y: [-2, -8, -2],
+                          x: [0, Math.sin(i) * 4, 0],
+                          opacity: [0.8, 0.3, 0.8],
+                          scale: [0.5, 1, 0.5],
+                        }}
+                        transition={{
+                          duration: 1.5 + i * 0.3,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                          delay: i * 0.2,
+                        }}
+                      />
+                    ))}
+                  </>
+                )}
+                
+                {/* Content */}
+                <span className="relative z-10 flex items-center space-x-1.5">
+                  {isVideoCompleted ? (
+                    <>
+                      <motion.span
+                        className="text-sm"
+                        animate={{ rotate: [0, 10, 0] }}
+                        transition={{
+                          duration: 0.6,
+                          repeat: Infinity,
+                          repeatDelay: 2,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        ✅
+                      </motion.span>
+                      <span className="text-white font-bold">Watched</span>
+                    </>
+                  ) : rewarded ? (
+                    <span>+{xpReward} XP Earned</span>
+                  ) : (
+                    <span>+{xpReward} XP</span>
+                  )}
+                </span>
+              </motion.div>
             </div>
           </motion.div>
         </motion.div>

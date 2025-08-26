@@ -71,9 +71,13 @@ export const useAuth = () => {
           
           // Dispatch event to sync XP context with Firebase data
           if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('xpUpdated', { 
-              detail: { totalXP: wizUser.totalXP } 
-            }));
+            // Use setTimeout to ensure the event is dispatched after the context is initialized
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('xpUpdated', { 
+                detail: { totalXP: wizUser.totalXP } 
+              }));
+              console.log('🔄 Dispatched initial xpUpdated event with totalXP:', wizUser.totalXP);
+            }, 100);
           }
         } catch (error) {
           console.error('❌ Error fetching user data:', error);
@@ -265,6 +269,14 @@ export const useAuth = () => {
         
         setUser(updatedUser);
         
+        // Dispatch event to sync XP context
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('xpUpdated', { 
+            detail: { totalXP: updatedUser.totalXP } 
+          }));
+          console.log('🔄 Dispatched xpUpdated event from refreshUserData with totalXP:', updatedUser.totalXP);
+        }
+        
         // Force a re-render by updating the state again after a short delay
         setTimeout(async () => {
           const recheckDoc = await getDoc(doc(db, 'users', user.uid));
@@ -279,6 +291,14 @@ export const useAuth = () => {
             };
             setUser(finalUser);
             console.log('🔄 Final user data update:', { totalXP: finalUser.totalXP });
+            
+            // Dispatch final update event
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('xpUpdated', { 
+                detail: { totalXP: finalUser.totalXP } 
+              }));
+              console.log('🔄 Dispatched final xpUpdated event with totalXP:', finalUser.totalXP);
+            }
           }
         }, 1000);
         

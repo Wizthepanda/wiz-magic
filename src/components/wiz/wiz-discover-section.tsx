@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Play, Eye, Heart, Share2, CheckCircle, Zap, ChevronLeft, ChevronRight, Crown, Medal, Trophy, Star, Users, Award, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { WizVideoPlayer } from './wiz-video-player';
@@ -13,6 +13,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { FloatingParticles } from '@/components/ui/floating-particles';
 import { WizShorts } from './WizShorts';
 import { EnhancedMostViewed } from './EnhancedMostViewed';
+import { db } from '@/lib/firebase';
+import { collection, query, orderBy, limit, onSnapshot, getDocs } from 'firebase/firestore';
+import { testPublishVideo } from '@/lib/test-video-sync';
+import { VideoCompletionService } from '@/lib/video-completion-service';
 
 const categories = [
   { id: 'all', label: 'All', color: 'bg-wiz-primary', dotColor: 'bg-blue-400' },
@@ -295,15 +299,256 @@ export const WizDiscoverSection = () => {
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [leaderboardTab, setLeaderboardTab] = useState('creators');
   const [isPremiereVideoPlaying, setIsPremiereVideoPlaying] = useState(false);
+  const [dynamicVideos, setDynamicVideos] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  // Debug function - can be called from browser console
+  const debugFirestoreVideos = async () => {
+    try {
+      console.log('🔍 Manual Firestore Debug Check');
+      const videosRef = collection(db, 'videos');
+      const snapshot = await getDocs(videosRef);
+      console.log('📊 Total documents in videos collection:', snapshot.docs.length);
+      snapshot.docs.forEach((doc, index) => {
+        console.log(`📺 Video ${index + 1} (${doc.id}):`, doc.data());
+      });
+      return snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
+    } catch (error) {
+      console.error('❌ Debug check failed:', error);
+      return [];
+    }
+  };
+
+  // Expose debug functions to window for console access
+  useEffect(() => {
+    (window as any).debugFirestoreVideos = debugFirestoreVideos;
+    (window as any).testPublishVideoForUser = (userId: string) => testPublishVideo(userId);
+    return () => {
+      delete (window as any).debugFirestoreVideos;
+      delete (window as any).testPublishVideoForUser;
+    };
+  }, []);
+
+  // Helper function to map category tags to standard categories
+  const mapCategoryToStandard = (tags) => {
+    if (!tags || tags.length === 0) return { category: 'tech', categoryLabel: 'TECH' };
+    const tagStr = tags.join(' ').toLowerCase();
+    
+    if (tagStr.includes('ai') || tagStr.includes('artificial') || tagStr.includes('machine learning')) {
+      return { category: 'ai', categoryLabel: 'AI' };
+    }
+    if (tagStr.includes('tech') || tagStr.includes('programming') || tagStr.includes('code')) {
+      return { category: 'tech', categoryLabel: 'TECH' };
+    }
+    if (tagStr.includes('music') || tagStr.includes('beat') || tagStr.includes('song')) {
+      return { category: 'music', categoryLabel: 'MUSIC' };
+    }
+    if (tagStr.includes('money') || tagStr.includes('finance') || tagStr.includes('wealth')) {
+      return { category: 'money', categoryLabel: 'MONEY' };
+    }
+    if (tagStr.includes('health') || tagStr.includes('fitness') || tagStr.includes('wellness')) {
+      return { category: 'health', categoryLabel: 'HEALTH' };
+    }
+    if (tagStr.includes('gaming') || tagStr.includes('game') || tagStr.includes('esports')) {
+      return { category: 'gaming', categoryLabel: 'GAMING' };
+    }
+    if (tagStr.includes('movie') || tagStr.includes('film') || tagStr.includes('cinema')) {
+      return { category: 'movies', categoryLabel: 'MOVIES' };
+    }
+    if (tagStr.includes('news') || tagStr.includes('current') || tagStr.includes('politics')) {
+      return { category: 'news', categoryLabel: 'NEWS' };
+    }
+    if (tagStr.includes('podcast') || tagStr.includes('interview') || tagStr.includes('discussion')) {
+      return { category: 'podcast', categoryLabel: 'PODCAST' };
+    }
+    
+    return { category: 'tech', categoryLabel: 'TECH' };
+  };
+
+  // Helper function to calculate XP reward based on duration
+  const calculateXPReward = (duration) => {
+    if (!duration) return 10;
+    const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+    if (!match) return 10;
+    const hours = parseInt(match[1] || '0');
+    const minutes = parseInt(match[2] || '0');  
+    const seconds = parseInt(match[3] || '0');
+    const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+    return Math.max(10, Math.floor(totalSeconds / 10));
+  };
+
+  // Helper function to format view count
+  const formatViewCount = (views) => {
+    const num = parseInt(views);
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(0)}K`;
+    return views;
+  };
+
+  // Helper function to format duration
+  const formatDuration = (duration) => {
+    if (!duration) return '0:00';
+    const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+    if (!match) return '0:00';
+    const hours = parseInt(match[1] || '0');
+    const minutes = parseInt(match[2] || '0');
+    const seconds = parseInt(match[3] || '0');
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  // Load videos from Firestore
+  useEffect(() => {
+    const loadVideos = () => {
+      try {
+        const videosRef = collection(db, 'videos');
+        // Try with ordering first, fallback to simple query if index doesn't exist
+        let videosQuery;
+        try {
+          videosQuery = query(videosRef, orderBy('addedToWiz', 'desc'), limit(20));
+        } catch (indexError) {
+          console.warn('🔍 Discover: Index not found, using simple query:', indexError);
+          videosQuery = query(videosRef, limit(20));
+        }
+
+        console.log('🔍 Discover: Setting up Firestore listener...');
+        const unsubscribe = onSnapshot(videosQuery, async (snapshot) => {
+          console.log('🔍 Discover: Firestore snapshot received, doc count:', snapshot.docs.length);
+          console.log('🔍 Discover: Raw snapshot data:', snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() })));
+          
+          const loadedVideos = [];
+          
+          // Get completed videos for the current user
+          const completedVideos = user ? await VideoCompletionService.getUserCompletedVideos() : [];
+          console.log('📚 User completed videos:', completedVideos);
+          
+          snapshot.docs.forEach((doc) => {
+            const data = doc.data();
+            console.log(`🔍 Processing video doc ${doc.id}:`, data);
+            
+            const { category, categoryLabel } = mapCategoryToStandard(data.categoryTags || []);
+            const isWatched = completedVideos.includes(data.videoId);
+            
+            const video = {
+              id: doc.id,
+              title: data.title || 'Untitled Video',
+              creator: data.creatorName || data.channelName || 'Unknown Creator',
+              avatar: data.creatorAvatar || data.channelAvatar || '',
+              thumbnail: data.thumbnail || `https://img.youtube.com/vi/${data.videoId}/maxresdefault.jpg`,
+              duration: formatDuration(data.duration),
+              xpReward: calculateXPReward(data.duration),
+              category,
+              categoryLabel,
+              views: formatViewCount(data.views || '0'),
+              watched: isWatched,
+              progress: isWatched ? 100 : 0,
+              videoId: data.videoId,
+              isNew: new Date(data.addedToWiz?.toDate?.() || data.addedToWiz || new Date()).getTime() > Date.now() - 24 * 60 * 60 * 1000,
+            };
+            
+            console.log(`✅ Processed video "${video.title}": watched=${isWatched}`, video);
+            loadedVideos.push(video);
+          });
+
+          console.log('📺 Loaded videos from Firestore:', loadedVideos.length);
+          console.log('📺 Final loaded videos:', loadedVideos);
+          setDynamicVideos(loadedVideos);
+          setLoading(false);
+        }, (error) => {
+          console.error('❌ Error loading videos with ordered query:', error);
+          
+          // If the ordered query fails (likely due to missing index), try a simple query
+          if (error.code === 'failed-precondition') {
+            console.log('🔄 Discover: Trying fallback query without ordering...');
+            const fallbackQuery = query(videosRef, limit(20));
+            const fallbackUnsubscribe = onSnapshot(fallbackQuery, async (snapshot) => {
+              console.log('🔍 Discover: Fallback query snapshot received, doc count:', snapshot.docs.length);
+              const loadedVideos = [];
+              
+              // Get completed videos for the current user
+              const completedVideos = user ? await VideoCompletionService.getUserCompletedVideos() : [];
+              
+              snapshot.docs.forEach((doc) => {
+                const data = doc.data();
+                const { category, categoryLabel } = mapCategoryToStandard(data.categoryTags || []);
+                const isWatched = completedVideos.includes(data.videoId);
+                
+                const video = {
+                  id: doc.id,
+                  title: data.title || 'Untitled Video',
+                  creator: data.creatorName || data.channelName || 'Unknown Creator',
+                  avatar: data.creatorAvatar || data.channelAvatar || '',
+                  thumbnail: data.thumbnail || `https://img.youtube.com/vi/${data.videoId}/maxresdefault.jpg`,
+                  duration: formatDuration(data.duration),
+                  xpReward: calculateXPReward(data.duration),
+                  category,
+                  categoryLabel,
+                  views: formatViewCount(data.views || '0'),
+                  watched: isWatched,
+                  progress: isWatched ? 100 : 0,
+                  videoId: data.videoId,
+                  isNew: new Date(data.addedToWiz?.toDate?.() || data.addedToWiz || new Date()).getTime() > Date.now() - 24 * 60 * 60 * 1000,
+                };
+                loadedVideos.push(video);
+              });
+              
+              console.log('📺 Fallback loaded videos from Firestore:', loadedVideos.length);
+              setDynamicVideos(loadedVideos);
+              setLoading(false);
+            }, (fallbackError) => {
+              console.error('❌ Fallback query also failed:', fallbackError);
+              setLoading(false);
+            });
+            
+            return fallbackUnsubscribe;
+          } else {
+            setLoading(false);
+          }
+        });
+
+        return unsubscribe;
+      } catch (error) {
+        console.error('❌ Error setting up video listener:', error);
+        setLoading(false);
+      }
+    };
+
+    const unsubscribe = loadVideos();
+    return () => {
+      if (unsubscribe && typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  }, []);
+
+  // Combine dynamic videos with static videos, prioritizing dynamic videos
+  const allVideos = dynamicVideos.length > 0 ? dynamicVideos : videos;
+  
   const filteredVideos = activeCategory === 'all' 
-    ? videos 
-    : videos.filter(video => video.category === activeCategory);
+    ? allVideos 
+    : allVideos.filter(video => video.category === activeCategory);
 
   const handleWatchVideo = (videoId: number | string) => {
-    const video = videos.find(v => v.id === videoId) || aiTechVideos.find(v => v.id === videoId);
+    const video = allVideos.find(v => v.id === videoId);
     if (video) {
       setSelectedVideo(video);
+    }
+  };
+
+  const handleVideoReward = (xp: number) => {
+    if (selectedVideo) {
+      console.log(`🎯 Earned ${xp} XP for watching ${selectedVideo.title}`);
+      
+      // Update the video's state to show it's been watched
+      setDynamicVideos(prevVideos => 
+        prevVideos.map(video => 
+          video.id === selectedVideo.id 
+            ? { ...video, watched: true, progress: 100 }
+            : video
+        )
+      );
     }
   };
 
@@ -1866,9 +2111,7 @@ export const WizDiscoverSection = () => {
         xpReward={selectedVideo?.xpReward || 0}
         isOpen={!!selectedVideo}
         onClose={() => setSelectedVideo(null)}
-        onReward={(xp: number) => {
-          console.log(`🎯 Earned ${xp} XP for watching ${selectedVideo?.title}`);
-        }}
+        onReward={handleVideoReward}
       />
       </div>
     </div>

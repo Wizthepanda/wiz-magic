@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Youtube, CheckCircle, Video, Users, Gift, Zap, Play, Eye, ToggleLeft, ToggleRight, Clock, Shield, Crown, Star, Sparkles, TrendingUp, Lock, Unlock } from 'lucide-react';
+import { Youtube, CheckCircle, Video, Users, Gift, Zap, Play, Eye, ToggleLeft, ToggleRight, Clock, Shield, Crown, Star, Sparkles, TrendingUp, Lock, Unlock, UserPlus, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { isYouTubeAPIEnabled } from '@/lib/feature-flags';
+import { CreatorOnboarding } from './CreatorOnboarding';
 
 export const WizActivatePage = () => {
   const { user, connectYouTube, loading } = useAuth();
@@ -14,6 +15,7 @@ export const WizActivatePage = () => {
   const [featuredVideos, setFeaturedVideos] = useState(new Set());
   const [xpCounter, setXpCounter] = useState(0);
   const [activeContentTab, setActiveContentTab] = useState('free');
+  const [showCreatorOnboarding, setShowCreatorOnboarding] = useState(false);
 
   // Mock YouTube channel data
   const mockChannelData = {
@@ -105,6 +107,38 @@ export const WizActivatePage = () => {
       description: 'Turn watch-time engagement into rewards. Give back to your most dedicated fans with exclusive perks, premium content access, and creator-only benefits.'
     }
   ];
+
+  // Show Creator Onboarding if requested
+  if (showCreatorOnboarding) {
+    return (
+      <div className="relative min-h-full overflow-hidden">
+        {/* Minimal gradient background */}
+        <div 
+          className="fixed inset-0 -z-10"
+          style={{
+            background: `
+              radial-gradient(circle at 50% 20%, rgba(230, 230, 250, 0.3) 0%, transparent 50%),
+              linear-gradient(180deg, rgba(246, 240, 255, 0.4) 0%, rgba(255, 255, 255, 0.95) 100%)
+            `
+          }}
+        />
+        
+        {/* Back Button */}
+        <div className="absolute top-6 left-6 z-10">
+          <Button
+            variant="outline"
+            onClick={() => setShowCreatorOnboarding(false)}
+            className="bg-white/80 hover:bg-white/90 backdrop-blur-sm border-gray-200"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Activate
+          </Button>
+        </div>
+        
+        <CreatorOnboarding />
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-full overflow-hidden">
@@ -852,6 +886,98 @@ export const WizActivatePage = () => {
               </motion.div>
             )}
           </AnimatePresence>
+        </motion.div>
+
+        {/* Creator Onboarding CTA Section */}
+        <motion.div
+          className="space-y-8"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 1.2 }}
+        >
+          <div className="text-center">
+            <h2 
+              className="text-3xl md:text-4xl font-bold mb-4"
+              style={{
+                background: 'linear-gradient(135deg, #e879f9 0%, #a855f7 30%, #6366f1 70%, #c4b5fd 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                filter: 'drop-shadow(0 4px 12px rgba(168, 85, 247, 0.4))'
+              }}
+            >
+              Ready to Share Your Content?
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Join the WIZ creator community and instantly share your videos with fans who can earn XP by watching.
+            </p>
+          </div>
+
+          <motion.div
+            className="max-w-2xl mx-auto"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Card 
+              className="cursor-pointer border-0 shadow-2xl overflow-hidden group"
+              onClick={() => setShowCreatorOnboarding(true)}
+              style={{
+                background: `
+                  linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%),
+                  linear-gradient(135deg, rgba(168, 85, 247, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%)
+                `,
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(168, 85, 247, 0.2)',
+                borderRadius: '24px'
+              }}
+            >
+              <CardContent className="p-8">
+                <div className="flex items-center space-x-6">
+                  <div 
+                    className="w-20 h-20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
+                    style={{
+                      background: 'linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%)',
+                      boxShadow: '0 8px 32px rgba(139, 92, 246, 0.3)'
+                    }}
+                  >
+                    <UserPlus className="w-10 h-10 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-2xl font-bold text-gray-800 mb-2">Become a Creator on WIZ</h3>
+                    <p className="text-gray-600 mb-4">
+                      Connect your YouTube channel, choose your category, and auto-populate your content into WIZ Discover.
+                    </p>
+                    <div className="flex items-center space-x-4 text-sm text-gray-500">
+                      <div className="flex items-center space-x-1">
+                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                        <span>3-step setup</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                        <span>Instant go-live</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                        <span>Creator rewards</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center text-wiz-primary group-hover:translate-x-2 transition-transform duration-300">
+                    <ArrowRight className="w-6 h-6" />
+                  </div>
+                </div>
+                
+                {/* Hover Effect */}
+                <div 
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-24px pointer-events-none"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)',
+                    boxShadow: '0 0 40px rgba(168, 85, 247, 0.2)'
+                  }}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
         </motion.div>
 
         {/* Footer Disclaimer */}

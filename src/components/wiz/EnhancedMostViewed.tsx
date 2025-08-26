@@ -3,6 +3,10 @@ import { Play, Crown, Zap, ChevronLeft, ChevronRight, X, Heart, Share2, Flame } 
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { VideoPanel } from './VideoPanel';
+import { useAuth } from '@/hooks/useAuth';
+import { useXp } from '@/context/XpContext';
+import { useToast } from '@/hooks/use-toast';
 
 // Enhanced Most Viewed data with landscape format
 const mostViewedVideos = [
@@ -100,6 +104,9 @@ const getRankingColor = (ranking: number) => {
 };
 
 export const EnhancedMostViewed = () => {
+  const { user, addXP } = useAuth();
+  const { level, addXp } = useXp();
+  const { toast } = useToast();
   const [selectedVideo, setSelectedVideo] = useState<null | typeof mostViewedVideos[0]>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -286,117 +293,29 @@ export const EnhancedMostViewed = () => {
           </div>
         </div>
 
-      {/* Enhanced Video Modal */}
-      <AnimatePresence>
-        {selectedVideo && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center"
-            style={{
-              background: 'rgba(0, 0, 0, 0.85)',
-              backdropFilter: 'blur(25px)'
-            }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={closeModal}
-          >
-            <motion.div
-              className="relative w-full max-w-4xl mx-4"
-              style={{
-                aspectRatio: '16/9',
-                background: 'rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(30px)',
-                borderRadius: '24px',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)'
-              }}
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Close Button */}
-              <button
-                onClick={closeModal}
-                className="absolute top-6 right-6 z-10 p-3 rounded-full text-white"
-                style={{
-                  background: 'rgba(0, 0, 0, 0.6)',
-                  backdropFilter: 'blur(15px)'
-                }}
-              >
-                <X className="w-6 h-6" />
-              </button>
-
-              {/* Video Content */}
-              <div className="w-full h-full rounded-3xl overflow-hidden">
-                <div 
-                  className="w-full h-full bg-cover bg-center relative"
-                  style={{ 
-                    backgroundImage: `url(${selectedVideo.thumbnail})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }}
-                >
-                  {/* Play Overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <motion.div
-                      className="w-32 h-32 rounded-full flex items-center justify-center text-white cursor-pointer"
-                      style={{
-                        background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
-                        boxShadow: '0 16px 64px rgba(168, 85, 247, 0.5)'
-                      }}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Play className="w-16 h-16 fill-current ml-2" />
-                    </motion.div>
-                  </div>
-
-                  {/* Bottom Info Panel */}
-                  <div className="absolute bottom-0 left-0 right-0 p-8">
-                    <div
-                      className="rounded-2xl p-6 text-white"
-                      style={{
-                        background: 'rgba(0, 0, 0, 0.7)',
-                        backdropFilter: 'blur(20px)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)'
-                      }}
-                    >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <h3 className="text-2xl font-bold mb-2">{selectedVideo.title}</h3>
-                          <div className="flex items-center justify-between text-lg text-gray-300 mb-4">
-                            <span>{selectedVideo.creator}</span>
-                            <span className="text-yellow-400 font-semibold">+{selectedVideo.xpReward} XP</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Action Buttons */}
-                      <div className="flex items-center justify-center space-x-6">
-                        <Button
-                          size="lg"
-                          className="bg-white/20 hover:bg-white/30 text-white border-white/30 px-8 py-3"
-                        >
-                          <Heart className="w-5 h-5 mr-3" />
-                          Like
-                        </Button>
-                        <Button
-                          size="lg"
-                          className="bg-white/20 hover:bg-white/30 text-white border-white/30 px-8 py-3"
-                        >
-                          <Share2 className="w-5 h-5 mr-3" />
-                          Share
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Video Player Panel */}
+      <VideoPanel
+        videoId={selectedVideo?.videoId || ''}
+        title={selectedVideo?.title || ''}
+        creator={selectedVideo?.creator || ''}
+        xpReward={selectedVideo?.xpReward || 0}
+        isOpen={!!selectedVideo}
+        onClose={closeModal}
+        onReward={(xp: number) => {
+          console.log(`🎯 EnhancedMostViewed: Earned ${xp} XP for watching ${selectedVideo?.title}`);
+          
+          // Update both XP systems to ensure progress bar updates immediately
+          addXp(xp); // Update XP context immediately for instant UI feedback
+          addXP(xp); // Update auth context for persistence
+          
+          // Show success toast notification
+          toast({
+            title: "🎉 XP Earned!",
+            description: `You earned +${xp} XP! Your current level: Level ${level}`,
+            duration: 4000,
+          });
+        }}
+      />
     </>
   );
 };
