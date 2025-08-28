@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { useXPSystem } from '../hooks/useXPSystem';
 
 interface XpContextType {
   xp: number; // XP within current level
@@ -7,105 +8,77 @@ interface XpContextType {
   level: number;
   xpToNextLevel: number;
   progressPercent: number;
+  dailyXp: number;
+  dailyXpCap: number;
+  currentStreak: number;
+  longestStreak: number;
+  dailyVideosWatched: number;
+  isLoading: boolean;
+  xpData: any;
+  // New methods from XP system
+  awardWatchXP: (videoId: string, watchTime: number, completed: boolean, sessionId: string) => Promise<any>;
+  awardShareXP: (videoId: string) => Promise<any>;
+  canEarnMoreXP: boolean;
+  dailyProgress: number;
 }
 
 const XpContext = createContext<XpContextType | undefined>(undefined);
 
 export const XpProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [totalXp, setTotalXp] = useState(() => {
-    // Load from localStorage on initialization
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('wizXp');
-      const initialXp = saved ? parseInt(saved, 10) : 0;
-      console.log('🎯 XpContext: Initial XP from localStorage:', initialXp);
-      
-      // Also listen for any pending xpUpdated events immediately
-      setTimeout(() => {
-        console.log('🔄 XpContext: Initialized, ready to receive xpUpdated events');
-      }, 0);
-      
-      return initialXp;
-    }
-    return 0;
-  });
-
-
-  // Calculate level and progress based on 1000 XP per level
-  const level = Math.floor(totalXp / 1000) + 1;
-  const xpInCurrentLevel = totalXp % 1000;
-  const xpToNextLevel = 1000;
-  const progressPercent = (xpInCurrentLevel / xpToNextLevel) * 100;
-
-  const addXp = (amount: number) => {
-    console.log(`📈 XpContext.addXp called with: ${amount}, current total: ${totalXp}`);
-    setTotalXp((prev) => {
-      const newTotalXp = prev + amount;
-      console.log(`📈 XpContext: ${prev} + ${amount} = ${newTotalXp}`);
-      
-      // Save to localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('wizXp', newTotalXp.toString());
-        console.log(`💾 XpContext: Saved ${newTotalXp} to localStorage`);
-      }
-      
-      return newTotalXp;
-    });
-    
-    // Force re-render all components consuming this context after XP update
-    setTimeout(() => {
-      setTotalXp((prev) => {
-        console.log(`🔄 XpContext: Forced refresh with totalXp: ${prev}`);
-        return prev; // Don't change value, just trigger re-render
-      });
-    }, 10);
-  };
-
-  // Listen for XP updates from Firebase (dispatched by useAuth)
+  // Use the new XP system hook
+  const xpSystem = useXPSystem();
+  const [forceRefresh, setForceRefresh] = useState(0);
+  
+  // Listen for force refresh events to immediately update context
   useEffect(() => {
-    const handleXpUpdate = (event: CustomEvent) => {
-      const { totalXP } = event.detail;
-      console.log(`🔄 XP Context received Firebase update: ${totalXP}, current: ${totalXp}`);
-      
-      // Always sync from Firebase if it's different (trust Firebase as source of truth)
-      if (totalXP !== totalXp) {
-        console.log(`📊 XP Context syncing with Firebase: ${totalXp} → ${totalXP}`);
-        setTotalXp(totalXP);
-        
-        // Update localStorage to match Firebase
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('wizXp', totalXP.toString());
-          console.log(`💾 XP Context: Synced localStorage to ${totalXP}`);
-        }
-        
-        // Force additional re-render to ensure UI updates
-        setTimeout(() => {
-          setTotalXp(totalXP);
-          console.log(`🔄 XP Context: Additional sync confirmation with ${totalXP}`);
-        }, 50);
-      }
+    const handleForceRefresh = (event: CustomEvent) => {
+      console.log('🔄 XpContext received forceXPRefresh event:', event.detail);
+      setForceRefresh(prev => prev + 1); // Force re-render
     };
 
-    if (typeof window !== 'undefined') {
-      window.addEventListener('xpUpdated', handleXpUpdate as EventListener);
-      return () => window.removeEventListener('xpUpdated', handleXpUpdate as EventListener);
-    }
-  }, [totalXp]);
+    window.addEventListener('forceXPRefresh', handleForceRefresh as EventListener);
+    return () => {
+      window.removeEventListener('forceXPRefresh', handleForceRefresh as EventListener);
+    };
+  }, []);
 
-  // Save XP to localStorage whenever it changes
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('wizXp', totalXp.toString());
-    }
-  }, [totalXp]);
+  // Legacy addXp method for backwards compatibility
+  const addXp = (amount: number) => {
+    console.log(`📈 Legacy addXp called with: ${amount}. Use awardWatchXP instead.`);
+    // This method is now deprecated - XP should be awarded through Firebase Functions
+  };
+
+  console.log('🔄 XpContext rendering with data:', JSON.stringify({
+    totalXP: xpSystem.totalXP,
+    level: xpSystem.level,
+    progressPercent: xpSystem.progressPercent,
+    xpInCurrentLevel: xpSystem.xpInCurrentLevel,
+    xpToNextLevel: xpSystem.xpToNextLevel,
+    dailyXP: xpSystem.dailyXP,
+    loading: xpSystem.loading,
+    forceRefresh
+  }, null, 2));
 
   return (
     <XpContext.Provider value={{ 
-      xp: xpInCurrentLevel, // XP within current level
-      totalXp, // Total XP earned
-      addXp, 
-      level, 
-      xpToNextLevel, 
-      progressPercent 
+      xp: xpSystem.xpInCurrentLevel,
+      totalXp: xpSystem.totalXP, 
+      addXp, // Legacy method
+      level: xpSystem.level, 
+      xpToNextLevel: xpSystem.xpToNextLevel, 
+      progressPercent: xpSystem.progressPercent,
+      dailyXp: xpSystem.dailyXP,
+      dailyXpCap: xpSystem.dailyXPCap,
+      currentStreak: xpSystem.streakCount,
+      longestStreak: xpSystem.streakCount, // TODO: Add longestStreak to XP system
+      dailyVideosWatched: 0, // TODO: Add to XP system
+      isLoading: xpSystem.loading,
+      xpData: xpSystem.xpData,
+      // New methods
+      awardWatchXP: xpSystem.awardWatchXP,
+      awardShareXP: xpSystem.awardShareXP,
+      canEarnMoreXP: xpSystem.canEarnMoreXP,
+      dailyProgress: xpSystem.dailyProgress
     }}>
       {children}
     </XpContext.Provider>

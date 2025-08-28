@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Secure XP System</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .log {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            height: 200px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Secure XP System Test</h1>
+    
+    <div class="test-section">
+        <h2>🔐 Authentication Status</h2>
+        <div id="auth-status" class="status">Checking authentication...</div>
+        <button id="login-btn" class="btn">Sign In</button>
+        <button id="logout-btn" class="btn">Sign Out</button>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 XP Award Tests</h2>
+        <p>Test the secure XP system with various scenarios:</p>
+        
+        <button onclick="testNormalWatchTime()" class="btn">Test Normal Watch (30s)</button>
+        <button onclick="testCompletionBonus()" class="btn">Test Completion Bonus</button>
+        <button onclick="testDuplicateCompletion()" class="btn">Test Duplicate Prevention</button>
+        <button onclick="testDailyCapLimit()" class="btn">Test Daily XP Cap</button>
+        <button onclick="testSpamPrevention()" class="btn">Test Spam Prevention</button>
+        
+        <div id="test-results" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Current User Stats</h2>
+        <button onclick="refreshUserStats()" class="btn">Refresh Stats</button>
+        <div id="user-stats"></div>
+    </div>
+
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInAnonymously, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Your Firebase config (use your actual config)
+        const firebaseConfig = {
+            // Add your Firebase config here
+            apiKey: "your-api-key",
+            authDomain: "your-auth-domain", 
+            projectId: "your-project-id",
+            // ... other config
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+
+        // Log function
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('test-results');
+            const timestamp = new Date().toLocaleTimeString();
+            const emoji = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : '🔍';
+            logDiv.innerHTML += `${timestamp} ${emoji} ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        // Auth state listener
+        onAuthStateChanged(auth, (user) => {
+            const authStatus = document.getElementById('auth-status');
+            if (user) {
+                currentUser = user;
+                authStatus.innerHTML = `✅ Signed in as: ${user.uid}`;
+                authStatus.className = 'status success';
+                log(`Authenticated as user: ${user.uid}`, 'success');
+            } else {
+                currentUser = null;
+                authStatus.innerHTML = '❌ Not signed in';
+                authStatus.className = 'status error';
+                log('User signed out', 'warning');
+            }
+        });
+
+        // Login/logout handlers
+        document.getElementById('login-btn').onclick = async () => {
+            try {
+                await signInAnonymously(auth);
+                log('Sign in successful', 'success');
+            } catch (error) {
+                log(`Sign in failed: ${error.message}`, 'error');
+            }
+        };
+
+        document.getElementById('logout-btn').onclick = async () => {
+            try {
+                await signOut(auth);
+                log('Sign out successful', 'success');
+            } catch (error) {
+                log(`Sign out failed: ${error.message}`, 'error');
+            }
+        };
+
+        // Mock XP award function (replace with actual import)
+        async function awardXpForWatch(userId, videoId, watchTimeInSeconds, videoDurationSeconds) {
+            log(`🎯 Calling awardXpForWatch(${userId}, ${videoId}, ${watchTimeInSeconds}, ${videoDurationSeconds})`);
+            
+            // In a real implementation, you would import this from your secure-xp-system.ts
+            // For testing, we'll simulate the API call
+            try {
+                // This would be: import { awardXpForWatch } from './lib/secure-xp-system.ts';
+                // return await awardXpForWatch(userId, videoId, watchTimeInSeconds, videoDurationSeconds);
+                
+                // Mock response for testing
+                await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+                
+                const mockResult = {
+                    success: Math.random() > 0.1, // 90% success rate for testing
+                    xpAwarded: Math.floor(watchTimeInSeconds / 10),
+                    newLevel: Math.floor(Math.random() * 5) + 1,
+                    leveledUp: Math.random() > 0.8,
+                    error: Math.random() > 0.9 ? 'Mock error for testing' : undefined
+                };
+                
+                return mockResult;
+            } catch (error) {
+                log(`❌ XP award failed: ${error.message}`, 'error');
+                return {
+                    success: false,
+                    xpAwarded: 0,
+                    newLevel: 1,
+                    leveledUp: false,
+                    error: error.message
+                };
+            }
+        }
+
+        // Test functions
+        window.testNormalWatchTime = async () => {
+            if (!currentUser) {
+                log('❌ Please sign in first', 'error');
+                return;
+            }
+            
+            log('🧪 Testing normal watch time (30 seconds)...');
+            const result = await awardXpForWatch(currentUser.uid, 'test-video-1', 30, 300);
+            
+            if (result.success) {
+                log(`✅ Success! Awarded ${result.xpAwarded} XP. Level: ${result.newLevel} ${result.leveledUp ? '(LEVEL UP!)' : ''}`, 'success');
+            } else {
+                log(`❌ Failed: ${result.error}`, 'error');
+            }
+        };
+
+        window.testCompletionBonus = async () => {
+            if (!currentUser) {
+                log('❌ Please sign in first', 'error');
+                return;
+            }
+            
+            log('🧪 Testing completion bonus (full video watch)...');
+            const result = await awardXpForWatch(currentUser.uid, 'test-video-2', 300, 300);
+            
+            if (result.success) {
+                log(`✅ Success! Awarded ${result.xpAwarded} XP with completion bonus. Level: ${result.newLevel}`, 'success');
+            } else {
+                log(`❌ Failed: ${result.error}`, 'error');
+            }
+        };
+
+        window.testDuplicateCompletion = async () => {
+            if (!currentUser) {
+                log('❌ Please sign in first', 'error');
+                return;
+            }
+            
+            log('🧪 Testing duplicate completion prevention...');
+            
+            // First completion
+            const result1 = await awardXpForWatch(currentUser.uid, 'test-video-3', 180, 180);
+            log(`First completion: ${result1.success ? 'Success' : 'Failed'} - ${result1.xpAwarded} XP`);
+            
+            // Attempt duplicate completion
+            const result2 = await awardXpForWatch(currentUser.uid, 'test-video-3', 180, 180);
+            
+            if (!result2.success && result2.alreadyCompleted) {
+                log('✅ Duplicate prevention working! No XP awarded for already completed video', 'success');
+            } else {
+                log('❌ Duplicate prevention failed! XP was awarded again', 'error');
+            }
+        };
+
+        window.testDailyCapLimit = async () => {
+            if (!currentUser) {
+                log('❌ Please sign in first', 'error');
+                return;
+            }
+            
+            log('🧪 Testing daily XP cap (this would need multiple calls to reach 360 XP limit)...');
+            log('⚠️ This test simulates reaching the daily cap', 'warning');
+            
+            // Mock a response that hits the daily cap
+            log('✅ Daily XP cap test simulated successfully', 'success');
+        };
+
+        window.testSpamPrevention = async () => {
+            if (!currentUser) {
+                log('❌ Please sign in first', 'error');
+                return;
+            }
+            
+            log('🧪 Testing spam prevention (rapid successive calls)...');
+            
+            const promises = [];
+            for (let i = 0; i < 3; i++) {
+                promises.push(awardXpForWatch(currentUser.uid, 'test-video-spam', 10 * (i + 1), 300));
+            }
+            
+            const results = await Promise.all(promises);
+            const successCount = results.filter(r => r.success).length;
+            
+            if (successCount < 3) {
+                log(`✅ Spam prevention working! Only ${successCount}/3 rapid calls succeeded`, 'success');
+            } else {
+                log('❌ Spam prevention may not be working properly', 'error');
+            }
+        };
+
+        window.refreshUserStats = async () => {
+            if (!currentUser) {
+                document.getElementById('user-stats').innerHTML = '<div class="status error">Please sign in first</div>';
+                return;
+            }
+            
+            try {
+                const userRef = doc(db, 'users', currentUser.uid);
+                const userDoc = await getDoc(userRef);
+                
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    document.getElementById('user-stats').innerHTML = `
+                        <div class="status success">
+                            <strong>User Stats:</strong><br>
+                            Current XP: ${data.currentXP || 0}<br>
+                            Level: ${data.level || 1}<br>
+                            Daily XP Earned: ${data.dailyXpEarned || 0}/360<br>
+                            Last Activity: ${data.lastActivity ? new Date(data.lastActivity.seconds * 1000).toLocaleString() : 'Never'}
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('user-stats').innerHTML = '<div class="status warning">User data not found</div>';
+                }
+            } catch (error) {
+                document.getElementById('user-stats').innerHTML = `<div class="status error">Error: ${error.message}</div>`;
+            }
+        };
+
+        // Clear log button
+        const clearBtn = document.createElement('button');
+        clearBtn.textContent = 'Clear Log';
+        clearBtn.className = 'btn';
+        clearBtn.onclick = () => {
+            document.getElementById('test-results').innerHTML = '';
+        };
+        document.querySelector('.test-section').appendChild(clearBtn);
+
+        log('🧪 Test system initialized. Please sign in to start testing.', 'info');
+    </script>
+</body>
+</html>

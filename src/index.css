@@ -1,3 +1,6 @@
+/* Import XP Animation Styles */
+@import './styles/xp-animations.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

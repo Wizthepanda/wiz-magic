@@ -13,6 +13,9 @@ import { YouTubeService } from '@/lib/youtube';
 import { LocalXPService } from '@/lib/local-xp-service';
 import { isYouTubeAPIEnabled, logFeatureFlag } from '@/lib/feature-flags';
 import { isAdmin, getUserPermissions, TEST_USER_DEMO_DATA } from '@/config/admin-config';
+import { YouTubeXPService } from '@/lib/youtube-xp-service';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/lib/firebase';
 // Note: We'll import useXp dynamically to avoid circular dependency
 
 export interface WizUser extends User {
@@ -25,80 +28,123 @@ export interface WizUser extends User {
   testUserData?: any;
 }
 
+// Helper function to get user data
+const getUserData = async (firebaseUser: User): Promise<WizUser> => {
+  try {
+    // Initialize XP data in background (don't await to speed up loading)
+    const initializeXP = async () => {
+      try {
+        const { initializeUserXP } = await import('@/lib/wiz-xp-core');
+        await initializeUserXP(
+          firebaseUser.uid, 
+          firebaseUser.displayName || undefined, 
+          firebaseUser.email || undefined
+        );
+        console.log('✅ XP data initialized in background');
+      } catch (error) {
+        console.warn('⚠️ XP initialization failed (non-blocking):', error);
+      }
+    };
+    
+    // Start XP initialization but don't wait for it
+    initializeXP();
+    
+    const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+    const userData = userDoc.data();
+    
+    // Check if user is admin and get permissions
+    const userPermissions = getUserPermissions(firebaseUser.email || '');
+    
+    const wizUser: WizUser = {
+      ...firebaseUser,
+      level: userData?.level || 1,
+      totalXP: userData?.totalXP || userData?.currentXP || 0,
+      youtubeConnected: userData?.youtubeConnected || false,
+      createdAt: userData?.createdAt?.toDate() || new Date(),
+      isAdmin: userPermissions.isAdmin,
+      permissions: userPermissions.permissions,
+      testUserData: null, // Remove demo data
+    };
+    
+    return wizUser;
+  } catch (error) {
+    console.error('Error getting user data:', error);
+    // Return basic user data if Firestore fails
+    const userPermissions = getUserPermissions(firebaseUser.email || '');
+    return {
+      ...firebaseUser,
+      level: 1,
+      totalXP: 0,
+      youtubeConnected: false,
+      createdAt: new Date(),
+      isAdmin: userPermissions.isAdmin,
+      permissions: userPermissions.permissions,
+      testUserData: null,
+    };
+  }
+};
+
+// Create a singleton auth state manager
+let authListenerInitialized = false;
+let authUnsubscribe: (() => void) | null = null;
+
 export const useAuth = () => {
   const [user, setUser] = useState<WizUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    console.log('🔧 Setting up auth state listener...');
-    let isMounted = true;
-    
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (!isMounted) return; // Prevent state updates if component unmounted
-      
-      // Only log the first auth state change to reduce noise
-      if (!isInitialized) {
-        console.log('🔄 Auth state changed:', firebaseUser ? `${firebaseUser.email} (uid: ${firebaseUser.uid})` : 'No user');
-      }
-      
-      if (firebaseUser && !user) {
-        // Only fetch user data if we don't already have it
-        try {
-          console.log('📥 Fetching user data from Firestore...');
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-          const userData = userDoc.data();
-          
-          if (!isMounted) return; // Check again after async operation
-          
-          // Check if user is admin and get permissions
-          const userPermissions = getUserPermissions(firebaseUser.email || '');
-          const adminTestData = userPermissions.isAdmin ? TEST_USER_DEMO_DATA : null;
-          
-          const wizUser: WizUser = {
-            ...firebaseUser,
-            level: userData?.level || (userPermissions.isAdmin ? adminTestData?.level : 1),
-            totalXP: userData?.totalXP || (userPermissions.isAdmin ? adminTestData?.xp : 0),
-            youtubeConnected: userData?.youtubeConnected || false,
-            createdAt: userData?.createdAt?.toDate() || new Date(),
-            isAdmin: userPermissions.isAdmin,
-            permissions: userPermissions.permissions,
-            testUserData: adminTestData,
-          };
-          
-          console.log('✅ Setting user state:', { email: wizUser.email, level: wizUser.level, totalXP: wizUser.totalXP });
-          setUser(wizUser);
-          
-          // Dispatch event to sync XP context with Firebase data
-          if (typeof window !== 'undefined') {
-            // Use setTimeout to ensure the event is dispatched after the context is initialized
-            setTimeout(() => {
-              window.dispatchEvent(new CustomEvent('xpUpdated', { 
-                detail: { totalXP: wizUser.totalXP } 
-              }));
-              console.log('🔄 Dispatched initial xpUpdated event with totalXP:', wizUser.totalXP);
-            }, 100);
-          }
-        } catch (error) {
-          console.error('❌ Error fetching user data:', error);
-          if (isMounted) {
-            setUser(null);
-          }
-        }
-      } else if (!firebaseUser) {
-        console.log('❌ No Firebase user, setting user state to null');
-        setUser(null);
-      }
-      
-      if (isMounted) {
+    // Only setup listener once across all instances
+    if (authListenerInitialized) {
+      // If listener exists, just get current state
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        // Get user data immediately if already authenticated
+        getUserData(currentUser)
+          .then(wizUser => {
+            setUser(wizUser);
+            setLoading(false);
+          })
+          .catch(error => {
+            console.error('Error getting user data:', error);
+            setLoading(false);
+          });
+      } else {
         setLoading(false);
-        setIsInitialized(true);
+      }
+      return;
+    }
+    
+    console.log('🔧 Setting up singleton auth state listener...');
+    authListenerInitialized = true;
+    let hasLoggedState = false;
+    
+    authUnsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      // Only log once to reduce noise
+      if (!hasLoggedState) {
+        console.log('🔄 Auth state changed:', firebaseUser ? `${firebaseUser.email} (uid: ${firebaseUser.uid})` : 'No user');
+        hasLoggedState = true;
+      }
+      
+      try {
+        if (firebaseUser) {
+          console.log('📥 Getting user data from Firestore...');
+          const wizUser = await getUserData(firebaseUser);
+          console.log('✅ User authenticated:', { email: wizUser.email, level: wizUser.level, totalXP: wizUser.totalXP });
+          setUser(wizUser);
+        } else {
+          console.log('❌ No Firebase user');
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('❌ Error in auth state change:', error);
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
     });
 
     // Handle redirect result on app initialization (only once)
     const handleRedirectResult = async () => {
-      if (isInitialized) return; // Skip if already initialized
       
       try {
         // Add timeout to prevent hanging
@@ -140,6 +186,11 @@ export const useAuth = () => {
           if (isYouTubeAPIEnabled()) {
             await setDoc(doc(db, 'users', user.uid), userData, { merge: true });
             console.log('✅ User data saved to Firestore');
+            
+            // Initialize YouTube XP tracking in background (non-blocking)
+            YouTubeXPService.initializeUserTracking(user.uid)
+              .then(() => console.log('✅ YouTube XP tracking initialized'))
+              .catch(error => console.warn('⚠️ Failed to initialize YouTube XP tracking:', error));
           } else {
             await LocalXPService.initializeLocalUser(user.uid, userData);
             console.log('✅ User data saved locally');
@@ -154,8 +205,8 @@ export const useAuth = () => {
     handleRedirectResult();
     
     return () => {
-      isMounted = false;
-      unsubscribe();
+      // Don't unsubscribe the global listener, just mark unmounted
+      console.log('🔄 Auth hook unmounted');
     };
   }, []);
 

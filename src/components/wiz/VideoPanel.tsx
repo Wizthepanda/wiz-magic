@@ -93,28 +93,17 @@ export const VideoPanel: React.FC<VideoPanelProps> = ({
           if (percent >= 95 && !rewarded && !isVideoCompleted) {
             setRewarded(true);
             
-            // Fixed XP reward based on video's designated XP value
-            const earnedXp = xpReward;
+            // Calculate actual watch time (use current position as approximate watch time)
+            const actualWatchTime = Math.min(currentTime, duration);
             
-            // Mark video as completed to prevent future XP farming
-            const marked = await VideoCompletionService.markVideoCompleted(videoId, earnedXp, currentTime);
+            // Mark video as completed and award XP through Firebase Functions
+            const marked = await VideoCompletionService.markVideoCompleted(videoId, xpReward, actualWatchTime);
             
             if (marked) {
-              // Use callback to handle XP (prevents double-adding)
-              onReward(earnedXp);
-              
-              // Also directly dispatch event to ensure XP Context gets updated
-              if (typeof window !== 'undefined') {
-                // Get current user XP and add the earned amount
-                const event = new CustomEvent('xpUpdated', { 
-                  detail: { totalXP: (user?.totalXP || 0) + earnedXp } 
-                });
-                window.dispatchEvent(event);
-                console.log('🔄 VideoPanel dispatched xpUpdated event with earnedXp:', earnedXp);
-              }
-              
+              // Use callback for UI feedback
+              onReward(xpReward);
               setIsVideoCompleted(true);
-              console.log(`🏁 Video completed: ${videoId} - Earned ${earnedXp} XP`);
+              console.log(`🏁 Video completed: ${videoId} - Watch time: ${actualWatchTime}s`);
             } else {
               console.log(`⚠️ YouTube video ${videoId} was already completed - no XP awarded`);
             }

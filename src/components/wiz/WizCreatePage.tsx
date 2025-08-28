@@ -233,29 +233,78 @@ export const WizCreatePage = () => {
 
       // First, ensure creator profile is saved so videos can get proper creator info
       console.log('👤 Saving/updating creator profile...');
+      console.log('📊 Channel Info Data:', channelInfo);
+      
+      // Validate and sanitize channel info with deep inspection
+      console.log('🔍 Deep inspection of channelInfo:');
+      console.log('channelInfo keys:', channelInfo ? Object.keys(channelInfo) : 'channelInfo is null/undefined');
+      console.log('channelInfo.id type:', typeof channelInfo?.id, 'value:', channelInfo?.id);
+      console.log('channelInfo.name type:', typeof channelInfo?.name, 'value:', channelInfo?.name);
+      console.log('channelInfo.avatar type:', typeof channelInfo?.avatar, 'value:', channelInfo?.avatar);
+      console.log('channelInfo.subscriberCount type:', typeof channelInfo?.subscriberCount, 'value:', channelInfo?.subscriberCount);
+      
+      const safeChannelInfo = {
+        id: channelInfo?.id || `channel_${user.uid}`,
+        name: channelInfo?.name || user.displayName || 'Unknown Creator',
+        avatar: channelInfo?.avatar || user.photoURL || '',
+        subscriberCount: channelInfo?.subscriberCount || '0'
+      };
+      
+      console.log('✅ Sanitized Channel Info:', safeChannelInfo);
+      console.log('🔍 selectedVideos[0] category:', selectedVideos[0]?.category);
+      
       const existingProfile = await CreatorService.getCreatorProfile(user.uid);
-      if (!existingProfile) {
-        await CreatorService.saveCreatorProfile({
-          userId: user.uid,
-          channelId: channelInfo.id,
-          channelName: channelInfo.name,
-          channelAvatar: channelInfo.avatar,
-          subscriberCount: channelInfo.subscriberCount,
-          primaryCategory: selectedVideos[0]?.category || 'tech',
-          onboardingComplete: true,
-          totalVideos: selectedVideos.length
-        });
-        console.log('✅ Creator profile created');
-      } else {
-        // Update existing profile with latest channel info
-        await CreatorService.saveCreatorProfile({
-          ...existingProfile,
-          channelName: channelInfo.name,
-          channelAvatar: channelInfo.avatar,
-          subscriberCount: channelInfo.subscriberCount,
-          totalVideos: (existingProfile.totalVideos || 0) + selectedVideos.length
-        });
-        console.log('✅ Creator profile updated');
+      
+      try {
+        if (!existingProfile) {
+          const profileData = {
+            userId: user.uid,
+            channelId: safeChannelInfo.id,
+            channelName: safeChannelInfo.name,
+            channelAvatar: safeChannelInfo.avatar,
+            subscriberCount: safeChannelInfo.subscriberCount,
+            primaryCategory: selectedVideos[0]?.category || 'tech',
+            onboardingComplete: true,
+            totalVideos: selectedVideos.length
+          };
+          
+          console.log('🔍 Profile data to save (new profile):', profileData);
+          await CreatorService.saveCreatorProfile(profileData);
+          console.log('✅ Creator profile created');
+        } else {
+          const updateData = {
+            ...existingProfile,
+            channelName: safeChannelInfo.name,
+            channelAvatar: safeChannelInfo.avatar,
+            subscriberCount: safeChannelInfo.subscriberCount,
+            totalVideos: (existingProfile.totalVideos || 0) + selectedVideos.length
+          };
+          
+          console.log('🔍 Profile data to save (update):', updateData);
+          await CreatorService.saveCreatorProfile(updateData);
+          console.log('✅ Creator profile updated');
+        }
+      } catch (profileError) {
+        console.error('❌ Failed to save creator profile, trying minimal fallback:', profileError);
+        
+        // Fallback: try to save minimal profile data
+        try {
+          const minimalProfile = {
+            userId: user.uid,
+            channelId: user.uid, // Use user ID as channel ID fallback
+            channelName: user.displayName || 'Creator',
+            primaryCategory: 'tech',
+            onboardingComplete: true,
+            totalVideos: selectedVideos.length
+          };
+          
+          console.log('🔄 Attempting minimal profile save:', minimalProfile);
+          await CreatorService.saveCreatorProfile(minimalProfile);
+          console.log('✅ Minimal creator profile saved');
+        } catch (fallbackError) {
+          console.error('❌ Even minimal profile save failed:', fallbackError);
+          // Continue anyway - we can still try to publish videos
+        }
       }
 
       // Now publish videos to Discover - they'll get proper creator info from the profile

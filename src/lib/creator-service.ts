@@ -63,12 +63,58 @@ export class CreatorService {
     try {
       const creatorRef = doc(db, 'creators', profileData.userId);
       
-      const creatorData: CreatorProfile = {
-        ...profileData,
-        createdAt: profileData.createdAt || new Date(),
-        lastSyncDate: new Date(),
-        status: 'active'
+      // Deep sanitization function to remove all undefined/null values
+      const deepSanitize = (obj: any): any => {
+        if (obj === null || obj === undefined) return null;
+        if (typeof obj === 'string') return obj === 'undefined' ? '' : obj;
+        if (typeof obj === 'number' || typeof obj === 'boolean') return obj;
+        if (obj instanceof Date) return obj;
+        if (Array.isArray(obj)) return obj.map(deepSanitize).filter(item => item !== null);
+        if (typeof obj === 'object') {
+          const cleaned: any = {};
+          for (const [key, value] of Object.entries(obj)) {
+            const sanitizedValue = deepSanitize(value);
+            if (sanitizedValue !== null && sanitizedValue !== undefined) {
+              cleaned[key] = sanitizedValue;
+            }
+          }
+          return cleaned;
+        }
+        return obj;
       };
+      
+      // Validate and sanitize all fields
+      const sanitizedData = {
+        userId: String(profileData.userId || ''),
+        channelId: String(profileData.channelId || ''),
+        channelName: String(profileData.channelName || 'Unknown Creator'),
+        channelAvatar: String(profileData.channelAvatar || ''),
+        subscriberCount: String(profileData.subscriberCount || '0'),
+        primaryCategory: String(profileData.primaryCategory || 'tech'),
+        onboardingComplete: Boolean(profileData.onboardingComplete),
+        totalVideos: Number(profileData.totalVideos || 0),
+        status: 'active' as const
+      };
+      
+      // Only include optional fields if they have valid values
+      if (profileData.secondaryCategory && profileData.secondaryCategory !== 'undefined') {
+        sanitizedData['secondaryCategory'] = String(profileData.secondaryCategory);
+      }
+      
+      console.log('🧹 Pre-sanitized data:', profileData);
+      console.log('🧹 Sanitized creator profile data:', sanitizedData);
+      
+      // Deep sanitize the entire object
+      const cleanedData = deepSanitize(sanitizedData);
+      console.log('🧹 Deep cleaned data:', cleanedData);
+      
+      const creatorData = {
+        ...cleanedData,
+        createdAt: new Date(),
+        lastSyncDate: new Date()
+      };
+
+      console.log('🔥 Final data being sent to Firestore:', creatorData);
 
       await setDoc(creatorRef, {
         ...creatorData,
@@ -79,6 +125,8 @@ export class CreatorService {
       console.log('✅ Creator profile saved:', profileData.userId);
     } catch (error) {
       console.error('❌ Error saving creator profile:', error);
+      console.error('❌ Original profile data:', profileData);
+      console.error('❌ Error stack:', error.stack);
       throw error;
     }
   }

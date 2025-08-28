@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XP System Production Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .test-result { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🎯 XP System Production Test</h1>
+    <p>This page tests the new production XP system deployed to Firebase.</p>
+
+    <h2>Test Instructions:</h2>
+    <ol>
+        <li>Go to <a href="https://wiz-magic-platform.web.app" target="_blank">https://wiz-magic-platform.web.app</a></li>
+        <li>Sign in to your account</li>
+        <li>Open browser console (F12)</li>
+        <li>Run the test commands below</li>
+    </ol>
+
+    <h2>🧪 Test Commands (Run in Browser Console)</h2>
+
+    <div class="test-result info">
+        <h3>1. Test Video Completion XP</h3>
+        <pre>// Import the client function
+const { awardVideoCompletion } = await import('./src/lib/xp/awardXpClient.js');
+
+// Award XP for a test video
+const result = await awardVideoCompletion('test_video_' + Date.now(), 10, 45);
+console.log('XP Award Result:', result);</pre>
+    </div>
+
+    <div class="test-result info">
+        <h3>2. Test Share XP</h3>
+        <pre>// Import share function  
+const { awardShare } = await import('./src/lib/xp/awardXpClient.js');
+
+// Award share XP
+const shareResult = await awardShare('shared_video_' + Date.now());
+console.log('Share XP Result:', shareResult);</pre>
+    </div>
+
+    <div class="test-result info">
+        <h3>3. Check Auth Singleton</h3>
+        <pre>// Check auth state
+const authSingleton = await import('./src/lib/authSingleton.js').then(m => m.default);
+console.log('Current user:', authSingleton.getCurrentUser());
+console.log('Is authenticated:', authSingleton.isAuthenticated());</pre>
+    </div>
+
+    <div class="test-result info">
+        <h3>4. Listen to XP Events</h3>
+        <pre>// Listen for XP update events
+window.addEventListener('xpUpdated', (event) => {
+    console.log('🎯 XP Updated Event:', event.detail);
+});
+
+window.addEventListener('levelUp', (event) => {
+    console.log('🆙 Level Up Event:', event.detail);
+});</pre>
+    </div>
+
+    <div class="test-result info">
+        <h3>5. Check Offline Queue</h3>
+        <pre>// Check offline queue status
+const { getOfflineQueueStatus } = await import('./src/lib/xp/awardXpClient.js');
+console.log('Offline Queue:', getOfflineQueueStatus());</pre>
+    </div>
+
+    <h2>✅ Expected Results</h2>
+
+    <div class="test-result success">
+        <h4>Video Completion Test</h4>
+        <ul>
+            <li>Console shows: "✅ awardXpOnce success awarded=11 newTotal=X"</li>
+            <li>Console shows: "⚡ window xpUpdated fired"</li>
+            <li>Toast notification appears: "+11 XP earned!"</li>
+            <li>XP includes 10% completion bonus (10 + 1 = 11 XP)</li>
+        </ul>
+    </div>
+
+    <div class="test-result success">
+        <h4>Share Test</h4>
+        <ul>
+            <li>Console shows: "+20 XP for sharing!"</li>
+            <li>Share XP doesn't count toward daily cap</li>
+            <li>XP event fires immediately</li>
+        </ul>
+    </div>
+
+    <div class="test-result success">
+        <h4>Auth Singleton Test</h4>
+        <ul>
+            <li>Returns current authenticated user object</li>
+            <li>No duplicate Firebase Auth listeners</li>
+            <li>Clean auth state management</li>
+        </ul>
+    </div>
+
+    <h2>🚨 Troubleshooting</h2>
+
+    <div class="test-result error">
+        <h4>If XP Not Awarded:</h4>
+        <ul>
+            <li>Check if user is signed in</li>
+            <li>Check browser console for errors</li>
+            <li>Verify Firestore security rules are deployed</li>
+            <li>Check daily XP cap (360 XP max)</li>
+        </ul>
+    </div>
+
+    <div class="test-result error">
+        <h4>If Import Errors Occur:</h4>
+        <ul>
+            <li>Files might be bundled differently in production</li>
+            <li>Try accessing functions through window object</li>
+            <li>Check Network tab for 404 errors</li>
+            <li>Verify build includes new XP files</li>
+        </ul>
+    </div>
+
+    <h2>📊 Production Health Checks</h2>
+
+    <div class="test-result info">
+        <h4>Firebase Console Verification:</h4>
+        <ol>
+            <li><a href="https://console.firebase.google.com/project/wiz-magic-platform/firestore" target="_blank">Check Firestore</a> - Verify user documents have currentXP, dailyXpEarned fields</li>
+            <li><a href="https://console.firebase.google.com/project/wiz-magic-platform/firestore/rules" target="_blank">Check Rules</a> - Ensure new security rules are active</li>
+            <li><a href="https://console.firebase.google.com/project/wiz-magic-platform/hosting" target="_blank">Check Hosting</a> - Verify latest deployment is live</li>
+        </ol>
+    </div>
+
+    <h2>🎉 Success Criteria</h2>
+    
+    <div class="test-result success">
+        <p><strong>The XP system is working correctly if:</strong></p>
+        <ul>
+            <li>✅ XP awards complete without errors</li>
+            <li>✅ UI updates immediately with XP feedback</li>
+            <li>✅ Firestore documents are created/updated correctly</li>
+            <li>✅ Daily XP caps are enforced</li>
+            <li>✅ Level-ups trigger at proper thresholds</li>
+            <li>✅ No duplicate XP awards for same video</li>
+            <li>✅ Offline queue processes when back online</li>
+        </ul>
+    </div>
+
+    <hr>
+    <p><em>Created: 2025-08-27 | XP System v1.0.0 | Production Ready ✅</em></p>
+</body>
+</html>

@@ -8,26 +8,42 @@ import Index from "./pages/Index";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import './lib/firebase'; // Initialize Firebase
+import { useEffect } from 'react';
+import authSingleton from './lib/authSingleton';
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <XpProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/about" element={<About />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </XpProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  // Initialize auth singleton on app start
+  useEffect(() => {
+    console.log('🚀 Initializing auth singleton...');
+    authSingleton.initialize().then(user => {
+      console.log('✅ Auth singleton initialized:', user ? user.uid : 'no user');
+    });
+    
+    return () => {
+      authSingleton.destroy(); // Cleanup on app unmount
+    };
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <XpProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/about" element={<About />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </XpProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

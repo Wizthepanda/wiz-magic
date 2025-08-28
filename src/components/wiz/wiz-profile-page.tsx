@@ -9,10 +9,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
+import { useXp } from '@/context/XpContext';
 import { FloatingParticles } from '@/components/ui/floating-particles';
 
 export const WizProfilePage = () => {
   const { user } = useAuth();
+  const { 
+    xp,
+    totalXp, 
+    level, 
+    progressPercent, 
+    xpToNextLevel,
+    dailyXp,
+    currentStreak 
+  } = useXp();
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -20,7 +30,7 @@ export const WizProfilePage = () => {
   const userStats = {
     totalWatchTime: '247h 32m',
     videosWatched: 156,
-    currentStreak: 23,
+    currentStreak: currentStreak,
     longestStreak: 45,
     favoriteCategory: 'AI & Technology',
     joinDate: 'September 2024',
@@ -223,7 +233,7 @@ export const WizProfilePage = () => {
                     <div className="flex items-center space-x-4 mt-2">
                       <Badge variant="secondary" className="bg-wiz-primary/20 text-wiz-primary">
                         <Crown className="w-3 h-3 mr-1" />
-                        Level {user.level}
+                        Level {level}
                       </Badge>
                       <Badge variant="outline">
                         <Youtube className="w-3 h-3 mr-1" />
@@ -247,7 +257,7 @@ export const WizProfilePage = () => {
                 {/* Quick Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-wiz-primary">{user.totalXP.toLocaleString()}</div>
+                    <div className="text-2xl font-bold text-wiz-primary">{totalXp}</div>
                     <div className="text-sm text-muted-foreground">Total XP</div>
                   </div>
                   <div className="text-center">
@@ -308,15 +318,15 @@ export const WizProfilePage = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="text-center">
-                    <div className="text-4xl font-bold text-wiz-primary">Level {user.level}</div>
+                    <div className="text-4xl font-bold text-wiz-primary">Level {level}</div>
                     <div className="text-muted-foreground">
-                      {((user.totalXP % 1000) / 1000 * 100).toFixed(1)}% to next level
+                      {Math.round(progressPercent)}% to next level
                     </div>
                   </div>
-                  <Progress value={(user.totalXP % 1000) / 1000 * 100} className="h-4" />
+                  <Progress value={progressPercent} className="h-4" />
                   <div className="flex justify-between text-sm text-muted-foreground">
-                    <span>{user.totalXP % 1000} XP</span>
-                    <span>1000 XP</span>
+                    <span>{xp} XP</span>
+                    <span>{xpToNextLevel} XP</span>
                   </div>
                 </CardContent>
               </Card>

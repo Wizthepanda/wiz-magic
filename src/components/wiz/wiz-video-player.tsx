@@ -1,20 +1,29 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import ReactPlayer from 'react-player/youtube';
-import { Zap } from 'lucide-react';
+import { Zap, Share2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { FirestoreService } from '@/lib/firestore';
-import { YouTubeService } from '@/lib/youtube';
 import { motion } from 'framer-motion';
+import { ShareButton } from '@/components/ui/share-button';
+import { awardVideoCompletion } from '@/lib/xp/awardXpClient';
 
 interface WizVideoPlayerProps {
   videoId: string;
   title: string;
   description?: string;
   xpReward?: number;
+  isBoosted?: boolean;
+  enableXPTracking?: boolean;
 }
 
-export const WizVideoPlayer = ({ videoId, title, description, xpReward = 25 }: WizVideoPlayerProps) => {
-  const { user, refreshUserData, addXP } = useAuth();
+export const WizVideoPlayer = ({ 
+  videoId, 
+  title, 
+  description, 
+  xpReward = 25,
+  isBoosted = false,
+  enableXPTracking = true
+}: WizVideoPlayerProps) => {
+  const { user } = useAuth();
   const playerRef = useRef<ReactPlayer>(null);
   const [watchTime, setWatchTime] = useState(0);
   const [liked, setLiked] = useState(false);
@@ -22,98 +31,123 @@ export const WizVideoPlayer = ({ videoId, title, description, xpReward = 25 }: W
   const [xpEarned, setXpEarned] = useState(0);
   const [showXpAnimation, setShowXpAnimation] = useState(false);
   const [forceUpdate, setForceUpdate] = useState(0);
+  const [videoDuration, setVideoDuration] = useState<number | undefined>(undefined);
+  const [watchStartTime, setWatchStartTime] = useState<number | null>(null);
+  const [totalWatchTime, setTotalWatchTime] = useState(0);
+  const [hasAwardedXP, setHasAwardedXP] = useState(false);
+
+  // Track active watch time more accurately
+  const lastUpdateTimeRef = useRef<number>(Date.now());
+  const lastPositionRef = useRef<number>(0);
+
+  // Listen for XP events from our new system
+  useEffect(() => {
+    const handleXpUpdated = (event: CustomEvent) => {
+      const { earnedXp, levelUp, newLevel } = event.detail;
+      console.log('⚡ Video player received XP event:', event.detail);
+      
+      setXpEarned(earnedXp);
+      setShowXpAnimation(true);
+      
+      if (levelUp) {
+        console.log(`🎉 Level up notification: ${newLevel}`);
+      }
+      
+      setTimeout(() => setShowXpAnimation(false), 3000);
+    };
+
+    window.addEventListener('xpUpdated', handleXpUpdated as EventListener);
+    
+    return () => {
+      window.removeEventListener('xpUpdated', handleXpUpdated as EventListener);
+    };
+  }, []);
 
   const handleProgress = ({ playedSeconds, played }: { playedSeconds: number, played: number }) => {
-    // Update watch time immediately for instant UI feedback
+    // Update watch time for UI feedback
     setWatchTime(playedSeconds);
-    // Force component re-render for instant progress updates
-    setForceUpdate(prev => prev + 1);
     
-    // Force React to re-render progress components immediately
-    const duration = getDuration();
-    if (duration > 0) {
-      const progress = Math.min(Math.round((playedSeconds / duration) * 1000) / 10, 100);
-      console.log('📊 Progress:', { playedSeconds, duration, progress: progress.toFixed(1) + '%' });
-      
-      // Show XP preview when video is nearly complete (95% or more) - but don't award yet
-      if (user && progress >= 95 && xpEarned === 0) {
-        console.log('🎯 Video nearly complete:', progress.toFixed(1) + '% - XP will be awarded on completion');
-        // Don't award XP here - wait for video completion
+    // Track legitimate watch time (+1 XP per 10s rule)
+    const now = Date.now();
+    const timeDiff = (now - lastUpdateTimeRef.current) / 1000;
+    const positionDiff = playedSeconds - lastPositionRef.current;
+    
+    // Anti-cheat: Only count if playback rate is reasonable (0.5x to 2.5x)
+    const playbackRate = timeDiff > 0 ? positionDiff / timeDiff : 0;
+    if (playbackRate >= 0.5 && playbackRate <= 2.5 && positionDiff > 0) {
+      const legitimateWatchTime = Math.min(positionDiff, timeDiff);
+      if (legitimateWatchTime > 0 && legitimateWatchTime <= 2) {
+        setTotalWatchTime(prev => prev + legitimateWatchTime);
       }
     }
     
-    // Award XP for watching milestones
-    if (user && playedSeconds > 30 && xpEarned === 0) {
-      awardXP(10, 'Started watching');
+    lastUpdateTimeRef.current = now;
+    lastPositionRef.current = playedSeconds;
+    
+    // Force component re-render for instant progress updates
+    setForceUpdate(prev => prev + 1);
+  };
+
+  // Handle video ready (get duration)
+  const handleReady = (player: ReactPlayer) => {
+    const duration = player.getDuration();
+    if (duration) {
+      setVideoDuration(duration);
+      console.log(`📏 Video duration: ${duration} seconds`);
+    }
+  };
+
+  // Handle video start
+  const handleStart = () => {
+    console.log('▶️ Video started');
+    setWatchStartTime(Date.now());
+    lastUpdateTimeRef.current = Date.now();
+    lastPositionRef.current = 0;
+  };
+
+  // Handle video pause
+  const handlePause = () => {
+    console.log('⏸️ Video paused');
+    // Reset timing references to avoid incorrect calculations when resumed
+    lastUpdateTimeRef.current = Date.now();
+  };
+
+  // Handle video resume
+  const handlePlay = () => {
+    console.log('▶️ Video resumed');
+    // Reset timing references for accurate tracking
+    lastUpdateTimeRef.current = Date.now();
+    if (playerRef.current) {
+      lastPositionRef.current = playerRef.current.getCurrentTime();
     }
   };
 
   const handleEnded = async () => {
-    console.log('🎬 Video ended!', { videoId, watchTime, user: user?.uid });
+    if (hasAwardedXP || !enableXPTracking || !user) return;
+
+    console.log(`🎬 Video ${videoId} reached 100%`);
+    setHasAwardedXP(true);
     
-    if (user && playerRef.current) {
-      const duration = getDuration();
-      // Force 100% completion when video ends
-      setWatchTime(duration);
-      const completionPercentage = 100;
-      console.log('📊 Video stats:', { 
-        duration, 
-        watchTime: duration, 
-        completion: '100%',
-        willAwardXP: true
-      });
+    // Import the bulletproof completion function
+    const { completeVideo } = await import('@/lib/youtube-video-completion');
+    
+    try {
+      const result = await completeVideo(videoId, user.uid);
       
-      try {
-        // Award fixed XP for video completion (25 XP for demo video)
-        const xpGained = xpReward; // Use the prop value (25 XP)
-        console.log('🎁 Awarding XP for video completion:', xpGained);
-        
-        // Show XP animation and update user state instantly FIRST
-        setXpEarned(xpGained);
+      if (result.success) {
+        setXpEarned(result.xpAwarded);
         setShowXpAnimation(true);
-        setTimeout(() => setShowXpAnimation(false), 2000);
-        
-        console.log('⚡ Instantly updating UI with addXP:', xpGained);
-        // Update user state instantly for immediate UI feedback
-        addXP(xpGained);
-        
-        // Also dispatch event to sync XP context immediately
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('xpUpdated', { 
-            detail: { totalXP: (user?.totalXP || 0) + xpGained } 
-          }));
-          console.log('🔄 Dispatched xpUpdated event with new total:', (user?.totalXP || 0) + xpGained);
-        }
-        
-        // Update XP in Firestore manually (without using YouTube service that also awards XP)
-        await FirestoreService.updateUserXP(user.uid, xpGained, 'video_completion', {
-          videoId,
-          watchTime: duration,
-          duration,
-          completionPercentage: 100,
-        });
-        
-        // Record engagement in Firestore
-        await FirestoreService.recordVideoEngagement({
-          videoId,
-          userId: user.uid,
-          watchTime: duration,
-          liked,
-          commented,
-          completed: true,
-          xpEarned: xpGained,
-          timestamp: new Date(),
-        });
-        
-        console.log('✅ Video completion recorded in Firestore');
-        
-        // Update the video card to show as watched with 100% progress
-        // This will be handled by the parent component through state management
-      } catch (error) {
-        console.error('❌ Error in handleEnded:', error);
+        setTimeout(() => setShowXpAnimation(false), 3000);
+        console.log(`✅ XP updated and video marked watched`);
+        console.log(`💰 Final XP balance: ${result.finalXpBalance}`);
+      } else if (result.alreadyCompleted) {
+        console.log(`⚠️ Video already completed, no XP awarded`);
+      } else {
+        console.error(`❌ Error awarding XP: ${result.error}`);
       }
-    } else {
-      console.log('⚠️ No user or player ref available');
+    } catch (error) {
+      console.error('❌ Error in video completion:', error);
+      setHasAwardedXP(false); // Allow retry
     }
   };
 
@@ -121,46 +155,18 @@ export const WizVideoPlayer = ({ videoId, title, description, xpReward = 25 }: W
     if (!user || liked) return;
     
     setLiked(true);
-    await YouTubeService.trackVideoEngagement(videoId, 'like');
-    awardXP(5, 'Liked video');
+    // XP for likes would be handled by a separate function if needed
+    console.log('👍 Video liked');
   };
 
   const handleComment = async () => {
     if (!user || commented) return;
     
     setCommented(true);
-    await YouTubeService.trackVideoEngagement(videoId, 'comment');
-    awardXP(15, 'Commented on video');
+    // XP for comments would be handled by a separate function if needed
+    console.log('💬 Video commented');
   };
 
-  const awardXP = async (amount: number, reason: string) => {
-    console.log('🎁 Awarding XP:', { amount, reason, userId: user?.uid });
-    
-    setXpEarned(prev => prev + amount);
-    setShowXpAnimation(true);
-    
-    setTimeout(() => setShowXpAnimation(false), 2000);
-    
-    if (user) {
-      try {
-        // Update XP in Firestore
-        await FirestoreService.updateUserXP(user.uid, amount, 'video_watch', {
-          videoId,
-          reason,
-        });
-        
-        console.log('✅ XP updated in Firestore, refreshing user data...');
-        
-        // Wait a moment for Firestore to update, then refresh user data
-        setTimeout(async () => {
-          await refreshUserData();
-        }, 500);
-        
-      } catch (error) {
-        console.error('❌ Error awarding XP:', error);
-      }
-    }
-  };
 
   // Calculate watch progress with improved accuracy
   const getDuration = () => {
@@ -230,6 +236,10 @@ export const WizVideoPlayer = ({ videoId, title, description, xpReward = 25 }: W
               width="100%"
               height="100%"
               controls
+              onReady={handleReady}
+              onStart={handleStart}
+              onPlay={handlePlay}
+              onPause={handlePause}
               onProgress={handleProgress}
               onEnded={handleEnded}
               config={{
@@ -238,7 +248,14 @@ export const WizVideoPlayer = ({ videoId, title, description, xpReward = 25 }: W
                     modestbranding: 1,
                     rel: 0,
                     iv_load_policy: 3,
+                    fs: 1,
+                    cc_load_policy: 0,
+                    playsinline: 1,
+                    origin: typeof window !== 'undefined' ? window.location.origin : 'https://wiz-magic-platform.web.app'
                   },
+                  embedOptions: {
+                    host: 'https://www.youtube-nocookie.com'
+                  }
                 },
               }}
             />
@@ -363,6 +380,35 @@ export const WizVideoPlayer = ({ videoId, title, description, xpReward = 25 }: W
               </p>
             )}
           </div>
+
+          {/* Action Buttons */}
+          {user && (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <ShareButton
+                  videoId={videoId}
+                  videoTitle={title}
+                  variant="outline"
+                  size="sm"
+                  showXPReward={true}
+                />
+              </div>
+              
+              {/* XP Status */}
+              {enableXPTracking && (
+                <div className="flex items-center space-x-2 text-xs text-gray-400">
+                  {isBoosted && (
+                    <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full font-medium">
+                      🚀 Boosted (1.5x XP)
+                    </span>
+                  )}
+                  <span>
+                    {xpEarned > 0 ? `+${xpEarned} XP earned` : 'Earning XP...'}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* XP Reward Pill - Responsive Layout */}
           <div className="flex justify-center md:justify-end">

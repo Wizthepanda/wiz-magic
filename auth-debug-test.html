@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Debug Test - WIZ Magic Platform</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background: #1a1a1a; 
+            color: #fff; 
+        }
+        .debug-section { 
+            background: #2a2a2a; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 8px; 
+            border: 1px solid #444; 
+        }
+        .success { background-color: #0d4d2d; border-color: #0d7f3f; }
+        .error { background-color: #4d0d0d; border-color: #7f1d1d; }
+        .info { background-color: #0d2d4d; border-color: #1d4d7f; }
+        button { 
+            padding: 10px 20px; 
+            margin: 5px; 
+            background: #6d28d9; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+        }
+        button:hover { background: #5b21b6; }
+        pre { 
+            background: #1a1a1a; 
+            padding: 10px; 
+            border-radius: 5px; 
+            overflow-x: auto; 
+            font-size: 12px; 
+        }
+        .status { 
+            display: inline-block; 
+            padding: 4px 8px; 
+            border-radius: 4px; 
+            font-size: 12px; 
+            font-weight: bold; 
+        }
+        .status.ok { background: #16a34a; }
+        .status.error { background: #dc2626; }
+        .status.loading { background: #ca8a04; }
+    </style>
+</head>
+<body>
+    <h1>🔍 WIZ Magic Platform - Auth Debug Test</h1>
+    
+    <div class="debug-section info">
+        <h3>Instructions:</h3>
+        <ol>
+            <li>Go to <a href="https://wiz-magic-platform.web.app" target="_blank">https://wiz-magic-platform.web.app</a></li>
+            <li>Open browser console (F12)</li>
+            <li>Copy and paste the test commands below</li>
+            <li>Check the results to diagnose the authentication issue</li>
+        </ol>
+    </div>
+
+    <h2>🧪 Debug Commands (Run in Browser Console)</h2>
+
+    <div class="debug-section">
+        <h3>1. Check Firebase Auth State</h3>
+        <pre>// Check current Firebase auth state
+import { auth } from './src/lib/firebase.js';
+console.log('🔍 Firebase Auth Object:', auth);
+console.log('🔍 Current User:', auth.currentUser);
+console.log('🔍 Auth Domain:', auth.config?.authDomain);
+
+// Listen for auth changes
+auth.onAuthStateChanged(user => {
+    console.log('🔄 Auth state changed:', user ? `${user.email} (${user.uid})` : 'No user');
+});</pre>
+    </div>
+
+    <div class="debug-section">
+        <h3>2. Check Auth Singleton</h3>
+        <pre>// Check auth singleton state
+import authSingleton from './src/lib/authSingleton.js';
+console.log('🔍 Auth Singleton Current User:', authSingleton.getCurrentUser());
+console.log('🔍 Auth Singleton Initialized:', authSingleton.initialized);
+console.log('🔍 Auth Singleton Listeners:', authSingleton.listeners.size);
+
+// Initialize if needed
+if (!authSingleton.initialized) {
+    authSingleton.initialize().then(user => {
+        console.log('✅ Auth singleton initialized:', user ? user.uid : 'no user');
+    });
+}</pre>
+    </div>
+
+    <div class="debug-section">
+        <h3>3. Check useAuth Hook</h3>
+        <pre>// Check if useAuth hook is working
+// This won't work directly in console, but you can check in React DevTools
+// Look for components using useAuth and check their state</pre>
+    </div>
+
+    <div class="debug-section">
+        <h3>4. Test Google Sign-In</h3>
+        <pre>// Test Google sign-in manually
+import { auth, googleProvider } from './src/lib/firebase.js';
+import { signInWithRedirect, getRedirectResult } from 'firebase/auth';
+
+// Check for redirect result first
+getRedirectResult(auth).then(result => {
+    if (result) {
+        console.log('✅ Redirect result:', result.user.email);
+    } else {
+        console.log('ℹ️ No redirect result');
+    }
+}).catch(error => {
+    console.error('❌ Redirect result error:', error);
+});
+
+// Manually trigger Google sign-in
+// signInWithRedirect(auth, googleProvider);</pre>
+    </div>
+
+    <div class="debug-section">
+        <h3>5. Check Local Storage</h3>
+        <pre>// Check Firebase auth persistence
+Object.keys(localStorage).filter(key => 
+    key.includes('firebase') || key.includes('auth')
+).forEach(key => {
+    console.log(`🔍 ${key}:`, localStorage.getItem(key));
+});
+
+// Check our XP offline queue
+const xpQueue = localStorage.getItem('wiz_xp_offline_queue');
+if (xpQueue) {
+    console.log('🔍 XP Offline Queue:', JSON.parse(xpQueue));
+} else {
+    console.log('ℹ️ No XP offline queue found');
+}</pre>
+    </div>
+
+    <div class="debug-section">
+        <h3>6. Check Environment Variables</h3>
+        <pre>// Check if demo mode is enabled
+console.log('🔍 Demo Mode:', import.meta.env.VITE_DEMO_MODE);
+console.log('🔍 Environment:', import.meta.env.MODE);
+console.log('🔍 Firebase Config:', {
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY?.substring(0, 10) + '...',
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID
+});</pre>
+    </div>
+
+    <div class="debug-section">
+        <h3>7. Manual Authentication Test</h3>
+        <pre>// Test manual authentication
+import { signInWithRedirect } from 'firebase/auth';
+import { auth, googleProvider } from './src/lib/firebase.js';
+
+async function testAuth() {
+    try {
+        console.log('🔄 Starting manual auth test...');
+        await signInWithRedirect(auth, googleProvider);
+        console.log('🔄 Redirect initiated...');
+    } catch (error) {
+        console.error('❌ Auth test failed:', error);
+    }
+}
+
+// Uncomment to test:
+// testAuth();</pre>
+    </div>
+
+    <h2>🔍 Expected Results</h2>
+
+    <div class="debug-section success">
+        <h3>✅ If Authentication is Working:</h3>
+        <ul>
+            <li><strong>Firebase Auth:</strong> <code>auth.currentUser</code> should be an object with user data</li>
+            <li><strong>Auth Singleton:</strong> <code>getCurrentUser()</code> should return user object</li>
+            <li><strong>Local Storage:</strong> Should contain Firebase auth tokens</li>
+            <li><strong>Demo Mode:</strong> Should be <code>undefined</code> or <code>"false"</code></li>
+        </ul>
+    </div>
+
+    <div class="debug-section error">
+        <h3>❌ If Authentication is NOT Working:</h3>
+        <ul>
+            <li><strong>Firebase Auth:</strong> <code>auth.currentUser</code> will be <code>null</code></li>
+            <li><strong>Auth Singleton:</strong> <code>getCurrentUser()</code> will return <code>null</code></li>
+            <li><strong>Local Storage:</strong> Missing or invalid Firebase auth tokens</li>
+            <li><strong>Console Errors:</strong> Look for CORS, configuration, or network errors</li>
+        </ul>
+    </div>
+
+    <h2>🛠️ Troubleshooting Steps</h2>
+
+    <div class="debug-section">
+        <h3>Step 1: Clear Browser Data</h3>
+        <ol>
+            <li>Open Chrome DevTools (F12)</li>
+            <li>Go to Application → Storage</li>
+            <li>Click "Clear site data"</li>
+            <li>Refresh the page</li>
+            <li>Try signing in again</li>
+        </ol>
+    </div>
+
+    <div class="debug-section">
+        <h3>Step 2: Check Firebase Console</h3>
+        <ol>
+            <li>Go to <a href="https://console.firebase.google.com/project/wiz-magic-platform/authentication/users" target="_blank">Firebase Auth Users</a></li>
+            <li>Check if your user account exists</li>
+            <li>Verify the auth domain is set correctly</li>
+        </ol>
+    </div>
+
+    <div class="debug-section">
+        <h3>Step 3: Test in Incognito Mode</h3>
+        <ol>
+            <li>Open Chrome in incognito mode</li>
+            <li>Go to the WIZ Magic Platform</li>
+            <li>Try signing in fresh</li>
+            <li>Check if the issue persists</li>
+        </ol>
+    </div>
+
+    <div class="debug-section">
+        <h3>Step 4: Check Network Tab</h3>
+        <ol>
+            <li>Open DevTools → Network tab</li>
+            <li>Try signing in</li>
+            <li>Look for failed requests (red entries)</li>
+            <li>Check for CORS or 403 errors</li>
+        </ol>
+    </div>
+
+    <h2>🎯 Quick Fix Attempts</h2>
+
+    <div class="debug-section info">
+        <h3>Try These Browser Console Commands:</h3>
+        <pre>// 1. Force auth singleton initialization
+import authSingleton from './src/lib/authSingleton.js';
+authSingleton.destroy();
+authSingleton.initialize().then(console.log);
+
+// 2. Clear auth state and re-initialize
+localStorage.clear();
+sessionStorage.clear();
+window.location.reload();
+
+// 3. Check for multiple auth listeners
+console.log('Auth listeners count:', authSingleton.listeners.size);</pre>
+    </div>
+
+    <hr>
+    <p><em>Created: 2025-08-27 | Auth Debug Tool v1.0</em></p>
+</body>
+</html>

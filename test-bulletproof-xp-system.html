@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Bulletproof XP System Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0f172a;
+            color: #f8fafc;
+            line-height: 1.6;
+        }
+        .test-section {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+            border: 1px solid rgba(147, 51, 234, 0.3);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+        .btn {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 8px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+        }
+        .btn:disabled {
+            background: #374151;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .log {
+            background: #000;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #333;
+        }
+        .status {
+            padding: 12px 16px;
+            margin: 12px 0;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        .success { 
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
+            color: #10b981; 
+            border: 1px solid rgba(16, 185, 129, 0.3); 
+        }
+        .error { 
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%);
+            color: #ef4444; 
+            border: 1px solid rgba(239, 68, 68, 0.3); 
+        }
+        .warning { 
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%);
+            color: #f59e0b; 
+            border: 1px solid rgba(245, 158, 11, 0.3); 
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        .metric-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3b82f6;
+            margin-bottom: 4px;
+        }
+        .metric-label {
+            font-size: 0.9rem;
+            color: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Bulletproof YouTube XP System Test</h1>
+    <p style="color: #9ca3af;">Testing atomic transactions, duplicate prevention, and Firestore consistency</p>
+    
+    <div class="test-section">
+        <h2>🔐 Authentication Status</h2>
+        <div id="auth-status" class="status warning">Checking authentication...</div>
+        <button id="login-btn" class="btn">🚪 Sign In Anonymously</button>
+        <button id="logout-btn" class="btn">🔓 Sign Out</button>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Test Metrics</h2>
+        <div class="test-grid">
+            <div class="metric-card">
+                <div id="total-tests" class="metric-value">0</div>
+                <div class="metric-label">Total Tests Run</div>
+            </div>
+            <div class="metric-card">
+                <div id="successful-awards" class="metric-value">0</div>
+                <div class="metric-label">Successful XP Awards</div>
+            </div>
+            <div class="metric-card">
+                <div id="prevented-duplicates" class="metric-value">0</div>
+                <div class="metric-label">Prevented Duplicates</div>
+            </div>
+            <div class="metric-card">
+                <div id="current-xp" class="metric-value">0</div>
+                <div class="metric-label">Current XP Balance</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 Bulletproof XP Tests</h2>
+        <p>Each test simulates different scenarios to verify the system is bulletproof:</p>
+        
+        <div class="test-grid">
+            <button onclick="testSingleCompletion()" class="btn">🎯 Test Single Completion</button>
+            <button onclick="testDuplicateAttempt()" class="btn">🚫 Test Duplicate Prevention</button>
+            <button onclick="testRapidFire()" class="btn">⚡ Test Rapid-Fire Clicks</button>
+            <button onclick="testConcurrentRequests()" class="btn">🔄 Test Concurrent Requests</button>
+            <button onclick="testTransactionIntegrity()" class="btn">🛡️ Test Transaction Integrity</button>
+            <button onclick="runFullTestSuite()" class="btn" style="background: linear-gradient(135deg, #059669 0%, #047857 100%);">🚀 Run Full Test Suite</button>
+        </div>
+        
+        <div id="test-log" class="log"></div>
+        
+        <div style="text-align: center; margin-top: 16px;">
+            <button onclick="clearLog()" class="btn" style="background: #374151;">🗑️ Clear Log</button>
+            <button onclick="exportTestResults()" class="btn" style="background: #0d9488;">📤 Export Results</button>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 Firestore State Inspector</h2>
+        <button onclick="inspectFirestoreState()" class="btn">🔍 Inspect Current State</button>
+        <div id="firestore-state"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInAnonymously, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, getDoc, runTransaction, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase config - replace with your actual config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDgHc2_7OL1F8W3FJ5QjKqN6jrZhpfZu8g",
+            authDomain: "wiz-magic-platform.firebaseapp.com",
+            projectId: "wiz-magic-platform",
+            storageBucket: "wiz-magic-platform.firebasestorage.app",
+            messagingSenderId: "485151111726",
+            appId: "1:485151111726:web:4a41c2f2e8a8a2f0e8f0a5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Global state
+        let currentUser = null;
+        let testMetrics = {
+            totalTests: 0,
+            successfulAwards: 0,
+            preventedDuplicates: 0,
+            currentXP: 0
+        };
+
+        // Logging function
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('test-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const emoji = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : '🔍';
+            const color = type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#00ff00';
+            
+            logDiv.innerHTML += `<span style="color: ${color}">${timestamp} ${emoji} ${message}</span>\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(`${emoji} ${message}`);
+        }
+
+        // Update metrics display
+        function updateMetrics() {
+            document.getElementById('total-tests').textContent = testMetrics.totalTests;
+            document.getElementById('successful-awards').textContent = testMetrics.successfulAwards;
+            document.getElementById('prevented-duplicates').textContent = testMetrics.preventedDuplicates;
+            document.getElementById('current-xp').textContent = testMetrics.currentXP;
+        }
+
+        // Auth state listener
+        onAuthStateChanged(auth, (user) => {
+            const authStatus = document.getElementById('auth-status');
+            if (user) {
+                currentUser = user;
+                authStatus.innerHTML = `✅ Authenticated as: ${user.uid.substring(0, 8)}...`;
+                authStatus.className = 'status success';
+                log(`Authenticated as user: ${user.uid}`, 'success');
+                
+                // Load current XP
+                loadCurrentXP();
+            } else {
+                currentUser = null;
+                authStatus.innerHTML = '❌ Not authenticated';
+                authStatus.className = 'status error';
+                log('User signed out', 'warning');
+                testMetrics.currentXP = 0;
+                updateMetrics();
+            }
+        });
+
+        // Load current XP from Firestore
+        async function loadCurrentXP() {
+            if (!currentUser) return;
+            
+            try {
+                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+                if (userDoc.exists()) {
+                    testMetrics.currentXP = userDoc.data().currentXP || 0;
+                    updateMetrics();
+                    log(`Loaded current XP balance: ${testMetrics.currentXP}`, 'info');
+                }
+            } catch (error) {
+                log(`Error loading XP: ${error.message}`, 'error');
+            }
+        }
+
+        // Mock complete video function (bulletproof version)
+        async function completeVideo(videoId, userId) {
+            log(`📥 Checking Firestore before awarding XP for video ${videoId}...`);
+            
+            testMetrics.totalTests++;
+            updateMetrics();
+
+            try {
+                const result = await runTransaction(db, async (transaction) => {
+                    const userDocRef = doc(db, 'users', userId);
+                    const videoCompletionRef = doc(db, 'users', userId, 'videos', videoId);
+
+                    const userDoc = await transaction.get(userDocRef);
+                    const videoDoc = await transaction.get(videoCompletionRef);
+
+                    if (!userDoc.exists()) {
+                        // Initialize user
+                        transaction.set(userDocRef, {
+                            currentXP: 0,
+                            createdAt: serverTimestamp()
+                        });
+                    }
+
+                    const userData = userDoc.exists() ? userDoc.data() : { currentXP: 0 };
+                    const currentXP = userData.currentXP || 0;
+
+                    // Check if video is already completed
+                    if (videoDoc.exists() && videoDoc.data().completed === true) {
+                        return {
+                            success: false,
+                            xpAwarded: 0,
+                            alreadyCompleted: true,
+                            finalXpBalance: currentXP
+                        };
+                    }
+
+                    // Award XP
+                    const XP_REWARD = 10;
+                    const newXP = currentXP + XP_REWARD;
+
+                    transaction.update(userDocRef, {
+                        currentXP: newXP,
+                        lastActivity: serverTimestamp()
+                    });
+
+                    transaction.set(videoCompletionRef, {
+                        videoId,
+                        completed: true,
+                        completedAt: serverTimestamp(),
+                        xpAwarded: XP_REWARD
+                    });
+
+                    return {
+                        success: true,
+                        xpAwarded: XP_REWARD,
+                        finalXpBalance: newXP,
+                        alreadyCompleted: false
+                    };
+                });
+
+                if (result.success) {
+                    testMetrics.successfulAwards++;
+                    testMetrics.currentXP = result.finalXpBalance;
+                    log(`✅ XP updated and video marked watched`, 'success');
+                    log(`💰 Final XP balance: ${result.finalXpBalance} (+${result.xpAwarded})`, 'success');
+                } else if (result.alreadyCompleted) {
+                    testMetrics.preventedDuplicates++;
+                    log(`⚠️ Video already completed, no XP awarded`, 'warning');
+                } else {
+                    log(`❌ XP award failed: ${result.error}`, 'error');
+                }
+
+                updateMetrics();
+                return result;
+
+            } catch (error) {
+                log(`❌ Transaction failed: ${error.message}`, 'error');
+                return {
+                    success: false,
+                    xpAwarded: 0,
+                    error: error.message
+                };
+            }
+        }
+
+        // Test functions
+        window.testSingleCompletion = async () => {
+            if (!currentUser) {
+                log('❌ Please sign in first', 'error');
+                return;
+            }
+            
+            log('🧪 Testing single video completion...', 'info');
+            const testVideoId = `test-single-${Date.now()}`;
+            await completeVideo(testVideoId, currentUser.uid);
+        };
+
+        window.testDuplicateAttempt = async () => {
+            if (!currentUser) {
+                log('❌ Please sign in first', 'error');
+                return;
+            }
+            
+            log('🧪 Testing duplicate prevention...', 'info');
+            const testVideoId = `test-duplicate-${Date.now()}`;
+            
+            // First completion
+            log('First completion attempt:', 'info');
+            await completeVideo(testVideoId, currentUser.uid);
+            
+            // Wait a moment, then try duplicate
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            log('Second completion attempt (should be prevented):', 'info');
+            await completeVideo(testVideoId, currentUser.uid);
+        };
+
+        window.testRapidFire = async () => {
+            if (!currentUser) {
+                log('❌ Please sign in first', 'error');
+                return;
+            }
+            
+            log('🧪 Testing rapid-fire completion attempts...', 'info');
+            const testVideoId = `test-rapid-${Date.now()}`;
+            
+            const promises = [];
+            for (let i = 0; i < 5; i++) {
+                promises.push(completeVideo(testVideoId, currentUser.uid));
+            }
+            
+            log('Firing 5 simultaneous completion requests...', 'info');
+            const results = await Promise.all(promises);
+            
+            const successCount = results.filter(r => r.success).length;
+            const duplicateCount = results.filter(r => r.alreadyCompleted).length;
+            
+            log(`📊 Rapid-fire results: ${successCount} successful, ${duplicateCount} prevented duplicates`, 'info');
+        };
+
+        window.testConcurrentRequests = async () => {
+            if (!currentUser) {
+                log('❌ Please sign in first', 'error');
+                return;
+            }
+            
+            log('🧪 Testing concurrent requests for different videos...', 'info');
+            
+            const videoIds = [];
+            for (let i = 0; i < 3; i++) {
+                videoIds.push(`test-concurrent-${Date.now()}-${i}`);
+            }
+            
+            const promises = videoIds.map(videoId => completeVideo(videoId, currentUser.uid));
+            
+            log('Firing concurrent requests for 3 different videos...', 'info');
+            const results = await Promise.all(promises);
+            
+            const successCount = results.filter(r => r.success).length;
+            log(`📊 Concurrent results: ${successCount}/3 videos completed successfully`, 'success');
+        };
+
+        window.testTransactionIntegrity = async () => {
+            if (!currentUser) {
+                log('❌ Please sign in first', 'error');
+                return;
+            }
+            
+            log('🧪 Testing transaction integrity...', 'info');
+            
+            const initialXP = testMetrics.currentXP;
+            const testVideoId = `test-integrity-${Date.now()}`;
+            
+            await completeVideo(testVideoId, currentUser.uid);
+            
+            // Verify XP was actually updated in Firestore
+            const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+            const actualXP = userDoc.data().currentXP || 0;
+            
+            if (actualXP === testMetrics.currentXP) {
+                log('✅ Transaction integrity verified: Local and Firestore XP match', 'success');
+            } else {
+                log(`❌ Transaction integrity failed: Local=${testMetrics.currentXP}, Firestore=${actualXP}`, 'error');
+            }
+        };
+
+        window.runFullTestSuite = async () => {
+            if (!currentUser) {
+                log('❌ Please sign in first', 'error');
+                return;
+            }
+            
+            log('🚀 Running full bulletproof test suite...', 'info');
+            
+            await testSingleCompletion();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testDuplicateAttempt();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testRapidFire();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testConcurrentRequests();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testTransactionIntegrity();
+            
+            log('🎉 Full test suite completed!', 'success');
+            log(`📊 Final metrics: ${testMetrics.successfulAwards} awards, ${testMetrics.preventedDuplicates} duplicates prevented`, 'success');
+        };
+
+        window.clearLog = () => {
+            document.getElementById('test-log').innerHTML = '';
+        };
+
+        window.exportTestResults = () => {
+            const results = {
+                timestamp: new Date().toISOString(),
+                metrics: testMetrics,
+                userId: currentUser?.uid,
+                testPassed: testMetrics.preventedDuplicates > 0 && testMetrics.successfulAwards > 0
+            };
+            
+            const blob = new Blob([JSON.stringify(results, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'xp-system-test-results.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            log('📤 Test results exported to JSON file', 'success');
+        };
+
+        window.inspectFirestoreState = async () => {
+            if (!currentUser) {
+                log('❌ Please sign in first', 'error');
+                return;
+            }
+            
+            try {
+                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+                const stateDiv = document.getElementById('firestore-state');
+                
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    stateDiv.innerHTML = `
+                        <div class="status success">
+                            <strong>Firestore User Document:</strong><br>
+                            Current XP: ${data.currentXP || 0}<br>
+                            Last Activity: ${data.lastActivity ? new Date(data.lastActivity.seconds * 1000).toLocaleString() : 'Never'}<br>
+                            Created: ${data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleString() : 'Unknown'}
+                        </div>
+                    `;
+                } else {
+                    stateDiv.innerHTML = '<div class="status warning">User document not found in Firestore</div>';
+                }
+            } catch (error) {
+                document.getElementById('firestore-state').innerHTML = `<div class="status error">Error: ${error.message}</div>`;
+            }
+        };
+
+        // Login/logout handlers
+        document.getElementById('login-btn').onclick = async () => {
+            try {
+                await signInAnonymously(auth);
+                log('🚪 Anonymous sign in successful', 'success');
+            } catch (error) {
+                log(`❌ Sign in failed: ${error.message}`, 'error');
+            }
+        };
+
+        document.getElementById('logout-btn').onclick = async () => {
+            try {
+                await signOut(auth);
+                log('🔓 Sign out successful', 'success');
+            } catch (error) {
+                log(`❌ Sign out failed: ${error.message}`, 'error');
+            }
+        };
+
+        // Initialize
+        log('🧪 Bulletproof XP System Test initialized', 'info');
+        log('👆 Sign in and run tests to verify the system prevents duplicate XP awards', 'info');
+    </script>
+</body>
+</html>

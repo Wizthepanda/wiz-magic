@@ -1,10 +1,11 @@
 /**
- * Video Completion Service - Tracks completed videos and prevents XP farming
+ * Video Completion Service - Tracks completed videos and awards XP
  */
 
-import { auth } from './firebase';
-import { doc, setDoc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { auth, functions } from './firebase';
+import { doc, setDoc, getDoc, updateDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
+import { httpsCallable } from 'firebase/functions';
 
 export interface VideoCompletion {
   videoId: string;
@@ -35,17 +36,28 @@ export class VideoCompletionService {
   }
 
   /**
-   * Mark a video as completed for the current user
+   * Mark a video as completed and award XP through Firebase Functions
    */
   static async markVideoCompleted(
     videoId: string, 
-    xpEarned: number, 
+    expectedXp: number, 
     watchTime: number
   ): Promise<boolean> {
     const user = auth.currentUser;
     if (!user) return false;
 
     try {
+      // Validate inputs
+      if (!videoId || typeof videoId !== 'string' || videoId.trim() === '') {
+        console.error(`❌ Invalid videoId: "${videoId}"`);
+        return false;
+      }
+      
+      if (!watchTime || watchTime < 5) {
+        console.error(`❌ Invalid watchTime: ${watchTime} (minimum 5 seconds required)`);
+        return false;
+      }
+      
       // Check if already completed to prevent duplicates
       const alreadyCompleted = await this.isVideoCompleted(videoId);
       if (alreadyCompleted) {
@@ -53,30 +65,97 @@ export class VideoCompletionService {
         return false;
       }
 
-      // Add to user's completed videos list
-      await updateDoc(doc(db, 'users', user.uid), {
-        completedVideos: arrayUnion(videoId),
-        lastActivity: new Date()
+      // Award XP through Firebase Function (this updates user's XP and profile)
+      const awardWatchXP = httpsCallable(functions, 'awardWatchXP');
+      const completionRate = 1.0; // Video was completed
+      const sessionId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      console.log(`🎯 Awarding watch XP for video ${videoId}:`, { 
+        videoId, 
+        watchTime, 
+        completionRate, 
+        sessionId 
+      });
+      
+      const xpResult = await awardWatchXP({
+        videoId,
+        watchTime,
+        completionRate,
+        sessionId
       });
 
-      // Store detailed completion record
-      const completionData: VideoCompletion = {
-        videoId,
-        completedAt: new Date(),
-        xpEarned,
+      console.log(`✅ XP awarded result:`, JSON.stringify(xpResult.data, null, 2));
+
+      // Mark video as completed in user's personal tracking
+      const ref = doc(db, "users", user.uid, "videos", videoId);
+      await setDoc(ref, { 
+        watched: true, 
+        completedAt: serverTimestamp(),
+        xpEarned: xpResult.data?.totalXpAwarded || expectedXp,
         watchTime,
-        userId: user.uid
+        sessionId
+      }, { merge: true });
+
+      // Update user's completed videos list and ensure XP fields are set
+      const userUpdateData: any = {
+        completedVideos: arrayUnion(videoId),
+        lastActivity: new Date()
       };
+      
+      // Also ensure the XP fields are present in case Firebase Function failed to update
+      if (xpResult.data) {
+        if (xpResult.data.currentXP !== undefined) {
+          userUpdateData.currentXP = xpResult.data.currentXP;
+          userUpdateData.totalXP = xpResult.data.currentXP; // Both for compatibility
+        }
+        if (xpResult.data.level !== undefined) {
+          userUpdateData.level = xpResult.data.level;
+        }
+        if (xpResult.data.dailyXpEarned !== undefined) {
+          userUpdateData.dailyXpEarned = xpResult.data.dailyXpEarned;
+          userUpdateData.dailyXP = xpResult.data.dailyXpEarned; // Both for compatibility
+        }
+      }
+      
+      await updateDoc(doc(db, 'users', user.uid), userUpdateData);
+      console.log('📊 User document updated with XP data:', userUpdateData);
 
-      await setDoc(
-        doc(db, 'video_completions', `${user.uid}_${videoId}`),
-        completionData
-      );
+      // Dispatch XP updated event for real-time UI updates
+      if (typeof window !== 'undefined') {
+        const event = new CustomEvent('xpUpdated', { 
+          detail: { 
+            earnedXp: xpResult.data?.totalXpAwarded || expectedXp,
+            totalXp: xpResult.data?.currentXP || 0,
+            currentXP: xpResult.data?.currentXP || 0,
+            level: xpResult.data?.level || 1,
+            dailyXpEarned: xpResult.data?.dailyXpEarned || 0,
+            progressToNext: xpResult.data?.progressToNext || 0,
+            levelUp: xpResult.data?.leveledUp || false,
+            newLevel: xpResult.data?.level || 1,
+            forceRefresh: true
+          } 
+        });
+        window.dispatchEvent(event);
+        console.log('🔄 VideoCompletionService dispatched xpUpdated event:', event.detail);
+        
+        // Also dispatch a force refresh event to ensure UI updates
+        setTimeout(() => {
+          const refreshEvent = new CustomEvent('forceXPRefresh', {
+            detail: {
+              currentXP: xpResult.data?.currentXP || 0,
+              level: xpResult.data?.level || 1,
+              dailyXpEarned: xpResult.data?.dailyXpEarned || 0
+            }
+          });
+          window.dispatchEvent(refreshEvent);
+          console.log('🔄 Dispatched forceXPRefresh event');
+        }, 1000);
+      }
 
-      console.log(`✅ Video ${videoId} marked as completed for user ${user.uid}`);
+      console.log(`✅ Video ${videoId} completed with ${xpResult.data?.totalXpAwarded || expectedXp} XP for user ${user.uid}`);
       return true;
     } catch (error) {
-      console.error('Error marking video as completed:', error);
+      console.error('Error completing video and awarding XP:', error);
       return false;
     }
   }
