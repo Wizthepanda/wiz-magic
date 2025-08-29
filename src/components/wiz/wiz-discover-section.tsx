@@ -13,10 +13,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { FloatingParticles } from '@/components/ui/floating-particles';
 import { WizShorts } from './WizShorts';
 import { EnhancedMostViewed } from './EnhancedMostViewed';
+import { WizMobileFilters } from './WizMobileFilters';
+import { WizPremiumLeaderboard } from './WizPremiumLeaderboard';
 import { db } from '@/lib/firebase';
 import { collection, query, orderBy, limit, onSnapshot, getDocs } from 'firebase/firestore';
 import { testPublishVideo } from '@/lib/test-video-sync';
 import { VideoCompletionService } from '@/lib/video-completion-service';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 const categories = [
   { id: 'all', label: 'All', color: 'bg-wiz-primary', dotColor: 'bg-blue-400' },
@@ -301,6 +305,7 @@ export const WizDiscoverSection = () => {
   const [isPremiereVideoPlaying, setIsPremiereVideoPlaying] = useState(false);
   const [dynamicVideos, setDynamicVideos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile();
 
   // Debug function - can be called from browser console
   const debugFirestoreVideos = async () => {
@@ -537,9 +542,27 @@ export const WizDiscoverSection = () => {
     }
   };
 
-  const handleVideoReward = (xp: number) => {
+  const handleVideoReward = async (xp: number) => {
     if (selectedVideo) {
       console.log(`🎯 Earned ${xp} XP for watching ${selectedVideo.title}`);
+      
+      // Mark video as completed in Firebase to persist the completion status
+      try {
+        const watchTime = 30; // Minimum watch time in seconds for completion
+        const marked = await VideoCompletionService.markVideoCompleted(
+          selectedVideo.videoId, 
+          xp, 
+          watchTime
+        );
+        
+        if (marked) {
+          console.log(`✅ Video ${selectedVideo.videoId} marked as completed in Firebase`);
+        } else {
+          console.warn(`⚠️ Failed to mark video ${selectedVideo.videoId} as completed`);
+        }
+      } catch (error) {
+        console.error(`❌ Error marking video as completed:`, error);
+      }
       
       // Update the video's state to show it's been watched
       setDynamicVideos(prevVideos => 
@@ -572,21 +595,37 @@ export const WizDiscoverSection = () => {
       <FloatingParticles />
       
       <div className="max-w-7xl mx-auto p-3 sm:p-6 space-y-6 sm:space-y-8">
-        {/* Category Filter Section - Mobile responsive */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex justify-start flex-wrap gap-2 sm:gap-3 px-2 sm:px-0">
-            {categories.map((category) => (
-              <Button
-                key={category.id}
-                variant={activeCategory === category.id ? "default" : "outline"}
-                onClick={() => setActiveCategory(category.id)}
-                className={`${activeCategory === category.id ? category.color : ''} transition-all duration-200 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3`}
-              >
-                <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${category.dotColor}`} />
-                <span className="truncate">{category.label}</span>
-              </Button>
-            ))}
+        {/* Section Title - Only show on mobile since desktop has it in header */}
+        {isMobile && (
+          <div className="px-2">
+            <h2 className="text-2xl font-bold text-white mb-4">Discover</h2>
           </div>
+        )}
+
+        {/* Category Filter Section - Mobile vs Desktop */}
+        <div className="mb-6 sm:mb-8">
+          {isMobile ? (
+            <div className="sticky top-[72px] z-20 bg-background/80 backdrop-blur-lg -mx-3 px-3 py-3">
+              <WizMobileFilters
+                activeFilter={activeCategory}
+                onFilterChange={setActiveCategory}
+              />
+            </div>
+          ) : (
+            <div className="flex justify-start flex-wrap gap-2 sm:gap-3 px-2 sm:px-0">
+              {categories.map((category) => (
+                <Button
+                  key={category.id}
+                  variant={activeCategory === category.id ? "default" : "outline"}
+                  onClick={() => setActiveCategory(category.id)}
+                  className={`${activeCategory === category.id ? category.color : ''} transition-all duration-200 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3`}
+                >
+                  <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${category.dotColor}`} />
+                  <span className="truncate">{category.label}</span>
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Discover Content - Mobile responsive scrolling */}
@@ -632,12 +671,30 @@ export const WizDiscoverSection = () => {
           
           <div
             id="discover-container"
-            className="flex space-x-3 sm:space-x-6 overflow-x-auto scrollbar-hide pb-4 scroll-smooth px-2 sm:px-0"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            className={cn(
+              "pb-4 scroll-smooth",
+              isMobile 
+                ? "space-y-4 px-3" 
+                : "flex space-x-3 sm:space-x-6 overflow-x-auto scrollbar-hide px-2 sm:px-0"
+            )}
+            style={!isMobile ? { scrollbarWidth: 'none', msOverflowStyle: 'none' } : {}}
           >
-                        {filteredVideos.map((video) => (
-              <div key={video.id} className="flex-shrink-0 w-64 sm:w-80 group">
-                <Card className="h-80 sm:h-96 overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1"
+            {filteredVideos.map((video) => (
+              <div 
+                key={video.id} 
+                className={cn(
+                  "group",
+                  isMobile 
+                    ? "w-full" 
+                    : "flex-shrink-0 w-64 sm:w-80"
+                )}
+              >
+                <Card className={cn(
+                  "overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-500",
+                  isMobile 
+                    ? "hover:scale-[1.01]" 
+                    : "h-80 sm:h-96 hover:scale-[1.02] hover:-translate-y-1"
+                )}
                       style={{
                         background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
                         backdropFilter: 'blur(8px)',
@@ -645,10 +702,17 @@ export const WizDiscoverSection = () => {
                         borderRadius: '20px',
                         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)'
                       }}>
-                  <CardContent className="p-0 h-full flex flex-col">
+                  <CardContent className={cn(
+                    "p-0 h-full",
+                    isMobile ? "flex" : "flex flex-col"
+                  )}>
                     {/* Thumbnail Section */}
-                    <div className="relative h-48 bg-gradient-to-br from-slate-200 to-slate-300 overflow-hidden"
-                         style={{ borderRadius: '20px 20px 0 0' }}>
+                    <div className={cn(
+                      "relative bg-gradient-to-br from-slate-200 to-slate-300 overflow-hidden",
+                      isMobile 
+                        ? "w-40 h-24 rounded-l-2xl flex-shrink-0" 
+                        : "h-48 rounded-t-2xl"
+                    )}>
                       
                       {/* Category Badge - Top Left */}
                       <div className="absolute top-3 left-3 z-20">
@@ -723,53 +787,83 @@ export const WizDiscoverSection = () => {
                     </div>
 
                     {/* Content Section */}
-                    <div className="flex-1 p-5 flex flex-col">
+                    <div className={cn(
+                      "flex-1 flex flex-col",
+                      isMobile ? "p-3 justify-between" : "p-5"
+                    )}>
                       {/* Title */}
-                      <h4 className="font-bold text-lg text-gray-800 line-clamp-2 mb-3 group-hover:text-wiz-primary transition-colors leading-tight">
+                      <h4 className={cn(
+                        "font-bold text-gray-800 group-hover:text-wiz-primary transition-colors leading-tight",
+                        isMobile ? "text-sm line-clamp-2 mb-1" : "text-lg line-clamp-2 mb-3"
+                      )}>
                         {video.title}
                       </h4>
                       
                       {/* Creator & Views */}
-                      <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+                      <div className={cn(
+                        "flex items-center text-gray-600",
+                        isMobile ? "text-xs mb-2 space-x-2" : "justify-between text-sm mb-4"
+                      )}>
                         <span className="font-medium">{video.creator}</span>
                         <div className="flex items-center space-x-1">
-                          <Eye className="w-4 h-4" />
+                          <Eye className={cn(isMobile ? "w-3 h-3" : "w-4 h-4")} />
                           <span>{video.views}</span>
                         </div>
                       </div>
                       
                       {/* Action Buttons */}
-                      <div className="flex items-center space-x-3 mt-auto">
-                        <Button 
-                          className={`flex-1 font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 ${
-                            video.watched 
-                              ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700' 
-                              : 'bg-gradient-to-r from-wiz-primary to-wiz-secondary hover:from-wiz-secondary hover:to-wiz-primary'
-                          }`}
-                          onClick={() => handleWatchVideo(video.id)}
-                          style={{ borderRadius: '12px' }}
-                        >
-                          <Play className="w-4 h-4 mr-2" />
-                          {video.watched ? 'Watched' : 'Watch'}
-                        </Button>
-                        
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="p-2 hover:bg-pink-50 hover:text-pink-500 hover:border-pink-300 transition-all duration-300"
-                          style={{ borderRadius: '10px' }}
-                        >
-                          <Heart className="w-4 h-4" />
-                        </Button>
-                        
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="p-2 hover:bg-blue-50 hover:text-blue-500 hover:border-blue-300 transition-all duration-300"
-                          style={{ borderRadius: '10px' }}
-                        >
-                          <Share2 className="w-4 h-4" />
-                        </Button>
+                      <div className={cn(
+                        "flex items-center mt-auto",
+                        isMobile ? "justify-end" : "space-x-3"
+                      )}>
+                        {isMobile ? (
+                          <Button 
+                            size="sm"
+                            className={`font-semibold text-white shadow-md hover:shadow-lg transition-all duration-300 ${
+                              video.watched 
+                                ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700' 
+                                : 'bg-gradient-to-r from-wiz-primary to-wiz-secondary hover:from-wiz-secondary hover:to-wiz-primary'
+                            }`}
+                            onClick={() => handleWatchVideo(video.id)}
+                            style={{ borderRadius: '8px' }}
+                          >
+                            <Play className="w-3 h-3 mr-1" />
+                            {video.watched ? 'Watched' : 'Watch'}
+                          </Button>
+                        ) : (
+                          <>
+                            <Button 
+                              className={`flex-1 font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 ${
+                                video.watched 
+                                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700' 
+                                  : 'bg-gradient-to-r from-wiz-primary to-wiz-secondary hover:from-wiz-secondary hover:to-wiz-primary'
+                              }`}
+                              onClick={() => handleWatchVideo(video.id)}
+                              style={{ borderRadius: '12px' }}
+                            >
+                              <Play className="w-4 h-4 mr-2" />
+                              {video.watched ? 'Watched' : 'Watch'}
+                            </Button>
+                            
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="p-2 hover:bg-pink-50 hover:text-pink-500 hover:border-pink-300 transition-all duration-300"
+                              style={{ borderRadius: '10px' }}
+                            >
+                              <Heart className="w-4 h-4" />
+                            </Button>
+                            
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="p-2 hover:bg-blue-50 hover:text-blue-500 hover:border-blue-300 transition-all duration-300"
+                              style={{ borderRadius: '10px' }}
+                            >
+                              <Share2 className="w-4 h-4" />
+                            </Button>
+                          </>
+                        )}
                       </div>
                       
                       {/* XP Earned Display */}
@@ -1067,97 +1161,100 @@ export const WizDiscoverSection = () => {
               </motion.div>
             </motion.div>
 
-            {/* Creator Constellation Grid */}
+            {/* Creator Constellation Grid - Mobile Responsive */}
             <motion.div 
-              className="relative min-h-[600px]"
+              className="relative"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1.4, duration: 1.0 }}
             >
-              {/* Connection Lines */}
-              <svg className="absolute inset-0 w-full h-full pointer-events-none z-5">
-                <defs>
-                  <linearGradient id="constellationGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="rgba(168, 85, 247, 0.6)" />
-                    <stop offset="50%" stopColor="rgba(99, 102, 241, 0.4)" />
-                    <stop offset="100%" stopColor="rgba(139, 92, 246, 0.6)" />
-                  </linearGradient>
-                  <filter id="glowEffect">
-                    <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                    <feMerge> 
-                      <feMergeNode in="coloredBlur"/>
-                      <feMergeNode in="SourceGraphic"/>
-                    </feMerge>
-                  </filter>
-                </defs>
-                
-                {/* Constellation Lines */}
-                <motion.path
-                  d="M120,100 L320,80 L520,160 L380,300 L180,280 L120,100"
-                  stroke="url(#constellationGlow)"
-                  strokeWidth="1.5"
-                  fill="none"
-                  filter="url(#glowEffect)"
-                  initial={{ pathLength: 0, opacity: 0 }}
-                  animate={{ pathLength: 1, opacity: 0.7 }}
-                  transition={{ duration: 3, delay: 2, ease: "easeInOut" }}
-                />
-                <motion.path
-                  d="M600,120 L520,160 L680,260 L780,200"
-                  stroke="url(#constellationGlow)"
-                  strokeWidth="1.5"
-                  fill="none"
-                  filter="url(#glowEffect)"
-                  initial={{ pathLength: 0, opacity: 0 }}
-                  animate={{ pathLength: 1, opacity: 0.5 }}
-                  transition={{ duration: 2.5, delay: 2.5, ease: "easeInOut" }}
-                />
-              </svg>
+              {/* Desktop: Constellation with Connection Lines */}
+              <div className="hidden lg:block">
+                <div className="relative min-h-[600px]">
+                  {/* Connection Lines */}
+                  <svg className="absolute inset-0 w-full h-full pointer-events-none z-5">
+                    <defs>
+                      <linearGradient id="constellationGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="rgba(168, 85, 247, 0.6)" />
+                        <stop offset="50%" stopColor="rgba(99, 102, 241, 0.4)" />
+                        <stop offset="100%" stopColor="rgba(139, 92, 246, 0.6)" />
+                      </linearGradient>
+                      <filter id="glowEffect">
+                        <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                        <feMerge> 
+                          <feMergeNode in="coloredBlur"/>
+                          <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                      </filter>
+                    </defs>
+                    
+                    {/* Constellation Lines */}
+                    <motion.path
+                      d="M120,100 L320,80 L520,160 L380,300 L180,280 L120,100"
+                      stroke="url(#constellationGlow)"
+                      strokeWidth="1.5"
+                      fill="none"
+                      filter="url(#glowEffect)"
+                      initial={{ pathLength: 0, opacity: 0 }}
+                      animate={{ pathLength: 1, opacity: 0.7 }}
+                      transition={{ duration: 3, delay: 2, ease: "easeInOut" }}
+                    />
+                    <motion.path
+                      d="M600,120 L520,160 L680,260 L780,200"
+                      stroke="url(#constellationGlow)"
+                      strokeWidth="1.5"
+                      fill="none"
+                      filter="url(#glowEffect)"
+                      initial={{ pathLength: 0, opacity: 0 }}
+                      animate={{ pathLength: 1, opacity: 0.5 }}
+                      transition={{ duration: 2.5, delay: 2.5, ease: "easeInOut" }}
+                    />
+                  </svg>
 
-              {/* Creator Tiles - Organic Asymmetrical Layout */}
-              {creators.slice(0, 6).map((creator, index) => {
-                const positions = [
-                  { x: '8%', y: '10%', size: 200 },
-                  { x: '45%', y: '5%', size: 180 },
-                  { x: '75%', y: '15%', size: 190 },
-                  { x: '15%', y: '55%', size: 185 },
-                  { x: '55%', y: '50%', size: 195 },
-                  { x: '80%', y: '60%', size: 175 }
-                ];
-                
-                const pos = positions[index];
-                
-                return (
-                  <motion.div
-                    key={creator.id}
-                    className="absolute group cursor-pointer z-10"
-                    style={{
-                      left: pos.x,
-                      top: pos.y,
-                      width: `${pos.size}px`,
-                      height: `${pos.size}px`,
-                    }}
-                    initial={{ 
-                      opacity: 0, 
-                      scale: 0,
-                      y: 50
-                    }}
-                    animate={{ 
-                      opacity: 1, 
-                      scale: 1,
-                      y: 0
-                    }}
-                    transition={{ 
-                      duration: 0.8, 
-                      delay: 1.8 + index * 0.2,
-                      type: "spring",
-                      bounce: 0.3
-                    }}
-                    whileHover={{ 
-                      scale: 1.05,
-                      transition: { duration: 0.3, ease: "easeOut" }
-                    }}
-                  >
+                  {/* Creator Tiles - Organic Asymmetrical Layout */}
+                  {creators.slice(0, 6).map((creator, index) => {
+                    const positions = [
+                      { x: '8%', y: '10%', size: 200 },
+                      { x: '45%', y: '5%', size: 180 },
+                      { x: '75%', y: '15%', size: 190 },
+                      { x: '15%', y: '55%', size: 185 },
+                      { x: '55%', y: '50%', size: 195 },
+                      { x: '80%', y: '60%', size: 175 }
+                    ];
+                    
+                    const pos = positions[index];
+                    
+                    return (
+                      <motion.div
+                        key={creator.id}
+                        className="absolute group cursor-pointer z-10"
+                        style={{
+                          left: pos.x,
+                          top: pos.y,
+                          width: `${pos.size}px`,
+                          height: `${pos.size}px`,
+                        }}
+                        initial={{ 
+                          opacity: 0, 
+                          scale: 0,
+                          y: 50
+                        }}
+                        animate={{ 
+                          opacity: 1, 
+                          scale: 1,
+                          y: 0
+                        }}
+                        transition={{ 
+                          duration: 0.8, 
+                          delay: 1.8 + index * 0.2,
+                          type: "spring",
+                          bounce: 0.3
+                        }}
+                        whileHover={{ 
+                          scale: 1.05,
+                          transition: { duration: 0.3, ease: "easeOut" }
+                        }}
+                      >
                     {/* Video Showcase */}
                     <div
                       className="relative w-full h-full rounded-2xl overflow-hidden transition-all duration-700"
@@ -1312,8 +1409,97 @@ export const WizDiscoverSection = () => {
                       </motion.p>
                     </motion.div>
                   </motion.div>
-                );
-              })}
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Mobile & Tablet: Clean Grid Layout */}
+              <div className="block lg:hidden">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 px-4">
+                  {creators.slice(0, 6).map((creator, index) => (
+                    <motion.div
+                      key={creator.id}
+                      className="group cursor-pointer"
+                      initial={{ 
+                        opacity: 0, 
+                        y: 30
+                      }}
+                      animate={{ 
+                        opacity: 1, 
+                        y: 0
+                      }}
+                      transition={{ 
+                        duration: 0.6, 
+                        delay: 0.1 * index,
+                        ease: "easeOut"
+                      }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      {/* Creator Card */}
+                      <div className="relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
+                        {/* Creator Image */}
+                        <div className="aspect-square relative overflow-hidden">
+                          <img 
+                            src={creator.thumbnail}
+                            alt={`${creator.name}'s showcase`}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                          
+                          {/* Gradient Overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                          
+                          {/* Twitter Button */}
+                          <motion.button
+                            className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:shadow-lg transition-all duration-200"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(creator.twitterUrl, '_blank');
+                            }}
+                          >
+                            <svg className="w-4 h-4 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                            </svg>
+                          </motion.button>
+                        </div>
+                        
+                        {/* Creator Info */}
+                        <div className="p-4">
+                          <div className="flex items-center space-x-3">
+                            {/* Avatar */}
+                            <div className="relative">
+                              <img 
+                                src={creator.avatar} 
+                                alt={creator.name}
+                                className="w-10 h-10 rounded-full border-2 border-gray-200 bg-gray-100"
+                              />
+                              {creator.verified && (
+                                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                                  <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Name and Role */}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-gray-800 text-sm truncate">
+                                {creator.name}
+                              </h3>
+                              <p className="text-xs text-gray-500 truncate">
+                                {creator.specialty}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
             </motion.div>
 
             {/* Join the Watch Party Button - Bottom Center */}
@@ -1387,720 +1573,26 @@ export const WizDiscoverSection = () => {
           </div>
         </motion.div>
 
-        {/* 🏆 Prestigious Leaderboard - Hall of Fame Design */}
+        {/* 🏆 Epic Premium Leaderboard */}
         <div className="relative mb-20">
-        <motion.div 
-          className="relative"
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
-        >
-          {/* Glassmorphic Container */}
-          <div 
-            className="relative rounded-2xl overflow-hidden p-8"
-            style={{
-              background: `
-                linear-gradient(135deg, rgba(230, 230, 250, 0.3) 0%, rgba(147, 51, 234, 0.15) 50%, rgba(99, 102, 241, 0.2) 100%),
-                rgba(255, 255, 255, 0.1)
-              `,
-              backdropFilter: 'blur(25px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              boxShadow: `
-                0 25px 50px rgba(147, 51, 234, 0.15),
-                0 0 80px rgba(230, 230, 250, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3)
-              `
-            }}
+          <motion.div 
+            className="relative"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
           >
-            {/* Animated Background Particles */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              {[...Array(12)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute w-1 h-1 rounded-full"
-                  style={{
-                    background: 'linear-gradient(45deg, rgba(255, 215, 0, 0.6), rgba(147, 51, 234, 0.4))',
-                    left: `${Math.random() * 100}%`,
-                    top: `${Math.random() * 100}%`,
-                  }}
-                  animate={{
-                    y: [0, -30, 0],
-                    x: [0, Math.random() * 20 - 10, 0],
-                    opacity: [0.3, 0.8, 0.3],
-                    scale: [1, 1.5, 1]
-                  }}
-                  transition={{
-                    duration: 4 + Math.random() * 2,
-                    repeat: Infinity,
-                    delay: Math.random() * 2,
-                    ease: "easeInOut"
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* Prismatic Light Edges */}
-            <motion.div
-              className="absolute inset-0 rounded-2xl opacity-30"
+            <div 
+              className="rounded-3xl overflow-hidden bg-white shadow-xl"
               style={{
-                background: `
-                  linear-gradient(45deg, 
-                    transparent 0%, 
-                    rgba(255, 0, 150, 0.1) 25%, 
-                    rgba(0, 255, 255, 0.1) 50%, 
-                    rgba(255, 255, 0, 0.1) 75%, 
-                    transparent 100%
-                  )
-                `
+                border: '1px solid rgba(0, 0, 0, 0.05)',
+                boxShadow: '0 25px 50px rgba(0, 0, 0, 0.08)'
               }}
-              animate={{
-                rotate: [0, 360]
-              }}
-              transition={{
-                duration: 20,
-                repeat: Infinity,
-                ease: "linear"
-              }}
-            />
-            
-            {/* Header - Hall of Fame Style */}
-            <motion.div 
-              className="text-center mb-10 relative z-10"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8, duration: 0.8 }}
             >
-              {/* Gradient Crown Icon */}
-              <motion.div 
-                className="w-16 h-16 mx-auto mb-4 flex items-center justify-center"
-                animate={{ 
-                  scale: [1, 1.05, 1],
-                  rotate: [0, 1, -1, 0]
-                }}
-                transition={{ 
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              >
-                <Crown 
-                  className="w-12 h-12"
-                  style={{
-                    background: 'linear-gradient(135deg, #E6E6FA 0%, #FFD700 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    filter: 'drop-shadow(0 4px 8px rgba(255, 215, 0, 0.3))'
-                  }}
-                />
-              </motion.div>
-              
-              {/* Title */}
-              <motion.h2 
-                className="text-4xl font-bold mb-3"
-                style={{
-                  background: 'linear-gradient(135deg, #E6E6FA 0%, #6d28d9 50%, #9333EA 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  filter: 'drop-shadow(0 2px 4px rgba(147, 51, 234, 0.3))'
-                }}
-                animate={{
-                  backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-                }}
-                transition={{
-                  duration: 6,
-                  repeat: Infinity,
-                  ease: "linear"
-                }}
-              >
-                Leaderboard
-              </motion.h2>
-              
-              {/* Subtitle */}
-              <p className="text-lg text-gray-600/90 font-medium mb-6">
-                This Week's Top Wizards & Creators
-              </p>
-
-              {/* Pill Toggle Tabs */}
-              <div 
-                className="inline-flex p-2 rounded-full"
-                style={{
-                  background: `
-                    linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(230, 230, 250, 0.1) 100%),
-                    rgba(0, 0, 0, 0.1)
-                  `,
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  boxShadow: `
-                    0 8px 32px rgba(147, 51, 234, 0.1),
-                    inset 0 1px 0 rgba(255, 255, 255, 0.3)
-                  `
-                }}
-              >
-                {[{ id: 'creators', label: 'Creators', icon: Trophy }, { id: 'wizards', label: 'Wizards', icon: Zap }].map((tab) => (
-                  <motion.button
-                    key={tab.id}
-                    onClick={() => setLeaderboardTab(tab.id)}
-                    className={`
-                      relative px-8 py-3 text-sm font-semibold rounded-full transition-all duration-300 z-10
-                      ${leaderboardTab === tab.id 
-                        ? 'text-white' 
-                        : 'text-gray-600 hover:text-gray-800'
-                      }
-                    `}
-                    style={{ minWidth: '120px' }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    {/* Glowing Active Background */}
-                    {leaderboardTab === tab.id && (
-                      <motion.div
-                        className="absolute inset-0 rounded-full"
-                        style={{
-                          background: `
-                            linear-gradient(135deg, 
-                              rgba(147, 51, 234, 0.9) 0%, 
-                              rgba(99, 102, 241, 0.8) 50%, 
-                              rgba(139, 92, 246, 0.9) 100%
-                            )
-                          `,
-                          boxShadow: '0 8px 32px rgba(147, 51, 234, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-                        }}
-                        layoutId="activeLeaderboardTab"
-                        initial={false}
-                        transition={{
-                          type: "spring",
-                          stiffness: 400,
-                          damping: 25
-                        }}
-                      />
-                    )}
-                    
-                    {/* Shimmer Effect */}
-                    {leaderboardTab === tab.id && (
-                      <motion.div
-                        className="absolute inset-0 rounded-full overflow-hidden"
-                        initial={{ x: '-100%' }}
-                        animate={{ x: '100%' }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          repeatDelay: 4,
-                          ease: "easeInOut"
-                        }}
-                        style={{
-                          background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%)'
-                        }}
-                      />
-                    )}
-                    
-                    {/* Tab Content */}
-                    <div className="relative z-10 flex items-center justify-center space-x-2">
-                      <motion.div
-                        animate={leaderboardTab === tab.id ? { 
-                          scale: [1, 1.1, 1],
-                          rotate: [0, 3, -3, 0]
-                        } : {}}
-                        transition={leaderboardTab === tab.id ? { 
-                          duration: 3,
-                          repeat: Infinity,
-                          ease: "easeInOut"
-                        } : {}}
-                      >
-                        <tab.icon className="w-4 h-4" />
-                      </motion.div>
-                      <span className="font-semibold">{tab.label}</span>
-                    </div>
-                  </motion.button>
-                ))}
+              <div className="p-4 sm:p-6 lg:p-8">
+                <WizPremiumLeaderboard />
               </div>
-            </motion.div>
-
-            {/* Leaderboard Cards */}
-            <div className="space-y-3 relative z-10">
-              {leaderboardTab === 'creators' && topCreators.map((creator, index) => (
-                <motion.div
-                  key={creator.rank}
-                  className="group relative"
-                  initial={{ opacity: 0, y: 20, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ 
-                    duration: 0.5, 
-                    delay: 1.0 + index * 0.1,
-                    ease: "easeOut"
-                  }}
-                  whileHover={{ 
-                    scale: 1.02,
-                    y: -2,
-                    transition: { duration: 0.2, ease: "easeOut" }
-                  }}
-                >
-                  {/* Rank Card */}
-                  <div
-                    className="relative p-5 rounded-xl overflow-hidden transition-all duration-300"
-                    style={{
-                      background: creator.rank === 1
-                        ? 'linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 193, 7, 0.08) 100%)'
-                        : creator.rank === 2
-                        ? 'linear-gradient(135deg, rgba(192, 192, 192, 0.15) 0%, rgba(169, 169, 169, 0.08) 100%)'
-                        : creator.rank === 3
-                        ? 'linear-gradient(135deg, rgba(205, 127, 50, 0.15) 0%, rgba(184, 115, 51, 0.08) 100%)'
-                        : 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(230, 230, 250, 0.05) 100%)',
-                      backdropFilter: 'blur(15px)',
-                      border: creator.rank <= 3
-                        ? `1px solid ${
-                            creator.rank === 1 ? 'rgba(255, 215, 0, 0.3)' :
-                            creator.rank === 2 ? 'rgba(192, 192, 192, 0.3)' :
-                            'rgba(205, 127, 50, 0.3)'
-                          }`
-                        : '1px solid rgba(255, 255, 255, 0.15)',
-                      boxShadow: creator.rank <= 3
-                        ? `0 4px 20px ${
-                            creator.rank === 1 ? 'rgba(255, 215, 0, 0.1)' :
-                            creator.rank === 2 ? 'rgba(192, 192, 192, 0.1)' :
-                            'rgba(205, 127, 50, 0.1)'
-                          }`
-                        : '0 4px 20px rgba(147, 51, 234, 0.05)'
-                    }}
-                  >
-                    {/* Hover Glass Effect */}
-                    <motion.div
-                      className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-300"
-                      style={{
-                        background: 'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%)',
-                        borderRadius: '12px'
-                      }}
-                    />
-
-                    <div className="flex items-center justify-between relative z-10">
-                      {/* Left: Rank + Avatar + Info */}
-                      <div className="flex items-center gap-4">
-                        {/* Ranking Badge */}
-                        <motion.div 
-                          className="relative flex-shrink-0"
-                          whileHover={{ scale: 1.1 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          {creator.rank === 1 ? (
-                            <motion.div
-                              className="relative"
-                              animate={{ 
-                                scale: [1, 1.05, 1]
-                              }}
-                              transition={{ 
-                                duration: 2,
-                                repeat: Infinity,
-                                ease: "easeInOut"
-                              }}
-                            >
-                              <Crown 
-                                className="w-10 h-10"
-                                style={{
-                                  background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
-                                  WebkitBackgroundClip: 'text',
-                                  WebkitTextFillColor: 'transparent',
-                                  backgroundClip: 'text',
-                                  filter: 'drop-shadow(0 0 10px rgba(255, 215, 0, 0.6))'
-                                }}
-                              />
-                              {/* Glowing Aura */}
-                              <motion.div
-                                className="absolute inset-0 rounded-full"
-                                style={{
-                                  background: 'radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, transparent 70%)',
-                                  transform: 'scale(1.5)'
-                                }}
-                                animate={{ 
-                                  opacity: [0.3, 0.6, 0.3]
-                                }}
-                                transition={{ 
-                                  duration: 2,
-                                  repeat: Infinity,
-                                  ease: "easeInOut"
-                                }}
-                              />
-                            </motion.div>
-                          ) : creator.rank === 2 ? (
-                            <Medal 
-                              className="w-10 h-10"
-                              style={{
-                                background: 'linear-gradient(135deg, #C0C0C0 0%, #A8A8A8 100%)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                backgroundClip: 'text',
-                                filter: 'drop-shadow(0 0 8px rgba(192, 192, 192, 0.5))'
-                              }}
-                            />
-                          ) : creator.rank === 3 ? (
-                            <Trophy 
-                              className="w-10 h-10"
-                              style={{
-                                background: 'linear-gradient(135deg, #CD7F32 0%, #B8860B 100%)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                backgroundClip: 'text',
-                                filter: 'drop-shadow(0 0 8px rgba(205, 127, 50, 0.5))'
-                              }}
-                            />
-                          ) : (
-                            <div 
-                              className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold text-white"
-                              style={{
-                                background: 'linear-gradient(135deg, #9333EA 0%, #7C3AED 100%)',
-                                boxShadow: '0 4px 15px rgba(147, 51, 234, 0.3)'
-                              }}
-                            >
-                              {creator.rank}
-                            </div>
-                          )}
-                        </motion.div>
-
-                        {/* Avatar */}
-                        <motion.div
-                          className="relative flex-shrink-0"
-                          whileHover={{ scale: 1.1 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <div
-                            className="w-16 h-16 rounded-full border-2 border-white/40 shadow-lg"
-                            style={{
-                              boxShadow: creator.rank <= 3
-                                ? `0 0 15px ${
-                                    creator.rank === 1 ? 'rgba(255, 215, 0, 0.3)' :
-                                    creator.rank === 2 ? 'rgba(192, 192, 192, 0.3)' :
-                                    'rgba(205, 127, 50, 0.3)'
-                                  }`
-                                : '0 0 10px rgba(147, 51, 234, 0.2)'
-                            }}
-                          >
-                            <Avatar className="w-full h-full">
-                              <AvatarImage src={creator.avatar} alt={creator.name} />
-                              <AvatarFallback
-                                className="w-full h-full rounded-full flex items-center justify-center text-white font-bold text-xl"
-                                style={{
-                                  background: 'linear-gradient(135deg, #9333EA 0%, #7C3AED 100%)'
-                                }}
-                              >
-                                {creator.name.slice(0, 2)}
-                              </AvatarFallback>
-                            </Avatar>
-                          </div>
-                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white">
-                            <CheckCircle className="w-4 h-4 text-white" />
-                          </div>
-                        </motion.div>
-
-                        {/* User Info */}
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-xl font-bold text-gray-800 truncate">
-                              {creator.name}
-                            </h3>
-                          </div>
-                          <p className="text-sm text-gray-600 truncate">
-                            @{creator.name.toLowerCase().replace(/\s+/g, '')}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Right: XP with Animated Shimmer */}
-                      <motion.div
-                        className="text-right flex-shrink-0"
-                        whileHover={{ scale: 1.05 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <motion.div 
-                          className="text-2xl font-bold mb-1 relative"
-                          style={{
-                            background: creator.rank <= 3
-                              ? `linear-gradient(135deg, ${
-                                  creator.rank === 1 ? '#FFD700, #FFA500' :
-                                  creator.rank === 2 ? '#C0C0C0, #A8A8A8' :
-                                  '#CD7F32, #B8860B'
-                                })`
-                              : 'linear-gradient(135deg, #9333EA 0%, #7C3AED 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text'
-                          }}
-                          animate={{
-                            backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-                          }}
-                          transition={{
-                            duration: 4,
-                            repeat: Infinity,
-                            ease: "linear"
-                          }}
-                        >
-                          {creator.xp.toLocaleString()}
-                          
-                          {/* Animated Shimmer */}
-                          <motion.div
-                            className="absolute inset-0 opacity-20"
-                            style={{
-                              background: 'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.6) 50%, transparent 70%)'
-                            }}
-                            animate={{
-                              x: ['-100%', '100%']
-                            }}
-                            transition={{
-                              duration: 3,
-                              repeat: Infinity,
-                              repeatDelay: 4,
-                              ease: "easeInOut"
-                            }}
-                          />
-                        </motion.div>
-                        <div className="text-sm text-gray-500 font-medium">XP</div>
-                      </motion.div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-
-              {leaderboardTab === 'wizards' && topWizards.map((wizard, index) => (
-                <motion.div
-                  key={wizard.rank}
-                  className="group relative"
-                  initial={{ opacity: 0, y: 20, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ 
-                    duration: 0.5, 
-                    delay: 1.0 + index * 0.1,
-                    ease: "easeOut"
-                  }}
-                  whileHover={{ 
-                    scale: 1.02,
-                    y: -2,
-                    transition: { duration: 0.2, ease: "easeOut" }
-                  }}
-                >
-                  {/* Rank Card */}
-                  <div
-                    className="relative p-5 rounded-xl overflow-hidden transition-all duration-300"
-                    style={{
-                      background: wizard.rank === 1
-                        ? 'linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 193, 7, 0.08) 100%)'
-                        : wizard.rank === 2
-                        ? 'linear-gradient(135deg, rgba(192, 192, 192, 0.15) 0%, rgba(169, 169, 169, 0.08) 100%)'
-                        : wizard.rank === 3
-                        ? 'linear-gradient(135deg, rgba(205, 127, 50, 0.15) 0%, rgba(184, 115, 51, 0.08) 100%)'
-                        : 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(230, 230, 250, 0.05) 100%)',
-                      backdropFilter: 'blur(15px)',
-                      border: wizard.rank <= 3
-                        ? `1px solid ${
-                            wizard.rank === 1 ? 'rgba(255, 215, 0, 0.3)' :
-                            wizard.rank === 2 ? 'rgba(192, 192, 192, 0.3)' :
-                            'rgba(205, 127, 50, 0.3)'
-                          }`
-                        : '1px solid rgba(255, 255, 255, 0.15)',
-                      boxShadow: wizard.rank <= 3
-                        ? `0 4px 20px ${
-                            wizard.rank === 1 ? 'rgba(255, 215, 0, 0.1)' :
-                            wizard.rank === 2 ? 'rgba(192, 192, 192, 0.1)' :
-                            'rgba(205, 127, 50, 0.1)'
-                          }`
-                        : '0 4px 20px rgba(147, 51, 234, 0.05)'
-                    }}
-                  >
-                    {/* Hover Glass Effect */}
-                    <motion.div
-                      className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-300"
-                      style={{
-                        background: 'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%)',
-                        borderRadius: '12px'
-                      }}
-                    />
-
-                    <div className="flex items-center justify-between relative z-10">
-                      {/* Left: Rank + Avatar + Info */}
-                      <div className="flex items-center gap-4">
-                        {/* Ranking Badge */}
-                        <motion.div 
-                          className="relative flex-shrink-0"
-                          whileHover={{ scale: 1.1 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          {wizard.rank === 1 ? (
-                            <motion.div
-                              className="relative"
-                              animate={{ 
-                                scale: [1, 1.05, 1]
-                              }}
-                              transition={{ 
-                                duration: 2,
-                                repeat: Infinity,
-                                ease: "easeInOut"
-                              }}
-                            >
-                              <Crown 
-                                className="w-10 h-10"
-                                style={{
-                                  background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
-                                  WebkitBackgroundClip: 'text',
-                                  WebkitTextFillColor: 'transparent',
-                                  backgroundClip: 'text',
-                                  filter: 'drop-shadow(0 0 10px rgba(255, 215, 0, 0.6))'
-                                }}
-                              />
-                              {/* Glowing Aura */}
-                              <motion.div
-                                className="absolute inset-0 rounded-full"
-                                style={{
-                                  background: 'radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, transparent 70%)',
-                                  transform: 'scale(1.5)'
-                                }}
-                                animate={{ 
-                                  opacity: [0.3, 0.6, 0.3]
-                                }}
-                                transition={{ 
-                                  duration: 2,
-                                  repeat: Infinity,
-                                  ease: "easeInOut"
-                                }}
-                              />
-                            </motion.div>
-                          ) : wizard.rank === 2 ? (
-                            <Medal 
-                              className="w-10 h-10"
-                              style={{
-                                background: 'linear-gradient(135deg, #C0C0C0 0%, #A8A8A8 100%)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                backgroundClip: 'text',
-                                filter: 'drop-shadow(0 0 8px rgba(192, 192, 192, 0.5))'
-                              }}
-                            />
-                          ) : wizard.rank === 3 ? (
-                            <Trophy 
-                              className="w-10 h-10"
-                              style={{
-                                background: 'linear-gradient(135deg, #CD7F32 0%, #B8860B 100%)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                backgroundClip: 'text',
-                                filter: 'drop-shadow(0 0 8px rgba(205, 127, 50, 0.5))'
-                              }}
-                            />
-                          ) : (
-                            <div 
-                              className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold text-white"
-                              style={{
-                                background: 'linear-gradient(135deg, #9333EA 0%, #7C3AED 100%)',
-                                boxShadow: '0 4px 15px rgba(147, 51, 234, 0.3)'
-                              }}
-                            >
-                              {wizard.rank}
-                            </div>
-                          )}
-                        </motion.div>
-
-                        {/* Avatar */}
-                        <motion.div
-                          className="relative flex-shrink-0"
-                          whileHover={{ scale: 1.1 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <div
-                            className="w-16 h-16 rounded-full border-2 border-white/40 shadow-lg"
-                            style={{
-                              boxShadow: wizard.rank <= 3
-                                ? `0 0 15px ${
-                                    wizard.rank === 1 ? 'rgba(255, 215, 0, 0.3)' :
-                                    wizard.rank === 2 ? 'rgba(192, 192, 192, 0.3)' :
-                                    'rgba(205, 127, 50, 0.3)'
-                                  }`
-                                : '0 0 10px rgba(147, 51, 234, 0.2)'
-                            }}
-                          >
-                            <Avatar className="w-full h-full">
-                              <AvatarImage src={wizard.avatar} alt={wizard.name} />
-                              <AvatarFallback
-                                className="w-full h-full rounded-full flex items-center justify-center text-white font-bold text-xl"
-                                style={{
-                                  background: 'linear-gradient(135deg, #9333EA 0%, #7C3AED 100%)'
-                                }}
-                              >
-                                {wizard.name.slice(0, 2)}
-                              </AvatarFallback>
-                            </Avatar>
-                          </div>
-                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center border-2 border-white">
-                            <Zap className="w-4 h-4 text-white" />
-                          </div>
-                        </motion.div>
-
-                        {/* User Info */}
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-xl font-bold text-gray-800 truncate">
-                              {wizard.name}
-                            </h3>
-                          </div>
-                          <p className="text-sm text-gray-600 truncate">
-                            @{wizard.name.toLowerCase().replace(/\s+/g, '')}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Right: XP with Animated Shimmer */}
-                      <motion.div
-                        className="text-right flex-shrink-0"
-                        whileHover={{ scale: 1.05 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <motion.div 
-                          className="text-2xl font-bold mb-1 relative"
-                          style={{
-                            background: wizard.rank <= 3
-                              ? `linear-gradient(135deg, ${
-                                  wizard.rank === 1 ? '#FFD700, #FFA500' :
-                                  wizard.rank === 2 ? '#C0C0C0, #A8A8A8' :
-                                  '#CD7F32, #B8860B'
-                                })`
-                              : 'linear-gradient(135deg, #9333EA 0%, #7C3AED 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text'
-                          }}
-                          animate={{
-                            backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-                          }}
-                          transition={{
-                            duration: 4,
-                            repeat: Infinity,
-                            ease: "linear"
-                          }}
-                        >
-                          {wizard.xp.toLocaleString()}
-                          
-                          {/* Animated Shimmer */}
-                          <motion.div
-                            className="absolute inset-0 opacity-20"
-                            style={{
-                              background: 'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.6) 50%, transparent 70%)'
-                            }}
-                            animate={{
-                              x: ['-100%', '100%']
-                            }}
-                            transition={{
-                              duration: 3,
-                              repeat: Infinity,
-                              repeatDelay: 4,
-                              ease: "easeInOut"
-                            }}
-                          />
-                        </motion.div>
-                        <div className="text-sm text-gray-500 font-medium">XP</div>
-                      </motion.div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
         </div>
 
       {/* Video Panel - Clean Dark Design */}

@@ -6,6 +6,7 @@ import { VideoPanel } from './VideoPanel';
 import { useAuth } from '@/hooks/useAuth';
 import { useXp } from '@/context/XpContext';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Types
 interface ShortVideo {
@@ -234,10 +235,12 @@ export const WizShorts = () => {
   const { user, addXP } = useAuth();
   const { level, addXp } = useXp();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [selectedVideo, setSelectedVideo] = useState<ShortVideo | null>(null);
   const [startX, setStartX] = useState(0);
   const [isDown, setIsDown] = useState(false);
   const [cardWidth, setCardWidth] = useState('220px');
+  const [currentPage, setCurrentPage] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Update card width based on screen size
@@ -283,6 +286,22 @@ export const WizShorts = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollBy({ left: 400, behavior: 'smooth' });
     }
+  };
+
+  // Mobile grid navigation
+  const nextPage = () => {
+    const maxPages = Math.ceil(allShortsData.length / 4) - 1;
+    setCurrentPage(prev => (prev < maxPages ? prev + 1 : prev));
+  };
+
+  const prevPage = () => {
+    setCurrentPage(prev => (prev > 0 ? prev - 1 : prev));
+  };
+
+  // Get current shorts for mobile grid
+  const getCurrentPageShorts = () => {
+    const startIndex = currentPage * 4;
+    return allShortsData.slice(startIndex, startIndex + 4);
   };
 
   // Touch/Swipe handlers
@@ -351,23 +370,144 @@ export const WizShorts = () => {
             </div>
           </div>
 
-          {/* Unified Horizontal Carousel - Match Latest Videos */}
-          <div
-            ref={scrollRef}
-            className="flex space-x-3 sm:space-x-6 overflow-x-auto scrollbar-hide pb-4 scroll-smooth px-2 sm:px-0"
-            style={{ 
-              scrollbarWidth: 'none', 
-              msOverflowStyle: 'none'
-            }}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            {allShortsData.map((short, index) => {
-              const categoryColor = getCategoryColor(short.category);
+          {/* Mobile: 4-Panel Grid */}
+          {isMobile ? (
+            <div className="px-3">
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                {getCurrentPageShorts().map((short) => {
+                  const categoryColor = getCategoryColor(short.category);
+                  return (
+                    <div key={short.id} className="group">
+                      <div 
+                        className="aspect-[9/16] overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer rounded-2xl"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
+                          backdropFilter: 'blur(8px)',
+                          border: '1px solid rgba(255, 255, 255, 0.3)',
+                          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)'
+                        }}
+                        onClick={() => handleVideoClick(short)}
+                      >
+                        <div className="relative h-full">
+                          {/* Background Image */}
+                          <div 
+                            className="w-full h-full bg-cover bg-center"
+                            style={{ 
+                              backgroundImage: `url(${short.thumbnail})`,
+                              backgroundSize: 'cover',
+                              backgroundPosition: 'center'
+                            }}
+                          />
+                          
+                          {/* Gradient Overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                          
+                          {/* Category Badge - Top Left */}
+                          <div className="absolute top-2 left-2 z-20">
+                            <div className="px-2 py-1 text-xs font-bold text-white uppercase tracking-wide rounded-lg"
+                                 style={{
+                                   background: `linear-gradient(135deg, ${categoryColor.from} 0%, ${categoryColor.to} 100%)`,
+                                   boxShadow: `0 2px 8px ${categoryColor.from}40`
+                                 }}>
+                              {short.category}
+                            </div>
+                          </div>
 
-              return (
-                <div key={short.id} className="flex-shrink-0 w-48 sm:w-56 group">
+                          {/* XP Badge - Top Right */}
+                          <div className="absolute top-2 right-2 z-20">
+                            <div className="flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-bold"
+                                 style={{
+                                   background: 'radial-gradient(circle, rgba(255, 215, 0, 0.9) 0%, rgba(255, 165, 0, 0.8) 100%)',
+                                   color: '#1F2937',
+                                   boxShadow: '0 2px 8px rgba(255, 215, 0, 0.3)'
+                                 }}>
+                              <Zap className="w-3 h-3" />
+                              <span>{short.xpReward}</span>
+                            </div>
+                          </div>
+
+                          {/* Duration - Bottom Right */}
+                          <div className="absolute bottom-2 right-2 z-20 px-2 py-1 bg-black/70 rounded-md text-xs text-white font-semibold">
+                            {short.duration}
+                          </div>
+
+                          {/* Play Button Overlay */}
+                          <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                            <Button
+                              size="sm"
+                              className="w-12 h-12 rounded-full p-0 shadow-xl"
+                              style={{
+                                background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.9) 0%, rgba(99, 102, 241, 0.9) 100%)',
+                                backdropFilter: 'blur(10px)',
+                                border: '2px solid rgba(255, 255, 255, 0.3)'
+                              }}
+                            >
+                              <Play className="w-4 h-4 text-white fill-current ml-0.5" />
+                            </Button>
+                          </div>
+
+                          {/* Content at Bottom */}
+                          <div className="absolute bottom-0 left-0 right-0 p-3 text-white z-10">
+                            <h4 className="text-sm font-bold mb-1 line-clamp-2 leading-tight">
+                              {short.title}
+                            </h4>
+                            <div className="flex items-center justify-between text-xs opacity-90">
+                              <span className="font-medium truncate mr-2">{short.creator}</span>
+                              <span>{short.views}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Mobile Navigation */}
+              <div className="flex items-center justify-center space-x-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={prevPage}
+                  disabled={currentPage === 0}
+                  className="h-8 w-8 p-0 rounded-full disabled:opacity-50"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                
+                <span className="text-sm text-gray-600">
+                  {currentPage + 1} / {Math.ceil(allShortsData.length / 4)}
+                </span>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={nextPage}
+                  disabled={currentPage >= Math.ceil(allShortsData.length / 4) - 1}
+                  className="h-8 w-8 p-0 rounded-full disabled:opacity-50"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          ) : (
+            /* Desktop: Horizontal Carousel */
+            <div
+              ref={scrollRef}
+              className="flex space-x-3 sm:space-x-6 overflow-x-auto scrollbar-hide pb-4 scroll-smooth px-2 sm:px-0"
+              style={{ 
+                scrollbarWidth: 'none', 
+                msOverflowStyle: 'none'
+              }}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              {allShortsData.map((short, index) => {
+                const categoryColor = getCategoryColor(short.category);
+
+                return (
+                  <div key={short.id} className="flex-shrink-0 w-48 sm:w-56 group">
                   <div 
                     className="h-80 sm:h-96 overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 cursor-pointer rounded-2xl"
                     style={{
@@ -456,10 +596,11 @@ export const WizShorts = () => {
                 </div>
               );
             })}
-          </div>
+            </div>
+          )}
         </div>
 
-      {/* Video Player Panel */}
+        {/* Video Player Panel */}
       <VideoPanel
         videoId={selectedVideo?.videoId || ''}
         title={selectedVideo?.title || ''}

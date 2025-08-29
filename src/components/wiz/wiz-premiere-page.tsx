@@ -439,6 +439,7 @@ export const WizPremierePage = () => {
           </div>
         </div>
 
+
         {/* Upgrade CTA for non-eligible users */}
         {!isEligible && (
           <Card className="border-0 shadow-xl" style={{

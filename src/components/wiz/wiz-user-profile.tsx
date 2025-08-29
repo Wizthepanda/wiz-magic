@@ -153,7 +153,9 @@ export const WizUserProfile = () => {
             {/* User Info + Level Badge */}
             <div className="text-right">
               <div className="flex items-center space-x-2 mb-1">
-                <span className="text-sm font-medium text-white">{user.displayName}</span>
+                <span className="text-sm font-medium text-gray-400">
+                  {user.displayName}
+                </span>
                 <Badge 
                   className="text-xs font-bold text-white border-0 px-2 py-0.5"
                   style={getLevelBadgeStyle(level)}
@@ -167,8 +169,8 @@ export const WizUserProfile = () => {
                 <motion.div
                   className="h-full rounded-full"
                   style={{
-                    background: 'linear-gradient(90deg, rgba(147, 51, 234, 0.9) 0%, rgba(168, 85, 247, 0.9) 50%, rgba(59, 130, 246, 0.9) 100%)',
-                    boxShadow: animateXP ? '0 0 15px rgba(147, 51, 234, 0.8)' : '0 0 10px rgba(147, 51, 234, 0.5)'
+                    background: 'linear-gradient(90deg, #8B5CF6 0%, #A855F7 50%, #6366F1 100%)',
+                    boxShadow: animateXP ? '0 0 15px rgba(139, 92, 246, 0.8)' : '0 0 10px rgba(139, 92, 246, 0.5)'
                   }}
                   initial={{ width: 0 }}
                   animate={{ 
@@ -179,7 +181,16 @@ export const WizUserProfile = () => {
                 />
               </div>
               
-              <div className="text-xs text-gray-300 font-medium">
+              <div 
+                className="text-xs font-semibold"
+                style={{
+                  background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 50%, #6366F1 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  filter: 'drop-shadow(0 1px 2px rgba(139, 92, 246, 0.3))'
+                }}
+              >
                 {xp} / {xpToNextLevel} XP
               </div>
             </div>
@@ -215,7 +226,9 @@ export const WizUserProfile = () => {
               </AvatarFallback>
             </Avatar>
             <div>
-              <div className="text-white font-semibold text-lg">{user.displayName}</div>
+              <div className="font-semibold text-lg text-gray-400">
+                {user.displayName}
+              </div>
               <div className="text-gray-400 text-sm">{user.email}</div>
               <Badge 
                 className="mt-1 text-xs font-bold text-white border-0"
@@ -261,9 +274,27 @@ export const WizUserProfile = () => {
               </motion.div>
             </div>
             
-            <div className="flex justify-between text-xs text-gray-400">
-              <span>{xp} XP</span>
-              <span>{xpToNextLevel} XP</span>
+            <div className="flex justify-between text-xs font-semibold">
+              <span 
+                style={{
+                  background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 50%, #6366F1 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}
+              >
+                {xp} XP
+              </span>
+              <span 
+                style={{
+                  background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 50%, #6366F1 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}
+              >
+                {xpToNextLevel} XP
+              </span>
             </div>
           </div>
           

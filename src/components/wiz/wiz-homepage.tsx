@@ -403,12 +403,16 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
 
       </motion.div>
 
-      {/* Top Right Enter Button */}
+      {/* Top Right Enter Button - Mobile Responsive */}
       <motion.div 
-        className="fixed top-4 right-4 sm:top-6 sm:right-6 z-50"
+        className="fixed top-6 right-4 sm:top-6 sm:right-6 z-50"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.3 }}
+        style={{
+          // Ensure it doesn't overlap with hero content on mobile
+          top: 'max(24px, env(safe-area-inset-top))'
+        }}
       >
         <motion.button
           onClick={handleEnterPlatform}
@@ -523,8 +527,8 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
         <HeroBackground />
 
       {/* Ultra Premium Hero Section */}
-      <main className="relative z-10 flex flex-col items-center justify-center min-h-screen px-8">
-        <div className="text-center max-w-5xl mx-auto space-y-12">
+      <main className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 sm:px-8 pt-20 sm:pt-0">
+        <div className="text-center max-w-5xl mx-auto space-y-8 sm:space-y-12">
           {/* Luxury WIZ Logo */}
           <motion.div 
             className="space-y-8"
@@ -533,7 +537,7 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
             transition={{ duration: 0.8 }}
           >
             <motion.h1 
-              className="text-8xl md:text-9xl font-black relative"
+              className="text-6xl sm:text-8xl md:text-9xl font-black relative"
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.2 }}
