@@ -8,6 +8,7 @@ import { WizPremierePage } from './wiz-premiere-page';
 import { WizLeaderboardPage } from './wiz-leaderboard-page';
 import { WizProfilePage } from './wiz-profile-page';
 import { WizCreatePage } from './WizCreatePage';
+import { WizLearnPage } from './wiz-learn-page';
 import { FloatingParticles } from '@/components/ui/floating-particles';
 import { AdminTestPanel } from '@/components/admin/AdminTestPanel';
 import { WizSearchBar } from './WizSearchBar';
@@ -50,6 +51,8 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
         return <WizDiscoverSection />;
       case 'create':
         return <WizCreatePage />;
+      case 'learn':
+        return <WizLearnPage />;
       case 'leaderboard':
         return <WizLeaderboardPage />;
       case 'premiere':
@@ -130,6 +133,7 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
                   <h1 className="text-lg sm:text-xl font-bold text-gray-800 truncate">
                     {activeSection === 'discover' && 'Discover'}
                     {activeSection === 'create' && 'Create'}
+                    {activeSection === 'learn' && '🎓 Learn'}
                     {activeSection === 'leaderboard' && 'Leaderboard'}
                     {activeSection === 'premiere' && 'WIZ Premiere'}
                     {activeSection === 'profile' && 'Profile'}

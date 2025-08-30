@@ -1507,9 +1507,9 @@ export const WizDiscoverSection = () => {
                 </div>
               </div>
 
-              {/* Mobile & Tablet: Clean Grid Layout */}
+              {/* Mobile & Tablet: Enhanced Grid Layout */}
               <div className="block lg:hidden">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 px-4">
+                <div className="mobile-creator-grid grid grid-cols-1 sm:grid-cols-2 gap-6 px-4 max-w-4xl mx-auto">
                   {creators.slice(0, 6).map((creator, index) => (
                     <motion.div
                       key={creator.id}
@@ -1527,49 +1527,76 @@ export const WizDiscoverSection = () => {
                         delay: 0.1 * index,
                         ease: "easeOut"
                       }}
-                      whileTap={{ scale: 0.95 }}
+                      whileTap={{ scale: 0.98 }}
                     >
-                      {/* Creator Card */}
-                      <div className="relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
+                      {/* Enhanced Creator Card */}
+                      <div className="mobile-creator-card relative bg-white/95 backdrop-blur-sm rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-200/50 min-h-[280px]">
                         {/* Creator Image */}
-                        <div className="aspect-square relative overflow-hidden">
+                        <div className="aspect-[16/10] relative overflow-hidden">
                           <img 
                             src={creator.thumbnail}
                             alt={`${creator.name}'s showcase`}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            className="mobile-creator-image w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                           
-                          {/* Gradient Overlay */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                          {/* Enhanced Gradient Overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                           
-                          {/* Twitter Button */}
+                          {/* Enhanced Twitter Button - Larger Touch Target */}
                           <motion.button
-                            className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:shadow-lg transition-all duration-200"
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
+                            className="mobile-twitter-btn absolute top-4 right-4 p-3 bg-white/95 backdrop-blur-md rounded-full shadow-lg hover:shadow-xl transition-all duration-200 touch-manipulation"
+                            style={{
+                              minWidth: '44px',
+                              minHeight: '44px'
+                            }}
+                            whileHover={{ 
+                              scale: 1.1,
+                              backgroundColor: 'rgba(29, 155, 240, 0.1)'
+                            }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={(e) => {
                               e.stopPropagation();
                               window.open(creator.twitterUrl, '_blank');
                             }}
+                            aria-label={`Visit ${creator.name}'s Twitter profile`}
                           >
-                            <svg className="w-4 h-4 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
                               <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                             </svg>
                           </motion.button>
+
+                          {/* Enhanced Verification Badge */}
+                          {creator.verified && (
+                            <div className="absolute top-4 left-4">
+                              <div className="flex items-center space-x-1 px-2 py-1 bg-blue-500/90 backdrop-blur-sm rounded-full">
+                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                                <span className="text-xs font-medium text-white">Verified</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Followers Count Badge */}
+                          <div className="absolute bottom-4 left-4">
+                            <div className="px-2 py-1 bg-white/90 backdrop-blur-sm rounded-full">
+                              <span className="text-xs font-semibold text-gray-700">{creator.followers} followers</span>
+                            </div>
+                          </div>
                         </div>
                         
-                        {/* Creator Info */}
-                        <div className="p-4">
-                          <div className="flex items-center space-x-3">
-                            {/* Avatar */}
-                            <div className="relative">
+                        {/* Enhanced Creator Info */}
+                        <div className="mobile-creator-info p-5">
+                          <div className="flex items-start space-x-4">
+                            {/* Enhanced Avatar */}
+                            <div className="relative flex-shrink-0">
                               <img 
                                 src={creator.avatar} 
                                 alt={creator.name}
-                                className="w-10 h-10 rounded-full border-2 border-gray-200 bg-gray-100"
+                                className="w-12 h-12 rounded-full border-2 border-white shadow-md bg-gray-100"
                               />
                               {creator.verified && (
-                                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white">
                                   <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                   </svg>
@@ -1577,16 +1604,51 @@ export const WizDiscoverSection = () => {
                               )}
                             </div>
                             
-                            {/* Name and Role */}
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-gray-800 text-sm truncate">
+                            {/* Enhanced Name and Details */}
+                            <div className="flex-1 min-w-0 space-y-1">
+                              <h3 className="font-bold text-gray-900 text-base leading-tight">
                                 {creator.name}
                               </h3>
-                              <p className="text-xs text-gray-500 truncate">
+                              <p className="text-sm text-gray-600 font-medium">
+                                {creator.username}
+                              </p>
+                              <p className="text-sm text-gray-500 leading-relaxed">
                                 {creator.specialty}
                               </p>
+                              
+                              {/* Stats Row */}
+                              <div className="flex items-center space-x-4 text-xs text-gray-500 pt-2">
+                                <div className="flex items-center space-x-1">
+                                  <span className="font-semibold">{creator.videos}</span>
+                                  <span>videos</span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  <span className="font-semibold">{creator.totalViews}</span>
+                                  <span>views</span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                                  <span className="font-semibold">{creator.rating}</span>
+                                </div>
+                              </div>
                             </div>
                           </div>
+
+                          {/* Mobile-Friendly Twitter Link Button */}
+                          <motion.button
+                            className="mt-4 w-full py-2.5 px-4 bg-gray-100 hover:bg-blue-50 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2 touch-manipulation"
+                            whileTap={{ scale: 0.98 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(creator.twitterUrl, '_blank');
+                            }}
+                            aria-label={`Follow ${creator.name} on Twitter`}
+                          >
+                            <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                            </svg>
+                            <span className="font-medium text-gray-700">Follow on X</span>
+                          </motion.button>
                         </div>
                       </div>
                     </motion.div>

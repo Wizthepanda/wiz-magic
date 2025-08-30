@@ -12,7 +12,8 @@ import {
   ChevronRight,
   Sparkles,
   Wand2,
-  Plus
+  Plus,
+  GraduationCap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -41,6 +42,7 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
   const navigation = [
     { id: 'discover', label: 'Discover', icon: Compass },
     { id: 'create', label: 'Create', icon: Plus },
+    { id: 'learn', label: 'Learn', icon: GraduationCap },
     { id: 'premiere', label: 'WIZ Premiere', icon: Crown, level: 5 },
     { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
     { id: 'profile', label: 'Profile', icon: User },

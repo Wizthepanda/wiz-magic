@@ -8,7 +8,8 @@ import {
   Settings, 
   Plus,
   LogOut,
-  Zap
+  Zap,
+  GraduationCap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -53,6 +54,12 @@ export const WizMobileMenu = ({ activeSection, onSectionChange }: WizMobileMenuP
       label: 'Create', 
       icon: Plus,
       gradient: 'from-green-500 to-teal-600'
+    },
+    { 
+      id: 'learn', 
+      label: 'Learn', 
+      icon: GraduationCap,
+      gradient: 'from-amber-500 to-orange-600'
     },
     { 
       id: 'premiere', 
