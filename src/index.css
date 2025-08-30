@@ -1,5 +1,7 @@
 /* Import XP Animation Styles */
 @import './styles/xp-animations.css';
+/* Import Mobile-specific Fixes */
+@import './styles/mobile-fixes.css';
 
 @tailwind base;
 @tailwind components;

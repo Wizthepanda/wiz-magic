@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { CreatorService, CreatorVideo } from '@/lib/creator-service';
 import { youTubeAPI, YouTubeChannelInfo, YouTubeVideo } from '@/lib/youtube-api';
 
@@ -39,6 +40,7 @@ const categories = [
 export const WizCreatePage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   const [currentStep, setCurrentStep] = useState(1);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -345,7 +347,9 @@ export const WizCreatePage = () => {
         }}
       />
 
-      <div className="max-w-7xl mx-auto px-6 py-12 space-y-12">
+      <div className={`max-w-7xl mx-auto space-y-12 ${
+        isMobile ? 'px-4 py-8' : 'px-6 py-12'
+      }`}>
         {/* Header */}
         <motion.div 
           className="text-center space-y-6"
@@ -354,7 +358,9 @@ export const WizCreatePage = () => {
           transition={{ duration: 0.6 }}
         >
           <h1 
-            className="text-5xl md:text-6xl font-bold"
+            className={`font-bold ${
+              isMobile ? 'text-4xl' : 'text-5xl md:text-6xl'
+            }`}
             style={{
               background: 'linear-gradient(135deg, #e879f9 0%, #a855f7 30%, #6366f1 70%, #c4b5fd 100%)',
               WebkitBackgroundClip: 'text',
@@ -365,48 +371,91 @@ export const WizCreatePage = () => {
           >
             Create on WIZ
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className={`text-gray-600 max-w-3xl mx-auto ${
+            isMobile ? 'text-lg px-2' : 'text-xl'
+          }`}>
             Connect your channel, select videos, and share them with the WIZ community.
           </p>
         </motion.div>
 
         {/* Step Progress Indicator */}
         <motion.div 
-          className="flex justify-center items-center space-x-8 mb-16"
+          className={`flex justify-center items-center mb-8 ${
+            isMobile ? 'mb-6 px-4' : 'space-x-8 mb-16'
+          }`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          {stepTitles.map((step, index) => (
-            <div key={step.number} className="flex items-center">
-              <div className="flex flex-col items-center space-y-2">
-                <motion.div
-                  className={`w-16 h-16 rounded-full border-2 flex items-center justify-center font-bold transition-all duration-300 ${
-                    currentStep >= step.number
-                      ? 'bg-gradient-to-r from-wiz-primary to-wiz-secondary text-white border-wiz-primary'
-                      : currentStep === step.number
-                      ? 'border-wiz-primary text-wiz-primary bg-white'
-                      : 'border-gray-300 text-gray-400 bg-gray-50'
-                  }`}
-                  animate={{
-                    scale: currentStep === step.number ? 1.1 : 1,
-                    boxShadow: currentStep === step.number ? '0 0 20px rgba(168, 85, 247, 0.4)' : '0 0 0px rgba(0,0,0,0)'
-                  }}
-                >
-                  {currentStep > step.number ? <Check className="w-6 h-6" /> : step.number}
-                </motion.div>
-                <div className="text-center">
-                  <div className="text-lg font-semibold text-gray-900">{step.title}</div>
-                  <div className="text-sm text-gray-500">{step.subtitle}</div>
-                </div>
+          {isMobile ? (
+            // Mobile: Horizontal scrollable stepper
+            <div className="w-full overflow-x-auto scrollbar-hide">
+              <div className="flex items-center space-x-4 min-w-max px-2 py-4">
+                {stepTitles.map((step, index) => (
+                  <div key={step.number} className="flex items-center flex-shrink-0">
+                    <div className="flex items-center space-x-3">
+                      <motion.div
+                        className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-bold text-sm transition-all duration-300 ${
+                          currentStep >= step.number
+                            ? 'bg-gradient-to-r from-wiz-primary to-wiz-secondary text-white border-wiz-primary'
+                            : currentStep === step.number
+                            ? 'border-wiz-primary text-wiz-primary bg-white'
+                            : 'border-gray-300 text-gray-400 bg-gray-50'
+                        }`}
+                        animate={{
+                          scale: currentStep === step.number ? 1.1 : 1,
+                          boxShadow: currentStep === step.number ? '0 0 15px rgba(168, 85, 247, 0.4)' : '0 0 0px rgba(0,0,0,0)'
+                        }}
+                      >
+                        {currentStep > step.number ? <Check className="w-4 h-4" /> : step.number}
+                      </motion.div>
+                      <div className="text-left">
+                        <div className="text-sm font-semibold text-gray-900">{step.title}</div>
+                        <div className="text-xs text-gray-500">{step.subtitle}</div>
+                      </div>
+                    </div>
+                    {index < stepTitles.length - 1 && (
+                      <div className={`w-8 h-0.5 mx-3 transition-all duration-300 ${
+                        currentStep > step.number ? 'bg-wiz-primary' : 'bg-gray-300'
+                      }`} />
+                    )}
+                  </div>
+                ))}
               </div>
-              {index < stepTitles.length - 1 && (
-                <div className={`w-24 h-0.5 mx-4 transition-all duration-300 ${
-                  currentStep > step.number ? 'bg-wiz-primary' : 'bg-gray-300'
-                }`} />
-              )}
             </div>
-          ))}
+          ) : (
+            // Desktop: Original vertical layout
+            stepTitles.map((step, index) => (
+              <div key={step.number} className="flex items-center">
+                <div className="flex flex-col items-center space-y-2">
+                  <motion.div
+                    className={`w-16 h-16 rounded-full border-2 flex items-center justify-center font-bold transition-all duration-300 ${
+                      currentStep >= step.number
+                        ? 'bg-gradient-to-r from-wiz-primary to-wiz-secondary text-white border-wiz-primary'
+                        : currentStep === step.number
+                        ? 'border-wiz-primary text-wiz-primary bg-white'
+                        : 'border-gray-300 text-gray-400 bg-gray-50'
+                    }`}
+                    animate={{
+                      scale: currentStep === step.number ? 1.1 : 1,
+                      boxShadow: currentStep === step.number ? '0 0 20px rgba(168, 85, 247, 0.4)' : '0 0 0px rgba(0,0,0,0)'
+                    }}
+                  >
+                    {currentStep > step.number ? <Check className="w-6 h-6" /> : step.number}
+                  </motion.div>
+                  <div className="text-center">
+                    <div className="text-lg font-semibold text-gray-900">{step.title}</div>
+                    <div className="text-sm text-gray-500">{step.subtitle}</div>
+                  </div>
+                </div>
+                {index < stepTitles.length - 1 && (
+                  <div className={`w-24 h-0.5 mx-4 transition-all duration-300 ${
+                    currentStep > step.number ? 'bg-wiz-primary' : 'bg-gray-300'
+                  }`} />
+                )}
+              </div>
+            ))
+          )}
         </motion.div>
 
         {/* Step Content */}
@@ -418,16 +467,20 @@ export const WizCreatePage = () => {
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -50 }}
-              className="max-w-2xl mx-auto"
+              className={`max-w-2xl mx-auto ${
+                isMobile ? 'flex items-center justify-center min-h-[60vh] px-4' : ''
+              }`}
             >
-              <Card className="overflow-hidden border-0 shadow-2xl">
+              <Card className="overflow-hidden border-0 shadow-2xl w-full">
                 <CardContent 
-                  className="p-12 text-center space-y-8"
+                  className={`text-center space-y-8 ${
+                    isMobile ? 'p-6' : 'p-12'
+                  }`}
                   style={{
                     background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
                     backdropFilter: 'blur(20px)',
                     border: '1px solid rgba(255, 255, 255, 0.3)',
-                    borderRadius: '24px'
+                    borderRadius: isMobile ? '20px' : '24px'
                   }}
                 >
                   <div className="relative">
@@ -442,7 +495,9 @@ export const WizCreatePage = () => {
                         ease: "easeInOut" 
                       }}
                     >
-                      <Youtube className="w-32 h-32 mx-auto text-red-500" />
+                      <Youtube className={`mx-auto text-red-500 ${
+                        isMobile ? 'w-24 h-24' : 'w-32 h-32'
+                      }`} />
                     </motion.div>
                     <motion.div
                       className="absolute -top-4 -right-4 w-8 h-8 bg-wiz-primary rounded-full flex items-center justify-center"
@@ -461,8 +516,12 @@ export const WizCreatePage = () => {
                   </div>
 
                   <div className="space-y-4">
-                    <h2 className="text-3xl font-bold">Connect your YouTube channel to start creating on WIZ.</h2>
-                    <p className="text-gray-600 text-lg leading-relaxed">
+                    <h2 className={`font-bold ${
+                      isMobile ? 'text-2xl' : 'text-3xl'
+                    }`}>Connect your YouTube channel to start creating on WIZ.</h2>
+                    <p className={`text-gray-600 leading-relaxed ${
+                      isMobile ? 'text-base' : 'text-lg'
+                    }`}>
                       We'll securely connect to your YouTube channel using Google's authentication. Your credentials are never stored by WIZ.
                     </p>
                     {!import.meta.env.VITE_YOUTUBE_CLIENT_ID && (
@@ -477,10 +536,14 @@ export const WizCreatePage = () => {
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                     <Button
                       size="lg"
-                      className="h-20 px-16 text-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300"
+                      className={`font-bold shadow-lg hover:shadow-xl transition-all duration-300 ${
+                        isMobile 
+                          ? 'w-full h-16 px-8 text-lg' 
+                          : 'h-20 px-16 text-xl'
+                      }`}
                       style={{
                         background: 'linear-gradient(135deg, #FF0000 0%, #8B5CF6 100%)',
-                        borderRadius: '20px',
+                        borderRadius: isMobile ? '16px' : '20px',
                         boxShadow: '0 8px 32px rgba(255, 0, 0, 0.3)'
                       }}
                       onClick={handleConnectYouTube}
@@ -549,7 +612,11 @@ export const WizCreatePage = () => {
                   <p className="text-gray-600 text-lg">Loading your videos...</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className={`grid gap-6 ${
+                  isMobile 
+                    ? 'grid-cols-1' 
+                    : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+                }`}>
                   {videos.map((video, index) => {
                     const isSelected = selectedVideos.some(v => v.id === video.id);
                     
@@ -575,7 +642,9 @@ export const WizCreatePage = () => {
                               <img 
                                 src={video.thumbnail} 
                                 alt={video.title}
-                                className="w-full h-48 object-cover"
+                                className={`w-full object-cover ${
+                                  isMobile ? 'h-44' : 'h-48'
+                                }`}
                               />
                               
                               {/* Selection Overlay */}
@@ -627,7 +696,11 @@ export const WizCreatePage = () => {
               <div className="text-center">
                 <Button
                   size="lg"
-                  className="px-12 py-3 font-bold bg-gradient-to-r from-wiz-primary to-wiz-secondary text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                  className={`font-bold bg-gradient-to-r from-wiz-primary to-wiz-secondary text-white shadow-lg hover:shadow-xl transition-all duration-300 ${
+                    isMobile 
+                      ? 'w-full px-8 py-3 text-base' 
+                      : 'px-12 py-3'
+                  }`}
                   onClick={proceedToCategorize}
                   disabled={selectedVideos.length === 0}
                 >
@@ -705,7 +778,11 @@ export const WizCreatePage = () => {
                 </p>
                 <Button
                   size="lg"
-                  className="px-16 py-4 text-xl font-bold bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                  className={`font-bold bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 ${
+                    isMobile 
+                      ? 'w-full px-8 py-4 text-lg' 
+                      : 'px-16 py-4 text-xl'
+                  }`}
                   onClick={publishToWiz}
                   disabled={isPublishing}
                 >
@@ -740,13 +817,17 @@ export const WizCreatePage = () => {
                 transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
                 className="relative"
               >
-                <div className="w-40 h-40 mx-auto relative">
+                <div className={`mx-auto relative ${
+                  isMobile ? 'w-32 h-32' : 'w-40 h-40'
+                }`}>
                   <motion.div
                     className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center"
                     animate={{ rotate: 360 }}
                     transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                   >
-                    <Trophy className="w-20 h-20 text-white" />
+                    <Trophy className={`text-white ${
+                      isMobile ? 'w-16 h-16' : 'w-20 h-20'
+                    }`} />
                   </motion.div>
                   
                   {/* Sparkles */}
@@ -780,10 +861,14 @@ export const WizCreatePage = () => {
                 transition={{ delay: 0.4 }}
                 className="space-y-6"
               >
-                <h1 className="text-5xl font-bold">
+                <h1 className={`font-bold ${
+                  isMobile ? 'text-3xl' : 'text-5xl'
+                }`}>
                   🎉 You're Live on WIZ!
                 </h1>
-                <p className="text-2xl text-gray-600 max-w-3xl mx-auto">
+                <p className={`text-gray-600 max-w-3xl mx-auto ${
+                  isMobile ? 'text-lg px-4' : 'text-2xl'
+                }`}>
                   Your videos are now featured in Discover. Viewers can watch and earn XP immediately.
                 </p>
               </motion.div>
@@ -793,21 +878,35 @@ export const WizCreatePage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
-                className="grid grid-cols-3 gap-8 max-w-lg mx-auto"
+                className={`grid grid-cols-3 max-w-lg mx-auto ${
+                  isMobile ? 'gap-4 px-4' : 'gap-8'
+                }`}
               >
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-wiz-primary">{selectedVideos.length}</div>
-                  <div className="text-gray-600">Videos Live</div>
+                  <div className={`font-bold text-wiz-primary ${
+                    isMobile ? 'text-3xl' : 'text-4xl'
+                  }`}>{selectedVideos.length}</div>
+                  <div className={`text-gray-600 ${
+                    isMobile ? 'text-sm' : 'text-base'
+                  }`}>Videos Live</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-wiz-primary">
+                  <div className={`font-bold text-wiz-primary ${
+                    isMobile ? 'text-3xl' : 'text-4xl'
+                  }`}>
                     {new Set(selectedVideos.map(v => v.category)).size}
                   </div>
-                  <div className="text-gray-600">Categories</div>
+                  <div className={`text-gray-600 ${
+                    isMobile ? 'text-sm' : 'text-base'
+                  }`}>Categories</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-wiz-primary">∞</div>
-                  <div className="text-gray-600">Potential XP</div>
+                  <div className={`font-bold text-wiz-primary ${
+                    isMobile ? 'text-3xl' : 'text-4xl'
+                  }`}>∞</div>
+                  <div className={`text-gray-600 ${
+                    isMobile ? 'text-sm' : 'text-base'
+                  }`}>Potential XP</div>
                 </div>
               </motion.div>
 
@@ -816,11 +915,15 @@ export const WizCreatePage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8 }}
-                className="flex flex-col sm:flex-row gap-4 justify-center"
+                className={`flex gap-4 justify-center ${
+                  isMobile ? 'flex-col px-4' : 'flex-col sm:flex-row'
+                }`}
               >
                 <Button
                   size="lg"
-                  className="px-8 py-3 font-bold bg-gradient-to-r from-wiz-primary to-wiz-secondary text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                  className={`font-bold bg-gradient-to-r from-wiz-primary to-wiz-secondary text-white shadow-lg hover:shadow-xl transition-all duration-300 ${
+                    isMobile ? 'w-full px-8 py-3' : 'px-8 py-3'
+                  }`}
                   onClick={() => {
                     // Navigate to creator profile to view published videos
                     if (channelInfo) {
@@ -839,7 +942,9 @@ export const WizCreatePage = () => {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="px-8 py-3 font-bold border-2 border-wiz-primary text-wiz-primary hover:bg-wiz-primary hover:text-white transition-all duration-300"
+                  className={`font-bold border-2 border-wiz-primary text-wiz-primary hover:bg-wiz-primary hover:text-white transition-all duration-300 ${
+                    isMobile ? 'w-full px-8 py-3' : 'px-8 py-3'
+                  }`}
                   onClick={() => {
                     // Navigate to Discover page to see published videos
                     window.location.hash = 'discover';

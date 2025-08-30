@@ -13,9 +13,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { useXp } from '@/context/XpContext';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 export const WizUserProfile = () => {
   const { user, signOut, signInWithGoogle, loading } = useAuth();
+  const isMobile = useIsMobile();
   const { 
     xp, 
     totalXp, 
@@ -207,13 +210,20 @@ export const WizUserProfile = () => {
       </DropdownMenuTrigger>
       
       <DropdownMenuContent 
-        className="w-96 p-0 border-0 shadow-2xl"
+        className={cn(
+          "p-0 border-0 shadow-2xl",
+          isMobile ? "w-80 max-h-[80vh] overflow-y-auto" : "w-96"
+        )}
         align="end"
         style={{
           background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%)',
           backdropFilter: 'blur(20px)',
           border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: '16px'
+          borderRadius: '16px',
+          ...(isMobile && {
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(139, 92, 246, 0.5) transparent'
+          })
         }}
       >
         <div className="p-6 space-y-6">

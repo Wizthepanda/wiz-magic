@@ -22,6 +22,39 @@ interface WizMobileFiltersProps {
   className?: string;
 }
 
+// Map category IDs to Tailwind gradient classes for desktop consistency
+const getCategoryGradient = (categoryId: string, isActive: boolean) => {
+  const gradientMap = {
+    'all': isActive ? 'bg-gradient-to-r from-purple-500 to-violet-600' : 'bg-white hover:bg-gray-50',
+    'ai': isActive ? 'bg-gradient-to-r from-red-500 to-rose-600' : 'bg-white hover:bg-gray-50',
+    'tech': isActive ? 'bg-gradient-to-r from-orange-500 to-amber-600' : 'bg-white hover:bg-gray-50',
+    'music': isActive ? 'bg-gradient-to-r from-pink-500 to-rose-600' : 'bg-white hover:bg-gray-50',
+    'money': isActive ? 'bg-gradient-to-r from-emerald-500 to-green-600' : 'bg-white hover:bg-gray-50',
+    'health': isActive ? 'bg-gradient-to-r from-rose-500 to-pink-600' : 'bg-white hover:bg-gray-50',
+    'gaming': isActive ? 'bg-gradient-to-r from-purple-500 to-violet-600' : 'bg-white hover:bg-gray-50',
+    'movies': isActive ? 'bg-gradient-to-r from-indigo-500 to-blue-600' : 'bg-white hover:bg-gray-50',
+    'news': isActive ? 'bg-gradient-to-r from-cyan-500 to-blue-600' : 'bg-white hover:bg-gray-50',
+    'podcast': isActive ? 'bg-gradient-to-r from-teal-500 to-cyan-600' : 'bg-white hover:bg-gray-50',
+  };
+  return gradientMap[categoryId] || (isActive ? 'bg-gradient-to-r from-purple-500 to-violet-600' : 'bg-white hover:bg-gray-50');
+};
+
+// Map dot colors to actual color values for inline styles
+const getDotColor = (dotColorClass: string): string => {
+  const colorMap = {
+    'bg-blue-400': '#60a5fa',
+    'bg-red-400': '#f87171',
+    'bg-orange-400': '#fb923c',
+    'bg-pink-400': '#f472b6',
+    'bg-green-400': '#4ade80',
+    'bg-purple-400': '#c084fc',
+    'bg-indigo-400': '#818cf8',
+    'bg-cyan-400': '#22d3ee',
+    'bg-teal-400': '#2dd4bf',
+  };
+  return colorMap[dotColorClass] || '#60a5fa';
+};
+
 export const WizMobileFilters = ({ 
   activeFilter = 'all', 
   onFilterChange,
@@ -73,18 +106,18 @@ export const WizMobileFilters = ({
     <div className={cn("relative", className)}>
       {/* Left gradient fade */}
       {canScrollLeft && (
-        <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+        <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none max-md:block" />
       )}
       
       {/* Right gradient fade */}
       {canScrollRight && (
-        <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none max-md:block" />
       )}
       
-      {/* Scrollable filter container */}
+      {/* Scrollable filter container - Enhanced mobile pill design */}
       <div
         ref={scrollContainerRef}
-        className="flex space-x-3 overflow-x-auto scrollbar-hide py-2 px-1"
+        className="flex gap-3 overflow-x-auto scrollbar-hide py-3 px-1 snap-x snap-mandatory max-md:gap-3"
         style={{
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
@@ -101,79 +134,55 @@ export const WizMobileFilters = ({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className="flex-shrink-0"
+              className="flex-shrink-0 snap-center"
             >
               <button
                 onClick={() => onFilterChange?.(category.id)}
                 className={cn(
-                  "relative px-4 py-2 rounded-full transition-all duration-200",
-                  "text-sm font-medium whitespace-nowrap",
-                  "border border-transparent",
+                  // Base styling - elegant pill shape with Tailwind
+                  "flex items-center gap-2 rounded-full px-4 py-2 font-semibold shadow-sm transition-all duration-200 whitespace-nowrap",
+                  // Mobile-specific enhanced styling
+                  "max-md:px-5 max-md:py-2.5 max-md:shadow-md",
+                  // Gradient backgrounds and text colors
+                  getCategoryGradient(category.id, isActive),
                   isActive
-                    ? "text-white shadow-lg transform scale-105"
-                    : "text-gray-400 hover:text-white hover:scale-102"
+                    ? "text-white transform scale-105 shadow-lg"
+                    : "text-gray-700 border border-gray-200 hover:scale-102 hover:shadow-md"
                 )}
-                style={{
-                  background: isActive 
-                    ? 'linear-gradient(135deg, rgba(147, 51, 234, 0.8) 0%, rgba(219, 39, 119, 0.8) 50%, rgba(59, 130, 246, 0.8) 100%)'
-                    : 'rgba(255, 255, 255, 0.05)',
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: isActive 
-                    ? '0 0 20px rgba(147, 51, 234, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3)'
-                    : '0 2px 8px rgba(0, 0, 0, 0.1)',
-                  border: isActive 
-                    ? '1px solid rgba(147, 51, 234, 0.5)'
-                    : '1px solid rgba(255, 255, 255, 0.1)'
-                }}
               >
-                <div className="flex items-center space-x-2">
-                  {/* Category dot indicator */}
-                  <div 
-                    className={cn(
-                      "w-2 h-2 rounded-full transition-all duration-200",
-                      isActive ? "scale-125" : "scale-100"
-                    )}
-                    style={{
-                      background: isActive 
-                        ? 'rgba(255, 255, 255, 0.8)'
-                        : category.dotColor.replace('bg-', '#')
-                    }}
-                  />
-                  <span>{category.label}</span>
-                </div>
-                
-                {/* Active glow effect */}
-                {isActive && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="absolute inset-0 rounded-full"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%)',
-                      pointerEvents: 'none'
-                    }}
-                  />
-                )}
+                {/* Unique dot color indicator */}
+                <span 
+                  className="h-2 w-2 rounded-full flex-shrink-0" 
+                  style={{ 
+                    backgroundColor: isActive ? 'rgba(255, 255, 255, 0.9)' : getDotColor(category.dotColor)
+                  }} 
+                />
+                <span className="font-semibold text-sm max-md:text-sm">
+                  {category.label}
+                </span>
               </button>
             </motion.div>
           );
         })}
       </div>
 
-      {/* Filter count indicator */}
-      <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2">
+      {/* Subtle scroll indicators for mobile */}
+      <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 max-md:block hidden">
         <div className="flex space-x-1">
-          {categories.map((_, index) => (
-            <div
-              key={index}
-              className={cn(
-                "w-1 h-1 rounded-full transition-all duration-200",
-                Math.floor(index / 3) === Math.floor(categories.findIndex(c => c.id === activeFilter) / 3)
-                  ? "bg-purple-400 scale-125"
-                  : "bg-gray-600 scale-100"
-              )}
-            />
-          ))}
+          {Array.from({ length: Math.ceil(categories.length / 4) }).map((_, index) => {
+            const isActive = Math.floor(categories.findIndex(c => c.id === activeFilter) / 4) === index;
+            return (
+              <div
+                key={index}
+                className={cn(
+                  "w-1.5 h-1.5 rounded-full transition-all duration-200",
+                  isActive
+                    ? "bg-purple-400 scale-110"
+                    : "bg-gray-300 scale-100"
+                )}
+              />
+            );
+          })}
         </div>
       </div>
     </div>

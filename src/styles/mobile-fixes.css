@@ -1,0 +1,122 @@
+/* Mobile-specific fixes for wizxp.com */
+/* All styles wrapped in @media (max-width: 768px) to target mobile only */
+
+@media screen and (max-width: 768px) {
+  /* Hamburger Menu Styles - Mobile Only */
+  .mobile-hamburger-btn {
+    /* Ensure hamburger button is isolated from profile handlers */
+    z-index: 40;
+    position: relative;
+  }
+
+  #mobile-hamburger {
+    /* Unique styling for mobile hamburger */
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(10px) !important;
+  }
+
+  #mobile-hamburger:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+    transform: scale(1.02) !important;
+  }
+
+  .mobile-side-panel {
+    /* Side panel specific mobile styling */
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  /* Filter Bubbles - Match Desktop Styling on Mobile */
+  .mobile-filter-bubble {
+    /* Force desktop-like styling on mobile */
+    min-height: 32px !important;
+    padding: 0 8px 0 8px !important;
+    font-weight: 500 !important;
+    border-radius: 9999px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    transition: all 0.2s ease !important;
+  }
+
+  .mobile-filter-bubble:hover {
+    background: rgba(255, 255, 255, 0.9) !important;
+    transform: translateY(-1px) !important;
+  }
+
+  .mobile-filter-bubble.active {
+    font-weight: 600 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  /* Filter bubbles container - horizontal scroll */
+  .mobile-filters-container {
+    display: flex !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    padding: 8px 0 !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  .mobile-filters-container::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* Ensure filter bubbles don't wrap */
+  .mobile-filters-container .mobile-filter-bubble {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  /* Mobile-specific spacing and layout fixes */
+  .mobile-discover-section {
+    padding: 0 !important;
+  }
+
+  .mobile-discover-title {
+    color: #1f2937 !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    font-weight: 700 !important;
+  }
+
+  /* Prevent any desktop hamburger interference */
+  .desktop-hamburger {
+    display: none !important;
+  }
+
+  /* Mobile-specific z-index management */
+  #mobile-side-panel {
+    z-index: 60 !important;
+  }
+
+  .mobile-hamburger-btn {
+    z-index: 50 !important;
+  }
+
+  /* Touch-friendly targets */
+  .mobile-hamburger-btn,
+  .mobile-filter-bubble {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+
+  /* Backdrop blur for mobile menu */
+  .mobile-menu-backdrop {
+    backdrop-filter: blur(8px) !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+  }
+}
+
+/* Fallback for older browsers */
+@supports not (backdrop-filter: blur(10px)) {
+  @media screen and (max-width: 768px) {
+    #mobile-hamburger {
+      background: rgba(255, 255, 255, 0.8) !important;
+    }
+    
+    .mobile-side-panel {
+      background: rgba(255, 255, 255, 0.95) !important;
+    }
+  }
+}

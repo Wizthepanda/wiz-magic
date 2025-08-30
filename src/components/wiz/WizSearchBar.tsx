@@ -168,8 +168,12 @@ export const WizSearchBar = ({
               : 'inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 16px rgba(0, 0, 0, 0.1)'
           }}
         >
-          {/* Search Icon */}
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          {/* Search Icon - Enhanced for mobile */}
+          <Search className={cn(
+            "absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 transition-all duration-200",
+            isMobile ? "w-5 h-5" : "w-4 h-4",
+            isActive && "text-purple-400"
+          )} />
           
           {/* Input */}
           <input

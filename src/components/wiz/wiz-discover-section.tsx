@@ -594,11 +594,17 @@ export const WizDiscoverSection = () => {
       {/* Floating Particles Background */}
       <FloatingParticles />
       
-      <div className="max-w-7xl mx-auto p-3 sm:p-6 space-y-6 sm:space-y-8">
+      <div className={cn(
+        "max-w-7xl mx-auto space-y-6 sm:space-y-8",
+        isMobile ? "p-0" : "p-3 sm:p-6"
+      )}>
         {/* Section Title - Only show on mobile since desktop has it in header */}
         {isMobile && (
           <div className="px-2">
-            <h2 className="text-2xl font-bold text-white mb-4">Discover</h2>
+            <h2 className="text-2xl font-bold mb-4" style={{
+              color: '#1f2937',
+              textShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            }}>Discover</h2>
           </div>
         )}
 
@@ -689,210 +695,297 @@ export const WizDiscoverSection = () => {
                     : "flex-shrink-0 w-64 sm:w-80"
                 )}
               >
-                <Card className={cn(
-                  "overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-500",
-                  isMobile 
-                    ? "hover:scale-[1.01]" 
-                    : "h-80 sm:h-96 hover:scale-[1.02] hover:-translate-y-1"
-                )}
-                      style={{
-                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
-                        backdropFilter: 'blur(8px)',
-                        border: '1px solid rgba(255, 255, 255, 0.3)',
-                        borderRadius: '20px',
-                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)'
-                      }}>
-                  <CardContent className={cn(
-                    "p-0 h-full",
-                    isMobile ? "flex" : "flex flex-col"
-                  )}>
-                    {/* Thumbnail Section */}
-                    <div className={cn(
-                      "relative bg-gradient-to-br from-slate-200 to-slate-300 overflow-hidden",
-                      isMobile 
-                        ? "w-40 h-24 rounded-l-2xl flex-shrink-0" 
-                        : "h-48 rounded-t-2xl"
-                    )}>
+                {isMobile ? (
+                  /* YouTube-Style Mobile Card */
+                  <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white rounded-2xl">
+                    <CardContent className="p-0">
+                      {/* 16:9 Thumbnail Section */}
+                      <div className="relative aspect-video bg-gradient-to-br from-slate-200 to-slate-300 overflow-hidden rounded-t-2xl">
                       
-                      {/* Category Badge - Top Left */}
-                      <div className="absolute top-3 left-3 z-20">
-                        {video.isNew ? (
-                          <Badge className="px-3 py-1 text-xs font-bold text-white uppercase tracking-wide"
-                                 style={{
-                                   background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
-                                   borderRadius: '12px',
-                                   boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
-                                 }}>
-                            NEW
+                        {/* Category Badge - Top Left Small Pill */}
+                        <div className="absolute top-2 left-2 z-20">
+                          <Badge 
+                            className="px-2 py-0.5 text-xs font-semibold text-white"
+                            style={{
+                              background: video.isNew 
+                                ? 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)'
+                                : getCategoryGradient(video.category),
+                              borderRadius: '8px',
+                              fontSize: '10px'
+                            }}
+                          >
+                            {video.isNew ? 'NEW' : video.categoryLabel}
                           </Badge>
-                        ) : (
-                          <Badge className="px-3 py-1 text-xs font-bold text-white uppercase tracking-wide"
-                                 style={{
-                                   background: getCategoryGradient(video.category),
-                                   borderRadius: '12px',
-                                   boxShadow: getCategoryShadow(video.category)
-                                 }}>
-                            {video.categoryLabel}
-                          </Badge>
+                        </div>
+
+                        {/* Duration - Bottom Right Pill */}
+                        <div className="absolute bottom-2 right-2 z-20 px-2 py-0.5 bg-black/80 rounded-md text-xs text-white font-medium">
+                          {video.duration}
+                        </div>
+
+                        {/* Progress Bar */}
+                        {video.progress > 0 && (
+                          <div className="absolute bottom-0 left-0 right-0 z-20">
+                            <div className="w-full bg-white/30 h-1">
+                              <div 
+                                className="bg-gradient-to-r from-wiz-primary to-wiz-secondary h-1 transition-all duration-300"
+                                style={{ width: `${video.progress}%` }}
+                              />
+                            </div>
+                          </div>
                         )}
                       </div>
 
-                      {/* XP Badge - Top Right */}
-                      <div className="absolute top-3 right-3 z-20">
-                        <div className="flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-bold"
-                             style={{
-                               background: 'radial-gradient(circle, rgba(255, 215, 0, 0.9) 0%, rgba(255, 165, 0, 0.8) 100%)',
-                               color: '#1F2937',
-                               boxShadow: '0 2px 8px rgba(255, 215, 0, 0.3)'
-                             }}>
-                          <Zap className="w-3 h-3" />
-                          <span>{video.xpReward}</span>
-                        </div>
-                      </div>
-
-                      {/* Duration - Bottom Right */}
-                      <div className="absolute bottom-3 right-3 z-20 px-2 py-1 bg-black/70 rounded-lg text-xs text-white font-semibold">
-                        {video.duration}
-                      </div>
-
-                      {/* Play Button Overlay */}
-                      <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                        <Button
-                          size="lg"
-                          onClick={() => handleWatchVideo(video.id)}
-                          className="h-16 w-16 rounded-full p-0 text-wiz-primary shadow-2xl hover:scale-110 transition-transform duration-300"
-                          style={{
-                            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%)',
-                            backdropFilter: 'blur(10px)'
-                          }}
-                        >
-                          <Play className="w-7 h-7 ml-0.5" fill="currentColor" />
-                        </Button>
-                      </div>
-
-                      {/* Gradient Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent z-10" />
-
-                      {/* Progress Bar */}
-                      {video.progress > 0 && (
-                        <div className="absolute bottom-0 left-0 right-0 z-20">
-                          <div className="w-full bg-white/30 h-1">
-                            <div 
-                              className="bg-gradient-to-r from-wiz-primary to-wiz-secondary h-1 transition-all duration-300"
-                              style={{ width: `${video.progress}%` }}
-                            />
+                      {/* Content Section - YouTube Style */}
+                      <div className="p-4">
+                        <div className="flex items-start justify-between">
+                          {/* Left: Video Info */}
+                          <div className="flex-1 pr-4">
+                            {/* Title - Bold and larger */}
+                            <h4 className="font-bold text-base text-gray-900 line-clamp-2 leading-snug mb-2">
+                              {video.title}
+                            </h4>
+                            
+                            {/* Creator & Views - Muted text below */}
+                            <div className="space-y-1">
+                              <p className="text-sm text-gray-600 font-medium">
+                                {video.creator}
+                              </p>
+                              <div className="flex items-center text-xs text-gray-500 space-x-2">
+                                <div className="flex items-center space-x-1">
+                                  <Eye className="w-3 h-3" />
+                                  <span>{video.views}</span>
+                                </div>
+                                {video.xpReward && (
+                                  <>
+                                    <span>•</span>
+                                    <div className="flex items-center space-x-1">
+                                      <Zap className="w-3 h-3 text-yellow-500" />
+                                      <span>{video.xpReward} XP</span>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
 
-                    {/* Content Section */}
-                    <div className={cn(
-                      "flex-1 flex flex-col",
-                      isMobile ? "p-3 justify-between" : "p-5"
-                    )}>
-                      {/* Title */}
-                      <h4 className={cn(
-                        "font-bold text-gray-800 group-hover:text-wiz-primary transition-colors leading-tight",
-                        isMobile ? "text-sm line-clamp-2 mb-1" : "text-lg line-clamp-2 mb-3"
-                      )}>
-                        {video.title}
-                      </h4>
-                      
-                      {/* Creator & Views */}
-                      <div className={cn(
-                        "flex items-center text-gray-600",
-                        isMobile ? "text-xs mb-2 space-x-2" : "justify-between text-sm mb-4"
-                      )}>
-                        <span className="font-medium">{video.creator}</span>
-                        <div className="flex items-center space-x-1">
-                          <Eye className={cn(isMobile ? "w-3 h-3" : "w-4 h-4")} />
-                          <span>{video.views}</span>
-                        </div>
-                      </div>
-                      
-                      {/* Action Buttons */}
-                      <div className={cn(
-                        "flex items-center mt-auto",
-                        isMobile ? "justify-end" : "space-x-3"
-                      )}>
-                        {isMobile ? (
-                          <Button 
-                            size="sm"
-                            className={`font-semibold text-white shadow-md hover:shadow-lg transition-all duration-300 ${
-                              video.watched 
-                                ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700' 
-                                : 'bg-gradient-to-r from-wiz-primary to-wiz-secondary hover:from-wiz-secondary hover:to-wiz-primary'
-                            }`}
-                            onClick={() => handleWatchVideo(video.id)}
-                            style={{ borderRadius: '8px' }}
-                          >
-                            <Play className="w-3 h-3 mr-1" />
-                            {video.watched ? 'Watched' : 'Watch'}
-                          </Button>
-                        ) : (
-                          <>
+                          {/* Right: Floating Watch CTA */}
+                          <div className="flex-shrink-0">
                             <Button 
-                              className={`flex-1 font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 ${
+                              size="sm"
+                              className={`font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-full px-4 py-2 ${
                                 video.watched 
                                   ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700' 
                                   : 'bg-gradient-to-r from-wiz-primary to-wiz-secondary hover:from-wiz-secondary hover:to-wiz-primary'
                               }`}
                               onClick={() => handleWatchVideo(video.id)}
-                              style={{ borderRadius: '12px' }}
                             >
-                              <Play className="w-4 h-4 mr-2" />
-                              {video.watched ? 'Watched' : 'Watch'}
+                              {video.watched ? (
+                                <div className="flex items-center space-x-1">
+                                  <CheckCircle className="w-3 h-3" />
+                                  <span className="text-xs">Watched</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center space-x-1">
+                                  <Play className="w-3 h-3" fill="currentColor" />
+                                  <span className="text-xs">Watch</span>
+                                </div>
+                              )}
                             </Button>
-                            
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="p-2 hover:bg-pink-50 hover:text-pink-500 hover:border-pink-300 transition-all duration-300"
-                              style={{ borderRadius: '10px' }}
-                            >
-                              <Heart className="w-4 h-4" />
-                            </Button>
-                            
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="p-2 hover:bg-blue-50 hover:text-blue-500 hover:border-blue-300 transition-all duration-300"
-                              style={{ borderRadius: '10px' }}
-                            >
-                              <Share2 className="w-4 h-4" />
-                            </Button>
-                          </>
+                          </div>
+                        </div>
+
+                        {/* XP Earned Display */}
+                        {video.watched && (
+                          <div className="mt-3 text-sm font-semibold"
+                               style={{
+                                 background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
+                                 WebkitBackgroundClip: 'text',
+                                 WebkitTextFillColor: 'transparent',
+                                 backgroundClip: 'text'
+                               }}>
+                            XP Earned: +{video.xpReward} XP
+                          </div>
                         )}
                       </div>
-                      
-                      {/* XP Earned Display */}
-                      {video.watched && (
-                        <div className="mt-3 text-sm font-semibold text-wiz-primary">
-                          XP Earned: +{video.xpReward} XP
+                    </CardContent>
+                  </Card>
+                ) : (
+                  /* Desktop Card Layout */
+                  <Card className="h-80 sm:h-96 overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
+                          backdropFilter: 'blur(8px)',
+                          border: '1px solid rgba(255, 255, 255, 0.3)',
+                          borderRadius: '20px',
+                          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)'
+                        }}>
+                    <CardContent className="p-0 h-full flex flex-col">
+                      {/* Thumbnail Section */}
+                      <div className="relative h-48 bg-gradient-to-br from-slate-200 to-slate-300 overflow-hidden rounded-t-2xl">
+                        
+                        {/* Category Badge - Top Left */}
+                        <div className="absolute top-3 left-3 z-20">
+                          {video.isNew ? (
+                            <Badge className="px-3 py-1 text-xs font-bold text-white uppercase tracking-wide"
+                                   style={{
+                                     background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
+                                     borderRadius: '12px',
+                                     boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
+                                   }}>
+                              NEW
+                            </Badge>
+                          ) : (
+                            <Badge className="px-3 py-1 text-xs font-bold text-white uppercase tracking-wide"
+                                   style={{
+                                     background: getCategoryGradient(video.category),
+                                     borderRadius: '12px',
+                                     boxShadow: getCategoryShadow(video.category)
+                                   }}>
+                              {video.categoryLabel}
+                            </Badge>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+
+                        {/* XP Badge - Top Right */}
+                        <div className="absolute top-3 right-3 z-20">
+                          <div className="flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-bold"
+                               style={{
+                                 background: 'radial-gradient(circle, rgba(255, 215, 0, 0.9) 0%, rgba(255, 165, 0, 0.8) 100%)',
+                                 color: '#1F2937',
+                                 boxShadow: '0 2px 8px rgba(255, 215, 0, 0.3)'
+                               }}>
+                            <Zap className="w-3 h-3" />
+                            <span>{video.xpReward}</span>
+                          </div>
+                        </div>
+
+                        {/* Duration - Bottom Right */}
+                        <div className="absolute bottom-3 right-3 z-20 px-2 py-1 bg-black/70 rounded-lg text-xs text-white font-semibold">
+                          {video.duration}
+                        </div>
+
+                        {/* Play Button Overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                          <Button
+                            size="lg"
+                            onClick={() => handleWatchVideo(video.id)}
+                            className="h-16 w-16 rounded-full p-0 text-wiz-primary shadow-2xl hover:scale-110 transition-transform duration-300"
+                            style={{
+                              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%)',
+                              backdropFilter: 'blur(10px)'
+                            }}
+                          >
+                            <Play className="w-7 h-7 ml-0.5" fill="currentColor" />
+                          </Button>
+                        </div>
+
+                        {/* Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent z-10" />
+
+                        {/* Progress Bar */}
+                        {video.progress > 0 && (
+                          <div className="absolute bottom-0 left-0 right-0 z-20">
+                            <div className="w-full bg-white/30 h-1">
+                              <div 
+                                className="bg-gradient-to-r from-wiz-primary to-wiz-secondary h-1 transition-all duration-300"
+                                style={{ width: `${video.progress}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Content Section */}
+                      <div className="flex-1 p-5 flex flex-col">
+                        {/* Title */}
+                        <h4 className="font-bold text-lg text-gray-800 line-clamp-2 mb-3 group-hover:text-wiz-primary transition-colors leading-tight">
+                          {video.title}
+                        </h4>
+                        
+                        {/* Creator & Views */}
+                        <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+                          <span className="font-medium">{video.creator}</span>
+                          <div className="flex items-center space-x-1">
+                            <Eye className="w-4 h-4" />
+                            <span>{video.views}</span>
+                          </div>
+                        </div>
+                        
+                        {/* Action Buttons */}
+                        <div className="flex items-center space-x-3 mt-auto">
+                          <Button 
+                            className={`flex-1 font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 ${
+                              video.watched 
+                                ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700' 
+                                : 'bg-gradient-to-r from-wiz-primary to-wiz-secondary hover:from-wiz-secondary hover:to-wiz-primary'
+                            }`}
+                            onClick={() => handleWatchVideo(video.id)}
+                            style={{ borderRadius: '12px' }}
+                          >
+                            <Play className="w-4 h-4 mr-2" />
+                            {video.watched ? 'Watched' : 'Watch'}
+                          </Button>
+                          
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="p-2 hover:bg-pink-50 hover:text-pink-500 hover:border-pink-300 transition-all duration-300"
+                            style={{ borderRadius: '10px' }}
+                          >
+                            <Heart className="w-4 h-4" />
+                          </Button>
+                          
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="p-2 hover:bg-blue-50 hover:text-blue-500 hover:border-blue-300 transition-all duration-300"
+                            style={{ borderRadius: '10px' }}
+                          >
+                            <Share2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        
+                        {/* XP Earned Display */}
+                        {video.watched && (
+                          <div className="mt-3 text-sm font-semibold"
+                               style={{
+                                 background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
+                                 WebkitBackgroundClip: 'text',
+                                 WebkitTextFillColor: 'transparent',
+                                 backgroundClip: 'text'
+                               }}>
+                            XP Earned: +{video.xpReward} XP
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
-          ))}
+            ))}
           </div>
         </div>
 
         {/* 🎬 Shorts Section */}
-        <WizShorts />
+        <div className={cn("mb-8", isMobile && "px-3")}>
+          <WizShorts />
+        </div>
 
         {/* 🔥 Enhanced Most Viewed Section */}
-        <EnhancedMostViewed />
+        <div className={cn("mb-8", isMobile && "px-3")}>
+          <EnhancedMostViewed />
+        </div>
 
         {/* WIZ Premiere — Elevated Abstract UI */}
-        <motion.div 
-          className="relative w-full mb-16 overflow-hidden"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.2, delay: 0.3 }}
-        >
+        <div className={cn("mb-8", isMobile && "px-3")}>
+          {/* Remove duplicate mobile title */}
+          <motion.div 
+            className="relative w-full overflow-hidden"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.2, delay: 0.3 }}
+          >
           {/* Abstract Backdrop */}
           <div
             className="relative rounded-3xl py-16 px-8"
@@ -1571,10 +1664,13 @@ export const WizDiscoverSection = () => {
               </motion.button>
             </motion.div>
           </div>
-        </motion.div>
+          </motion.div>
+        </div>
 
         {/* 🏆 Epic Premium Leaderboard */}
-        <div className="relative mb-20">
+        <div className={cn("mb-8", isMobile && "px-3")}>
+          {/* Remove duplicate mobile title */}
+          <div className="relative">
           <motion.div 
             className="relative"
             initial={{ opacity: 0, y: 40 }}
@@ -1593,6 +1689,7 @@ export const WizDiscoverSection = () => {
               </div>
             </div>
           </motion.div>
+          </div>
         </div>
 
       {/* Video Panel - Clean Dark Design */}
