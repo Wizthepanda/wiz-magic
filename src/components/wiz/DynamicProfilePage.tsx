@@ -53,14 +53,28 @@ export const DynamicProfilePage: React.FC<DynamicProfilePageProps> = ({ classNam
     userId: user.uid
   });
 
-  // Render appropriate profile based on user type
+  // 🔑 CONDITIONAL PROFILE SWITCHING LOGIC (SIDE PANEL ONLY)
+  // This component handles the PRIVATE profile switching in the side panel ONLY
+  // 
+  // SEPARATION RULES:
+  // 1. Side Panel Profile = Private (Viewer OR Creator dashboard depending on role)
+  // 2. Public Creator Profile Page = Separate component (unchanged by this logic)
+  // 3. NO DUPLICATION - Only ONE profile page exists in side panel at any time
+  //
+  // IF user.role == "creator" AND user.hasEnrolledOnCreatePage == true:
+  //     SidePanel.ProfilePage = CreatorDashboardProfile (PrivateCreatorDashboard)
+  // ELSE:
+  //     SidePanel.ProfilePage = ViewerPrivateProfile (PrivateViewerProfile)
+  
   if (isCreator) {
+    // Load Creator Private Dashboard Profile for enrolled creators
     return (
       <div className={className}>
         <PrivateCreatorDashboard />
       </div>
     );
   } else {
+    // Load Viewer Private Profile for wizards
     return (
       <div className={className}>
         <PrivateViewerProfile />

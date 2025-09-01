@@ -35,23 +35,29 @@ export const useUserType = (): UserTypeInfo => {
         if (userDoc.exists()) {
           const userData = userDoc.data();
           
-          // User is a creator if they have:
-          // 1. YouTube connection AND
-          // 2. Have created at least one piece of content (course, video, etc.)
-          const hasYouTubeAuth = userData.youtubeConnected || userData.youtubeProfile;
-          const hasContent = userData.hasCreatedContent || 
-                           userData.coursesCreated > 0 || 
-                           userData.videosUploaded > 0 ||
-                           userData.role === 'creator';
+          // 🔑 CONDITIONAL LOGIC FOR SIDE PANEL PROFILE SWITCHING
+          // IF user.role == "creator" AND user.hasEnrolledOnCreatePage == true:
+          //     SidePanel.ProfilePage = CreatorDashboardProfile
+          // ELSE:
+          //     SidePanel.ProfilePage = ViewerPrivateProfile
           
-          const isCreatorUser = hasYouTubeAuth && hasContent;
+          // User is a creator if they have:
+          // 1. YouTube Auth (YouTube connection) AND
+          // 2. Have enrolled via Create Page (content creation or explicit role)
+          const hasYouTubeAuth = userData.youtubeConnected || userData.youtubeProfile;
+          const hasEnrolledOnCreatePage = userData.hasCreatedContent || 
+                                        userData.coursesCreated > 0 || 
+                                        userData.videosUploaded > 0 ||
+                                        userData.role === 'creator';
+          
+          const isCreatorUser = hasYouTubeAuth && hasEnrolledOnCreatePage;
           
           setUserType(isCreatorUser ? 'creator' : 'viewer');
-          setHasCreatedContent(hasContent);
+          setHasCreatedContent(hasEnrolledOnCreatePage);
           
           console.log(`👤 User type detected: ${isCreatorUser ? 'CREATOR' : 'VIEWER'}`, {
             hasYouTubeAuth,
-            hasContent,
+            hasEnrolledOnCreatePage,
             userData: { 
               role: userData.role,
               coursesCreated: userData.coursesCreated,
