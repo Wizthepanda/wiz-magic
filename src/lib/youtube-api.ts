@@ -463,6 +463,168 @@ class YouTubeAPIService {
     }
   }
 
+  /**
+   * Get public channel information by channel ID (no authentication required)
+   */
+  async getPublicChannelInfo(channelId: string): Promise<YouTubeChannelInfo> {
+    if (!this.config.apiKey) {
+      throw new Error('YouTube API Key not configured. Please set VITE_YOUTUBE_API_KEY environment variable.');
+    }
+
+    try {
+      // Use the public API endpoint that doesn't require authentication
+      const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails,brandingSettings&id=${channelId}&key=${this.config.apiKey}`;
+      
+      const response = await fetch(url, {
+        // No Authorization header needed for public data
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('YouTube API Error:', errorText);
+        throw new Error(`Failed to fetch channel information: ${response.status} ${errorText}`);
+      }
+
+      const data = await response.json();
+      
+      if (!data.items || data.items.length === 0) {
+        throw new Error(`No YouTube channel found with ID: ${channelId}`);
+      }
+
+      const channel = data.items[0];
+      const snippet = channel.snippet;
+      const statistics = channel.statistics;
+      const brandingSettings = channel.brandingSettings;
+
+      return {
+        id: channel.id,
+        name: snippet.title,
+        avatar: snippet.thumbnails?.high?.url || snippet.thumbnails?.medium?.url || snippet.thumbnails?.default?.url || '',
+        subscriberCount: this.formatSubscriberCount(statistics.subscriberCount || '0'),
+        customUrl: snippet.customUrl,
+        description: snippet.description || '',
+        bannerImageUrl: brandingSettings?.image?.bannerExternalUrl || '',
+        publishedAt: snippet.publishedAt
+      };
+    } catch (error) {
+      console.error('Error fetching public channel info:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get public videos from a specific channel (no authentication required)
+   */
+  async getPublicChannelVideos(channelId: string, maxResults: number = 20): Promise<YouTubeVideo[]> {
+    if (!this.config.apiKey) {
+      throw new Error('YouTube API Key not configured. Please set VITE_YOUTUBE_API_KEY environment variable.');
+    }
+
+    try {
+      // First get the channel's upload playlist ID
+      const channelUrl = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channelId}&key=${this.config.apiKey}`;
+      
+      const channelResponse = await fetch(channelUrl, {
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!channelResponse.ok) {
+        throw new Error(`Failed to fetch channel details for ${channelId}`);
+      }
+
+      const channelData = await channelResponse.json();
+      
+      if (!channelData.items || channelData.items.length === 0) {
+        throw new Error(`Channel not found: ${channelId}`);
+      }
+
+      const uploadsPlaylistId = channelData.items[0]?.contentDetails?.relatedPlaylists?.uploads;
+
+      if (!uploadsPlaylistId) {
+        console.warn(`No uploads playlist found for channel ${channelId}`);
+        return [];
+      }
+
+      // Get videos from the uploads playlist
+      const videosUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadsPlaylistId}&maxResults=${maxResults}&key=${this.config.apiKey}`;
+      
+      const videosResponse = await fetch(videosUrl, {
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!videosResponse.ok) {
+        throw new Error(`Failed to fetch videos for channel ${channelId}`);
+      }
+
+      const videosData = await videosResponse.json();
+      const videoIds = videosData.items.map((item: any) => item.snippet.resourceId.videoId).join(',');
+
+      if (!videoIds) {
+        return [];
+      }
+
+      // Get detailed video information including statistics and content details
+      const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${videoIds}&key=${this.config.apiKey}`;
+      
+      const detailsResponse = await fetch(detailsUrl, {
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!detailsResponse.ok) {
+        throw new Error('Failed to fetch video details');
+      }
+
+      const detailsData = await detailsResponse.json();
+
+      // Get channel info for consistent data
+      const channelInfoUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${channelId}&key=${this.config.apiKey}`;
+      const channelInfoResponse = await fetch(channelInfoUrl, {
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      let channelInfo = { snippet: { title: 'Unknown Channel', thumbnails: {} } };
+      if (channelInfoResponse.ok) {
+        const channelInfoData = await channelInfoResponse.json();
+        if (channelInfoData.items && channelInfoData.items.length > 0) {
+          channelInfo = channelInfoData.items[0];
+        }
+      }
+
+      return detailsData.items.map((video: any) => ({
+        id: video.id,
+        title: video.snippet.title,
+        description: video.snippet.description || '',
+        thumbnail: video.snippet.thumbnails?.maxresdefault?.url || 
+                  video.snippet.thumbnails?.high?.url || 
+                  video.snippet.thumbnails?.medium?.url || 
+                  video.snippet.thumbnails?.default?.url || '',
+        duration: this.formatDuration(video.contentDetails?.duration),
+        publishedAt: this.formatDate(video.snippet.publishedAt),
+        views: this.formatViewCount(video.statistics.viewCount || '0'),
+        tags: video.snippet.tags || [],
+        channelTitle: channelInfo.snippet.title,
+        channelThumbnail: channelInfo.snippet.thumbnails?.high?.url || 
+                        channelInfo.snippet.thumbnails?.medium?.url || 
+                        channelInfo.snippet.thumbnails?.default?.url || '',
+        channelId: channelId
+      }));
+    } catch (error) {
+      console.error('Error fetching public channel videos:', error);
+      throw error;
+    }
+  }
+
   // Helper methods
   private formatSubscriberCount(count: string): string {
     const num = parseInt(count);

@@ -16,22 +16,9 @@ interface YouTubeCreatorProfileProps {
   className?: string;
 }
 
-// Helper functions to generate mock data based on channelId
+// Helper functions for fallback mock data (only used when API key is not configured)
 const getChannelNameFromId = (channelId: string): string => {
-  const names = [
-    'TechVision Pro',
-    'CodeGenius Academy', 
-    'WealthMaster Finance',
-    'BeatKing Studios',
-    'FitnessGuru Pro',
-    'CryptoExpert Hub',
-    'CreativeAI Studio',
-    'ReactMaster Dev',
-    'MindfulnessPro',
-    'StartupMentor'
-  ];
-  const hash = channelId.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-  return names[hash % names.length];
+  return `Creator ${channelId.slice(-8)}`;
 };
 
 const getChannelAvatarFromId = (channelId: string): string => {
@@ -46,15 +33,11 @@ const getChannelAvatarFromId = (channelId: string): string => {
 };
 
 const getMockSubscriberCount = (channelId: string): string => {
-  const counts = ['125K', '89.3K', '245K', '1.2M', '567K', '78.9K', '334K', '156K'];
-  const hash = channelId.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-  return counts[hash % counts.length];
+  return '???';
 };
 
 const getMockBannerFromId = (channelId: string): string | undefined => {
-  // Return undefined for some channels to test fallback gradient
-  const hash = channelId.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-  return hash % 3 === 0 ? undefined : `https://img.youtube.com/vi/2M4asXviuoo/maxresdefault.jpg`;
+  return undefined; // Always use gradient fallback for mock data
 };
 
 export const YouTubeCreatorProfile: React.FC<YouTubeCreatorProfileProps> = ({
@@ -85,59 +68,41 @@ export const YouTubeCreatorProfile: React.FC<YouTubeCreatorProfileProps> = ({
         setLoading(true);
         setError(null);
 
-        // For now, use mock data since we need to implement public YouTube API calls
-        // In production, you would make public API calls to get channel info by channelId
-        // without requiring user authentication
-        
-        // Mock channel data based on channelId
-        const mockChannelInfo: YouTubeChannelInfo = {
-          id: channelId,
-          name: getChannelNameFromId(channelId),
-          avatar: getChannelAvatarFromId(channelId),
-          subscriberCount: getMockSubscriberCount(channelId),
-          customUrl: `@${channelId.slice(-8)}`,
-          description: `Amazing content creator making educational videos. Channel ID: ${channelId}`,
-          bannerImageUrl: getMockBannerFromId(channelId),
-          publishedAt: '2020-01-01T00:00:00Z'
-        };
-        
-        setChannelInfo(mockChannelInfo);
+        console.log(`🔍 Loading channel data for ID: ${channelId}`);
 
-        // Mock videos data
-        const mockVideos: YouTubeVideo[] = [
-          {
-            id: 'video1',
-            title: 'Amazing Tutorial: Getting Started',
-            description: 'Learn the basics in this comprehensive tutorial',
-            thumbnail: 'https://img.youtube.com/vi/2M4asXviuoo/maxresdefault.jpg',
-            duration: '15:30',
-            publishedAt: '2 days ago',
-            views: '45.2K',
-            tags: ['tutorial', 'education'],
-            channelTitle: mockChannelInfo.name,
-            channelThumbnail: mockChannelInfo.avatar,
-            channelId: channelId
-          },
-          {
-            id: 'video2',
-            title: 'Advanced Tips and Tricks',
-            description: 'Take your skills to the next level with these pro tips',
-            thumbnail: 'https://img.youtube.com/vi/ScMzIvxBSi4/maxresdefault.jpg',
-            duration: '22:45',
-            publishedAt: '5 days ago',
-            views: '89.1K',
-            tags: ['advanced', 'tips'],
-            channelTitle: mockChannelInfo.name,
-            channelThumbnail: mockChannelInfo.avatar,
-            channelId: channelId
-          }
-        ];
-        
-        setVideos(mockVideos);
+        // Fetch real channel info using public YouTube API
+        const channelData = await youTubeAPI.getPublicChannelInfo(channelId);
+        console.log('✅ Channel data loaded:', channelData);
+        setChannelInfo(channelData);
+
+        // Fetch real videos from the channel
+        const channelVideos = await youTubeAPI.getPublicChannelVideos(channelId, 10);
+        console.log(`✅ Loaded ${channelVideos.length} videos for channel`);
+        setVideos(channelVideos);
         
       } catch (err) {
-        console.error('Error loading channel data:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load channel data');
+        console.error('❌ Error loading channel data:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load channel data';
+        
+        // Check if it's an API key issue
+        if (errorMessage.includes('API Key not configured')) {
+          setError('YouTube API not configured. Using fallback data.');
+          // Fall back to mock data
+          const fallbackChannelInfo: YouTubeChannelInfo = {
+            id: channelId,
+            name: getChannelNameFromId(channelId),
+            avatar: getChannelAvatarFromId(channelId),
+            subscriberCount: getMockSubscriberCount(channelId),
+            customUrl: `@${channelId.slice(-8)}`,
+            description: `Content creator with Channel ID: ${channelId}`,
+            bannerImageUrl: getMockBannerFromId(channelId),
+            publishedAt: '2020-01-01T00:00:00Z'
+          };
+          setChannelInfo(fallbackChannelInfo);
+          setVideos([]);
+        } else {
+          setError(errorMessage);
+        }
       } finally {
         setLoading(false);
       }
@@ -476,7 +441,7 @@ export const YouTubeCreatorProfile: React.FC<YouTubeCreatorProfileProps> = ({
                           {video.duration}
                         </div>
                         <div className="absolute top-2 left-2 px-2 py-1 bg-purple-600 text-white text-xs rounded font-semibold">
-                          +{Math.floor(parseInt(video.views.replace(/\D/g, '')) / 1000)} XP
+                          +{Math.floor(Math.random() * 50 + 10)} XP
                         </div>
                       </div>
                       <CardContent className="p-4">

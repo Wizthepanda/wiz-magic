@@ -6,7 +6,7 @@ import { WizDiscoverSection } from './wiz-discover-section';
 import { WizLeaderboard } from './wiz-leaderboard';
 import { WizPremierePage } from './wiz-premiere-page';
 import { WizLeaderboardPage } from './wiz-leaderboard-page';
-import { WizProfilePage } from './wiz-profile-page';
+import { DynamicProfilePage } from './DynamicProfilePage';
 import { WizCreatePage } from './WizCreatePage';
 import { WizLearnPage } from './wiz-learn-page';
 import { FloatingParticles } from '@/components/ui/floating-particles';
@@ -58,7 +58,7 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
       case 'premiere':
         return <WizPremierePage />;
       case 'profile':
-        return <WizProfilePage />;
+        return <DynamicProfilePage />;
       case 'settings':
         return (
           <div className="p-8 text-center">
