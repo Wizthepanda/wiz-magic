@@ -43,7 +43,8 @@ import {
   BarChart2,
   Target,
   Sparkles,
-  Settings
+  Settings,
+  Share2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
