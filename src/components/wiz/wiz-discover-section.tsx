@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Play, Eye, Heart, Share2, CheckCircle, Zap, ChevronLeft, ChevronRight, Crown, Medal, Trophy, Star, Users, Award, X } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { WizVideoPlayer } from './wiz-video-player';
 import { VideoPanel } from './VideoPanel';
 import { useAuth } from '@/hooks/useAuth';
@@ -299,6 +300,7 @@ const getCategoryShadow = (category: string) => {
 
 export const WizDiscoverSection = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState('all');
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [leaderboardTab, setLeaderboardTab] = useState('creators');
@@ -439,8 +441,8 @@ export const WizDiscoverSection = () => {
             const video = {
               id: doc.id,
               title: data.title || 'Untitled Video',
-              creator: data.creatorName || data.channelName || 'Unknown Creator',
-              avatar: data.creatorAvatar || data.channelAvatar || '',
+              creator: data.creatorName || data.channelName || data.channelTitle || 'Unknown Creator',
+              avatar: data.creatorAvatar || data.channelAvatar || data.channelThumbnail || '',
               thumbnail: data.thumbnail || `https://img.youtube.com/vi/${data.videoId}/maxresdefault.jpg`,
               duration: formatDuration(data.duration),
               xpReward: calculateXPReward(data.duration),
@@ -450,6 +452,7 @@ export const WizDiscoverSection = () => {
               watched: isWatched,
               progress: isWatched ? 100 : 0,
               videoId: data.videoId,
+              channelId: data.channelId || '',
               isNew: new Date(data.addedToWiz?.toDate?.() || data.addedToWiz || new Date()).getTime() > Date.now() - 24 * 60 * 60 * 1000,
             };
             
@@ -483,8 +486,8 @@ export const WizDiscoverSection = () => {
                 const video = {
                   id: doc.id,
                   title: data.title || 'Untitled Video',
-                  creator: data.creatorName || data.channelName || 'Unknown Creator',
-                  avatar: data.creatorAvatar || data.channelAvatar || '',
+                  creator: data.creatorName || data.channelName || data.channelTitle || 'Unknown Creator',
+                  avatar: data.creatorAvatar || data.channelAvatar || data.channelThumbnail || '',
                   thumbnail: data.thumbnail || `https://img.youtube.com/vi/${data.videoId}/maxresdefault.jpg`,
                   duration: formatDuration(data.duration),
                   xpReward: calculateXPReward(data.duration),
@@ -494,6 +497,7 @@ export const WizDiscoverSection = () => {
                   watched: isWatched,
                   progress: isWatched ? 100 : 0,
                   videoId: data.videoId,
+                  channelId: data.channelId || '',
                   isNew: new Date(data.addedToWiz?.toDate?.() || data.addedToWiz || new Date()).getTime() > Date.now() - 24 * 60 * 60 * 1000,
                 };
                 loadedVideos.push(video);
@@ -539,6 +543,14 @@ export const WizDiscoverSection = () => {
     const video = allVideos.find(v => v.id === videoId);
     if (video) {
       setSelectedVideo(video);
+    }
+  };
+
+  const handleCreatorClick = (channelId: string, creatorName: string) => {
+    if (channelId) {
+      navigate(`/creator/${channelId}`);
+    } else {
+      console.warn('No channelId provided for creator:', creatorName);
     }
   };
 
@@ -723,6 +735,7 @@ export const WizDiscoverSection = () => {
                           {video.duration}
                         </div>
 
+
                         {/* Progress Bar */}
                         {video.progress > 0 && (
                           <div className="absolute bottom-0 left-0 right-0 z-20">
@@ -746,25 +759,32 @@ export const WizDiscoverSection = () => {
                               {video.title}
                             </h4>
                             
-                            {/* Creator & Views - Muted text below */}
-                            <div className="space-y-1">
-                              <p className="text-sm text-gray-600 font-medium">
-                                {video.creator}
-                              </p>
-                              <div className="flex items-center text-xs text-gray-500 space-x-2">
-                                <div className="flex items-center space-x-1">
-                                  <Eye className="w-3 h-3" />
-                                  <span>{video.views}</span>
+                            {/* Creator Profile & Views - Horizontal layout */}
+                            <div className="flex items-center justify-between">
+                              {/* Left: Creator Profile */}
+                              {video.avatar && (
+                                <div className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity duration-200"
+                                     onClick={(e) => {
+                                       e.stopPropagation();
+                                       handleCreatorClick(video.channelId, video.creator);
+                                     }}>
+                                  <div className="w-6 h-6 rounded-full overflow-hidden border border-gray-200/50 hover:border-gray-300 transition-colors duration-200">
+                                    <img 
+                                      src={video.avatar} 
+                                      alt={`${video.creator}'s profile`}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <span className="text-sm text-gray-600 font-medium hover:text-gray-800 transition-colors duration-200">
+                                    {video.creator}
+                                  </span>
                                 </div>
-                                {video.xpReward && (
-                                  <>
-                                    <span>•</span>
-                                    <div className="flex items-center space-x-1">
-                                      <Zap className="w-3 h-3 text-yellow-500" />
-                                      <span>{video.xpReward} XP</span>
-                                    </div>
-                                  </>
-                                )}
+                              )}
+                              
+                              {/* Right: Views */}
+                              <div className="flex items-center text-xs text-gray-500 space-x-1">
+                                <Eye className="w-3 h-3" />
+                                <span>{video.views}</span>
                               </div>
                             </div>
                           </div>
@@ -865,6 +885,7 @@ export const WizDiscoverSection = () => {
                           {video.duration}
                         </div>
 
+
                         {/* Play Button Overlay */}
                         <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-all duration-300">
                           <Button
@@ -903,10 +924,30 @@ export const WizDiscoverSection = () => {
                           {video.title}
                         </h4>
                         
-                        {/* Creator & Views */}
-                        <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-                          <span className="font-medium">{video.creator}</span>
-                          <div className="flex items-center space-x-1">
+                        {/* Creator Profile & Views - Horizontal layout */}
+                        <div className="flex items-center justify-between mb-3">
+                          {/* Left: Creator Profile */}
+                          {video.avatar && (
+                            <div className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity duration-200"
+                                 onClick={(e) => {
+                                   e.stopPropagation();
+                                   handleCreatorClick(video.channelId, video.creator);
+                                 }}>
+                              <div className="w-6 h-6 rounded-full overflow-hidden border border-gray-200/50 hover:border-gray-300 hover:scale-105 transition-all duration-200">
+                                <img 
+                                  src={video.avatar} 
+                                  alt={`${video.creator}'s profile`}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <span className="text-sm text-gray-600 font-medium hover:text-gray-800 transition-colors duration-200">
+                                {video.creator}
+                              </span>
+                            </div>
+                          )}
+                          
+                          {/* Right: Views */}
+                          <div className="flex items-center text-sm text-gray-600 space-x-1">
                             <Eye className="w-4 h-4" />
                             <span>{video.views}</span>
                           </div>

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Play, ChevronLeft, ChevronRight, X, Heart, Share2, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { VideoPanel } from './VideoPanel';
 import { useAuth } from '@/hooks/useAuth';
@@ -20,6 +21,8 @@ interface ShortVideo {
   xpReward: number;
   duration: string;
   videoId: string;
+  avatar?: string;
+  channelId?: string;
 }
 
 // Flattened shorts data for unified carousel
@@ -35,7 +38,9 @@ const allShortsData: ShortVideo[] = [
     category: 'AI',
     xpReward: 15,
     duration: '0:15',
-    videoId: '2M4asXviuoo'
+    videoId: '2M4asXviuoo',
+    avatar: '/Profile Pics/FERA.jpg',
+    channelId: 'UC1234567890'
   },
   {
     id: 2,
@@ -47,7 +52,9 @@ const allShortsData: ShortVideo[] = [
     category: 'AI',
     xpReward: 18,
     duration: '0:30',
-    videoId: 'ScMzIvxBSi4'
+    videoId: 'ScMzIvxBSi4',
+    avatar: '/Profile Pics/Captain Hahaa.jpg',
+    channelId: 'UC2345678901'
   },
   {
     id: 7,
@@ -59,7 +66,9 @@ const allShortsData: ShortVideo[] = [
     category: 'Tech',
     xpReward: 18,
     duration: '0:45',
-    videoId: 'ScMzIvxBSi4'
+    videoId: 'ScMzIvxBSi4',
+    avatar: '/Profile Pics/RoyalKongz.jpg',
+    channelId: 'UC3456789012'
   },
   {
     id: 19,
@@ -71,7 +80,9 @@ const allShortsData: ShortVideo[] = [
     category: 'Money',
     xpReward: 20,
     duration: '0:30',
-    videoId: 'jNQXAC9IVRw'
+    videoId: 'jNQXAC9IVRw',
+    avatar: '/Profile Pics/Ale.jpg',
+    channelId: 'UC4567890123'
   },
   {
     id: 13,
@@ -235,6 +246,7 @@ export const WizShorts = () => {
   const { user, addXP } = useAuth();
   const { level, addXp } = useXp();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [selectedVideo, setSelectedVideo] = useState<ShortVideo | null>(null);
   const [startX, setStartX] = useState(0);
@@ -274,6 +286,14 @@ export const WizShorts = () => {
 
   const closeModal = () => {
     setSelectedVideo(null);
+  };
+
+  const handleCreatorClick = (channelId: string | undefined, creatorName: string) => {
+    if (channelId) {
+      navigate(`/creator/${channelId}`);
+    } else {
+      console.warn('No channelId provided for creator:', creatorName);
+    }
   };
 
   const scrollLeft = () => {
@@ -451,10 +471,29 @@ export const WizShorts = () => {
                             <h4 className="text-sm font-bold mb-1 line-clamp-2 leading-tight">
                               {short.title}
                             </h4>
-                            <div className="flex items-center justify-between text-xs opacity-90">
-                              <span className="font-medium truncate mr-2">{short.creator}</span>
-                              <span>{short.views}</span>
-                            </div>
+                            
+                            {/* Creator Profile - Below title */}
+                            {short.avatar && (
+                              <div className="flex items-center space-x-1.5 mb-1 cursor-pointer hover:opacity-80 transition-opacity duration-200"
+                                   onClick={(e) => {
+                                     e.stopPropagation();
+                                     handleCreatorClick(short.channelId, short.creator);
+                                   }}>
+                                <div className="w-5 h-5 rounded-full overflow-hidden border border-white/30 hover:border-white/50 hover:scale-105 transition-all duration-200">
+                                  <img 
+                                    src={short.avatar} 
+                                    alt={`${short.creator}'s profile`}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <span className="font-medium text-xs truncate hover:text-gray-200 transition-colors duration-200">
+                                  {short.creator}
+                                </span>
+                              </div>
+                            )}
+                            
+                            {/* Views - Keep original position */}
+                            <div className="text-xs opacity-90">{short.views} views</div>
                           </div>
                         </div>
                       </div>
@@ -583,9 +622,28 @@ export const WizShorts = () => {
                         <h4 className="text-sm font-bold text-slate-800 mb-2 line-clamp-2 leading-tight">
                           {short.title}
                         </h4>
-                        <p className="text-xs text-slate-600 mb-2">
-                          {short.creator}
-                        </p>
+                        
+                        {/* Creator Profile - Below title */}
+                        {short.avatar && (
+                          <div className="flex items-center space-x-2 mb-2 cursor-pointer hover:opacity-80 transition-opacity duration-200"
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 handleCreatorClick(short.channelId, short.creator);
+                               }}>
+                            <div className="w-6 h-6 rounded-full overflow-hidden border border-slate-200/50 hover:border-slate-300 hover:scale-105 transition-all duration-200">
+                              <img 
+                                src={short.avatar} 
+                                alt={`${short.creator}'s profile`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <span className="text-sm text-slate-600 font-medium hover:text-slate-800 transition-colors duration-200">
+                              {short.creator}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {/* Views & Time - Keep original position */}
                         <div className="flex items-center justify-between text-xs text-slate-500">
                           <span>{short.views} views</span>
                           <span>{short.timeAgo}</span>

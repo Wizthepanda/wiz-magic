@@ -4,7 +4,7 @@
  * Handles daily YouTube watch history sync and XP processing
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.initializeYouTubeTracking = exports.dailyYouTubeSync = exports.syncYouTubeHistory = void 0;
+exports.initializeYouTubeTracking = exports.dailyYouTubeProfileSync = exports.dailyYouTubeSync = exports.syncYouTubeHistory = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const scheduler_1 = require("firebase-functions/v2/scheduler");
 const firestore_1 = require("firebase-admin/firestore");
@@ -373,6 +373,177 @@ exports.dailyYouTubeSync = (0, scheduler_1.onSchedule)({
     }
     catch (error) {
         console.error('Error in daily YouTube sync:', error);
+    }
+});
+/**
+ * Sync YouTube profile data for a user
+ */
+async function syncUserYouTubeProfile(userId, accessToken) {
+    var _a, _b, _c, _d, _e, _f, _g;
+    try {
+        // Fetch channel information
+        const channelResponse = await fetch(`${YOUTUBE_API_BASE}/channels?part=snippet,statistics,contentDetails,brandingSettings&mine=true&key=${YOUTUBE_API_KEY}`, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+            },
+        });
+        if (!channelResponse.ok) {
+            throw new Error(`YouTube API error: ${channelResponse.status}`);
+        }
+        const channelData = await channelResponse.json();
+        if (!channelData.items || channelData.items.length === 0) {
+            throw new Error('No YouTube channel found');
+        }
+        const channel = channelData.items[0];
+        const snippet = channel.snippet;
+        const statistics = channel.statistics;
+        const brandingSettings = channel.brandingSettings;
+        // Get user document
+        const userRef = db.collection('users').doc(userId);
+        const userDoc = await userRef.get();
+        if (!userDoc.exists) {
+            throw new Error('User document not found');
+        }
+        const userData = userDoc.data();
+        const existingProfile = userData.youtubeProfile;
+        const updatedFields = [];
+        const newProfile = {
+            channelId: channel.id,
+            channelTitle: snippet.title,
+            description: snippet.description || '',
+            thumbnailUrl: ((_b = (_a = snippet.thumbnails) === null || _a === void 0 ? void 0 : _a.high) === null || _b === void 0 ? void 0 : _b.url) || ((_d = (_c = snippet.thumbnails) === null || _c === void 0 ? void 0 : _c.medium) === null || _d === void 0 ? void 0 : _d.url) || ((_f = (_e = snippet.thumbnails) === null || _e === void 0 ? void 0 : _e.default) === null || _f === void 0 ? void 0 : _f.url) || '',
+            subscriberCount: formatSubscriberCount(statistics.subscriberCount || '0'),
+            customUrl: snippet.customUrl,
+            bannerImageUrl: ((_g = brandingSettings === null || brandingSettings === void 0 ? void 0 : brandingSettings.image) === null || _g === void 0 ? void 0 : _g.bannerExternalUrl) || '',
+            lastSynced: firestore_1.FieldValue.serverTimestamp(),
+        };
+        // Track what changed
+        if (!existingProfile || existingProfile.channelTitle !== newProfile.channelTitle) {
+            updatedFields.push('channelTitle');
+        }
+        if (!existingProfile || existingProfile.description !== newProfile.description) {
+            updatedFields.push('description');
+        }
+        if (!existingProfile || existingProfile.thumbnailUrl !== newProfile.thumbnailUrl) {
+            updatedFields.push('thumbnailUrl');
+        }
+        if (!existingProfile || existingProfile.subscriberCount !== newProfile.subscriberCount) {
+            updatedFields.push('subscriberCount');
+        }
+        // Prepare update data
+        const updateData = {
+            youtubeProfile: newProfile,
+        };
+        // Only update display name and photo if they match the old YouTube data (not manually changed)
+        if (userData.displayName === (existingProfile === null || existingProfile === void 0 ? void 0 : existingProfile.channelTitle) || !userData.displayName) {
+            updateData.displayName = newProfile.channelTitle;
+            updatedFields.push('displayName');
+        }
+        if (userData.photoURL === (existingProfile === null || existingProfile === void 0 ? void 0 : existingProfile.thumbnailUrl) || !userData.photoURL) {
+            updateData.photoURL = newProfile.thumbnailUrl;
+            updatedFields.push('photoURL');
+        }
+        // Update user document
+        await userRef.update(updateData);
+        console.log(`✅ YouTube profile synced for ${userId}:`, updatedFields);
+        return { success: true, updatedFields };
+    }
+    catch (error) {
+        console.error(`❌ Failed to sync YouTube profile for ${userId}:`, error);
+        return { success: false, updatedFields: [] };
+    }
+}
+/**
+ * Format subscriber count for display
+ */
+function formatSubscriberCount(count) {
+    const num = parseInt(count);
+    if (num >= 1000000) {
+        return `${(num / 1000000).toFixed(1)}M`;
+    }
+    else if (num >= 1000) {
+        return `${(num / 1000).toFixed(1)}K`;
+    }
+    return count;
+}
+/**
+ * Scheduled function to sync YouTube profiles for all connected users daily
+ */
+exports.dailyYouTubeProfileSync = (0, scheduler_1.onSchedule)({
+    schedule: '0 3 * * *',
+    timeZone: 'UTC',
+    memory: '1GiB',
+    timeoutSeconds: 300,
+}, async () => {
+    var _a, _b, _c, _d;
+    try {
+        console.log('Starting daily YouTube profile sync...');
+        // Get all users with YouTube connected
+        const usersSnapshot = await db.collection('users')
+            .where('youtubeConnected', '==', true)
+            .get();
+        console.log(`Found ${usersSnapshot.size} YouTube-connected users to sync`);
+        const results = {
+            total: usersSnapshot.size,
+            successful: 0,
+            failed: 0,
+            skipped: 0,
+        };
+        // Process users with rate limiting to avoid API quota issues
+        for (const userDoc of usersSnapshot.docs) {
+            const userId = userDoc.id;
+            const userData = userDoc.data();
+            try {
+                // Check if sync is needed (only once per day)
+                const lastSynced = (_c = (_b = (_a = userData.youtubeProfile) === null || _a === void 0 ? void 0 : _a.lastSynced) === null || _b === void 0 ? void 0 : _b.toDate) === null || _c === void 0 ? void 0 : _c.call(_b);
+                if (lastSynced) {
+                    const daysSinceSync = Math.floor((new Date().getTime() - lastSynced.getTime()) / (1000 * 60 * 60 * 24));
+                    if (daysSinceSync < 1) {
+                        results.skipped++;
+                        continue;
+                    }
+                }
+                // Get access token from tracking data
+                const trackingDoc = await db.collection('userTrackingData').doc(userId).get();
+                if (!trackingDoc.exists) {
+                    console.log(`Skipping ${userId}: No tracking data`);
+                    results.skipped++;
+                    continue;
+                }
+                const trackingData = trackingDoc.data();
+                if (!((_d = trackingData.youtubeTokens) === null || _d === void 0 ? void 0 : _d.accessToken)) {
+                    console.log(`Skipping ${userId}: No access token`);
+                    results.skipped++;
+                    continue;
+                }
+                if (trackingData.youtubeTokens.expiresAt.toDate() < new Date()) {
+                    console.log(`Skipping ${userId}: Token expired`);
+                    results.skipped++;
+                    continue;
+                }
+                // Sync profile
+                const syncResult = await syncUserYouTubeProfile(userId, trackingData.youtubeTokens.accessToken);
+                if (syncResult.success) {
+                    results.successful++;
+                    if (syncResult.updatedFields.length > 0) {
+                        console.log(`✅ Synced ${userId}: ${syncResult.updatedFields.join(', ')}`);
+                    }
+                }
+                else {
+                    results.failed++;
+                }
+                // Rate limiting: wait 200ms between requests
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+            catch (error) {
+                console.error(`❌ Error syncing profile for ${userId}:`, error);
+                results.failed++;
+            }
+        }
+        console.log('Daily YouTube profile sync completed:', results);
+    }
+    catch (error) {
+        console.error('❌ Error in daily YouTube profile sync:', error);
     }
 });
 /**

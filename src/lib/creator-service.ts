@@ -63,16 +63,42 @@ export class CreatorService {
     try {
       const creatorRef = doc(db, 'creators', profileData.userId);
       
-      // Deep sanitization function to remove all undefined/null values
+      // Deep sanitization function to remove all undefined/null values and problematic data types
       const deepSanitize = (obj: any): any => {
+        // Handle null/undefined
         if (obj === null || obj === undefined) return null;
-        if (typeof obj === 'string') return obj === 'undefined' ? '' : obj;
-        if (typeof obj === 'number' || typeof obj === 'boolean') return obj;
-        if (obj instanceof Date) return obj;
-        if (Array.isArray(obj)) return obj.map(deepSanitize).filter(item => item !== null);
+        
+        // Handle primitive types
+        if (typeof obj === 'string') return obj === 'undefined' || obj === 'null' ? '' : obj;
+        if (typeof obj === 'number') return isNaN(obj) || !isFinite(obj) ? 0 : obj;
+        if (typeof obj === 'boolean') return obj;
+        
+        // Handle dates
+        if (obj instanceof Date) return isNaN(obj.getTime()) ? new Date() : obj;
+        
+        // Reject functions and other problematic types
+        if (typeof obj === 'function' || typeof obj === 'symbol') return null;
+        
+        // Handle arrays
+        if (Array.isArray(obj)) {
+          return obj.map(deepSanitize).filter(item => item !== null && item !== undefined);
+        }
+        
+        // Handle objects
         if (typeof obj === 'object') {
+          // Check for circular references or problematic objects
+          try {
+            JSON.stringify(obj); // This will throw if there are circular references
+          } catch (e) {
+            console.warn('🚫 Removing object with circular reference or problematic structure:', e);
+            return null;
+          }
+          
           const cleaned: any = {};
           for (const [key, value] of Object.entries(obj)) {
+            // Skip function properties or methods
+            if (typeof value === 'function') continue;
+            
             const sanitizedValue = deepSanitize(value);
             if (sanitizedValue !== null && sanitizedValue !== undefined) {
               cleaned[key] = sanitizedValue;
@@ -80,6 +106,7 @@ export class CreatorService {
           }
           return cleaned;
         }
+        
         return obj;
       };
       

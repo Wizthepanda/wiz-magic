@@ -14,6 +14,7 @@ import { LocalXPService } from '@/lib/local-xp-service';
 import { isYouTubeAPIEnabled, logFeatureFlag } from '@/lib/feature-flags';
 import { isAdmin, getUserPermissions, TEST_USER_DEMO_DATA } from '@/config/admin-config';
 import { YouTubeXPService } from '@/lib/youtube-xp-service';
+import { youTubeAPI } from '@/lib/youtube-api';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/lib/firebase';
 // Note: We'll import useXp dynamically to avoid circular dependency
@@ -26,6 +27,16 @@ export interface WizUser extends User {
   isAdmin?: boolean;
   permissions?: string[];
   testUserData?: any;
+  youtubeProfile?: {
+    channelId: string;
+    channelTitle: string;
+    description: string;
+    thumbnailUrl: string;
+    subscriberCount: string;
+    customUrl?: string;
+    bannerImageUrl?: string;
+    lastSynced?: Date;
+  };
 }
 
 // Helper function to get user data
@@ -64,6 +75,10 @@ const getUserData = async (firebaseUser: User): Promise<WizUser> => {
       isAdmin: userPermissions.isAdmin,
       permissions: userPermissions.permissions,
       testUserData: null, // Remove demo data
+      youtubeProfile: userData?.youtubeProfile ? {
+        ...userData.youtubeProfile,
+        lastSynced: userData.youtubeProfile.lastSynced?.toDate()
+      } : undefined,
     };
     
     return wizUser;
@@ -80,6 +95,7 @@ const getUserData = async (firebaseUser: User): Promise<WizUser> => {
       isAdmin: userPermissions.isAdmin,
       permissions: userPermissions.permissions,
       testUserData: null,
+      youtubeProfile: undefined,
     };
   }
 };
@@ -267,19 +283,79 @@ export const useAuth = () => {
     try {
       const success = await YouTubeService.authenticateWithYouTube();
       if (success && user) {
-        // Update local user state
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        const userData = userDoc.data();
-        
-        const updatedUser: WizUser = {
-          ...user,
-          youtubeConnected: true,
-          level: userData?.level || 1,
-          totalXP: userData?.totalXP || 0,
-          createdAt: userData?.createdAt?.toDate() || new Date(),
-        };
-        
-        setUser(updatedUser);
+        try {
+          // Initialize YouTube API with OAuth token from redirect result
+          const authResult = await getRedirectResult(auth);
+          if (authResult?.credential) {
+            // Get OAuth access token
+            const accessToken = (authResult.credential as any).accessToken;
+            if (accessToken) {
+              youTubeAPI.setAccessToken(accessToken);
+              
+              // Fetch channel information
+              console.log('📺 Fetching YouTube channel information...');
+              const channelInfo = await youTubeAPI.getChannelInfo();
+              
+              // Prepare YouTube profile data
+              const youtubeProfile = {
+                channelId: channelInfo.id,
+                channelTitle: channelInfo.name,
+                description: channelInfo.description || '',
+                thumbnailUrl: channelInfo.avatar,
+                subscriberCount: channelInfo.subscriberCount,
+                customUrl: channelInfo.customUrl,
+                bannerImageUrl: channelInfo.bannerImageUrl,
+                lastSynced: new Date(),
+              };
+              
+              // Update user document in Firestore
+              await setDoc(doc(db, 'users', user.uid), {
+                youtubeConnected: true,
+                youtubeProfile: youtubeProfile,
+                displayName: user.displayName || channelInfo.name, // Auto-populate display name
+                photoURL: user.photoURL || channelInfo.avatar, // Auto-populate profile picture
+              }, { merge: true });
+              
+              console.log('✅ YouTube profile data saved:', youtubeProfile);
+              
+              // Update local user state
+              const userDoc = await getDoc(doc(db, 'users', user.uid));
+              const userData = userDoc.data();
+              
+              const updatedUser: WizUser = {
+                ...user,
+                youtubeConnected: true,
+                level: userData?.level || 1,
+                totalXP: userData?.totalXP || 0,
+                createdAt: userData?.createdAt?.toDate() || new Date(),
+                youtubeProfile: youtubeProfile,
+                displayName: user.displayName || channelInfo.name,
+                photoURL: user.photoURL || channelInfo.avatar,
+              };
+              
+              setUser(updatedUser);
+            }
+          }
+        } catch (profileError) {
+          console.warn('⚠️ Failed to fetch YouTube profile data (non-blocking):', profileError);
+          // Still mark as connected even if profile fetch fails
+          await setDoc(doc(db, 'users', user.uid), {
+            youtubeConnected: true,
+          }, { merge: true });
+          
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          const userData = userDoc.data();
+          
+          const updatedUser: WizUser = {
+            ...user,
+            youtubeConnected: true,
+            level: userData?.level || 1,
+            totalXP: userData?.totalXP || 0,
+            createdAt: userData?.createdAt?.toDate() || new Date(),
+          };
+          
+          setUser(updatedUser);
+        }
       }
       return success;
     } catch (error) {

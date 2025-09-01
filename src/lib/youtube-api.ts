@@ -36,6 +36,9 @@ export interface YouTubeChannelInfo {
   avatar: string;
   subscriberCount: string;
   customUrl?: string;
+  description?: string;
+  bannerImageUrl?: string;
+  publishedAt?: string;
 }
 
 export interface YouTubeVideo {
@@ -47,6 +50,9 @@ export interface YouTubeVideo {
   publishedAt: string;
   views: string;
   tags: string[];
+  channelTitle: string;
+  channelThumbnail: string;
+  channelId: string;
 }
 
 export interface YouTubeOAuthToken {
@@ -208,7 +214,7 @@ class YouTubeAPIService {
 
     try {
       // Use fetch instead of gapi.client to avoid loading issues
-      const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&mine=true&key=${this.config.apiKey}`;
+      const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails,brandingSettings&mine=true&key=${this.config.apiKey}`;
       
       const response = await fetch(url, {
         headers: {
@@ -230,13 +236,17 @@ class YouTubeAPIService {
       const channel = data.items[0];
       const snippet = channel.snippet;
       const statistics = channel.statistics;
+      const brandingSettings = channel.brandingSettings;
 
       return {
         id: channel.id,
         name: snippet.title,
-        avatar: snippet.thumbnails?.default?.url || snippet.thumbnails?.medium?.url || '',
+        avatar: snippet.thumbnails?.high?.url || snippet.thumbnails?.medium?.url || snippet.thumbnails?.default?.url || '',
         subscriberCount: this.formatSubscriberCount(statistics.subscriberCount),
-        customUrl: snippet.customUrl
+        customUrl: snippet.customUrl,
+        description: snippet.description || '',
+        bannerImageUrl: brandingSettings?.image?.bannerExternalUrl || '',
+        publishedAt: snippet.publishedAt
       };
     } catch (error) {
       console.error('Error fetching channel info:', error);
@@ -308,18 +318,56 @@ class YouTubeAPIService {
 
       const detailsData = await detailsResponse.json();
 
-      return detailsData.items.map((video: any) => ({
-        id: video.id,
-        title: video.snippet.title,
-        description: video.snippet.description || '',
-        thumbnail: video.snippet.thumbnails?.maxresdefault?.url || 
-                  video.snippet.thumbnails?.high?.url || 
-                  video.snippet.thumbnails?.medium?.url || '',
-        duration: this.formatDuration(video.contentDetails.duration),
-        publishedAt: this.formatDate(video.snippet.publishedAt),
-        views: this.formatViewCount(video.statistics.viewCount || '0'),
-        tags: video.snippet.tags || []
-      }));
+      // Extract unique channel IDs to fetch channel information
+      const channelIds = Array.from(new Set(detailsData.items.map((video: any) => video.snippet.channelId))).join(',');
+      
+      // Fetch channel information for profile pictures
+      const channelsUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${channelIds}&key=${this.config.apiKey}`;
+      
+      const channelsResponse = await fetch(channelsUrl, {
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+        },
+      });
+
+      let channelsData: any = { items: [] };
+      if (channelsResponse.ok) {
+        channelsData = await channelsResponse.json();
+      }
+
+      // Create a map of channel ID to channel information
+      const channelMap = new Map();
+      channelsData.items.forEach((channel: any) => {
+        channelMap.set(channel.id, {
+          title: channel.snippet.title,
+          thumbnail: channel.snippet.thumbnails?.high?.url || 
+                    channel.snippet.thumbnails?.medium?.url || 
+                    channel.snippet.thumbnails?.default?.url || ''
+        });
+      });
+
+      return detailsData.items.map((video: any) => {
+        const channelInfo = channelMap.get(video.snippet.channelId) || {
+          title: video.snippet.channelTitle,
+          thumbnail: ''
+        };
+
+        return {
+          id: video.id,
+          title: video.snippet.title,
+          description: video.snippet.description || '',
+          thumbnail: video.snippet.thumbnails?.maxresdefault?.url || 
+                    video.snippet.thumbnails?.high?.url || 
+                    video.snippet.thumbnails?.medium?.url || '',
+          duration: this.formatDuration(video.contentDetails?.duration),
+          publishedAt: this.formatDate(video.snippet.publishedAt),
+          views: this.formatViewCount(video.statistics.viewCount || '0'),
+          tags: video.snippet.tags || [],
+          channelTitle: channelInfo.title,
+          channelThumbnail: channelInfo.thumbnail,
+          channelId: video.snippet.channelId
+        };
+      });
     } catch (error) {
       console.error('Error fetching videos:', error);
       throw error;
@@ -347,6 +395,74 @@ class YouTubeAPIService {
     return !!this.accessToken;
   }
 
+  /**
+   * Subscribe to a YouTube channel
+   */
+  async subscribeToChannel(channelId: string): Promise<boolean> {
+    if (!this.accessToken) {
+      throw new Error('No access token available. Please authenticate first.');
+    }
+
+    try {
+      const url = `https://www.googleapis.com/youtube/v3/subscriptions?part=snippet&key=${this.config.apiKey}`;
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          snippet: {
+            resourceId: {
+              kind: 'youtube#channel',
+              channelId: channelId
+            }
+          }
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to subscribe to channel: ${response.status} ${errorText}`);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error subscribing to channel:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check if user is subscribed to a channel
+   */
+  async checkSubscription(channelId: string): Promise<boolean> {
+    if (!this.accessToken) {
+      return false;
+    }
+
+    try {
+      const url = `https://www.googleapis.com/youtube/v3/subscriptions?part=snippet&mine=true&forChannelId=${channelId}&key=${this.config.apiKey}`;
+      
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        return false;
+      }
+
+      const data = await response.json();
+      return data.items && data.items.length > 0;
+    } catch (error) {
+      console.error('Error checking subscription:', error);
+      return false;
+    }
+  }
+
   // Helper methods
   private formatSubscriberCount(count: string): string {
     const num = parseInt(count);
@@ -368,7 +484,12 @@ class YouTubeAPIService {
     return count;
   }
 
-  private formatDuration(isoDuration: string): string {
+  private formatDuration(isoDuration: string | undefined): string {
+    // Handle undefined or null duration
+    if (!isoDuration || typeof isoDuration !== 'string') {
+      return '0:00';
+    }
+    
     // Convert ISO 8601 duration to MM:SS format
     const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
     if (!match) return '0:00';

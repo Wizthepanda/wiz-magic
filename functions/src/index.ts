@@ -17,6 +17,7 @@ export { awardXP, awardShareXP, awardReferralXP, dailyReset } from './xp-system'
 export { 
   syncYouTubeHistory, 
   dailyYouTubeSync, 
+  dailyYouTubeProfileSync,
   initializeYouTubeTracking 
 } from './youtube-xp-functions';
 

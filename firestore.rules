@@ -53,11 +53,40 @@ service cloud.firestore {
       allow read: if true;
       allow write: if request.auth != null;
     }
+    
+    // Creator videos - creators can manage their own videos
+    match /creatorVideos/{videoId} {
+      allow read: if true; // Public read for discovery
+      allow write: if request.auth != null; // Any authenticated user can write
+    }
+    
+    // Creator profiles and tokens - users can only access their own
+    match /creators/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // YouTube subscriptions tracking
+    match /youtubeSubscriptions/{subscriptionId} {
+      allow read, write: if request.auth != null;
+    }
   }
 }
 
 // Validation function to ensure XP updates are reasonable
 function validateUserUpdate(newData, existingData) {
+  // Allow YouTube profile updates without XP validation
+  return ('youtubeProfile' in newData) || 
+         ('youtubeConnected' in newData) || 
+         ('youtubeSubscriptions' in newData) ||
+         ('displayName' in newData) || 
+         ('photoURL' in newData) ||
+         // For XP-related updates, validate reasonably
+         (('currentXP' in newData || 'totalXP' in newData || 'dailyXpEarned' in newData) ? 
+           validateXPUpdate(newData, existingData) : true);
+}
+
+// Helper function for XP validation
+function validateXPUpdate(newData, existingData) {
   let currentXP = 'currentXP' in existingData ? existingData.currentXP : 0;
   let newXP = 'currentXP' in newData ? newData.currentXP : currentXP;
   let currentDailyXP = 'dailyXpEarned' in existingData ? existingData.dailyXpEarned : 0;

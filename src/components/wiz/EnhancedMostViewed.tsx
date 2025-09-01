@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Play, Crown, Zap, ChevronLeft, ChevronRight, X, Heart, Share2, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { VideoPanel } from './VideoPanel';
@@ -20,7 +21,9 @@ const mostViewedVideos = [
     xpReward: 250,
     category: 'AI',
     ranking: 1,
-    videoId: '2M4asXviuoo'
+    videoId: '2M4asXviuoo',
+    avatar: '/Profile Pics/FERA.jpg',
+    channelId: 'UC1234567890'
   },
   {
     id: 2,
@@ -32,7 +35,9 @@ const mostViewedVideos = [
     xpReward: 320,
     category: 'Tech',
     ranking: 2,
-    videoId: 'ScMzIvxBSi4'
+    videoId: 'ScMzIvxBSi4',
+    avatar: '/Profile Pics/RoyalKongz.jpg',
+    channelId: 'UC2345678901'
   },
   {
     id: 3,
@@ -44,7 +49,9 @@ const mostViewedVideos = [
     xpReward: 280,
     category: 'Money',
     ranking: 3,
-    videoId: 'jNQXAC9IVRw'
+    videoId: 'jNQXAC9IVRw',
+    avatar: '/Profile Pics/Ale.jpg',
+    channelId: 'UC3456789012'
   },
   {
     id: 4,
@@ -107,6 +114,7 @@ export const EnhancedMostViewed = () => {
   const { user, addXP } = useAuth();
   const { level, addXp } = useXp();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [selectedVideo, setSelectedVideo] = useState<null | typeof mostViewedVideos[0]>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -116,6 +124,14 @@ export const EnhancedMostViewed = () => {
 
   const closeModal = () => {
     setSelectedVideo(null);
+  };
+
+  const handleCreatorClick = (channelId: string | undefined, creatorName: string) => {
+    if (channelId) {
+      navigate(`/creator/${channelId}`);
+    } else {
+      console.warn('No channelId provided for creator:', creatorName);
+    }
   };
 
   const scrollContainer = () => {
@@ -249,6 +265,7 @@ export const EnhancedMostViewed = () => {
                           {video.duration}
                         </div>
 
+
                         {/* Play Button Overlay */}
                         <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-all duration-300">
                           <Button
@@ -270,9 +287,28 @@ export const EnhancedMostViewed = () => {
                         <h4 className="text-base font-bold text-slate-800 mb-3 line-clamp-2 leading-tight">
                           {video.title}
                         </h4>
-                        <p className="text-sm text-slate-600 mb-3 font-medium">
-                          {video.creator}
-                        </p>
+                        
+                        {/* Creator Profile - Below title */}
+                        {video.avatar && (
+                          <div className="flex items-center space-x-2 mb-3 cursor-pointer hover:opacity-80 transition-opacity duration-200"
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 handleCreatorClick(video.channelId, video.creator);
+                               }}>
+                            <div className="w-6 h-6 rounded-full overflow-hidden border border-slate-200/50 hover:border-slate-300 hover:scale-105 transition-all duration-200">
+                              <img 
+                                src={video.avatar} 
+                                alt={`${video.creator}'s profile`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <span className="text-sm text-slate-600 font-medium hover:text-slate-800 transition-colors duration-200">
+                              {video.creator}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {/* Category Badge & Views - Keep original position */}
                         <div className="flex items-center justify-between mb-3">
                           <Badge className="px-3 py-1 text-xs font-bold text-white uppercase tracking-wide"
                                  style={{

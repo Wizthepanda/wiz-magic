@@ -17,7 +17,7 @@ import {
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
-import { useSimpleXP } from '@/hooks/useSimpleXP';
+import { useXp } from '@/context/XpContext';
 import { initProgressUI } from '@/lib/wiz-progress-ui';
 
 interface UserXPData {
@@ -42,10 +42,12 @@ interface ProgressData {
 
 export const WizProfileBar: React.FC = () => {
   const { user } = useAuth();
-  const { xpData, loading, error } = useSimpleXP();
+  const { totalXP, level, progressPercent, xpInCurrentLevel, xpToNextLevel, dailyXP, loading } = useXp();
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showSparkles, setShowSparkles] = useState(false);
+  const [prevTotalXP, setPrevTotalXP] = useState(totalXP);
+  const [prevLevel, setPrevLevel] = useState(level);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -76,6 +78,29 @@ export const WizProfileBar: React.FC = () => {
       window.removeEventListener('milestoneUnlocked', handleMilestoneUnlock as EventListener);
     };
   }, [user?.uid]);
+
+  // Watch for XP changes and trigger animations
+  useEffect(() => {
+    // Check if XP increased (not on initial load)
+    if (totalXP > 0 && prevTotalXP > 0 && totalXP > prevTotalXP) {
+      console.log(`🎯 XP increased from ${prevTotalXP} to ${totalXP}! Triggering animation...`);
+      
+      // Trigger sparkles for XP gain
+      setShowSparkles(true);
+      setTimeout(() => setShowSparkles(false), 2000);
+      
+      // Check if level increased
+      if (level > prevLevel) {
+        console.log(`🎉 Level up! From ${prevLevel} to ${level}`);
+        // Dispatch level up event for other listeners
+        window.dispatchEvent(new CustomEvent('levelUp', { detail: { oldLevel: prevLevel, newLevel: level } }));
+      }
+    }
+    
+    // Update previous values
+    setPrevTotalXP(totalXP);
+    setPrevLevel(level);
+  }, [totalXP, level, prevTotalXP, prevLevel]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -139,6 +164,22 @@ export const WizProfileBar: React.FC = () => {
     }
   };
 
+  // Create xpData object from new XP context for compatibility
+  const xpData = user ? {
+    currentXP: totalXP,
+    level: level,
+    dailyXpEarned: dailyXP,
+    displayName: user.displayName || 'WIZ User',
+    email: user.email || '',
+    avatarUrl: user.photoURL || '',
+    progressPercent: progressPercent,
+    xpForCurrentLevel: totalXP - xpInCurrentLevel, // Calculate base XP for current level
+    xpForNextLevel: totalXP - xpInCurrentLevel + xpToNextLevel, // Calculate total XP needed for next level
+    xpInCurrentLevel: xpInCurrentLevel,
+    xpNeededForNextLevel: xpToNextLevel,
+    dailyXpRemaining: Math.max(0, 360 - dailyXP)
+  } : null;
+
   // Calculate daily progress message based on daily XP
   const getDailyProgressMessage = (): string => {
     if (!xpData) return "🔥 Watch videos to earn XP today";
@@ -156,7 +197,7 @@ export const WizProfileBar: React.FC = () => {
     return "🔥 Start watching to earn XP today";
   };
 
-  if (loading || !xpData) {
+  if (loading || !xpData || !user) {
     return (
       <div className="flex items-center space-x-3 animate-pulse">
         <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
@@ -218,7 +259,6 @@ export const WizProfileBar: React.FC = () => {
             alt={xpData.displayName}
             className="w-8 h-8 rounded-full object-cover ring-2 ring-white/20"
           />
-        </div>
         </div>
 
         {/* Username, Level, and Progress */}
