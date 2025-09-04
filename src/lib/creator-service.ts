@@ -149,7 +149,64 @@ export class CreatorService {
         lastSyncDate: serverTimestamp()
       });
 
-      console.log('✅ Creator profile saved:', profileData.userId);
+      // CRITICAL: Update the users collection to enable creator profile switching
+      const userRef = doc(db, 'users', profileData.userId);
+      await setDoc(userRef, {
+        // Creator role and enrollment flags
+        hasCreatedContent: true,
+        role: 'creator',
+        youtubeConnected: true,
+        
+        // Update user display name to match YouTube channel
+        displayName: sanitizedData.channelName,
+        
+        // YouTube profile data
+        youtubeProfile: {
+          channelId: sanitizedData.channelId,
+          channelName: sanitizedData.channelName,
+          profilePicture: sanitizedData.channelAvatar,
+          subscriberCount: sanitizedData.subscriberCount
+        },
+        
+        // Enrollment timestamps
+        creatorPromotedAt: serverTimestamp(),
+        youtubeConnectedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        
+        // Initialize creator metrics
+        coursesCreated: 0,
+        videosUploaded: sanitizedData.totalVideos || 0,
+        totalEarnings: 0
+      }, { merge: true });
+
+      // CRITICAL: Also update creatorProfiles collection for creator dashboard components
+      const creatorProfileRef = doc(db, 'creatorProfiles', profileData.userId);
+      await setDoc(creatorProfileRef, {
+        youtubeData: {
+          channelId: sanitizedData.channelId,
+          handle: sanitizedData.channelName,
+          title: sanitizedData.channelName,
+          description: `Creator channel with ${sanitizedData.subscriberCount} subscribers`,
+          thumbnailUrl: sanitizedData.channelAvatar,
+          subscriberCount: parseInt(sanitizedData.subscriberCount.replace(/[^\d]/g, '')) || 0,
+          videoCount: sanitizedData.totalVideos || 0,
+          viewCount: 0, // Will be updated during sync
+          publishedAt: new Date().toISOString(),
+          lastSyncedAt: new Date().toISOString(),
+          isConnected: true
+        },
+        wizName: sanitizedData.channelName,
+        bio: `Creator with ${sanitizedData.subscriberCount} subscribers`,
+        joinedAt: new Date().toISOString(),
+        lastActiveAt: new Date().toISOString(),
+        profileVisibility: 'public',
+        allowMessages: true,
+        showEarnings: false,
+        categories: [sanitizedData.primaryCategory],
+        targetAudience: []
+      }, { merge: true });
+
+      console.log('✅ Creator profile saved and user promoted:', profileData.userId);
     } catch (error) {
       console.error('❌ Error saving creator profile:', error);
       console.error('❌ Original profile data:', profileData);
@@ -183,38 +240,144 @@ export class CreatorService {
   }
 
   /**
-   * Save creator videos to database
+   * Save creator videos to database with duplicate prevention
    */
   static async saveCreatorVideos(videos: Omit<CreatorVideo, 'addedToWiz' | 'lastUpdated'>[]): Promise<void> {
     try {
+      console.log(`🎬 Processing ${videos.length} videos for deduplication...`);
+      
       const batch = [];
+      const processedVideos = [];
+      const skippedVideos = [];
       
       for (const video of videos) {
         const videoRef = doc(db, 'creatorVideos', video.videoId);
-        const videoData: CreatorVideo = {
-          ...video,
-          addedToWiz: new Date(),
-          lastUpdated: new Date(),
-          status: 'active',
-          isFeatured: video.isFeatured || false,
-          originalYouTubeUrl: video.originalYouTubeUrl || `https://www.youtube.com/watch?v=${video.videoId}`
-        };
+        
+        // Check if video already exists
+        const existingDoc = await getDoc(videoRef);
+        
+        if (existingDoc.exists()) {
+          const existingData = existingDoc.data();
+          
+          // Only update if the video belongs to the same creator or is being claimed by current creator
+          if (existingData.creatorId === video.creatorId) {
+            // Update existing video with latest data - UPDATE addedToWiz to current time for newer uploads
+            const updatedData = {
+              ...video,
+              addedToWiz: new Date(), // Update to current time so newer uploads appear first
+              lastUpdated: serverTimestamp(),
+              status: 'active',
+              isFeatured: video.isFeatured || existingData.isFeatured || false,
+              originalYouTubeUrl: video.originalYouTubeUrl || `https://www.youtube.com/watch?v=${video.videoId}`
+            };
+            
+            batch.push(setDoc(videoRef, {
+              ...updatedData,
+              addedToWiz: serverTimestamp() // Use serverTimestamp for Firebase
+            }, { merge: true }));
+            processedVideos.push(video.videoId);
+            console.log(`🔄 Updating existing video: ${video.title}`);
+          } else {
+            console.log(`⚠️ Skipping video ${video.videoId} - belongs to different creator: ${existingData.creatorId}`);
+            skippedVideos.push(video.videoId);
+          }
+        } else {
+          // Create new video with enhanced creator data
+          const videoData: CreatorVideo = {
+            ...video,
+            addedToWiz: new Date(),
+            lastUpdated: new Date(),
+            status: 'active',
+            isFeatured: video.isFeatured || false,
+            originalYouTubeUrl: video.originalYouTubeUrl || `https://www.youtube.com/watch?v=${video.videoId}`,
+            // Ensure creator avatar is included if not already present
+            creatorAvatar: video.creatorAvatar || 
+                          `https://ui-avatars.com/api/?name=${encodeURIComponent((video.title || video.channelName || 'Creator').slice(0, 2))}&background=8B5CF6&color=ffffff&size=128&bold=true&format=svg`
+          };
 
-        batch.push(
-          setDoc(videoRef, {
-            ...videoData,
-            addedToWiz: serverTimestamp(),
-            lastUpdated: serverTimestamp()
-          })
-        );
+          batch.push(
+            setDoc(videoRef, {
+              ...videoData,
+              addedToWiz: serverTimestamp(),
+              lastUpdated: serverTimestamp()
+            })
+          );
+          processedVideos.push(video.videoId);
+          console.log(`✨ Creating new video: ${video.title}`);
+        }
       }
 
       // Execute all video saves
       await Promise.all(batch);
       
-      console.log(`✅ Saved ${videos.length} creator videos`);
+      console.log(`✅ Processed ${processedVideos.length} videos, skipped ${skippedVideos.length} duplicates`);
     } catch (error) {
       console.error('❌ Error saving creator videos:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Remove duplicate videos for a specific creator
+   */
+  static async removeDuplicateVideos(creatorId: string): Promise<void> {
+    try {
+      console.log(`🧹 Cleaning up duplicate videos for creator: ${creatorId}`);
+      
+      const videosQuery = query(
+        collection(db, 'creatorVideos'),
+        where('creatorId', '==', creatorId)
+      );
+      
+      const snapshot = await getDocs(videosQuery);
+      const videosByTitle = new Map<string, any[]>();
+      
+      // Group videos by title to identify duplicates
+      snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        const title = data.title?.toLowerCase().trim();
+        
+        if (!videosByTitle.has(title)) {
+          videosByTitle.set(title, []);
+        }
+        videosByTitle.get(title)!.push({ id: doc.id, data, doc });
+      });
+      
+      const duplicatesToRemove = [];
+      
+      // For each title group, keep the earliest one and mark others for deletion
+      videosByTitle.forEach((videos, title) => {
+        if (videos.length > 1) {
+          console.log(`🔍 Found ${videos.length} duplicates for: "${title}"`);
+          
+          // Sort by addedToWiz date (earliest first)
+          videos.sort((a, b) => {
+            const dateA = a.data.addedToWiz?.toDate?.() || new Date(a.data.addedToWiz) || new Date(0);
+            const dateB = b.data.addedToWiz?.toDate?.() || new Date(b.data.addedToWiz) || new Date(0);
+            return dateA.getTime() - dateB.getTime();
+          });
+          
+          // Keep the first (earliest) one, mark others for removal
+          const [keep, ...remove] = videos;
+          console.log(`✅ Keeping video: ${keep.id} (${keep.data.addedToWiz})`);
+          
+          remove.forEach(duplicate => {
+            console.log(`❌ Marking for removal: ${duplicate.id} (${duplicate.data.addedToWiz})`);
+            duplicatesToRemove.push(duplicate.doc.ref);
+          });
+        }
+      });
+      
+      // Delete duplicates
+      if (duplicatesToRemove.length > 0) {
+        await Promise.all(duplicatesToRemove.map(ref => ref.delete()));
+        console.log(`🗑️ Removed ${duplicatesToRemove.length} duplicate videos`);
+      } else {
+        console.log('✨ No duplicates found');
+      }
+      
+    } catch (error) {
+      console.error('❌ Error removing duplicate videos:', error);
       throw error;
     }
   }

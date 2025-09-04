@@ -14,6 +14,11 @@ const categories = [
   { id: 'movies', label: 'Movies', color: 'bg-indigo-500', dotColor: 'bg-indigo-400' },
   { id: 'news', label: 'News', color: 'bg-cyan-500', dotColor: 'bg-cyan-400' },
   { id: 'podcast', label: 'Podcast', color: 'bg-teal-500', dotColor: 'bg-teal-400' },
+  { id: 'art', label: 'Art', color: 'bg-violet-500', dotColor: 'bg-violet-400' },
+  { id: 'fashion', label: 'Fashion', color: 'bg-fuchsia-500', dotColor: 'bg-fuchsia-400' },
+  { id: 'relationships', label: 'Relationships', color: 'bg-pink-500', dotColor: 'bg-pink-400' },
+  { id: 'lifestyle', label: 'Lifestyle', color: 'bg-amber-500', dotColor: 'bg-amber-400' },
+  { id: 'movie', label: 'Movie', color: 'bg-slate-500', dotColor: 'bg-slate-400' },
 ];
 
 interface WizMobileFiltersProps {
@@ -35,6 +40,11 @@ const getCategoryGradient = (categoryId: string, isActive: boolean) => {
     'movies': isActive ? 'bg-gradient-to-r from-indigo-500 to-blue-600' : 'bg-white hover:bg-gray-50',
     'news': isActive ? 'bg-gradient-to-r from-cyan-500 to-blue-600' : 'bg-white hover:bg-gray-50',
     'podcast': isActive ? 'bg-gradient-to-r from-teal-500 to-cyan-600' : 'bg-white hover:bg-gray-50',
+    'art': isActive ? 'bg-gradient-to-r from-violet-500 to-purple-600' : 'bg-white hover:bg-gray-50',
+    'fashion': isActive ? 'bg-gradient-to-r from-fuchsia-500 to-pink-600' : 'bg-white hover:bg-gray-50',
+    'relationships': isActive ? 'bg-gradient-to-r from-pink-500 to-rose-600' : 'bg-white hover:bg-gray-50',
+    'lifestyle': isActive ? 'bg-gradient-to-r from-amber-500 to-yellow-600' : 'bg-white hover:bg-gray-50',
+    'movie': isActive ? 'bg-gradient-to-r from-slate-500 to-gray-600' : 'bg-white hover:bg-gray-50',
   };
   return gradientMap[categoryId] || (isActive ? 'bg-gradient-to-r from-purple-500 to-violet-600' : 'bg-white hover:bg-gray-50');
 };
@@ -51,6 +61,10 @@ const getDotColor = (dotColorClass: string): string => {
     'bg-indigo-400': '#818cf8',
     'bg-cyan-400': '#22d3ee',
     'bg-teal-400': '#2dd4bf',
+    'bg-violet-400': '#a78bfa',
+    'bg-fuchsia-400': '#e879f9',
+    'bg-amber-400': '#fbbf24',
+    'bg-slate-400': '#94a3b8',
   };
   return colorMap[dotColorClass] || '#60a5fa';
 };

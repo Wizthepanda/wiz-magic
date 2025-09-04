@@ -13,10 +13,8 @@ export const DynamicProfilePage: React.FC<DynamicProfilePageProps> = ({ classNam
   const { user } = useAuth();
   const { userType, isCreator, isViewer, loading } = useUserType();
   
-  // 🚀 DEBUG MODE: Force creator view for demo (remove in production)
-  // Check if user is Irfan Dean (for demo purposes)
-  const isDebugCreator = user?.displayName === 'Irfan Dean' || user?.email === 'irfandeandesigns@gmail.com';
-  const forceCreatorView = isDebugCreator; // Set to true for demo
+  // Production mode - use real role detection only
+  const forceCreatorView = false;
 
   // Loading state
   if (loading) {
@@ -50,13 +48,11 @@ export const DynamicProfilePage: React.FC<DynamicProfilePageProps> = ({ classNam
     );
   }
 
-  // Debug logging
-  console.log(`🔄 DynamicProfilePage: Rendering ${userType.toUpperCase()} profile for user ${user.displayName}`, {
+  // Profile switching debug logging
+  console.log(`🔄 Profile: ${userType.toUpperCase()} for ${user.displayName}`, {
     userType,
     isCreator,
-    isViewer,
-    forceCreatorView,
-    userId: user.uid
+    userId: user.uid?.slice(0, 8)
   });
 
   // 🔑 CONDITIONAL PROFILE SWITCHING LOGIC (SIDE PANEL ONLY)
@@ -72,17 +68,17 @@ export const DynamicProfilePage: React.FC<DynamicProfilePageProps> = ({ classNam
   // ELSE:
   //     SidePanel.ProfilePage = ViewerPrivateProfile (PrivateViewerProfile)
   
-  if (isCreator || forceCreatorView) {
-    // Load Creator Private Dashboard Profile for enrolled creators (or debug mode)
-    console.log(`✅ Loading Creator Dashboard for ${user.displayName} ${forceCreatorView ? '(DEBUG MODE)' : '(CREATOR)'}`);
+  if (isCreator) {
+    // Load Creator Private Dashboard for users who have connected YouTube and created content
+    console.log(`✅ Creator Dashboard: ${user.displayName} (has connected YouTube + created content)`);
     return (
       <div className={className}>
         <PrivateCreatorDashboard />
       </div>
     );
   } else {
-    // Load Viewer Private Profile for wizards
-    console.log(`👤 Loading Viewer Profile for ${user.displayName} (VIEWER)`);
+    // Load Viewer Profile for users who haven't completed creator requirements
+    console.log(`👤 Viewer Profile: ${user.displayName} (no YouTube connection or content creation)`);
     return (
       <div className={className}>
         <PrivateViewerProfile />

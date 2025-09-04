@@ -13,7 +13,7 @@ const Index = () => {
     if (!loading) {
       const shouldShowDashboard = !!user;
       if (shouldShowDashboard !== showDashboard) {
-        console.log(shouldShowDashboard ? '🎯 User authenticated, showing dashboard' : '🏠 No user found, showing homepage');
+        // console.log(shouldShowDashboard ? '🎯 User authenticated, showing dashboard' : '🏠 No user found, showing homepage');
         setShowDashboard(shouldShowDashboard);
       }
     }
@@ -23,7 +23,7 @@ const Index = () => {
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       if (event.key === 'h' || event.key === 'H') {
-        console.log('🏠 Going back to homepage for testing...');
+        // console.log('🏠 Going back to homepage for testing...');
         setShowDashboard(false);
       }
     };

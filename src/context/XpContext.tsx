@@ -48,16 +48,17 @@ export const XpProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     // This method is now deprecated - XP should be awarded through Firebase Functions
   };
 
-  console.log('🔄 XpContext rendering with data:', JSON.stringify({
-    totalXP: xpSystem.totalXP,
-    level: xpSystem.level,
-    progressPercent: xpSystem.progressPercent,
-    xpInCurrentLevel: xpSystem.xpInCurrentLevel,
-    xpToNextLevel: xpSystem.xpToNextLevel,
-    dailyXP: xpSystem.dailyXP,
-    loading: xpSystem.loading,
-    forceRefresh
-  }, null, 2));
+  // Debug logs disabled for production
+  // console.log('🔄 XpContext rendering with data:', JSON.stringify({
+  //   totalXP: xpSystem.totalXP,
+  //   level: xpSystem.level,
+  //   progressPercent: xpSystem.progressPercent,
+  //   xpInCurrentLevel: xpSystem.xpInCurrentLevel,
+  //   xpToNextLevel: xpSystem.xpToNextLevel,
+  //   dailyXP: xpSystem.dailyXP,
+  //   loading: xpSystem.loading,
+  //   forceRefresh
+  // }, null, 2));
 
   return (
     <XpContext.Provider value={{ 

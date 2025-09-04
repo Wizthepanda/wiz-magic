@@ -6,16 +6,19 @@ import { YouTubeCreatorProfile } from '@/components/wiz/YouTubeCreatorProfile';
 import { useAuth } from '@/hooks/useAuth';
 
 const CreatorProfile = () => {
-  const { channelId } = useParams<{ channelId: string }>();
+  const { channelId, handle } = useParams<{ channelId?: string; handle?: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  
+  // Use either channelId or handle as identifier
+  const creatorId = channelId || handle;
 
   const handleBack = () => {
     navigate(-1); // Go back to previous page
   };
 
-  if (!channelId) {
+  if (!creatorId) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
         <div className="container mx-auto px-4 py-8">
@@ -62,7 +65,7 @@ const CreatorProfile = () => {
         
         {/* Creator Profile Component */}
         <YouTubeCreatorProfile 
-          channelId={channelId}
+          channelId={creatorId}
           className="w-full"
         />
       </div>

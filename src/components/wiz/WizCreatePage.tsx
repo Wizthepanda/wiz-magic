@@ -38,6 +38,11 @@ const categories = [
   { value: 'health', label: 'Health' },
   { value: 'money', label: 'Money' },
   { value: 'podcast', label: 'Podcasts' },
+  { value: 'art', label: 'Art' },
+  { value: 'fashion', label: 'Fashion' },
+  { value: 'relationships', label: 'Relationships' },
+  { value: 'lifestyle', label: 'Lifestyle' },
+  { value: 'movie', label: 'Movie' },
 ];
 
 export const WizCreatePage = () => {

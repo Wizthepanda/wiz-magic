@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { CreatorService, CreatorVideo } from '@/lib/creator-service';
+import { doc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface CreatorProfile {
   channelId: string;
@@ -110,28 +112,77 @@ export const CreatorOnboarding = () => {
     { number: 3, title: 'Live', subtitle: 'Your Videos Ready' }
   ];
 
-  // Mock YouTube API connection (replace with actual implementation)
   const handleYouTubeConnect = async () => {
+    if (!user?.uid) {
+      toast({
+        title: "Authentication Error",
+        description: "Please sign in to connect your YouTube channel.",
+        duration: 3000,
+      });
+      return;
+    }
+
     setIsConnecting(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setCreatorProfile({
+    try {
+      // Mock profile data (replace with actual YouTube API when available)
+      const mockProfile = {
         channelId: 'UCexample123',
-        channelName: 'WIZ Creator Channel',
-        profilePicture: 'https://yt3.ggpht.com/example.jpg',
+        channelName: user.displayName || 'WIZ Creator Channel',
+        profilePicture: user.photoURL || 'https://yt3.ggpht.com/example.jpg',
         subscriberCount: '10.5K',
         videoCount: 42
-      });
+      };
+
+      // Update user document in Firestore with creator data (using setDoc with merge to handle new users)
+      const userRef = doc(db, 'users', user.uid);
+      await setDoc(userRef, {
+        // Creator role and enrollment flags
+        role: 'creator',
+        hasCreatedContent: true,
+        
+        // YouTube connection data
+        youtubeConnected: true,
+        youtubeProfile: {
+          channelId: mockProfile.channelId,
+          channelName: mockProfile.channelName,
+          profilePicture: mockProfile.profilePicture,
+          subscriberCount: mockProfile.subscriberCount,
+          videoCount: mockProfile.videoCount
+        },
+        
+        // Enrollment timestamps
+        creatorEnrolledAt: serverTimestamp(),
+        youtubeConnectedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        
+        // Initialize creator metrics
+        coursesCreated: 0,
+        videosUploaded: 0,
+        totalEarnings: 0
+      }, { merge: true });
+
+      console.log(`✅ Creator enrollment successful for user ${user.uid}`);
+      
+      setCreatorProfile(mockProfile);
       setIsConnecting(false);
       setCurrentStep(2);
       
       toast({
         title: "🎉 YouTube Connected!",
-        description: "Your channel has been successfully connected to WIZ.",
+        description: "You're now enrolled as a creator on WIZ! Visit your profile to see your creator dashboard.",
+        duration: 5000,
+      });
+    } catch (error) {
+      console.error('❌ Error enrolling creator:', error);
+      setIsConnecting(false);
+      
+      toast({
+        title: "Connection Failed",
+        description: "Failed to connect YouTube channel. Please try again.",
         duration: 3000,
       });
-    }, 2000);
+    }
   };
 
   const handleCategorySelect = (categoryId: string) => {

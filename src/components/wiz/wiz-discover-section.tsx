@@ -17,7 +17,8 @@ import { EnhancedMostViewed } from './EnhancedMostViewed';
 import { WizMobileFilters } from './WizMobileFilters';
 import { WizPremiumLeaderboard } from './WizPremiumLeaderboard';
 import { db } from '@/lib/firebase';
-import { collection, query, orderBy, limit, onSnapshot, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, limit, onSnapshot, getDocs, getDoc, doc } from 'firebase/firestore';
+import { VideoSyncDebug } from '@/lib/video-sync-debug';
 import { testPublishVideo } from '@/lib/test-video-sync';
 import { VideoCompletionService } from '@/lib/video-completion-service';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -34,6 +35,11 @@ const categories = [
   { id: 'movies', label: 'Movies', color: 'bg-indigo-500', dotColor: 'bg-indigo-400' },
   { id: 'news', label: 'News', color: 'bg-cyan-500', dotColor: 'bg-cyan-400' },
   { id: 'podcast', label: 'Podcast', color: 'bg-teal-500', dotColor: 'bg-teal-400' },
+  { id: 'art', label: 'Art', color: 'bg-violet-500', dotColor: 'bg-violet-400' },
+  { id: 'fashion', label: 'Fashion', color: 'bg-fuchsia-500', dotColor: 'bg-fuchsia-400' },
+  { id: 'relationships', label: 'Relationships', color: 'bg-pink-500', dotColor: 'bg-pink-400' },
+  { id: 'lifestyle', label: 'Lifestyle', color: 'bg-amber-500', dotColor: 'bg-amber-400' },
+  { id: 'movie', label: 'Movie', color: 'bg-slate-500', dotColor: 'bg-slate-400' },
 ];
 
 // Exactly 8 video panels with category tags
@@ -42,7 +48,7 @@ const videos = [
     id: 1,
     title: 'WIZ Magic Demo Video',
     creator: 'WIZ Magic',
-    avatar: '',
+    avatar: 'https://ui-avatars.com/api/?name=WIZ+Magic&background=8B5CF6&color=ffffff&size=128',
     thumbnail: '',
     duration: '0:27',
     xpReward: 25,
@@ -58,7 +64,7 @@ const videos = [
     id: 2,
     title: 'Building Wealth Through Tech Investments',
     creator: 'MoneyWizard',
-    avatar: '',
+    avatar: 'https://ui-avatars.com/api/?name=MoneyWizard&background=10B981&color=ffffff&size=128',
     thumbnail: '',
     duration: '18:30',
     xpReward: 220,
@@ -74,7 +80,7 @@ const videos = [
     id: 3,
     title: 'React 19 Features You Need to Know',
     creator: 'CodeMaster',
-    avatar: '',
+    avatar: 'https://ui-avatars.com/api/?name=CodeMaster&background=3B82F6&color=ffffff&size=128',
     thumbnail: '',
     duration: '15:20',
     xpReward: 180,
@@ -90,7 +96,7 @@ const videos = [
     id: 4,
     title: 'Music Production Secrets Revealed',
     creator: 'BeatCreator',
-    avatar: '',
+    avatar: 'https://ui-avatars.com/api/?name=BeatCreator&background=EC4899&color=ffffff&size=128',
     thumbnail: '',
     duration: '22:15',
     xpReward: 280,
@@ -106,7 +112,7 @@ const videos = [
     id: 5,
     title: 'Advanced Machine Learning Techniques',
     creator: 'MLExpert',
-    avatar: '',
+    avatar: 'https://ui-avatars.com/api/?name=MLExpert&background=8B5CF6&color=ffffff&size=128',
     thumbnail: '',
     duration: '25:40',
     xpReward: 320,
@@ -122,7 +128,7 @@ const videos = [
     id: 6,
     title: 'Cryptocurrency Trading Strategies',
     creator: 'CryptoKing',
-    avatar: '',
+    avatar: 'https://ui-avatars.com/api/?name=CryptoKing&background=F59E0B&color=ffffff&size=128',
     thumbnail: '',
     duration: '19:55',
     xpReward: 240,
@@ -138,7 +144,7 @@ const videos = [
     id: 7,
     title: 'Fitness Transformation in 30 Days',
     creator: 'HealthGuru',
-    avatar: '',
+    avatar: 'https://ui-avatars.com/api/?name=HealthGuru&background=EF4444&color=ffffff&size=128',
     thumbnail: '',
     duration: '16:45',
     xpReward: 200,
@@ -154,7 +160,7 @@ const videos = [
     id: 8,
     title: 'Electronic Music Composition',
     creator: 'SynthMaster',
-    avatar: '',
+    avatar: 'https://ui-avatars.com/api/?name=SynthMaster&background=EC4899&color=ffffff&size=128',
     thumbnail: '',
     duration: '24:30',
     xpReward: 260,
@@ -330,9 +336,18 @@ export const WizDiscoverSection = () => {
   useEffect(() => {
     (window as any).debugFirestoreVideos = debugFirestoreVideos;
     (window as any).testPublishVideoForUser = (userId: string) => testPublishVideo(userId);
+    (window as any).cleanupDuplicates = async (creatorId: string) => {
+      const { CreatorService } = await import('../../lib/creator-service');
+      return CreatorService.removeDuplicateVideos(creatorId);
+    };
+    (window as any).checkVideoSync = (creatorId?: string) => VideoSyncDebug.checkVideoSyncStatus(creatorId);
+    (window as any).syncMissingVideos = (creatorId: string) => VideoSyncDebug.syncMissingVideos(creatorId);
     return () => {
       delete (window as any).debugFirestoreVideos;
       delete (window as any).testPublishVideoForUser;
+      delete (window as any).cleanupDuplicates;
+      delete (window as any).checkVideoSync;
+      delete (window as any).syncMissingVideos;
     };
   }, []);
 
@@ -367,6 +382,21 @@ export const WizDiscoverSection = () => {
     }
     if (tagStr.includes('podcast') || tagStr.includes('interview') || tagStr.includes('discussion')) {
       return { category: 'podcast', categoryLabel: 'PODCAST' };
+    }
+    if (tagStr.includes('art') || tagStr.includes('design') || tagStr.includes('creative') || tagStr.includes('painting')) {
+      return { category: 'art', categoryLabel: 'ART' };
+    }
+    if (tagStr.includes('fashion') || tagStr.includes('style') || tagStr.includes('clothing') || tagStr.includes('trends')) {
+      return { category: 'fashion', categoryLabel: 'FASHION' };
+    }
+    if (tagStr.includes('relationship') || tagStr.includes('dating') || tagStr.includes('love') || tagStr.includes('couples')) {
+      return { category: 'relationships', categoryLabel: 'RELATIONSHIPS' };
+    }
+    if (tagStr.includes('lifestyle') || tagStr.includes('living') || tagStr.includes('daily') || tagStr.includes('routine')) {
+      return { category: 'lifestyle', categoryLabel: 'LIFESTYLE' };
+    }
+    if (tagStr.includes('movie') || tagStr.includes('film') || tagStr.includes('cinema') || tagStr.includes('review')) {
+      return { category: 'movie', categoryLabel: 'MOVIE' };
     }
     
     return { category: 'tech', categoryLabel: 'TECH' };
@@ -406,43 +436,200 @@ export const WizDiscoverSection = () => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  // Load videos from Firestore
+  // Load videos from Firestore with deduplication
   useEffect(() => {
-    const loadVideos = () => {
+    const loadVideos = async () => {
       try {
-        const videosRef = collection(db, 'videos');
-        // Try with ordering first, fallback to simple query if index doesn't exist
-        let videosQuery;
-        try {
-          videosQuery = query(videosRef, orderBy('addedToWiz', 'desc'), limit(20));
-        } catch (indexError) {
-          console.warn('🔍 Discover: Index not found, using simple query:', indexError);
-          videosQuery = query(videosRef, limit(20));
-        }
+        console.log('🔍 Discover: Loading videos with deduplication...');
+        
+        // Fetch from both collections
+        const [videosSnapshot, creatorVideosSnapshot] = await Promise.all([
+          // Fetch from videos collection
+          getDocs(query(collection(db, 'videos'), limit(15))).catch(err => {
+            console.warn('🔍 Videos collection query failed:', err);
+            return { docs: [] };
+          }),
+          // Fetch from creatorVideos collection
+          getDocs(query(collection(db, 'creatorVideos'), orderBy('addedToWiz', 'desc'), limit(15))).catch(err => {
+            console.warn('🔍 CreatorVideos collection query failed:', err);
+            return { docs: [] };
+          })
+        ]);
 
-        console.log('🔍 Discover: Setting up Firestore listener...');
-        const unsubscribe = onSnapshot(videosQuery, async (snapshot) => {
-          console.log('🔍 Discover: Firestore snapshot received, doc count:', snapshot.docs.length);
-          console.log('🔍 Discover: Raw snapshot data:', snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() })));
+        console.log('🔍 Discover: Fetched videos -', videosSnapshot.docs.length, 'from videos,', creatorVideosSnapshot.docs.length, 'from creatorVideos');
+        
+        const loadedVideos = [];
+        const processedVideoIds = new Map(); // Track processed videos with timestamp for deduplication
+        const creatorVideoCount = new Map(); // Track videos per creator
+        
+        // Get completed videos for the current user
+        const completedVideos = user ? await VideoCompletionService.getUserCompletedVideos() : [];
+        console.log('📚 User completed videos:', completedVideos);
+        
+        // Fetch creator profile data for avatar fallbacks
+        const creatorProfiles = new Map();
+        const uniqueCreatorIds = new Set();
+        
+        // Collect unique creator IDs from both snapshots
+        [...videosSnapshot.docs, ...creatorVideosSnapshot.docs].forEach(doc => {
+          const data = doc.data();
+          if (data.creatorId) uniqueCreatorIds.add(data.creatorId);
+        });
+        
+        // Fetch creator profiles for avatar fallbacks
+        if (uniqueCreatorIds.size > 0) {
+          for (const creatorId of uniqueCreatorIds) {
+            try {
+              const profileDoc = await getDoc(doc(db, 'creatorProfiles', creatorId));
+              if (profileDoc.exists()) {
+                creatorProfiles.set(creatorId, profileDoc.data());
+              }
+            } catch (error) {
+              console.warn(`Could not fetch creator profile for ${creatorId}:`, error);
+            }
+          }
+        }
+        
+        // Process videos from both collections with deduplication and creator limits
+        // Prioritize creatorVideos collection first so uploaded videos take precedence
+        const allSnapshots = [
+          ...creatorVideosSnapshot.docs.map(doc => ({ doc, source: 'creatorVideos' })),
+          ...videosSnapshot.docs.map(doc => ({ doc, source: 'videos' }))
+        ];
+        
+        // Sort by lastUpdated date first (for fresh uploads), then addedToWiz date
+        allSnapshots.sort((a, b) => {
+          const dataA = a.doc.data();
+          const dataB = b.doc.data();
           
-          const loadedVideos = [];
+          // Get lastUpdated dates
+          const lastUpdatedA = new Date(dataA.lastUpdated?.toDate?.() || dataA.lastUpdated || 0).getTime();
+          const lastUpdatedB = new Date(dataB.lastUpdated?.toDate?.() || dataB.lastUpdated || 0).getTime();
           
-          // Get completed videos for the current user
-          const completedVideos = user ? await VideoCompletionService.getUserCompletedVideos() : [];
-          console.log('📚 User completed videos:', completedVideos);
+          // Get addedToWiz dates
+          const addedA = new Date(dataA.addedToWiz?.toDate?.() || dataA.addedToWiz || 0).getTime();
+          const addedB = new Date(dataB.addedToWiz?.toDate?.() || dataB.addedToWiz || 0).getTime();
           
-          snapshot.docs.forEach((doc) => {
+          // If both have recent lastUpdated times (within last hour), prioritize those
+          const oneHourAgo = Date.now() - (60 * 60 * 1000);
+          if (lastUpdatedA > oneHourAgo || lastUpdatedB > oneHourAgo) {
+            return lastUpdatedB - lastUpdatedA;
+          }
+          
+          // Otherwise sort by addedToWiz date
+          return addedB - addedA;
+        });
+        
+        allSnapshots.forEach(({ doc, source }) => {
             const data = doc.data();
+            
+            // Enhanced duplicate detection - prioritize newer uploads
+            const getTimestamp = (data) => {
+              // Try multiple timestamp fields in priority order
+              const fields = [
+                data.lastUpdated?.toDate ? data.lastUpdated.toDate() : null,
+                data.lastUpdated ? new Date(data.lastUpdated) : null,
+                data.addedToWiz?.toDate ? data.addedToWiz.toDate() : null,
+                data.addedToWiz ? new Date(data.addedToWiz) : null
+              ].filter(date => date && !isNaN(date.getTime())); // Filter out invalid dates
+              
+              // Return the most recent valid timestamp, or current time if none found
+              return fields.length > 0 ? Math.max(...fields.map(d => d.getTime())) : Date.now();
+            };
+            
+            const currentTimestamp = getTimestamp(data);
+            
+            if (processedVideoIds.has(data.videoId)) {
+              const existingTimestamp = processedVideoIds.get(data.videoId);
+              
+              // Debug log the timestamps for comparison
+              const currentDate = new Date(currentTimestamp);
+              const existingDate = new Date(existingTimestamp);
+              console.log(`🔍 Duplicate detection for ${data.title}:`, {
+                videoId: data.videoId,
+                currentTime: !isNaN(currentDate.getTime()) ? currentDate.toISOString() : 'Invalid Date',
+                existingTime: !isNaN(existingDate.getTime()) ? existingDate.toISOString() : 'Invalid Date',
+                isNewer: currentTimestamp > existingTimestamp,
+                source,
+                lastUpdated: data.lastUpdated,
+                addedToWiz: data.addedToWiz
+              });
+              
+              if (currentTimestamp <= existingTimestamp) {
+                console.log(`⚠️ Skipping older duplicate video: ${data.title} (${data.videoId})`);
+                return;
+              } else {
+                console.log(`🔄 Replacing older video with newer version: ${data.title}`);
+                // Remove the older version from loadedVideos
+                const oldIndex = loadedVideos.findIndex(v => v.videoId === data.videoId);
+                if (oldIndex !== -1) {
+                  loadedVideos.splice(oldIndex, 1);
+                  // Also need to decrease the creator count
+                  const oldCreatorKey = loadedVideos[oldIndex]?.creatorId || loadedVideos[oldIndex]?.channelId || 'unknown';
+                  const oldCount = creatorVideoCount.get(oldCreatorKey) || 0;
+                  if (oldCount > 0) {
+                    creatorVideoCount.set(oldCreatorKey, oldCount - 1);
+                  }
+                }
+                processedVideoIds.set(data.videoId, currentTimestamp);
+              }
+            } else {
+              processedVideoIds.set(data.videoId, currentTimestamp);
+            }
+            
+            // Limit videos per creator to 20 to allow creators to showcase more content
+            const creatorKey = data.creatorId || data.channelId || data.creator || 'unknown';
+            const currentCount = creatorVideoCount.get(creatorKey) || 0;
+            if (currentCount >= 20) {
+              console.log(`⚠️ Skipping video from ${data.creatorName || data.creator}: max 20 videos per creator reached`);
+              return;
+            }
+            
             console.log(`🔍 Processing video doc ${doc.id}:`, data);
             
             const { category, categoryLabel } = mapCategoryToStandard(data.categoryTags || []);
             const isWatched = completedVideos.includes(data.videoId);
             
+            // Enhanced avatar fallback logic with unique generation
+            const creatorProfile = creatorProfiles.get(data.creatorId);
+            const creatorName = data.creatorName || data.channelName || data.channelTitle || 'Unknown Creator';
+            
+            // Generate unique avatar using creator name and video title for uniqueness
+            const uniqueAvatarSeed = `${creatorName}_${data.videoId || Math.random()}`;
+            const avatarColors = ['8B5CF6', 'EC4899', '06B6D4', 'F59E0B', '10B981', 'EF4444', '6366F1', 'F97316'];
+            const colorIndex = uniqueAvatarSeed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % avatarColors.length;
+            const avatarColor = avatarColors[colorIndex];
+            
+            console.log(`🎭 Avatar debug for ${data.title}:`, {
+              creatorId: data.creatorId,
+              creatorName: data.creatorName,
+              channelName: data.channelName,
+              videoAvatar: data.creatorAvatar,
+              channelAvatar: data.channelAvatar,
+              channelThumbnail: data.channelThumbnail,
+              hasCreatorProfile: !!creatorProfile,
+              profileAvatar: creatorProfile?.youtubeData?.thumbnailUrl,
+              profilePicture: creatorProfile?.youtubeData?.profilePicture,
+              uniqueSeed: uniqueAvatarSeed,
+              selectedColor: avatarColor
+            });
+            
+            const avatarUrl = data.creatorAvatar || 
+                             data.channelAvatar || 
+                             data.channelThumbnail ||
+                             creatorProfile?.youtubeData?.thumbnailUrl ||
+                             creatorProfile?.youtubeData?.profilePicture ||
+                             creatorProfile?.channelAvatar ||
+                             // Generate unique fallback avatar with creator-specific color
+                             `https://ui-avatars.com/api/?name=${encodeURIComponent(creatorName.slice(0, 2))}&background=${avatarColor}&color=ffffff&size=128&bold=true&format=svg`;
+            
+            console.log(`🎭 Final avatar URL for ${data.title}: ${avatarUrl}`);
+            
             const video = {
               id: doc.id,
               title: data.title || 'Untitled Video',
-              creator: data.creatorName || data.channelName || data.channelTitle || 'Unknown Creator',
-              avatar: data.creatorAvatar || data.channelAvatar || data.channelThumbnail || '',
+              creator: creatorName,
+              avatar: avatarUrl,
               thumbnail: data.thumbnail || `https://img.youtube.com/vi/${data.videoId}/maxresdefault.jpg`,
               duration: formatDuration(data.duration),
               xpReward: calculateXPReward(data.duration),
@@ -456,84 +643,32 @@ export const WizDiscoverSection = () => {
               isNew: new Date(data.addedToWiz?.toDate?.() || data.addedToWiz || new Date()).getTime() > Date.now() - 24 * 60 * 60 * 1000,
             };
             
+            // Update creator count (processedVideoIds already updated above)
+            creatorVideoCount.set(creatorKey, currentCount + 1);
+            
             console.log(`✅ Processed video "${video.title}": watched=${isWatched}`, video);
             loadedVideos.push(video);
           });
 
-          console.log('📺 Loaded videos from Firestore:', loadedVideos.length);
-          console.log('📺 Final loaded videos:', loadedVideos);
-          setDynamicVideos(loadedVideos);
+          // Already sorted by processing order, limit to 12 for better performance
+          const finalVideos = loadedVideos.slice(0, 12);
+
+          console.log('📺 Loaded videos from Firestore:', finalVideos.length);
+          console.log('📺 Final loaded videos:', finalVideos);
+          setDynamicVideos(finalVideos);
           setLoading(false);
-        }, (error) => {
-          console.error('❌ Error loading videos with ordered query:', error);
-          
-          // If the ordered query fails (likely due to missing index), try a simple query
-          if (error.code === 'failed-precondition') {
-            console.log('🔄 Discover: Trying fallback query without ordering...');
-            const fallbackQuery = query(videosRef, limit(20));
-            const fallbackUnsubscribe = onSnapshot(fallbackQuery, async (snapshot) => {
-              console.log('🔍 Discover: Fallback query snapshot received, doc count:', snapshot.docs.length);
-              const loadedVideos = [];
-              
-              // Get completed videos for the current user
-              const completedVideos = user ? await VideoCompletionService.getUserCompletedVideos() : [];
-              
-              snapshot.docs.forEach((doc) => {
-                const data = doc.data();
-                const { category, categoryLabel } = mapCategoryToStandard(data.categoryTags || []);
-                const isWatched = completedVideos.includes(data.videoId);
-                
-                const video = {
-                  id: doc.id,
-                  title: data.title || 'Untitled Video',
-                  creator: data.creatorName || data.channelName || data.channelTitle || 'Unknown Creator',
-                  avatar: data.creatorAvatar || data.channelAvatar || data.channelThumbnail || '',
-                  thumbnail: data.thumbnail || `https://img.youtube.com/vi/${data.videoId}/maxresdefault.jpg`,
-                  duration: formatDuration(data.duration),
-                  xpReward: calculateXPReward(data.duration),
-                  category,
-                  categoryLabel,
-                  views: formatViewCount(data.views || '0'),
-                  watched: isWatched,
-                  progress: isWatched ? 100 : 0,
-                  videoId: data.videoId,
-                  channelId: data.channelId || '',
-                  isNew: new Date(data.addedToWiz?.toDate?.() || data.addedToWiz || new Date()).getTime() > Date.now() - 24 * 60 * 60 * 1000,
-                };
-                loadedVideos.push(video);
-              });
-              
-              console.log('📺 Fallback loaded videos from Firestore:', loadedVideos.length);
-              setDynamicVideos(loadedVideos);
-              setLoading(false);
-            }, (fallbackError) => {
-              console.error('❌ Fallback query also failed:', fallbackError);
-              setLoading(false);
-            });
-            
-            return fallbackUnsubscribe;
-          } else {
-            setLoading(false);
-          }
-        });
+        } catch (error) {
+          console.error('❌ Error loading videos:', error);
+          setLoading(false);
+        }
+      };
 
-        return unsubscribe;
-      } catch (error) {
-        console.error('❌ Error setting up video listener:', error);
-        setLoading(false);
-      }
-    };
-
-    const unsubscribe = loadVideos();
-    return () => {
-      if (unsubscribe && typeof unsubscribe === 'function') {
-        unsubscribe();
-      }
-    };
-  }, []);
+      loadVideos();
+  }, [user]);
 
   // Combine dynamic videos with static videos, prioritizing dynamic videos
-  const allVideos = dynamicVideos.length > 0 ? dynamicVideos : videos;
+  // Only show static videos if no dynamic videos are loaded to prevent dummy content flash
+  const allVideos = dynamicVideos.length > 0 ? dynamicVideos : (loading ? [] : videos);
   
   const filteredVideos = activeCategory === 'all' 
     ? allVideos 
@@ -630,18 +765,22 @@ export const WizDiscoverSection = () => {
               />
             </div>
           ) : (
-            <div className="flex justify-start flex-wrap gap-2 sm:gap-3 px-2 sm:px-0">
-              {categories.map((category) => (
-                <Button
-                  key={category.id}
-                  variant={activeCategory === category.id ? "default" : "outline"}
-                  onClick={() => setActiveCategory(category.id)}
-                  className={`${activeCategory === category.id ? category.color : ''} transition-all duration-200 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3`}
-                >
-                  <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${category.dotColor}`} />
-                  <span className="truncate">{category.label}</span>
-                </Button>
-              ))}
+            <div className="relative w-full">
+              {/* Horizontal scroll container */}
+              <div className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory px-2 sm:px-0 pb-1">
+                {categories.map((category) => (
+                  <Button
+                    key={category.id}
+                    variant={activeCategory === category.id ? "default" : "outline"}
+                    onClick={() => setActiveCategory(category.id)}
+                    className={`${activeCategory === category.id ? category.color : ''} transition-all duration-200 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3 flex-shrink-0 snap-start`}
+                  >
+                    <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${category.dotColor}`} />
+                    <span className="whitespace-nowrap">{category.label}</span>
+                  </Button>
+                ))}
+              </div>
+
             </div>
           )}
         </div>
@@ -697,7 +836,45 @@ export const WizDiscoverSection = () => {
             )}
             style={!isMobile ? { scrollbarWidth: 'none', msOverflowStyle: 'none' } : {}}
           >
-            {filteredVideos.map((video) => (
+            {loading ? (
+              // Loading skeleton
+              Array.from({ length: isMobile ? 3 : 4 }).map((_, index) => (
+                <div 
+                  key={`skeleton-${index}`}
+                  className={cn(
+                    "group animate-pulse",
+                    isMobile 
+                      ? "w-full" 
+                      : "flex-shrink-0 w-64 sm:w-80"
+                  )}
+                >
+                  {isMobile ? (
+                    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                      <div className="aspect-video bg-gray-300 rounded-t-2xl"></div>
+                      <div className="p-4 space-y-3">
+                        <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
+                          <div className="h-3 bg-gray-300 rounded w-1/3"></div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-80 sm:h-96 bg-white rounded-2xl shadow-xl overflow-hidden">
+                      <div className="h-48 bg-gray-300"></div>
+                      <div className="p-5 space-y-3">
+                        <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
+                          <div className="h-3 bg-gray-300 rounded w-1/3"></div>
+                        </div>
+                        <div className="h-8 bg-gray-300 rounded"></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : filteredVideos.map((video) => (
               <div 
                 key={video.id} 
                 className={cn(

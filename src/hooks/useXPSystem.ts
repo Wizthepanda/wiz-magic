@@ -75,7 +75,8 @@ export const useXPSystem = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  console.log('🏗️ useXPSystem hook running with user:', user?.uid || 'NO USER', 'loading:', loading);
+  // Debug logs disabled for production
+  // console.log('🏗️ useXPSystem hook running with user:', user?.uid || 'NO USER', 'loading:', loading);
 
   // Listen to auth singleton for user changes
   useEffect(() => {
@@ -339,14 +340,14 @@ export const useXPSystem = () => {
   const canEarnMoreXP = xpData ? xpData.dailyXP < xpData.dailyCap : true;
   const dailyProgress = xpData ? (xpData.dailyXP / xpData.dailyCap) * 100 : 0;
   
-  // Debug computed values
-  console.log('🔧 useXPSystem computed values:', JSON.stringify({
-    xpData: xpData ? { totalXP: xpData.totalXP, currentLevel: xpData.currentLevel, progressToNext: xpData.progressToNext } : null,
-    levelData,
-    progressPercent: (levelData?.progressToNext || 0) * 100,
-    totalXP: xpData?.totalXP || 0,
-    level: levelData?.level || 1,
-  }, null, 2));
+  // Debug computed values - disabled for production
+  // console.log('🔧 useXPSystem computed values:', JSON.stringify({
+  //   xpData: xpData ? { totalXP: xpData.totalXP, currentLevel: xpData.currentLevel, progressToNext: xpData.progressToNext } : null,
+  //   levelData,
+  //   progressPercent: (levelData?.progressToNext || 0) * 100,
+  //   totalXP: xpData?.totalXP || 0,
+  //   level: levelData?.level || 1,
+  // }, null, 2));
 
   return {
     // Data

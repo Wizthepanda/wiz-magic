@@ -108,7 +108,7 @@ class AuthSingleton {
     this.initialized = false;
     this.initializing = false;
     
-    console.log('🗑️ AuthSingleton: Cleaned up');
+    // console.log('🗑️ AuthSingleton: Cleaned up');
   }
 }
 

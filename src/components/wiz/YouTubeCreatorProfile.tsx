@@ -10,6 +10,8 @@ import { useYouTubeSubscription } from '@/hooks/useYouTubeSubscription';
 import { youTubeAPI, YouTubeChannelInfo, YouTubeVideo } from '@/lib/youtube-api';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { collection, query, where, orderBy, limit, getDocs, getDoc, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface YouTubeCreatorProfileProps {
   channelId: string;
@@ -61,6 +63,58 @@ export const YouTubeCreatorProfile: React.FC<YouTubeCreatorProfileProps> = ({
     hasPermissions
   } = useYouTubeSubscription(user ? channelId : '');
 
+  // Function to fetch internal videos from our database
+  const fetchInternalVideos = async (creatorId: string): Promise<YouTubeVideo[]> => {
+    try {
+      // First try to find the creator by channel ID in creatorProfiles
+      const profileQuery = query(
+        collection(db, 'creatorProfiles'),
+        where('youtubeData.channelId', '==', creatorId),
+        limit(1)
+      );
+      
+      const profileSnapshot = await getDocs(profileQuery);
+      let actualCreatorId = creatorId;
+      
+      if (profileSnapshot.docs.length > 0) {
+        actualCreatorId = profileSnapshot.docs[0].id; // Use the actual user ID
+        console.log(`📋 Found creator profile: ${actualCreatorId} for channel: ${creatorId}`);
+      }
+      
+      // Fetch videos from creatorVideos collection
+      const videosQuery = query(
+        collection(db, 'creatorVideos'),
+        where('creatorId', '==', actualCreatorId),
+        orderBy('addedToWiz', 'desc'),
+        limit(10)
+      );
+      
+      const videosSnapshot = await getDocs(videosQuery);
+      const internalVideos = videosSnapshot.docs.map(doc => {
+        const data = doc.data();
+        // Convert our internal video format to YouTubeVideo format
+        return {
+          id: data.videoId,
+          title: data.title || 'Untitled Video',
+          description: data.description || '',
+          thumbnailUrl: data.thumbnail || `https://img.youtube.com/vi/${data.videoId}/maxresdefault.jpg`,
+          publishedAt: data.publishedAt || data.addedToWiz?.toDate?.()?.toISOString() || new Date().toISOString(),
+          channelId: data.channelId || creatorId,
+          channelTitle: data.channelName || data.creatorName || 'Creator',
+          viewCount: data.views ? parseInt(data.views.toString()) : 0,
+          likeCount: data.likes || Math.floor(Math.random() * 100),
+          commentCount: data.comments || Math.floor(Math.random() * 20),
+          duration: data.duration || 'PT0M0S'
+        } as YouTubeVideo;
+      });
+      
+      return internalVideos;
+    } catch (error) {
+      console.error('❌ Error fetching internal videos:', error);
+      return [];
+    }
+  };
+
   // Load channel data on mount
   useEffect(() => {
     const loadChannelData = async () => {
@@ -70,36 +124,90 @@ export const YouTubeCreatorProfile: React.FC<YouTubeCreatorProfileProps> = ({
 
         console.log(`🔍 Loading channel data for ID: ${channelId}`);
 
+        // First try to resolve if this is actually a user ID instead of channel ID
+        let actualChannelId = channelId;
+        try {
+          // Check if this channelId is actually a user ID in our database
+          const userDoc = await getDoc(doc(db, 'users', channelId));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            if (userData.youtubeProfile?.channelId) {
+              actualChannelId = userData.youtubeProfile.channelId;
+              console.log(`🔄 Resolved user ID ${channelId} to channel ID: ${actualChannelId}`);
+            }
+          }
+        } catch (resolveError) {
+          console.log('⚠️ Could not resolve channel ID, using original:', channelId);
+        }
+
         // Fetch real channel info using public YouTube API
-        const channelData = await youTubeAPI.getPublicChannelInfo(channelId);
+        const channelData = await youTubeAPI.getPublicChannelInfo(actualChannelId);
         console.log('✅ Channel data loaded:', channelData);
         setChannelInfo(channelData);
 
-        // Fetch real videos from the channel
-        const channelVideos = await youTubeAPI.getPublicChannelVideos(channelId, 10);
-        console.log(`✅ Loaded ${channelVideos.length} videos for channel`);
-        setVideos(channelVideos);
+        // Fetch real videos from the channel and internal database
+        const channelVideos = await youTubeAPI.getPublicChannelVideos(actualChannelId, 10);
+        console.log(`✅ Loaded ${channelVideos.length} YouTube videos for channel`);
+        
+        // Also fetch videos from our internal database (use original channelId for user lookup)
+        const internalVideos = await fetchInternalVideos(channelId);
+        console.log(`✅ Loaded ${internalVideos.length} internal videos for channel`);
+        
+        // Combine and deduplicate videos
+        const allVideos = [...channelVideos, ...internalVideos];
+        const uniqueVideos = allVideos.filter((video, index, self) => 
+          index === self.findIndex(v => v.id === video.id)
+        );
+        
+        setVideos(uniqueVideos);
         
       } catch (err) {
         console.error('❌ Error loading channel data:', err);
         const errorMessage = err instanceof Error ? err.message : 'Failed to load channel data';
         
-        // Check if it's an API key issue
-        if (errorMessage.includes('API Key not configured')) {
-          setError('YouTube API not configured. Using fallback data.');
-          // Fall back to mock data
+        // Check if it's an API key issue or invalid channel ID
+        if (errorMessage.includes('API Key not configured') || errorMessage.includes('No YouTube channel found')) {
+          setError(errorMessage.includes('API Key not configured') 
+            ? 'YouTube API not configured. Using fallback data.' 
+            : 'Loading creator profile with internal data.');
+          
+          // Try to get creator info from our database first
+          let creatorName = getChannelNameFromId(channelId);
+          let creatorAvatar = getChannelAvatarFromId(channelId);
+          
+          try {
+            const userDoc = await getDoc(doc(db, 'users', channelId));
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              creatorName = userData.displayName || userData.youtubeProfile?.channelName || creatorName;
+              creatorAvatar = userData.youtubeProfile?.profilePicture || creatorAvatar;
+            }
+            
+            const creatorProfileDoc = await getDoc(doc(db, 'creatorProfiles', channelId));
+            if (creatorProfileDoc.exists()) {
+              const profileData = creatorProfileDoc.data();
+              creatorName = profileData.wizName || profileData.youtubeData?.title || creatorName;
+              creatorAvatar = profileData.youtubeData?.thumbnailUrl || creatorAvatar;
+            }
+          } catch (dbError) {
+            console.log('Could not fetch creator data from database:', dbError);
+          }
+          
+          // Fall back to data (real if available, mock if not)
           const fallbackChannelInfo: YouTubeChannelInfo = {
             id: channelId,
-            name: getChannelNameFromId(channelId),
-            avatar: getChannelAvatarFromId(channelId),
+            name: creatorName,
+            avatar: creatorAvatar,
             subscriberCount: getMockSubscriberCount(channelId),
             customUrl: `@${channelId.slice(-8)}`,
-            description: `Content creator with Channel ID: ${channelId}`,
+            description: `WIZ Magic creator profile`,
             bannerImageUrl: getMockBannerFromId(channelId),
             publishedAt: '2020-01-01T00:00:00Z'
           };
           setChannelInfo(fallbackChannelInfo);
-          setVideos([]);
+          // Still try to load internal videos even if YouTube API fails
+          const internalVideos = await fetchInternalVideos(channelId);
+          setVideos(internalVideos);
         } else {
           setError(errorMessage);
         }

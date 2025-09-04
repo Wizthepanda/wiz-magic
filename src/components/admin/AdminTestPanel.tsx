@@ -2,32 +2,22 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { User, Crown, Shield, Database, TestTube, CheckCircle, ChevronDown, ChevronUp, Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { CreatorPromotion } from './CreatorPromotion';
 
 export const AdminTestPanel = () => {
   const { user } = useAuth();
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Debug logging
-  console.log('🔍 AdminTestPanel Debug:', {
-    user: user?.email,
-    isAdmin: user?.isAdmin,
-    permissions: user?.permissions,
-    userObject: user
-  });
+  // Debug logging disabled for production
+  // console.log('🔍 AdminTestPanel Debug:', {
+  //   user: user?.email,
+  //   isAdmin: user?.isAdmin,
+  //   permissions: user?.permissions,
+  //   userObject: user
+  // });
 
   // Only show if user is admin
   if (!user?.isAdmin) {
-    // Show a temporary debug panel for troubleshooting
-    if (user?.email === 'wizsparkles@gmail.com') {
-      return (
-        <div className="fixed bottom-4 right-4 bg-red-900/90 backdrop-blur-lg rounded-2xl p-4 border border-red-400/30 shadow-2xl z-50 max-w-sm text-white text-sm">
-          <h3 className="font-bold mb-2">🚨 Debug Info</h3>
-          <p>Email: {user?.email}</p>
-          <p>isAdmin: {user?.isAdmin ? 'true' : 'false'}</p>
-          <p>This panel should help debug the admin detection issue.</p>
-        </div>
-      );
-    }
     return null;
   }
 
@@ -112,6 +102,16 @@ export const AdminTestPanel = () => {
               </div>
             </motion.div>
           )}
+
+          {/* Creator Promotion Tool */}
+          <div className="mt-4 pt-3 border-t border-purple-400/20">
+            <div 
+              onClick={(e) => e.stopPropagation()} 
+              className="pointer-events-auto"
+            >
+              <CreatorPromotion />
+            </div>
+          </div>
 
           {/* Admin Dashboard Button */}
           <motion.button

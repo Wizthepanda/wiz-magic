@@ -3,10 +3,15 @@ import { Play, Star, TrendingUp, Users, Sparkles, Zap, Award, DollarSign, Chevro
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useXp } from '@/context/XpContext';
 import { isYouTubeAPIEnabled, isGoogleAuthEnabled, logFeatureFlag } from '@/lib/feature-flags';
 import { AdminTestPanel } from '@/components/admin/AdminTestPanel';
 import { YouTubeAuthModal } from './YouTubeAuthModal';
+import { VideoPanel } from './VideoPanel';
+import { db } from '@/lib/firebase';
+import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
 
 interface WizHomepageProps {
   onEnterPlatform: () => void;
@@ -101,8 +106,11 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
   const [isTrailerOpen, setIsTrailerOpen] = useState(false);
   const [showYouTubeModal, setShowYouTubeModal] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState(null);
   const carouselRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
   const { user, signInWithGoogle, connectYouTube } = useAuth();
+  const { addXp } = useXp();
 
   // Creators data for Meet the Creators section
   const creators = [
@@ -169,32 +177,33 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
   ];
 
   const handleEnterPlatform = async () => {
-    console.log('🎯 handleEnterPlatform called');
-    console.log('🔍 Current user state:', user ? `${user.email} (YouTube: ${user.youtubeConnected})` : 'No user');
+    // Debug logs disabled for production
+    // console.log('🎯 handleEnterPlatform called');
+    // console.log('🔍 Current user state:', user ? `${user.email} (YouTube: ${user.youtubeConnected})` : 'No user');
 
     try {
       // Check if Google Auth is disabled
       if (!isGoogleAuthEnabled()) {
         logFeatureFlag('Google Authentication', false, 'bypassing auth for testing');
-        console.log('🚀 Google Auth disabled, proceeding directly to dashboard');
+        // console.log('🚀 Google Auth disabled, proceeding directly to dashboard');
         onEnterPlatform();
         return;
       }
 
       // 1) If user is already signed in, proceed to platform
       if (user) {
-        console.log('✅ User already authenticated, proceeding to platform');
+        // console.log('✅ User already authenticated, proceeding to platform');
         onEnterPlatform();
         return;
       }
 
       // 2) If not signed in, show the pre-auth modal for YouTube connection
       if (isYouTubeAPIEnabled()) {
-        console.log('🎬 Showing YouTube auth modal');
+        // console.log('🎬 Showing YouTube auth modal');
         setShowYouTubeModal(true);
       } else {
         // Fallback to basic Google auth
-        console.log('🚀 Basic Google auth fallback');
+        // console.log('🚀 Basic Google auth fallback');
         await signInWithGoogle(false);
       }
       
@@ -207,13 +216,13 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
   const handleYouTubeAuthConfirm = async () => {
     try {
       setIsAuthLoading(true);
-      console.log('🚀 User confirmed YouTube auth, triggering OAuth...');
+      // console.log('🚀 User confirmed YouTube auth, triggering OAuth...');
       
       // This will redirect to Google OAuth with YouTube scopes
       await signInWithGoogle(true);
       
       // This code won't execute due to redirect
-      console.log('🔄 Sign-in initiated, redirecting...');
+      // console.log('🔄 Sign-in initiated, redirecting...');
       
     } catch (error: any) {
       console.error('❌ YouTube authentication error:', error);
@@ -329,7 +338,19 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
     }
   ];
 
-  const showcaseItems = [
+  // Video click handler for Featured Content
+  const handleVideoClick = (video) => {
+    setSelectedVideo(video);
+  };
+
+  // Video reward handler
+  const handleVideoReward = (xpAmount) => {
+    addXp(xpAmount);
+  };
+
+  // Dynamic showcase items loaded from Firebase
+  const [showcaseItems, setShowcaseItems] = useState([
+    // Fallback data while loading
     { 
       title: 'Master AI Prompting in 2025',
       creator: 'AIGuru42',
@@ -378,7 +399,175 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
       categoryColor: 'from-violet-400 to-purple-500',
       featured: true
     }
-  ];
+  ]);
+
+  // Helper functions for processing real video data
+  const formatDuration = (duration) => {
+    if (!duration) return '0:00';
+    const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+    if (!match) return '0:00';
+    const hours = parseInt(match[1] || '0');
+    const minutes = parseInt(match[2] || '0');
+    const seconds = parseInt(match[3] || '0');
+    if (hours > 0) return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const formatViewCount = (views) => {
+    const num = parseInt(views || '0');
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(0)}K`;
+    return num.toString();
+  };
+
+  const calculateXPReward = (duration) => {
+    if (!duration) return 10;
+    const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+    if (!match) return 10;
+    const hours = parseInt(match[1] || '0');
+    const minutes = parseInt(match[2] || '0');
+    const seconds = parseInt(match[3] || '0');
+    const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+    return Math.max(10, Math.floor(totalSeconds / 10));
+  };
+
+  const getCategoryFromTags = (tags) => {
+    if (!tags || tags.length === 0) return 'Tech';
+    const tagStr = tags.join(' ').toLowerCase();
+    if (tagStr.includes('ai') || tagStr.includes('artificial')) return 'AI & Tech';
+    if (tagStr.includes('music') || tagStr.includes('beat')) return 'Music';
+    if (tagStr.includes('money') || tagStr.includes('finance')) return 'Finance';
+    if (tagStr.includes('programming') || tagStr.includes('code')) return 'Programming';
+    if (tagStr.includes('art') || tagStr.includes('design') || tagStr.includes('creative')) return 'Art';
+    if (tagStr.includes('fashion') || tagStr.includes('style') || tagStr.includes('trends')) return 'Fashion';
+    if (tagStr.includes('relationship') || tagStr.includes('dating') || tagStr.includes('love')) return 'Relationships';
+    if (tagStr.includes('lifestyle') || tagStr.includes('living') || tagStr.includes('routine')) return 'Lifestyle';
+    if (tagStr.includes('movie') || tagStr.includes('film') || tagStr.includes('cinema')) return 'Movie';
+    return 'Tech';
+  };
+
+  const getCategoryColor = (category) => {
+    const colorMap = {
+      'AI & Tech': 'from-blue-400 to-cyan-500',
+      'Finance': 'from-emerald-400 to-green-500',
+      'Programming': 'from-purple-400 to-pink-500',
+      'Music': 'from-violet-400 to-purple-500',
+      'Tech': 'from-indigo-400 to-blue-500',
+      'Art': 'from-pink-400 to-rose-500',
+      'Fashion': 'from-fuchsia-400 to-pink-500',
+      'Relationships': 'from-red-400 to-pink-500',
+      'Lifestyle': 'from-amber-400 to-orange-500',
+      'Movie': 'from-gray-400 to-slate-500'
+    };
+    return colorMap[category] || 'from-purple-400 to-pink-500';
+  };
+
+  const getCategoryEmoji = (category) => {
+    const emojiMap = {
+      'AI & Tech': '🤖',
+      'Finance': '💎',
+      'Programming': '⚛️',
+      'Music': '🎵',
+      'Tech': '💻',
+      'Art': '🎨',
+      'Fashion': '👗',
+      'Relationships': '💕',
+      'Lifestyle': '✨',
+      'Movie': '🎬'
+    };
+    return emojiMap[category] || '🎬';
+  };
+
+  // Load featured videos from Firebase on component mount
+  useEffect(() => {
+    const loadFeaturedVideos = async () => {
+      try {
+        // console.log('🎬 Loading featured videos for homepage...');
+        
+        // Try to get recent videos (simplified query to avoid index issues)
+        let snapshot;
+        try {
+          // First try to get featured videos if they exist
+          const featuredQuery = query(
+            collection(db, 'creatorVideos'),
+            where('isFeatured', '==', true),
+            limit(4)
+          );
+          snapshot = await getDocs(featuredQuery);
+        } catch (featuredError) {
+          // console.log('⚠️ Featured query failed, trying recent videos');
+          snapshot = null;
+        }
+        
+        // If no featured videos, get recent active videos
+        if (!snapshot || snapshot.empty) {
+          try {
+            const recentQuery = query(
+              collection(db, 'creatorVideos'),
+              where('status', '==', 'active'),
+              limit(4)
+            );
+            snapshot = await getDocs(recentQuery);
+          } catch (recentError) {
+            // console.log('⚠️ Recent query failed, trying any videos');
+            // Last resort: get any videos
+            const anyQuery = query(
+              collection(db, 'creatorVideos'),
+              limit(4)
+            );
+            snapshot = await getDocs(anyQuery);
+          }
+        }
+
+        if (snapshot && !snapshot.empty) {
+          const videos = [];
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            console.log('🔍 Video document data:', {
+              docId: doc.id,
+              title: data.title,
+              creatorName: data.creatorName,
+              channelName: data.channelName,
+              creatorAvatar: data.creatorAvatar,
+              channelAvatar: data.channelAvatar,
+              allFields: Object.keys(data)
+            });
+            
+            const category = getCategoryFromTags(data.categoryTags);
+            const xpReward = calculateXPReward(data.duration);
+            
+            videos.push({
+              id: doc.id,
+              videoId: data.videoId,
+              title: data.title || 'Untitled Video',
+              creator: data.channelName || data.creatorName || 'Unknown Creator',
+              creatorAvatar: data.channelAvatar || data.creatorAvatar || '',
+              description: (data.description || 'Amazing content awaits you.').slice(0, 80) + '...',
+              category,
+              duration: formatDuration(data.duration),
+              views: formatViewCount(data.views),
+              thumbnail: data.thumbnail || `https://img.youtube.com/vi/${data.videoId}/maxresdefault.jpg`,
+              fallbackEmoji: getCategoryEmoji(category), // Keep emoji as fallback
+              xpValue: `${xpReward.toLocaleString()} XP`,
+              categoryColor: getCategoryColor(category),
+              featured: data.isFeatured || false,
+              originalYouTubeUrl: data.originalYouTubeUrl || `https://www.youtube.com/watch?v=${data.videoId}`
+            });
+          });
+
+          if (videos.length > 0) {
+            // console.log(`✅ Loaded ${videos.length} real videos for homepage`);
+            setShowcaseItems(videos);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error loading featured videos:', error);
+        // Keep fallback data on error
+      }
+    };
+
+    loadFeaturedVideos();
+  }, []);
 
   const scrollCarousel = (direction: 'left' | 'right') => {
     if (carouselRef.current) {
@@ -1521,7 +1710,7 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
                 filter: 'drop-shadow(0 4px 8px rgba(194, 159, 255, 0.1))'
               }}
             >
-              Featured Content
+              🎬 Watch. Learn. Level Up.
             </h3>
             <p 
               className="text-xl max-w-2xl mx-auto leading-relaxed"
@@ -1530,7 +1719,7 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
                 fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
               }}
             >
-              Cinema-quality content that earns you XP
+              Epic tutorials & stories that drop XP straight into your stash.
             </p>
           </motion.div>
 
@@ -1559,6 +1748,7 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
                     scale: 1.02,
                     transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] }
                   }}
+                  onClick={() => handleVideoClick(item)}
                 >
                 {/* Glassmorphic Poster Frame */}
                 <div 
@@ -1575,29 +1765,72 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
                 >
                   {/* Cinematic Thumbnail with Screen Effect */}
                   <div className="relative aspect-video overflow-hidden">
-                    <div 
-                      className="w-full h-full bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 flex items-center justify-center text-7xl relative"
-                      style={{
-                        background: `
-                          linear-gradient(135deg, rgba(246, 240, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%),
-                          linear-gradient(45deg, #F6F0FF 0%, #FFEEF8 50%, #F0F8FF 100%)
-                        `
-                      }}
-                    >
-                      <motion.span
-                        animate={{ 
-                          scale: [1, 1.02, 1]
+                    {item.thumbnail && !item.thumbnail.startsWith('http') ? (
+                      // Emoji fallback
+                      <div 
+                        className="w-full h-full bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 flex items-center justify-center text-7xl relative"
+                        style={{
+                          background: `
+                            linear-gradient(135deg, rgba(246, 240, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%),
+                            linear-gradient(45deg, #F6F0FF 0%, #FFEEF8 50%, #F0F8FF 100%)
+                          `
                         }}
-                        transition={{ 
-                          duration: 8, 
-                          repeat: Infinity,
-                          delay: index * 1,
-                          ease: "easeInOut"
-                        }}
-                        className="relative z-10"
                       >
-                        {item.thumbnail}
-                      </motion.span>
+                        <motion.span
+                          animate={{ 
+                            scale: [1, 1.02, 1]
+                          }}
+                          transition={{ 
+                            duration: 8, 
+                            repeat: Infinity,
+                            delay: index * 1,
+                            ease: "easeInOut"
+                          }}
+                          className="relative z-10"
+                        >
+                          {item.fallbackEmoji || item.thumbnail}
+                        </motion.span>
+                      </div>
+                    ) : (
+                      // Real YouTube thumbnail
+                      <div className="w-full h-full relative">
+                        <img 
+                          src={item.thumbnail}
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            // Show emoji fallback on image error
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                        <div 
+                          className="w-full h-full bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 items-center justify-center text-7xl relative hidden"
+                          style={{
+                            background: `
+                              linear-gradient(135deg, rgba(246, 240, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%),
+                              linear-gradient(45deg, #F6F0FF 0%, #FFEEF8 50%, #F0F8FF 100%)
+                            `
+                          }}
+                        >
+                          <motion.span
+                            animate={{ 
+                              scale: [1, 1.02, 1]
+                            }}
+                            transition={{ 
+                              duration: 8, 
+                              repeat: Infinity,
+                              delay: index * 1,
+                              ease: "easeInOut"
+                            }}
+                            className="relative z-10"
+                          >
+                            {item.fallbackEmoji}
+                          </motion.span>
+                        </div>
+                        <div className="absolute inset-0 bg-black/5" />
+                      </div>
+                    )}
                       
                       {/* Light Bloom on Edges */}
                       <div 
@@ -1691,15 +1924,52 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
                       {item.title}
                     </h4>
                     
-                    <p 
-                      className="text-sm mb-3"
-                      style={{ 
-                        color: '#5C5C5C',
-                        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
-                      }}
-                    >
-                      by {item.creator}
-                    </p>
+                    {/* Enhanced Creator Profile Section */}
+                    <div className="flex items-center mb-3 space-x-3">
+                      {/* Creator Avatar */}
+                      {item.creatorAvatar ? (
+                        <img 
+                          src={item.creatorAvatar} 
+                          alt={item.creator}
+                          className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                          onError={(e) => {
+                            // Fallback to gradient avatar on error
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div 
+                        className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center flex-shrink-0"
+                        style={{ display: item.creatorAvatar ? 'none' : 'flex' }}
+                      >
+                        <span className="text-white text-xs font-bold">
+                          {item.creator ? item.creator.charAt(0).toUpperCase() : 'C'}
+                        </span>
+                      </div>
+                      
+                      {/* Creator Info */}
+                      <div className="flex-1 min-w-0">
+                        <p 
+                          className="text-sm font-medium truncate"
+                          style={{ 
+                            color: '#2B2B2B',
+                            fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
+                          }}
+                        >
+                          {item.creator}
+                        </p>
+                        <p 
+                          className="text-xs"
+                          style={{ 
+                            color: '#8C8C8C',
+                            fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
+                          }}
+                        >
+                          Creator
+                        </p>
+                      </div>
+                    </div>
 
                     <p 
                       className="text-sm leading-relaxed mb-4"
@@ -1736,13 +2006,13 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
                   </div>
 
                   {/* Faint Prismatic Glow on Hover */}
-                  <div 
+                  <motion.div 
                     className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-2xl pointer-events-none"
                     style={{
                       background: 'linear-gradient(135deg, rgba(194, 159, 255, 0.04) 0%, rgba(236, 72, 153, 0.02) 50%, transparent 100%)',
                       filter: 'blur(0.5px)'
                     }}
-                  />
+                  >
 
                   {/* Subtle Prismatic Sweep Animation */}
                   <motion.div
@@ -1761,7 +2031,7 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
                       transform: 'skewX(-10deg)'
                     }}
                   />
-                </div>
+                </motion.div>
                 </motion.div>
               ))}
             </div>
@@ -2148,6 +2418,17 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
         }}
         onConfirm={handleYouTubeAuthConfirm}
         isLoading={isAuthLoading}
+      />
+
+      {/* Video Player Modal - Elegant & Minimalistic */}
+      <VideoPanel
+        videoId={selectedVideo?.videoId || selectedVideo?.id || ''}
+        title={selectedVideo?.title || ''}
+        creator={selectedVideo?.creator || ''}
+        xpReward={selectedVideo?.xpValue ? parseInt(selectedVideo.xpValue.replace(/[^\d]/g, '')) : 0}
+        isOpen={!!selectedVideo}
+        onClose={() => setSelectedVideo(null)}
+        onReward={handleVideoReward}
       />
     </div>
   );

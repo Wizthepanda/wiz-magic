@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { 
   User, 
   signInWithRedirect,
+  signInWithPopup,
   getRedirectResult, 
   signOut as firebaseSignOut,
   onAuthStateChanged 
@@ -226,6 +227,40 @@ export const useAuth = () => {
     };
   }, []);
 
+  const setupUserData = async (user: User) => {
+    try {
+      const userData = {
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        level: 1,
+        totalXP: 0,
+        youtubeConnected: false,
+        createdAt: new Date(),
+        lastLogin: new Date(),
+        stats: {
+          videosWatched: 0,
+          totalWatchTime: 0,
+        },
+        engagement: {
+          watchCount: 0,
+          likeCount: 0,
+          commentCount: 0,
+        }
+      };
+      
+      console.log('💾 Saving user data...', userData);
+      if (isYouTubeAPIEnabled()) {
+        await setDoc(doc(db, 'users', user.uid), userData, { merge: true });
+        console.log('✅ User data saved to Firestore');
+      } else {
+        console.log('⚠️ YouTube API disabled, skipping Firestore user data');
+      }
+    } catch (error) {
+      console.error('❌ Error setting up user data:', error);
+    }
+  };
+
   const signInWithGoogle = async (withYouTube: boolean = false) => {
     try {
       // Always use basic Google provider when YouTube API is disabled
@@ -264,10 +299,22 @@ export const useAuth = () => {
       console.log('Firebase auth app name:', auth.app?.name);
       console.groupEnd();
       
-      console.log('Starting Google sign-in with redirect, provider:', shouldUseYouTube ? 'YouTube' : 'basic');
+      // Use popup in development to avoid redirect_uri_mismatch, redirect in production
+      const isDevelopment = import.meta.env.MODE === 'development';
       
-      await signInWithRedirect(auth, provider);
-      // Note: This function doesn't return as the page will redirect
+      if (isDevelopment) {
+        console.log('🔧 Development mode: Using popup sign-in to avoid redirect_uri_mismatch');
+        const result = await signInWithPopup(auth, provider);
+        console.log('✅ Popup sign-in successful:', result.user?.email);
+        // Handle the user data setup that normally happens in getRedirectResult
+        if (result.user) {
+          await setupUserData(result.user);
+        }
+      } else {
+        console.log('🚀 Production mode: Using redirect sign-in');
+        await signInWithRedirect(auth, provider);
+        // Note: This function doesn't return as the page will redirect
+      }
     } catch (error) {
       console.error('Error signing in with Google:', error);
       throw error;
