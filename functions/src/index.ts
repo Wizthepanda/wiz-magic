@@ -31,3 +31,13 @@ export {
   wizDailyReset,
   getWizLeaderboard
 } from './wiz-xp-functions';
+
+// Export NowPayments tipping functions
+export {
+  getNowPaymentsCurrencies,
+  getNowPaymentsMinAmount,
+  getNowPaymentsEstimate,
+  createNowPaymentsPayment,
+  getNowPaymentsStatus,
+  nowPaymentsTipWebhook
+} from './nowpayments-functions';

@@ -7,6 +7,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useCreatorProfile } from '../hooks/useCreatorProfile';
 import { SyncButton } from './SyncButton';
 import { EditProfileDialog } from './EditProfileDialog';
+import { TipButton } from './TipButton';
 import { 
   Edit3, 
   ExternalLink, 
@@ -175,8 +176,17 @@ export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
           </div>
 
           {/* Right Side - Actions */}
-          <div className={`flex ${isMobile ? 'justify-center' : ''} items-center gap-3`}>
+          <div className={`flex ${isMobile ? 'justify-center flex-wrap' : ''} items-center gap-3`}>
             <SyncButton userId={user.uid} />
+            
+            {/* Tip Button - Prominent placement next to XP ring */}
+            <TipButton
+              creatorId={user.uid}
+              creatorName={user.displayName || 'Creator'}
+              creatorAvatar={user.photoURL || undefined}
+              size={isMobile ? 'md' : 'md'}
+              variant="default"
+            />
             
             <Button
               variant="outline"

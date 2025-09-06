@@ -12,6 +12,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { collection, query, where, orderBy, limit, getDocs, getDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { TipButton } from './creator/components/TipButton';
 
 interface YouTubeCreatorProfileProps {
   channelId: string;
@@ -241,12 +242,6 @@ export const YouTubeCreatorProfile: React.FC<YouTubeCreatorProfileProps> = ({
     }
   };
 
-  // Handle tip button click
-  const handleTip = () => {
-    // TODO: Implement tipping modal
-    alert('💜 Tipping feature coming soon! This will open a modal to tip the creator with $USDT or fiat.');
-    console.log('Tip button clicked - implement tipping modal');
-  };
 
   if (loading) {
     return (
@@ -317,33 +312,103 @@ export const YouTubeCreatorProfile: React.FC<YouTubeCreatorProfileProps> = ({
         transition={{ duration: 0.8 }}
         className="relative"
       >
-        {/* Banner Image */}
-        <div className="relative w-full h-48 sm:h-64 md:h-80 rounded-2xl overflow-hidden mb-4 bg-gradient-to-br from-purple-400 via-pink-500 to-red-500">
-          {channelInfo.bannerImageUrl ? (
+        {/* Premium Banner with Animated Shimmer */}
+        <div className="relative w-full h-48 sm:h-64 md:h-80 rounded-2xl overflow-hidden mb-4">
+          {/* Animated gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 opacity-90">
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+              animate={{
+                x: ['-100%', '100%']
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+            />
+          </div>
+          
+          {channelInfo.bannerImageUrl && (
             <img 
               src={channelInfo.bannerImageUrl}
               alt={`${channelInfo.name} channel banner`}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover mix-blend-overlay"
             />
-          ) : (
-            // Fallback gradient banner
-            <div className="w-full h-full bg-gradient-to-br from-purple-400 via-pink-500 to-red-500" />
           )}
           
-          {/* Gradient Overlay for readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          {/* Enhanced gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          
+          {/* Floating particles effect */}
+          <div className="absolute inset-0 overflow-hidden">
+            {[...Array(8)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-2 h-2 bg-white/30 rounded-full"
+                animate={{
+                  y: ['100%', '-10%'],
+                  x: [Math.random() * 100 + '%', Math.random() * 100 + '%'],
+                  opacity: [0, 1, 0]
+                }}
+                transition={{
+                  duration: Math.random() * 3 + 4,
+                  repeat: Infinity,
+                  delay: Math.random() * 2,
+                  ease: "easeOut"
+                }}
+                style={{
+                  left: Math.random() * 100 + '%',
+                  top: '100%'
+                }}
+              />
+            ))}
+          </div>
           
           {/* Desktop: Profile and actions overlay on banner */}
           {!isMobile && (
             <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between text-white">
               {/* Left: Profile info */}
               <div className="flex items-center space-x-4">
-                <Avatar className="w-20 h-20 md:w-24 md:h-24 border-4 border-white/20 shadow-2xl">
-                  <AvatarImage src={channelInfo.avatar} alt={channelInfo.name} />
-                  <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-purple-500 to-pink-500">
-                    {channelInfo.name.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
+                {/* Avatar with XP-based glow ring */}
+                <div className="relative">
+                  <motion.div
+                    className="absolute inset-0 rounded-full"
+                    animate={{
+                      boxShadow: [
+                        '0 0 20px rgba(168, 85, 247, 0.4)',
+                        '0 0 40px rgba(236, 72, 153, 0.6)',
+                        '0 0 20px rgba(168, 85, 247, 0.4)'
+                      ]
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  />
+                  <Avatar className="relative w-20 h-20 md:w-24 md:h-24 border-4 border-white/30 shadow-2xl backdrop-blur-sm">
+                    <AvatarImage src={channelInfo.avatar} alt={channelInfo.name} />
+                    <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-purple-500 to-pink-500">
+                      {channelInfo.name.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  
+                  {/* XP Level Badge */}
+                  <motion.div
+                    className="absolute -bottom-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg"
+                    animate={{
+                      scale: [1, 1.1, 1]
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  >
+                    {creatorStats.wizLevel}
+                  </motion.div>
+                </div>
                 
                 <div>
                   <div className="flex items-center gap-2 mb-1">
@@ -353,54 +418,80 @@ export const YouTubeCreatorProfile: React.FC<YouTubeCreatorProfileProps> = ({
                     )}
                   </div>
                   
-                  {/* Stats Pills */}
-                  <div className="flex items-center gap-3 mt-2">
-                    <div className="flex items-center space-x-1 px-3 py-1 bg-white/10 backdrop-blur-sm rounded-full text-sm">
-                      <Users className="w-4 h-4" />
+                  {/* Enhanced Stats Pills */}
+                  <div className="flex items-center gap-3 mt-3">
+                    <motion.div 
+                      className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-md rounded-full text-sm font-semibold shadow-lg border border-white/20"
+                      whileHover={{ scale: 1.05 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      <Users className="w-4 h-4 text-blue-300" />
                       <span>{creatorStats.subscribers}</span>
-                    </div>
-                    <div className="flex items-center space-x-1 px-3 py-1 bg-white/10 backdrop-blur-sm rounded-full text-sm">
-                      <VideoIcon className="w-4 h-4" />
-                      <span>{creatorStats.videos}</span>
-                    </div>
-                    <div className="flex items-center space-x-1 px-3 py-1 bg-white/10 backdrop-blur-sm rounded-full text-sm">
-                      <Star className="w-4 h-4" />
-                      <span>Level {creatorStats.wizLevel}</span>
-                    </div>
+                    </motion.div>
+                    <motion.div 
+                      className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-md rounded-full text-sm font-semibold shadow-lg border border-white/20"
+                      whileHover={{ scale: 1.05 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      <VideoIcon className="w-4 h-4 text-green-300" />
+                      <span>{creatorStats.videos} videos</span>
+                    </motion.div>
+                    <motion.div 
+                      className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-yellow-400/30 to-orange-400/30 backdrop-blur-md rounded-full text-sm font-bold shadow-lg border border-yellow-300/30"
+                      whileHover={{ scale: 1.05 }}
+                      animate={{
+                        boxShadow: [
+                          '0 4px 20px rgba(251, 191, 36, 0.3)',
+                          '0 6px 30px rgba(251, 191, 36, 0.5)',
+                          '0 4px 20px rgba(251, 191, 36, 0.3)'
+                        ]
+                      }}
+                      transition={{ 
+                        scale: { type: "spring", stiffness: 300 },
+                        boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                      }}
+                    >
+                      <Star className="w-4 h-4 text-yellow-200" />
+                      <span>Lv. {creatorStats.wizLevel}</span>
+                    </motion.div>
                   </div>
                 </div>
               </div>
               
-              {/* Right: Action buttons */}
+              {/* Right: Enhanced Action buttons */}
               <div className="flex items-center space-x-3">
-                <Button
-                  onClick={handleSubscriptionToggle}
-                  disabled={subscriptionLoading || !user}
-                  className={cn(
-                    "px-6 py-2 font-semibold transition-all duration-300",
-                    subscriptionStatus?.isSubscribed
-                      ? "bg-gray-600 hover:bg-gray-700 text-white"
-                      : "bg-red-600 hover:bg-red-700 text-white"
-                  )}
-                >
-                  🔴 {subscriptionStatus?.isSubscribed ? 'Subscribed' : 'Subscribe'}
-                </Button>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    onClick={handleSubscriptionToggle}
+                    disabled={subscriptionLoading || !user}
+                    className={cn(
+                      "px-6 py-3 font-bold text-sm transition-all duration-300 backdrop-blur-md border shadow-lg",
+                      subscriptionStatus?.isSubscribed
+                        ? "bg-gradient-to-r from-gray-600/90 to-gray-700/90 hover:from-gray-700 hover:to-gray-800 text-white border-gray-500/30"
+                        : "bg-gradient-to-r from-red-600/90 to-red-700/90 hover:from-red-700 hover:to-red-800 text-white border-red-500/30"
+                    )}
+                  >
+                    🔴 {subscriptionStatus?.isSubscribed ? 'Subscribed' : 'Subscribe'}
+                  </Button>
+                </motion.div>
                 
-                <Button
-                  variant="outline"
-                  className="px-6 py-2 bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm"
-                >
-                  <Heart className="w-4 h-4 mr-2" />
-                  Follow
-                </Button>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    variant="outline"
+                    className="px-6 py-3 bg-white/15 border-2 border-white/30 text-white hover:bg-white/25 backdrop-blur-md font-semibold shadow-lg transition-all duration-300"
+                  >
+                    <Heart className="w-4 h-4 mr-2" />
+                    Follow
+                  </Button>
+                </motion.div>
                 
-                <Button
-                  onClick={handleTip}
-                  className="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold shadow-lg"
-                >
-                  <DollarSign className="w-4 h-4 mr-2" />
-                  Tip
-                </Button>
+                <TipButton
+                  creatorId={channelId}
+                  creatorName={channelInfo.name}
+                  creatorAvatar={channelInfo.avatar}
+                  size="md"
+                  variant="default"
+                />
               </div>
             </div>
           )}
@@ -411,12 +502,45 @@ export const YouTubeCreatorProfile: React.FC<YouTubeCreatorProfileProps> = ({
           <div className="px-4 mb-6">
             {/* Profile info */}
             <div className="flex items-start space-x-4 mb-4">
-              <Avatar className="w-20 h-20 border-4 border-white shadow-lg -mt-10 relative z-10">
-                <AvatarImage src={channelInfo.avatar} alt={channelInfo.name} />
-                <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-purple-500 to-pink-500 text-white">
-                  {channelInfo.name.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
+              {/* Mobile Avatar with glow */}
+              <div className="relative">
+                <motion.div
+                  className="absolute inset-0 rounded-full"
+                  animate={{
+                    boxShadow: [
+                      '0 0 15px rgba(168, 85, 247, 0.4)',
+                      '0 0 30px rgba(236, 72, 153, 0.6)',
+                      '0 0 15px rgba(168, 85, 247, 0.4)'
+                    ]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
+                <Avatar className="relative w-20 h-20 border-4 border-white/30 shadow-lg -mt-10 z-10 backdrop-blur-sm">
+                  <AvatarImage src={channelInfo.avatar} alt={channelInfo.name} />
+                  <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-purple-500 to-pink-500 text-white">
+                    {channelInfo.name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                
+                {/* Mobile XP Level Badge */}
+                <motion.div
+                  className="absolute -bottom-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg z-20"
+                  animate={{
+                    scale: [1, 1.1, 1]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  {creatorStats.wizLevel}
+                </motion.div>
+              </div>
               
               <div className="flex-1 pt-2">
                 <div className="flex items-center gap-2 mb-1">
@@ -434,20 +558,42 @@ export const YouTubeCreatorProfile: React.FC<YouTubeCreatorProfileProps> = ({
               </div>
             </div>
 
-            {/* Stats pills - scrollable on mobile */}
+            {/* Enhanced Stats pills - scrollable on mobile */}
             <div className="flex space-x-3 mb-4 overflow-x-auto scrollbar-hide pb-2">
-              <div className="flex items-center space-x-1 px-3 py-2 bg-gray-100 rounded-full text-sm flex-shrink-0">
-                <Users className="w-4 h-4" />
-                <span>{creatorStats.subscribers}</span>
-              </div>
-              <div className="flex items-center space-x-1 px-3 py-2 bg-gray-100 rounded-full text-sm flex-shrink-0">
-                <VideoIcon className="w-4 h-4" />
-                <span>{creatorStats.videos}</span>
-              </div>
-              <div className="flex items-center space-x-1 px-3 py-2 bg-gray-100 rounded-full text-sm flex-shrink-0">
-                <Star className="w-4 h-4" />
-                <span>Level {creatorStats.wizLevel}</span>
-              </div>
+              <motion.div 
+                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-full text-sm font-semibold flex-shrink-0 shadow-lg border border-blue-200"
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <Users className="w-4 h-4 text-blue-600" />
+                <span className="text-gray-800">{creatorStats.subscribers}</span>
+              </motion.div>
+              <motion.div 
+                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-100 to-emerald-100 rounded-full text-sm font-semibold flex-shrink-0 shadow-lg border border-green-200"
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <VideoIcon className="w-4 h-4 text-green-600" />
+                <span className="text-gray-800">{creatorStats.videos} videos</span>
+              </motion.div>
+              <motion.div 
+                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-yellow-200 to-orange-200 rounded-full text-sm font-bold flex-shrink-0 shadow-lg border border-yellow-300"
+                whileHover={{ scale: 1.05 }}
+                animate={{
+                  boxShadow: [
+                    '0 4px 15px rgba(251, 191, 36, 0.3)',
+                    '0 6px 25px rgba(251, 191, 36, 0.5)',
+                    '0 4px 15px rgba(251, 191, 36, 0.3)'
+                  ]
+                }}
+                transition={{ 
+                  scale: { type: "spring", stiffness: 300 },
+                  boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                }}
+              >
+                <Star className="w-4 h-4 text-yellow-700" />
+                <span className="text-gray-800">Lv. {creatorStats.wizLevel}</span>
+              </motion.div>
             </div>
 
             {/* Action buttons - stacked vertically on mobile */}
@@ -471,50 +617,76 @@ export const YouTubeCreatorProfile: React.FC<YouTubeCreatorProfileProps> = ({
                   Follow
                 </Button>
                 
-                <Button
-                  onClick={handleTip}
-                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold"
-                >
-                  <DollarSign className="w-4 h-4 mr-2" />
-                  Tip
-                </Button>
+                <TipButton
+                  creatorId={channelId}
+                  creatorName={channelInfo.name}
+                  creatorAvatar={channelInfo.avatar}
+                  size="md"
+                  variant="default"
+                />
               </div>
             </div>
           </div>
         )}
 
-        {/* Navigation Tabs */}
-        <div className={cn("mb-6", isMobile ? "px-4" : "")}>
+        {/* Enhanced Segmented Control Tabs */}
+        <div className={cn("mb-8", isMobile ? "px-4" : "")}>
           <div className={cn(
-            "flex border-b border-gray-200",
-            isMobile ? "overflow-x-auto scrollbar-hide" : "justify-start"
+            "relative bg-gray-100/50 backdrop-blur-sm rounded-2xl p-1 border border-gray-200/50",
+            isMobile ? "overflow-x-auto scrollbar-hide" : "inline-flex"
           )}>
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
-                <button
+                <motion.button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
                   className={cn(
-                    "flex items-center space-x-2 px-4 py-3 font-medium transition-all duration-200 relative",
-                    isMobile ? "flex-shrink-0 text-sm" : "text-base",
+                    "relative flex items-center space-x-2 px-4 py-3 font-semibold transition-all duration-300 rounded-xl z-10",
+                    isMobile ? "flex-shrink-0 text-sm min-w-[100px]" : "text-sm min-w-[120px]",
                     activeTab === tab.id
-                      ? "text-purple-600 border-b-2 border-purple-600"
-                      : "text-gray-600 hover:text-gray-900"
+                      ? "text-white"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
                   )}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className={cn(
+                    "w-4 h-4 transition-colors duration-300",
+                    activeTab === tab.id ? "text-white" : "text-gray-500"
+                  )} />
                   <span>{tab.label}</span>
                   
-                  {/* Active tab gradient underline */}
+                  {/* Active tab background */}
                   {activeTab === tab.id && (
                     <motion.div
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500"
-                      layoutId="activeTab"
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                      className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 rounded-xl shadow-lg"
+                      layoutId="activeTabBg"
+                      transition={{ 
+                        type: "spring", 
+                        bounce: 0.15, 
+                        duration: 0.6 
+                      }}
+                      style={{ zIndex: -1 }}
                     />
                   )}
-                </button>
+                  
+                  {/* Hover glow effect */}
+                  {activeTab === tab.id && (
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 rounded-xl opacity-20 blur-xl"
+                      animate={{
+                        opacity: [0.2, 0.4, 0.2]
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                      style={{ zIndex: -2 }}
+                    />
+                  )}
+                </motion.button>
               );
             })}
           </div>
@@ -537,26 +709,86 @@ export const YouTubeCreatorProfile: React.FC<YouTubeCreatorProfileProps> = ({
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
               >
                 {videos.length > 0 ? (
-                  videos.map((video) => (
-                    <Card key={video.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                      <div className="relative aspect-video bg-gray-200">
-                        <img
-                          src={video.thumbnail}
-                          alt={video.title}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/70 text-white text-xs rounded">
-                          {video.duration}
+                  videos.map((video, index) => (
+                    <motion.div
+                      key={video.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1, duration: 0.5 }}
+                      whileHover={{ y: -8, scale: 1.02 }}
+                    >
+                      <Card className="overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 bg-white/70 backdrop-blur-sm border border-white/50 group">
+                        <div className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+                          <motion.img
+                            src={video.thumbnail}
+                            alt={video.title}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            whileHover={{ scale: 1.1 }}
+                          />
+                          
+                          {/* Gradient overlay on hover */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          
+                          {/* Duration badge */}
+                          <motion.div 
+                            className="absolute bottom-2 right-2 px-2 py-1 bg-black/80 text-white text-xs rounded-md font-medium backdrop-blur-sm"
+                            whileHover={{ scale: 1.1 }}
+                          >
+                            {video.duration}
+                          </motion.div>
+                          
+                          {/* XP badge */}
+                          <motion.div 
+                            className="absolute top-2 left-2 px-3 py-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs rounded-full font-bold shadow-lg"
+                            animate={{
+                              boxShadow: [
+                                '0 4px 15px rgba(147, 51, 234, 0.3)',
+                                '0 6px 25px rgba(147, 51, 234, 0.5)',
+                                '0 4px 15px rgba(147, 51, 234, 0.3)'
+                              ]
+                            }}
+                            transition={{
+                              duration: 2,
+                              repeat: Infinity,
+                              ease: "easeInOut"
+                            }}
+                            whileHover={{ scale: 1.1 }}
+                          >
+                            +{Math.floor(Math.random() * 50 + 10)} XP
+                          </motion.div>
+                          
+                          {/* Play button overlay on hover */}
+                          <motion.div
+                            className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                            whileHover={{ scale: 1.1 }}
+                          >
+                            <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-xl backdrop-blur-sm">
+                              <Play className="w-6 h-6 text-purple-600 ml-1" />
+                            </div>
+                          </motion.div>
                         </div>
-                        <div className="absolute top-2 left-2 px-2 py-1 bg-purple-600 text-white text-xs rounded font-semibold">
-                          +{Math.floor(Math.random() * 50 + 10)} XP
-                        </div>
-                      </div>
-                      <CardContent className="p-4">
-                        <h3 className="font-semibold text-sm line-clamp-2 mb-2">{video.title}</h3>
-                        <p className="text-xs text-gray-600">{video.views} views • {video.publishedAt}</p>
-                      </CardContent>
-                    </Card>
+                        
+                        <CardContent className="p-4 relative">
+                          <h3 className="font-bold text-sm line-clamp-2 mb-2 text-gray-800 group-hover:text-purple-700 transition-colors duration-300">
+                            {video.title}
+                          </h3>
+                          
+                          <div className="flex items-center justify-between text-xs text-gray-600">
+                            <div className="flex items-center space-x-1">
+                              <Eye className="w-3 h-3" />
+                              <span>{video.views} views</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <Clock className="w-3 h-3" />
+                              <span>{video.publishedAt}</span>
+                            </div>
+                          </div>
+                          
+                          {/* Premium glow effect */}
+                          <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-rose-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                        </CardContent>
+                      </Card>
+                    </motion.div>
                   ))
                 ) : (
                   <div className="col-span-full text-center py-12">

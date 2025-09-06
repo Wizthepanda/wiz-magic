@@ -4,7 +4,7 @@
  * Production XP System with YouTube API Integration
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getWizLeaderboard = exports.wizDailyReset = exports.getWizXPData = exports.awardWizReferralXP = exports.awardWizShareXP = exports.awardWatchXP = exports.awardWizXP = exports.initializeYouTubeTracking = exports.dailyYouTubeProfileSync = exports.dailyYouTubeSync = exports.syncYouTubeHistory = exports.dailyReset = exports.awardReferralXP = exports.awardShareXP = exports.awardXP = void 0;
+exports.nowPaymentsTipWebhook = exports.getNowPaymentsStatus = exports.createNowPaymentsPayment = exports.getNowPaymentsEstimate = exports.getNowPaymentsMinAmount = exports.getNowPaymentsCurrencies = exports.getWizLeaderboard = exports.wizDailyReset = exports.getWizXPData = exports.awardWizReferralXP = exports.awardWizShareXP = exports.awardWatchXP = exports.awardWizXP = exports.initializeYouTubeTracking = exports.dailyYouTubeProfileSync = exports.dailyYouTubeSync = exports.syncYouTubeHistory = exports.dailyReset = exports.awardReferralXP = exports.awardShareXP = exports.awardXP = void 0;
 const app_1 = require("firebase-admin/app");
 // Initialize Firebase Admin SDK
 if ((0, app_1.getApps)().length === 0) {
@@ -31,4 +31,12 @@ Object.defineProperty(exports, "awardWizReferralXP", { enumerable: true, get: fu
 Object.defineProperty(exports, "getWizXPData", { enumerable: true, get: function () { return wiz_xp_functions_1.getWizXPData; } });
 Object.defineProperty(exports, "wizDailyReset", { enumerable: true, get: function () { return wiz_xp_functions_1.wizDailyReset; } });
 Object.defineProperty(exports, "getWizLeaderboard", { enumerable: true, get: function () { return wiz_xp_functions_1.getWizLeaderboard; } });
+// Export NowPayments tipping functions
+var nowpayments_functions_1 = require("./nowpayments-functions");
+Object.defineProperty(exports, "getNowPaymentsCurrencies", { enumerable: true, get: function () { return nowpayments_functions_1.getNowPaymentsCurrencies; } });
+Object.defineProperty(exports, "getNowPaymentsMinAmount", { enumerable: true, get: function () { return nowpayments_functions_1.getNowPaymentsMinAmount; } });
+Object.defineProperty(exports, "getNowPaymentsEstimate", { enumerable: true, get: function () { return nowpayments_functions_1.getNowPaymentsEstimate; } });
+Object.defineProperty(exports, "createNowPaymentsPayment", { enumerable: true, get: function () { return nowpayments_functions_1.createNowPaymentsPayment; } });
+Object.defineProperty(exports, "getNowPaymentsStatus", { enumerable: true, get: function () { return nowpayments_functions_1.getNowPaymentsStatus; } });
+Object.defineProperty(exports, "nowPaymentsTipWebhook", { enumerable: true, get: function () { return nowpayments_functions_1.nowPaymentsTipWebhook; } });
 //# sourceMappingURL=index.js.map

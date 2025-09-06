@@ -51,7 +51,7 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
-export const functions = getFunctions(app);
+export const functions = getFunctions(app, 'us-central1');
 
 // Initialize analytics only if in production and measurement ID is available
 let analytics;
