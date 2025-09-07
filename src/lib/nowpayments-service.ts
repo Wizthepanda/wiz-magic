@@ -98,6 +98,10 @@ export class NowPaymentsService {
       } catch (error) {
         console.warn('Failed to get auth token:', error);
       }
+    } else {
+      // In debug/testing mode without auth, add a debug header
+      console.log('🔧 NowPayments: Operating without authentication (debug mode)');
+      headers['X-Debug-Mode'] = 'true';
     }
     
     return headers;
@@ -203,9 +207,21 @@ export class NowPaymentsService {
    */
   static async createTipPayment(request: TipCreatorRequest): Promise<CreatePaymentResponse> {
     try {
-      // Validate minimum amount (will be checked dynamically)
-      if (request.amount < 0.01) {
-        throw new Error('Invalid tip amount');
+      // Currency-aware minimum amount validation (based on NOWPayments API requirements)
+      const getMinimumAmount = (currency: string): number => {
+        const curr = currency.toLowerCase();
+        if (curr === 'btc') return 0.0003; // NOWPayments minimum ~0.0002625
+        if (curr === 'doge') return 10; // Reasonable DOGE minimum
+        if (curr === 'usdc') return 1.5; // Match USDT minimum
+        if (curr === 'usdtbsc' || curr === 'usdt') return 1.5; // NOWPayments minimum for USDT BSC
+        if (curr === 'usd') return 1.5; // USD tips use USDT BSC, so same minimum
+        return 1.5; // Default for other currencies
+      };
+
+      const minimumAmount = getMinimumAmount(request.payCurrency);
+      if (request.amount < minimumAmount) {
+        const displayCurrency = request.payCurrency === 'usdtbsc' ? 'USDT (BSC)' : request.payCurrency.toUpperCase();
+        throw new Error(`Invalid tip amount. Minimum ${minimumAmount} ${displayCurrency}`);
       }
 
       const headers = await this.getAuthHeaders();

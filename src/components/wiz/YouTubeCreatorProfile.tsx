@@ -497,43 +497,61 @@ export const YouTubeCreatorProfile: React.FC<YouTubeCreatorProfileProps> = ({
           )}
         </div>
 
-        {/* Mobile: Profile section below banner */}
+        {/* Mobile: Premium Profile section below banner */}
         {isMobile && (
-          <div className="px-4 mb-6">
-            {/* Profile info */}
-            <div className="flex items-start space-x-4 mb-4">
-              {/* Mobile Avatar with glow */}
+          <div className="px-6 mb-8">
+            {/* Profile info with enhanced premium styling */}
+            <div className="flex items-start space-x-5 mb-6">
+              {/* Enhanced Mobile Avatar with premium glow ring */}
               <div className="relative">
                 <motion.div
-                  className="absolute inset-0 rounded-full"
+                  className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500/40 via-pink-500/40 to-orange-500/40 blur-lg"
                   animate={{
-                    boxShadow: [
-                      '0 0 15px rgba(168, 85, 247, 0.4)',
-                      '0 0 30px rgba(236, 72, 153, 0.6)',
-                      '0 0 15px rgba(168, 85, 247, 0.4)'
-                    ]
+                    scale: [1, 1.2, 1],
+                    rotate: [0, 180, 360]
                   }}
                   transition={{
-                    duration: 2,
+                    duration: 4,
                     repeat: Infinity,
                     ease: "easeInOut"
                   }}
                 />
-                <Avatar className="relative w-20 h-20 border-4 border-white/30 shadow-lg -mt-10 z-10 backdrop-blur-sm">
+                <motion.div
+                  className="absolute inset-0 rounded-full"
+                  animate={{
+                    boxShadow: [
+                      '0 0 20px rgba(168, 85, 247, 0.5)',
+                      '0 0 40px rgba(236, 72, 153, 0.7)',
+                      '0 0 60px rgba(251, 146, 60, 0.5)',
+                      '0 0 20px rgba(168, 85, 247, 0.5)'
+                    ]
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
+                <Avatar className="relative w-24 h-24 border-4 border-white/40 shadow-2xl -mt-12 z-10 backdrop-blur-sm">
                   <AvatarImage src={channelInfo.avatar} alt={channelInfo.name} />
-                  <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-purple-500 to-pink-500 text-white">
+                  <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-purple-500 to-pink-500 text-white">
                     {channelInfo.name.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
                 
-                {/* Mobile XP Level Badge */}
+                {/* Enhanced XP Level Badge with pulsing effect */}
                 <motion.div
-                  className="absolute -bottom-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg z-20"
+                  className="absolute -bottom-2 -right-2 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-full shadow-xl z-20 border-2 border-white/50"
                   animate={{
-                    scale: [1, 1.1, 1]
+                    scale: [1, 1.15, 1],
+                    boxShadow: [
+                      '0 4px 20px rgba(251, 191, 36, 0.4)',
+                      '0 6px 30px rgba(251, 191, 36, 0.8)',
+                      '0 4px 20px rgba(251, 191, 36, 0.4)'
+                    ]
                   }}
                   transition={{
-                    duration: 2,
+                    duration: 2.5,
                     repeat: Infinity,
                     ease: "easeInOut"
                   }}
@@ -542,16 +560,21 @@ export const YouTubeCreatorProfile: React.FC<YouTubeCreatorProfileProps> = ({
                 </motion.div>
               </div>
               
-              <div className="flex-1 pt-2">
-                <div className="flex items-center gap-2 mb-1">
-                  <h1 className="text-xl font-bold">{channelInfo.name}</h1>
+              <div className="flex-1 pt-3">
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">{channelInfo.name}</h1>
                   {creatorStats.verified && (
-                    <CheckCircle className="w-5 h-5 text-blue-500 fill-current" />
+                    <motion.div
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <CheckCircle className="w-6 h-6 text-blue-500 fill-current" />
+                    </motion.div>
                   )}
                 </div>
                 
                 {channelInfo.description && (
-                  <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+                  <p className="text-base text-gray-600 line-clamp-3 mb-3 leading-relaxed">
                     {channelInfo.description}
                   </p>
                 )}
@@ -596,35 +619,58 @@ export const YouTubeCreatorProfile: React.FC<YouTubeCreatorProfileProps> = ({
               </motion.div>
             </div>
 
-            {/* Action buttons - stacked vertically on mobile */}
+            {/* Action buttons - stacked vertically with Tip as primary CTA */}
             <div className="space-y-3">
-              <Button
-                onClick={handleSubscriptionToggle}
-                disabled={subscriptionLoading || !user}
-                className={cn(
-                  "w-full font-semibold transition-all duration-300",
-                  subscriptionStatus?.isSubscribed
-                    ? "bg-gray-600 hover:bg-gray-700 text-white"
-                    : "bg-red-600 hover:bg-red-700 text-white"
-                )}
+              {/* Primary: Tip Button (Hero CTA) */}
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="relative"
               >
-                🔴 {subscriptionStatus?.isSubscribed ? 'Subscribed' : 'Subscribe'}
-              </Button>
-              
-              <div className="grid grid-cols-2 gap-3">
-                <Button variant="outline" className="w-full">
-                  <Heart className="w-4 h-4 mr-2" />
-                  Follow
-                </Button>
-                
                 <TipButton
                   creatorId={channelId}
                   creatorName={channelInfo.name}
                   creatorAvatar={channelInfo.avatar}
-                  size="md"
+                  size="lg"
                   variant="default"
+                  className="w-full h-16 text-lg font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
                 />
-              </div>
+                {/* Enhanced glow effect for tip button */}
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-rose-500/20 rounded-2xl blur-xl opacity-70 -z-10" />
+              </motion.div>
+              
+              {/* Secondary: Subscribe Button (Strong CTA) */}
+              <motion.div
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+              >
+                <Button
+                  onClick={handleSubscriptionToggle}
+                  disabled={subscriptionLoading || !user}
+                  className={cn(
+                    "w-full h-12 font-bold text-base transition-all duration-300 shadow-lg hover:shadow-xl",
+                    subscriptionStatus?.isSubscribed
+                      ? "bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white border-0"
+                      : "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white border-0"
+                  )}
+                >
+                  🔴 {subscriptionStatus?.isSubscribed ? 'Subscribed' : 'Subscribe'}
+                </Button>
+              </motion.div>
+              
+              {/* Tertiary: Follow Button (Neutral) */}
+              <motion.div
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+              >
+                <Button 
+                  variant="outline" 
+                  className="w-full h-12 bg-white/80 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 font-semibold text-base transition-all duration-300 backdrop-blur-sm"
+                >
+                  <Heart className="w-4 h-4 mr-2" />
+                  Follow
+                </Button>
+              </motion.div>
             </div>
           </div>
         )}

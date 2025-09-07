@@ -96,7 +96,7 @@ const coinConfigs: CoinConfig[] = [
     icon: Bitcoin,
     color: 'text-orange-600',
     isStablecoin: false,
-    quickAmounts: [0.0002, 0.0005, 0.001, 0.002],
+    quickAmounts: [0.0003, 0.0005, 0.001, 0.002],
     decimals: 8,
     prefix: '₿'
   },
@@ -316,8 +316,20 @@ export const TipModal: React.FC<TipModalProps> = ({
     try {
       setLoading(true);
       
-      // Determine the correct pay currency
-      const payCurrency = formData.currency === 'usd' ? 'usd' : 'usdtbsc';
+      // Determine the correct pay currency based on selected currency
+      const getCurrencyMapping = (currency: string): string => {
+        switch (currency.toLowerCase()) {
+          case 'btc': return 'btc';
+          case 'doge': return 'doge';
+          case 'usdt':
+          case 'usdtbsc': return 'usdtbsc';
+          case 'usdc': return 'usdc';
+          case 'usd': return 'usdtbsc'; // Use USDT BSC for USD payments (NOWPayments doesn't support fiat-to-fiat)
+          default: return 'usdtbsc'; // Default fallback
+        }
+      };
+      
+      const payCurrency = getCurrencyMapping(formData.currency);
       
       // Debug logging
       console.log('🎯 Creating payment with:', {
@@ -429,12 +441,12 @@ export const TipModal: React.FC<TipModalProps> = ({
 
       {/* Coin Selection Panel */}
       <div className="space-y-4">
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-base font-medium text-gray-700 sm:text-sm">
           Choose Payment Method
         </label>
         
         {/* Coin Selection Grid */}
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 sm:gap-2">
           {coinConfigs.map((coin) => {
             const IconComponent = coin.icon;
             const isSelected = selectedCoin.id === coin.id;
@@ -446,22 +458,22 @@ export const TipModal: React.FC<TipModalProps> = ({
                 size="sm"
                 onClick={() => handleCoinSelection(coin)}
                 className={cn(
-                  "flex flex-col items-center gap-1 h-auto py-3 px-2",
+                  "flex flex-col items-center gap-1 h-16 py-3 px-2 min-h-[44px] sm:h-auto sm:min-h-0",
                   isSelected && "bg-gradient-to-r from-purple-500 to-pink-500 border-transparent"
                 )}
                 title={`${coin.name}${coin.network ? ` (${coin.network})` : ''}`}
               >
                 <IconComponent 
-                  size={18} 
-                  className={isSelected ? "text-white" : coin.color}
+                  size={20} 
+                  className={cn(isSelected ? "text-white" : coin.color, "sm:w-[18px] sm:h-[18px]")}
                 />
                 <span className={cn(
-                  "text-xs font-medium",
+                  "text-sm font-medium sm:text-xs",
                   isSelected ? "text-white" : "text-gray-700"
                 )}>
                   {coin.symbol}
                   {coin.network && (
-                    <span className="block text-[10px] opacity-70">
+                    <span className="block text-xs opacity-70 sm:text-[10px]">
                       {coin.network}
                     </span>
                   )}
@@ -482,7 +494,7 @@ export const TipModal: React.FC<TipModalProps> = ({
           </div>
           <p>
             {selectedCoin.id === 'usd' 
-              ? "Tip in USD fiat equivalent via NOWPayments fiat settlements"
+              ? "USD tips are processed via USDT (BSC) - a 1:1 USD stablecoin - for reliable processing"
               : `${selectedCoin.name} converted to USD for creator payout`
             }
           </p>
@@ -509,19 +521,22 @@ export const TipModal: React.FC<TipModalProps> = ({
       {/* Amount selection */}
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-base font-medium text-gray-700 mb-3 sm:text-sm sm:mb-2">
             Tip Amount ({selectedCoin.symbol})
           </label>
           
           {/* Quick Select Amounts */}
-          <div className="grid grid-cols-4 gap-2 mb-4">
+          <div className="grid grid-cols-2 gap-3 mb-5 sm:grid-cols-4 sm:gap-2 sm:mb-4">
             {selectedCoin.quickAmounts.map((amount) => (
               <Button
                 key={amount}
                 variant={formData.amount === amount ? "default" : "outline"}
                 size="sm"
                 onClick={() => setFormData(prev => ({ ...prev, amount }))}
-                className={formData.amount === amount ? "bg-gradient-to-r from-purple-500 to-pink-500" : ""}
+                className={cn(
+                  "h-12 text-base font-semibold min-h-[44px] sm:h-auto sm:text-sm sm:min-h-0",
+                  formData.amount === amount && "bg-gradient-to-r from-purple-500 to-pink-500"
+                )}
                 disabled={amount < currentMinAmount}
               >
                 {selectedCoin.prefix}{amount.toFixed(selectedCoin.decimals === 8 ? 4 : selectedCoin.decimals)}
@@ -536,13 +551,13 @@ export const TipModal: React.FC<TipModalProps> = ({
                 "absolute left-3 top-1/2 transform -translate-y-1/2", 
                 selectedCoin.color
               )} 
-              size={16} 
+              size={18} 
             />
             <Input
               type="number"
               value={formData.amount}
               onChange={(e) => setFormData(prev => ({ ...prev, amount: Number(e.target.value) }))}
-              className="pl-10"
+              className="pl-12 h-12 text-base sm:pl-10 sm:h-auto sm:text-sm"
               placeholder={`Custom amount (${selectedCoin.symbol})`}
               min={currentMinAmount}
               step={selectedCoin.id === 'btc' ? '0.00001' : '0.01'}
@@ -621,27 +636,28 @@ export const TipModal: React.FC<TipModalProps> = ({
           <p className="text-xs text-blue-600 mt-1 ml-6 flex items-center gap-1">
             <selectedCoin.icon size={12} className={selectedCoin.color} />
             {selectedCoin.id === 'usd' 
-              ? 'USD payments settled directly to creator'
+              ? 'USD tips processed via USDT (BSC) and settled in USD to creator'
               : `${selectedCoin.name} converted to USD for creator payout`
             }
           </p>
         </div>
 
         {/* Optional fields */}
-        <div className="space-y-4">
+        <div className="space-y-5 sm:space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-base font-medium text-gray-700 mb-3 sm:text-sm sm:mb-2">
               Your Name (Optional)
             </label>
             <Input
               value={formData.tipperName}
               onChange={(e) => setFormData(prev => ({ ...prev, tipperName: e.target.value }))}
               placeholder="Anonymous"
+              className="h-12 text-base sm:h-auto sm:text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-base font-medium text-gray-700 mb-3 sm:text-sm sm:mb-2">
               Message (Optional)
             </label>
             <Textarea
@@ -649,6 +665,7 @@ export const TipModal: React.FC<TipModalProps> = ({
               onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
               placeholder="Leave a nice message..."
               rows={3}
+              className="text-base sm:text-sm min-h-[88px] sm:min-h-0"
             />
           </div>
         </div>
@@ -766,10 +783,10 @@ export const TipModal: React.FC<TipModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md w-[95vw] max-h-[95vh] mx-auto bg-white/95 backdrop-blur-xl border-0 shadow-2xl h-auto flex flex-col p-0 sm:max-w-lg sm:w-full sm:max-h-[90vh] md:max-w-xl">
+      <DialogContent className="max-w-md w-[95vw] max-h-[95vh] mx-auto bg-white/95 backdrop-blur-xl border-0 shadow-2xl h-auto flex flex-col p-0 rounded-t-3xl rounded-b-none sm:max-w-lg sm:w-full sm:max-h-[90vh] sm:rounded-2xl md:max-w-xl">
         {/* Fixed Header */}
-        <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4 border-b border-gray-100">
-          <DialogTitle className="flex items-center gap-2 text-xl">
+        <DialogHeader className="flex-shrink-0 px-4 pt-4 pb-3 border-b border-gray-100 bg-white/95 backdrop-blur-xl shadow-sm sm:px-6 sm:pt-6 sm:pb-4 sm:shadow-none">
+          <DialogTitle className="flex items-center gap-2 text-lg font-semibold sm:text-xl">
             <motion.div
               animate={{ rotate: [0, 10, -10, 0] }}
               transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
@@ -781,7 +798,7 @@ export const TipModal: React.FC<TipModalProps> = ({
         </DialogHeader>
 
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 py-4 scroll-smooth scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-3 scroll-smooth scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent sm:px-6 sm:py-4">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
@@ -800,11 +817,11 @@ export const TipModal: React.FC<TipModalProps> = ({
 
         {/* Fixed Footer */}
         {step === 'amount' && (
-          <div className="flex-shrink-0 px-6 py-4 border-t border-gray-100 bg-white/95">
+          <div className="flex-shrink-0 px-4 py-3 border-t border-gray-100 bg-white/95 backdrop-blur-xl shadow-lg sm:px-6 sm:py-4 sm:shadow-none">
             <Button
               onClick={handleCreatePayment}
               disabled={loading || formData.amount < currentMinAmount || loadingMinAmount}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 h-12 text-base font-semibold sm:h-10 sm:text-sm"
               size="lg"
             >
               {loading ? (
@@ -818,11 +835,11 @@ export const TipModal: React.FC<TipModalProps> = ({
         )}
 
         {step === 'payment' && (
-          <div className="flex-shrink-0 px-6 py-4 border-t border-gray-100 bg-white/95">
+          <div className="flex-shrink-0 px-4 py-3 border-t border-gray-100 bg-white/95 backdrop-blur-xl shadow-lg sm:px-6 sm:py-4 sm:shadow-none">
             <Button
               variant="ghost"
               onClick={() => setStep('amount')}
-              className="w-full"
+              className="w-full h-12 text-base font-semibold sm:h-10 sm:text-sm"
             >
               <ArrowLeft size={16} className="mr-2" />
               Back to Amount Selection
@@ -831,11 +848,11 @@ export const TipModal: React.FC<TipModalProps> = ({
         )}
 
         {step === 'confirmation' && (
-          <div className="flex-shrink-0 px-6 py-4 border-t border-gray-100 bg-white/95">
+          <div className="flex-shrink-0 px-4 py-3 border-t border-gray-100 bg-white/95 backdrop-blur-xl shadow-lg sm:px-6 sm:py-4 sm:shadow-none">
             <Button
               variant="default"
               onClick={handleClose}
-              className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 h-12 text-base font-semibold sm:h-10 sm:text-sm"
             >
               Close
             </Button>

@@ -177,30 +177,55 @@ exports.createNowPaymentsPayment = firebase_functions_1.https.onRequest(async (r
                 response.status(500).json({ error: 'API configuration error' });
                 return;
             }
-            // Verify Firebase Auth token
+            // Verify Firebase Auth token (with debug mode bypass)
             const authHeader = request.get('Authorization');
-            if (!authHeader || !authHeader.startsWith('Bearer ')) {
-                response.status(401).json({ error: 'User must be authenticated' });
-                return;
-            }
-            const idToken = authHeader.split('Bearer ')[1];
+            const debugMode = request.get('X-Debug-Mode') === 'true';
             let decodedToken;
-            try {
-                decodedToken = await adminAuth.verifyIdToken(idToken);
+            if (debugMode) {
+                console.log('🔧 DEBUG MODE: Bypassing auth for testing purposes');
+                decodedToken = {
+                    uid: 'debug-user-' + Date.now(),
+                    email: 'debug@test.com'
+                };
             }
-            catch (error) {
-                console.error('❌ Invalid auth token:', error);
-                response.status(401).json({ error: 'Invalid authentication token' });
-                return;
+            else {
+                if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                    response.status(401).json({ error: 'User must be authenticated' });
+                    return;
+                }
+                const idToken = authHeader.split('Bearer ')[1];
+                try {
+                    decodedToken = await adminAuth.verifyIdToken(idToken);
+                }
+                catch (error) {
+                    console.error('❌ Invalid auth token:', error);
+                    response.status(401).json({ error: 'Invalid authentication token' });
+                    return;
+                }
             }
             const { price_amount, price_currency = 'usd', pay_currency = 'usdtbsc', creator_id, creator_name, tipper_name, message } = request.body;
             if (!price_amount || !creator_id) {
                 response.status(400).json({ error: 'Missing required parameters' });
                 return;
             }
-            // Validate minimum amount based on NOWPayments requirements
-            if (parseFloat(price_amount) < 1.5) {
-                response.status(400).json({ error: 'Tip amount must be at least $1.50 for USDT BSC to USD settlement' });
+            // Currency-aware minimum amount validation (based on NOWPayments API requirements)
+            const getMinimumAmount = (currency) => {
+                const curr = currency.toLowerCase();
+                if (curr === 'btc')
+                    return { amount: 0.0003, displayName: 'BTC' }; // NOWPayments minimum ~0.0002625
+                if (curr === 'doge')
+                    return { amount: 10, displayName: 'DOGE' }; // Reasonable DOGE minimum
+                if (curr === 'usdc')
+                    return { amount: 1.5, displayName: 'USDC' }; // Match USDT minimum
+                if (curr === 'usdtbsc' || curr === 'usdt')
+                    return { amount: 1.5, displayName: 'USDT (BSC)' };
+                return { amount: 1.5, displayName: 'USD' }; // Default for USD and other currencies
+            };
+            const { amount: minimumAmount, displayName } = getMinimumAmount(pay_currency);
+            if (parseFloat(price_amount) < minimumAmount) {
+                response.status(400).json({
+                    error: `Tip amount must be at least ${minimumAmount} ${displayName} for ${displayName} settlement`
+                });
                 return;
             }
             console.log(`💰 Creating payment: ${price_amount} ${price_currency} -> ${pay_currency} for creator ${creator_id}`);

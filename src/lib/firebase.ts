@@ -47,9 +47,27 @@ if (missing.length > 0) {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firebase services with error handling
+// Initialize Firebase services with enhanced error handling
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+
+// Initialize Firestore with offline persistence settings
+export const db = (() => {
+  try {
+    const firestore = getFirestore(app);
+    // Enable offline persistence for better resilience
+    import('firebase/firestore').then(({ enableNetwork, disableNetwork }) => {
+      // Allow Firestore to work offline if network is blocked
+      console.log('🔗 Firestore initialized with network resilience');
+    }).catch(err => {
+      console.warn('⚠️ Firestore offline setup failed:', err);
+    });
+    return firestore;
+  } catch (error) {
+    console.error('❌ Failed to initialize Firestore:', error);
+    throw error;
+  }
+})();
+
 export const storage = getStorage(app);
 export const functions = getFunctions(app, 'us-central1');
 
@@ -67,7 +85,8 @@ export { analytics };
 // Configure Google Auth Provider - Ultra-smooth for wizxp.com
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
-  prompt: 'select_account'
+  prompt: 'select_account',
+  client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID
 });
 
 // Create a separate provider for YouTube scopes - Maximum smoothness
@@ -75,13 +94,15 @@ export const googleProviderWithYouTube = new GoogleAuthProvider();
 googleProviderWithYouTube.addScope('https://www.googleapis.com/auth/youtube.readonly');
 googleProviderWithYouTube.setCustomParameters({
   prompt: 'select_account', // Direct to account picker
-  include_granted_scopes: 'true' // Remember previous permissions
+  include_granted_scopes: 'true', // Remember previous permissions
+  client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID
 });
 
 // Auth Provider Debug (Development Only)
 if (import.meta.env.MODE === 'development') {
   console.group("🔍 Google Auth Provider Debug");
-  console.log("🔑 Client ID derived from appId:", firebaseConfig.appId);
+  console.log("🔑 Explicit Client ID:", import.meta.env.VITE_GOOGLE_CLIENT_ID);
+  console.log("🔑 Firebase App ID:", firebaseConfig.appId);
   console.log("🎯 Redirect URI:", `https://${firebaseConfig.authDomain}/__/auth/handler`);
   console.groupEnd();
 }

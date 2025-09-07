@@ -61,8 +61,14 @@ const getUserData = async (firebaseUser: User): Promise<WizUser> => {
     // Start XP initialization but don't wait for it
     initializeXP();
     
-    const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-    const userData = userDoc.data();
+    let userData;
+    try {
+      const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+      userData = userDoc.data();
+    } catch (firestoreError) {
+      console.warn('⚠️ Firestore connection failed, using fallback data:', firestoreError);
+      userData = null; // Will use default values below
+    }
     
     // Check if user is admin and get permissions
     const userPermissions = getUserPermissions(firebaseUser.email || '');
@@ -251,8 +257,13 @@ export const useAuth = () => {
       
       console.log('💾 Saving user data...', userData);
       if (isYouTubeAPIEnabled()) {
-        await setDoc(doc(db, 'users', user.uid), userData, { merge: true });
-        console.log('✅ User data saved to Firestore');
+        try {
+          await setDoc(doc(db, 'users', user.uid), userData, { merge: true });
+          console.log('✅ User data saved to Firestore');
+        } catch (firestoreError) {
+          console.warn('⚠️ Failed to save user data to Firestore, continuing anyway:', firestoreError);
+          // Don't throw - allow auth to continue even if Firestore fails
+        }
       } else {
         console.log('⚠️ YouTube API disabled, skipping Firestore user data');
       }
@@ -271,52 +282,45 @@ export const useAuth = () => {
         logFeatureFlag('YouTube OAuth Scope', false, 'using basic Google Auth instead');
       }
       
-      // 🔍 FIREBASE AUTH DEBUG: Extract and verify client_id
+      // 🔍 FIREBASE AUTH DEBUG: Verify client_id configuration
       console.group('🔍 FIREBASE AUTH DEBUG');
       console.log('Auth Domain from config:', auth.config?.authDomain || 'undefined');
       console.log('Current origin:', window.location.origin);
       console.log('Expected redirect URI:', `${window.location.origin}/__/auth/handler`);
-      
-      // Extract client_id from Firebase appId 
-      const appId = auth.app?.options?.appId || '';
-      console.log('Firebase App ID:', appId);
-      
-      // Client ID derivation logic: appId format is "1:PROJECT_NUMBER:web:APP_HASH"
-      // Client ID format is "PROJECT_NUMBER-APP_HASH.apps.googleusercontent.com"
-      if (appId.includes(':')) {
-        const parts = appId.split(':');
-        if (parts.length >= 4) {
-          const projectNumber = parts[1]; // "485151111726"
-          const appHash = parts[3];       // "914f4e974eae0f49e23dbf"
-          const derivedClientId = `${projectNumber}-${appHash}.apps.googleusercontent.com`;
-          console.log('🔑 Derived Client ID:', derivedClientId);
-          console.log('🎯 Expected Client ID (from Google Cloud Console): 543256047502-4fdauu19uj3t63kf5saclcg597niecsh.apps.googleusercontent.com');
-          console.log('✅ Client ID Match:', derivedClientId === '543256047502-4fdauu19uj3t63kf5saclcg597niecsh.apps.googleusercontent.com' ? '✅ YES - PERFECT MATCH!' : '❌ NO - MISMATCH DETECTED!');
-        }
-      }
-      
+      console.log('Firebase App ID:', auth.app?.options?.appId || 'undefined');
+      console.log('🔑 Explicit Client ID (from env):', import.meta.env.VITE_GOOGLE_CLIENT_ID);
+      console.log('🎯 Expected Client ID (from Google Cloud Console): 543256047502-4fdauu19uj3t63kf5saclcg597niecsh.apps.googleusercontent.com');
+      console.log('✅ Client ID Match:', import.meta.env.VITE_GOOGLE_CLIENT_ID === '543256047502-4fdauu19uj3t63kf5saclcg597niecsh.apps.googleusercontent.com' ? '✅ YES' : '❌ NO - MISMATCH DETECTED!');
       console.log('Provider custom params:', provider.customParameters || 'none');
       console.log('Firebase auth app name:', auth.app?.name);
       console.groupEnd();
       
-      // Use popup in development to avoid redirect_uri_mismatch, redirect in production
-      const isDevelopment = import.meta.env.MODE === 'development';
-      
-      if (isDevelopment) {
-        console.log('🔧 Development mode: Using popup sign-in to avoid redirect_uri_mismatch');
-        const result = await signInWithPopup(auth, provider);
-        console.log('✅ Popup sign-in successful:', result.user?.email);
-        // Handle the user data setup that normally happens in getRedirectResult
-        if (result.user) {
-          await setupUserData(result.user);
-        }
-      } else {
-        console.log('🚀 Production mode: Using redirect sign-in');
-        await signInWithRedirect(auth, provider);
-        // Note: This function doesn't return as the page will redirect
-      }
-    } catch (error) {
+      // Use redirect authentication - this is more reliable
+      console.log('🚀 Using redirect sign-in for better compatibility');
+      await signInWithRedirect(auth, provider);
+      // Note: This function doesn't return as the page will redirect
+    } catch (error: any) {
       console.error('Error signing in with Google:', error);
+      
+      // Enhanced error messages for common issues
+      if (error.code === 'auth/network-request-failed' || 
+          error.message?.includes('ERR_BLOCKED_BY_CLIENT')) {
+        throw new Error('🚫 Google services are blocked by your ad blocker or network.\n\n' +
+          '✅ Quick fix:\n' +
+          '1. Disable ad blocker for wizxp.com\n' +
+          '2. Add *.googleapis.com to whitelist\n' +
+          '3. Try incognito mode\n' +
+          '4. Clear browser cache');
+      } else if (error.code === 'auth/popup-blocked') {
+        throw new Error('Popup was blocked. Please allow popups for this site or try refreshing the page.');
+      } else if (error.code === 'auth/unauthorized-domain') {
+        throw new Error('This domain is not authorized for authentication. Please contact support.');
+      } else if (error.code === 'auth/internal-error' || error.message?.includes('internal-error')) {
+        console.error('🔧 AUTH DEBUG: Internal authentication error - likely ad blocker interference');
+        throw new Error('🚫 Authentication blocked by ad blocker.\n\n' +
+          '✅ Please disable ad blockers for wizxp.com and reload the page.');
+      }
+      
       throw error;
     }
   };
