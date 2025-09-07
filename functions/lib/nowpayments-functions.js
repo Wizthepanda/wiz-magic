@@ -203,7 +203,7 @@ exports.createNowPaymentsPayment = firebase_functions_1.https.onRequest(async (r
                     return;
                 }
             }
-            const { price_amount, price_currency = 'usd', pay_currency = 'usdtbsc', creator_id, creator_name, tipper_name, message } = request.body;
+            const { price_amount, price_currency = 'usd', pay_currency = 'usdtbsc', settlement_currency, creator_id, creator_name, tipper_name, message } = request.body;
             if (!price_amount || !creator_id) {
                 response.status(400).json({ error: 'Missing required parameters' });
                 return;
@@ -228,7 +228,7 @@ exports.createNowPaymentsPayment = firebase_functions_1.https.onRequest(async (r
                 });
                 return;
             }
-            console.log(`💰 Creating payment: ${price_amount} ${price_currency} -> ${pay_currency} for creator ${creator_id}`);
+            console.log(`💰 Creating payment: ${price_amount} ${price_currency} -> ${pay_currency} for creator ${creator_id}${settlement_currency ? ` (settle in ${settlement_currency})` : ''}`);
             const paymentData = {
                 price_amount: parseFloat(price_amount),
                 price_currency: price_currency.toLowerCase(),
@@ -236,10 +236,19 @@ exports.createNowPaymentsPayment = firebase_functions_1.https.onRequest(async (r
                 order_id: `tip-${Date.now()}`,
                 order_description: 'Creator Tip via WIZ',
                 ipn_callback_url: `${process.env.FUNCTIONS_BASE_URL || 'https://us-central1-wiz-magic-platform.cloudfunctions.net'}/nowPaymentsTipWebhook`
-                // Temporarily removing is_fee_paid_by_user to test if this resolves the "amountFrom" error
-                // Note: outcome_currency is not supported in current NOWPayments plan
-                // Settlement currency is handled by NOWPayments account settings
             };
+            // Add settlement currency for crypto settlements (outcome_currency parameter)
+            // Only use outcome_currency when payment and settlement currencies are different
+            if (settlement_currency && settlement_currency !== 'usd' && settlement_currency.toLowerCase() !== pay_currency.toLowerCase()) {
+                paymentData.outcome_currency = settlement_currency.toLowerCase();
+                console.log(`🎯 Cross-crypto settlement: ${pay_currency.toUpperCase()} → ${settlement_currency.toUpperCase()}`);
+            }
+            else if (settlement_currency && settlement_currency !== 'usd' && settlement_currency.toLowerCase() === pay_currency.toLowerCase()) {
+                console.log(`💰 Same-currency crypto settlement: ${settlement_currency.toUpperCase()} → ${settlement_currency.toUpperCase()}`);
+            }
+            else {
+                console.log(`💵 USD settlement (default NOWPayments behavior)`);
+            }
             console.log(`🔍 Payment data being sent to NOWPayments:`, paymentData);
             const apiResponse = await fetch('https://api.nowpayments.io/v1/payment', {
                 method: 'POST',
@@ -285,6 +294,7 @@ exports.createNowPaymentsPayment = firebase_functions_1.https.onRequest(async (r
                 amount: parseFloat(price_amount),
                 currency: price_currency.toUpperCase(),
                 payCurrency: pay_currency.toUpperCase(),
+                settlementCurrency: settlement_currency ? settlement_currency.toUpperCase() : 'USD',
                 status: payment.payment_status || 'waiting',
                 message: message || '',
                 createdAt: new Date(),

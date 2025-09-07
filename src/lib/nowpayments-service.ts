@@ -73,6 +73,7 @@ export interface TipCreatorRequest {
   amount: number;
   currency: string;
   payCurrency: string;
+  settlementCurrency?: string; // New: for multi-coin settlement
   tipperName?: string;
   message?: string;
 }
@@ -232,6 +233,7 @@ export class NowPaymentsService {
           price_amount: request.amount,
           price_currency: request.currency,
           pay_currency: request.payCurrency,
+          settlement_currency: request.settlementCurrency, // New: settlement preference
           order_id: `tip-${Date.now()}`,
           order_description: 'Creator Tip via WIZ',
           creator_id: request.creatorId,

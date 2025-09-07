@@ -61,6 +61,7 @@ interface TipFormData {
   tipperName: string;
   message: string;
   settleInUsd: boolean;
+  settlementCurrency: TipCurrency; // New: preferred settlement currency
 }
 
 // Coin configurations
@@ -146,7 +147,8 @@ export const TipModal: React.FC<TipModalProps> = ({
     payCurrency: 'usdtbsc',
     tipperName: '',
     message: '',
-    settleInUsd: true
+    settleInUsd: true,
+    settlementCurrency: 'usd' // Default to USD settlement
   });
   const [minAmounts, setMinAmounts] = useState<Record<string, number>>({});
   const [currentMinAmount, setCurrentMinAmount] = useState<number>(0);
@@ -164,9 +166,10 @@ export const TipModal: React.FC<TipModalProps> = ({
     }
   }, [isOpen]);
 
-  // Update minimum amount and selected coin when currency changes
+  // Update minimum amount and selected coin when currency or settlement changes
   useEffect(() => {
-    const key = `${formData.currency}_to_usd`;
+    const settlementKey = formData.settlementCurrency === 'usd' ? 'usd' : formData.settlementCurrency;
+    const key = `${formData.currency}_to_${settlementKey}`;
     const minAmount = minAmounts[key] || 0;
     setCurrentMinAmount(minAmount);
     
@@ -181,7 +184,7 @@ export const TipModal: React.FC<TipModalProps> = ({
       const newAmount = Math.max(minAmount * 1.1, coin?.quickAmounts[0] || minAmount);
       setFormData(prev => ({ ...prev, amount: newAmount }));
     }
-  }, [formData.currency, minAmounts]);
+  }, [formData.currency, formData.settlementCurrency, minAmounts]);
 
   // Get estimate when amount or currency changes
   useEffect(() => {
@@ -225,24 +228,41 @@ export const TipModal: React.FC<TipModalProps> = ({
     try {
       setLoadingMinAmount(true);
       
-      // Load minimum amounts for all supported coins
-      const promises = coinConfigs.map(async (coin) => {
-        try {
-          const response = await NowPaymentsService.getMinAmount(coin.id, 'usd');
-          return { coin: coin.id, minAmount: response.min_amount };
-        } catch (error) {
-          console.error(`Error loading minimum for ${coin.id}:`, error);
-          // Set reasonable defaults based on coin type
-          const defaultMin = coin.isStablecoin ? 1.5 : (coin.id === 'btc' ? 0.0001 : 5);
-          return { coin: coin.id, minAmount: defaultMin };
-        }
-      });
+      // Load minimum amounts for all supported coins (both USD settlement and crypto settlement)
+      const promises = coinConfigs.flatMap(coin => [
+        // For USD settlement
+        (async () => {
+          try {
+            const response = await NowPaymentsService.getMinAmount(coin.id, 'usd');
+            return { key: `${coin.id}_to_usd`, minAmount: response.min_amount };
+          } catch (error) {
+            console.error(`Error loading minimum for ${coin.id} to USD:`, error);
+            const defaultMin = coin.isStablecoin ? 1.5 : (coin.id === 'btc' ? 0.0001 : 5);
+            return { key: `${coin.id}_to_usd`, minAmount: defaultMin };
+          }
+        })(),
+        // For crypto settlement (same currency)
+        (async () => {
+          if (coin.id === 'usd') {
+            // USD to USD doesn't need API call, use default
+            return { key: `${coin.id}_to_${coin.id}`, minAmount: 1.5 };
+          }
+          try {
+            const response = await NowPaymentsService.getMinAmount(coin.id, coin.id);
+            return { key: `${coin.id}_to_${coin.id}`, minAmount: response.min_amount };
+          } catch (error) {
+            console.error(`Error loading minimum for ${coin.id} to ${coin.id}:`, error);
+            const defaultMin = coin.isStablecoin ? 1.5 : (coin.id === 'btc' ? 0.0001 : 10);
+            return { key: `${coin.id}_to_${coin.id}`, minAmount: defaultMin };
+          }
+        })()
+      ]);
 
       const results = await Promise.all(promises);
       const newMinAmounts: Record<string, number> = {};
       
-      results.forEach(({ coin, minAmount }) => {
-        newMinAmounts[`${coin}_to_usd`] = minAmount;
+      results.forEach(({ key, minAmount }) => {
+        newMinAmounts[key] = minAmount;
       });
 
       setMinAmounts(newMinAmounts);
@@ -274,10 +294,11 @@ export const TipModal: React.FC<TipModalProps> = ({
 
     try {
       setLoadingEstimate(true);
+      const settlementCurrency = formData.settlementCurrency === 'usd' ? 'usd' : formData.settlementCurrency;
       const estimateResponse = await NowPaymentsService.getEstimate(
         formData.amount,
         formData.currency,
-        formData.settleInUsd ? 'usd' : formData.currency
+        settlementCurrency
       );
       setEstimate(estimateResponse);
     } catch (error) {
@@ -351,6 +372,7 @@ export const TipModal: React.FC<TipModalProps> = ({
         amount: formData.amount,
         currency: formData.currency,
         payCurrency: payCurrency,
+        settlementCurrency: formData.settlementCurrency,
         tipperName: formData.tipperName || undefined,
         message: formData.message || undefined
       });
@@ -417,7 +439,8 @@ export const TipModal: React.FC<TipModalProps> = ({
       payCurrency: 'usdtbsc',
       tipperName: '',
       message: '',
-      settleInUsd: true
+      settleInUsd: true,
+      settlementCurrency: 'usd'
     });
     onClose();
   };
@@ -625,19 +648,163 @@ export const TipModal: React.FC<TipModalProps> = ({
           </div>
         )}
 
-        {/* Settlement Info */}
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <div className="flex items-center gap-2 text-blue-800">
+        {/* Settlement Options */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-base font-medium text-gray-700 mb-3 sm:text-sm sm:mb-2">
+              Choose Settlement Method
+            </label>
+            <p className="text-xs text-gray-600 mb-3">Decide how the creator receives the tip</p>
+            
+            {/* Settlement Currency Grid - Match Payment Method Design */}
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 sm:gap-2">
+              {coinConfigs.map((coin) => {
+                const IconComponent = coin.icon;
+                const isSelected = formData.settlementCurrency === coin.id;
+                
+                // Correct coin labels
+                let displayName = coin.name;
+                if (coin.id === 'usdtbsc') displayName = 'USDT BSC';
+                if (coin.id === 'usdc') displayName = 'USDC ERC20';
+                
+                return (
+                  <Button
+                    key={coin.id}
+                    variant={isSelected ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setFormData(prev => ({ 
+                      ...prev, 
+                      settlementCurrency: coin.id,
+                      settleInUsd: coin.id === 'usd'
+                    }))}
+                    className={cn(
+                      "flex flex-col items-center gap-1 h-16 py-3 px-2 min-h-[44px] sm:h-auto sm:min-h-0",
+                      isSelected && "bg-gradient-to-r from-purple-500 to-pink-500 border-transparent"
+                    )}
+                    title={`Settle in ${displayName}${coin.network ? ` (${coin.network})` : ''}`}
+                  >
+                    <IconComponent 
+                      size={20} 
+                      className={cn(isSelected ? "text-white" : coin.color, "sm:w-[18px] sm:h-[18px]")}
+                    />
+                    <span className={cn(
+                      "text-sm font-medium sm:text-xs",
+                      isSelected ? "text-white" : "text-gray-700"
+                    )}>
+                      {coin.symbol}
+                      {coin.network && (
+                        <span className="block text-[10px] opacity-70 sm:text-[8px]">
+                          {coin.id === 'usdtbsc' ? 'BSC' : coin.id === 'usdc' ? 'ERC20' : coin.network}
+                        </span>
+                      )}
+                    </span>
+                    
+                    {/* USD Default Badge */}
+                    {coin.id === 'usd' && (
+                      <span className={cn(
+                        "absolute top-1 left-1 px-1 py-0.5 rounded-full text-[8px] font-medium",
+                        isSelected 
+                          ? "bg-white/20 text-white backdrop-blur-sm" 
+                          : "bg-green-100 text-green-700"
+                      )}>
+                        DEFAULT
+                      </span>
+                    )}
+                  </Button>
+                );
+              })}
+            </div>
+            
+            {/* Active Settlement Display */}
+          <motion.div
+            key={formData.settlementCurrency}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className={cn(
+              "p-4 rounded-lg border-l-4",
+              formData.settlementCurrency === 'usd'
+                ? "bg-green-50 border-l-green-400"
+                : "bg-blue-50 border-l-blue-400"
+            )}
+          >
+            <div className="flex items-start gap-3">
+              <div className={cn(
+                "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5",
+                formData.settlementCurrency === 'usd'
+                  ? "bg-green-100"
+                  : "bg-blue-100"
+              )}>
+                <Check size={16} className={cn(
+                  formData.settlementCurrency === 'usd'
+                    ? "text-green-600"
+                    : "text-blue-600"
+                )} />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  {(() => {
+                    const settlementCoin = coinConfigs.find(c => c.id === formData.settlementCurrency);
+                    const IconComponent = settlementCoin?.icon || Coins;
+                    
+                    // Use corrected coin labels
+                    let displayName = settlementCoin?.name || 'USD';
+                    if (formData.settlementCurrency === 'usdtbsc') displayName = 'USDT BSC';
+                    if (formData.settlementCurrency === 'usdc') displayName = 'USDC ERC20';
+                    
+                    return (
+                      <>
+                        <IconComponent size={16} className={settlementCoin?.color || "text-blue-600"} />
+                        <span className={cn(
+                          "font-semibold text-sm",
+                          formData.settlementCurrency === 'usd'
+                            ? "text-green-800"
+                            : "text-blue-800"
+                        )}>
+                          Settlement: {displayName}
+                        </span>
+                      </>
+                    );
+                  })()}
+                </div>
+                <p className={cn(
+                  "text-sm leading-relaxed",
+                  formData.settlementCurrency === 'usd'
+                    ? "text-green-700"
+                    : "text-blue-700"
+                )}>
+                  {formData.settlementCurrency === 'usd' 
+                    ? "Creator receives USD directly via NOWPayments fiat settlement"
+                    : `Creator receives ${coinConfigs.find(c => c.id === formData.settlementCurrency)?.name || 'crypto'} directly — no conversion fees`
+                  }
+                </p>
+              </div>
+            </div>
+          </motion.div>
+          </div>
+        </div>
+
+        {/* Payment Info */}
+        <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+          <div className="flex items-center gap-2 text-yellow-800">
             <Coins size={16} />
             <span className="text-sm font-medium">
-              Creator settlement: Converted to USD via NOWPayments
+              Payment Method: {selectedCoin.name}
+              {formData.settlementCurrency !== formData.currency && 
+                ` → Settlement: ${(() => {
+                  const settlementCoin = coinConfigs.find(c => c.id === formData.settlementCurrency);
+                  if (formData.settlementCurrency === 'usdtbsc') return 'USDT BSC';
+                  if (formData.settlementCurrency === 'usdc') return 'USDC ERC20';
+                  return settlementCoin?.name || 'USD';
+                })()}`
+              }
             </span>
           </div>
-          <p className="text-xs text-blue-600 mt-1 ml-6 flex items-center gap-1">
+          <p className="text-xs text-yellow-700 mt-1 ml-6 flex items-center gap-1">
             <selectedCoin.icon size={12} className={selectedCoin.color} />
             {selectedCoin.id === 'usd' 
-              ? 'USD tips processed via USDT (BSC) and settled in USD to creator'
-              : `${selectedCoin.name} converted to USD for creator payout`
+              ? 'USD payments processed via USDT (BSC) for reliable processing'
+              : `Pay with ${selectedCoin.name}${formData.settlementCurrency !== selectedCoin.id ? ` and settle in ${coinConfigs.find(c => c.id === formData.settlementCurrency)?.symbol}` : ''}`
             }
           </p>
         </div>
