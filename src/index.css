@@ -270,3 +270,40 @@
     transform: scale(1.02);
   }
 }
+
+/* Mobile Safe Area Support */
+@layer utilities {
+  .safe-area-padding {
+    padding-top: max(env(safe-area-inset-top), 0px);
+    padding-right: max(env(safe-area-inset-right), 0px);
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+    padding-left: max(env(safe-area-inset-left), 0px);
+  }
+  
+  .safe-area-top {
+    padding-top: max(env(safe-area-inset-top), 0px);
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+  
+  .safe-area-left {
+    padding-left: max(env(safe-area-inset-left), 0px);
+  }
+  
+  .safe-area-right {
+    padding-right: max(env(safe-area-inset-right), 0px);
+  }
+}
+
+/* Mobile-specific tipping modal improvements */
+@media (max-width: 768px) {
+  .mobile-modal-height {
+    max-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 2rem);
+  }
+  
+  .mobile-modal-content {
+    margin-bottom: env(safe-area-inset-bottom);
+  }
+}

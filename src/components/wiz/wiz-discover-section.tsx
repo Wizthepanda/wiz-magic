@@ -39,7 +39,6 @@ const categories = [
   { id: 'fashion', label: 'Fashion', color: 'bg-fuchsia-500', dotColor: 'bg-fuchsia-400' },
   { id: 'relationships', label: 'Relationships', color: 'bg-pink-500', dotColor: 'bg-pink-400' },
   { id: 'lifestyle', label: 'Lifestyle', color: 'bg-amber-500', dotColor: 'bg-amber-400' },
-  { id: 'movie', label: 'Movie', color: 'bg-slate-500', dotColor: 'bg-slate-400' },
 ];
 
 // Exactly 8 video panels with category tags
@@ -523,6 +522,12 @@ export const WizDiscoverSection = () => {
         allSnapshots.forEach(({ doc, source }) => {
             const data = doc.data();
             
+            // Skip shorts - they should only appear in the Shorts section
+            if (data.contentType === 'short') {
+              console.log(`🎬 Skipping short video "${data.title}" from Latest Videos section`);
+              return;
+            }
+            
             // Enhanced duplicate detection - prioritize newer uploads
             const getTimestamp = (data) => {
               // Try multiple timestamp fields in priority order
@@ -890,6 +895,12 @@ export const WizDiscoverSection = () => {
                     <CardContent className="p-0">
                       {/* 16:9 Thumbnail Section */}
                       <div className="relative aspect-video bg-gradient-to-br from-slate-200 to-slate-300 overflow-hidden rounded-t-2xl">
+                        <img 
+                          src={video.thumbnail}
+                          alt={video.title}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
                       
                         {/* Category Badge - Top Left Small Pill */}
                         <div className="absolute top-2 left-2 z-20">
@@ -1020,6 +1031,12 @@ export const WizDiscoverSection = () => {
                     <CardContent className="p-0 h-full flex flex-col">
                       {/* Thumbnail Section */}
                       <div className="relative h-48 bg-gradient-to-br from-slate-200 to-slate-300 overflow-hidden rounded-t-2xl">
+                        <img 
+                          src={video.thumbnail}
+                          alt={video.title}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
                         
                         {/* Category Badge - Top Left */}
                         <div className="absolute top-3 left-3 z-20">

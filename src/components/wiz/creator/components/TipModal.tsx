@@ -950,9 +950,9 @@ export const TipModal: React.FC<TipModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md w-[95vw] max-h-[95vh] mx-auto bg-white/95 backdrop-blur-xl border-0 shadow-2xl h-auto flex flex-col p-0 rounded-t-3xl rounded-b-none sm:max-w-lg sm:w-full sm:max-h-[90vh] sm:rounded-2xl md:max-w-xl">
+      <DialogContent className="max-w-md w-[95vw] mobile-modal-height max-h-[96vh] mx-auto bg-white/95 backdrop-blur-xl border-0 shadow-2xl h-auto flex flex-col p-0 rounded-t-3xl rounded-b-none sm:max-w-lg sm:w-full sm:max-h-[90vh] sm:rounded-2xl md:max-w-xl">
         {/* Fixed Header */}
-        <DialogHeader className="flex-shrink-0 px-4 pt-4 pb-3 border-b border-gray-100 bg-white/95 backdrop-blur-xl shadow-sm sm:px-6 sm:pt-6 sm:pb-4 sm:shadow-none">
+        <DialogHeader className="flex-shrink-0 px-4 pt-4 pb-3 safe-area-top border-b border-gray-100 bg-white/95 backdrop-blur-xl shadow-sm sm:px-6 sm:pt-6 sm:pb-4 sm:shadow-none">
           <DialogTitle className="flex items-center gap-2 text-lg font-semibold sm:text-xl">
             <motion.div
               animate={{ rotate: [0, 10, -10, 0] }}
@@ -965,7 +965,7 @@ export const TipModal: React.FC<TipModalProps> = ({
         </DialogHeader>
 
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-3 scroll-smooth scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent sm:px-6 sm:py-4">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-3 scroll-smooth scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent sm:px-6 sm:py-4 min-h-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
@@ -984,7 +984,7 @@ export const TipModal: React.FC<TipModalProps> = ({
 
         {/* Fixed Footer */}
         {step === 'amount' && (
-          <div className="flex-shrink-0 px-4 py-3 border-t border-gray-100 bg-white/95 backdrop-blur-xl shadow-lg sm:px-6 sm:py-4 sm:shadow-none">
+          <div className="flex-shrink-0 px-4 py-3 safe-area-bottom border-t border-gray-100 bg-white/95 backdrop-blur-xl shadow-lg sm:px-6 sm:py-4 sm:shadow-none">
             <Button
               onClick={handleCreatePayment}
               disabled={loading || formData.amount < currentMinAmount || loadingMinAmount}
@@ -1002,7 +1002,7 @@ export const TipModal: React.FC<TipModalProps> = ({
         )}
 
         {step === 'payment' && (
-          <div className="flex-shrink-0 px-4 py-3 border-t border-gray-100 bg-white/95 backdrop-blur-xl shadow-lg sm:px-6 sm:py-4 sm:shadow-none">
+          <div className="flex-shrink-0 px-4 py-3 safe-area-bottom border-t border-gray-100 bg-white/95 backdrop-blur-xl shadow-lg sm:px-6 sm:py-4 sm:shadow-none">
             <Button
               variant="ghost"
               onClick={() => setStep('amount')}
@@ -1015,7 +1015,7 @@ export const TipModal: React.FC<TipModalProps> = ({
         )}
 
         {step === 'confirmation' && (
-          <div className="flex-shrink-0 px-4 py-3 border-t border-gray-100 bg-white/95 backdrop-blur-xl shadow-lg sm:px-6 sm:py-4 sm:shadow-none">
+          <div className="flex-shrink-0 px-4 py-3 safe-area-bottom border-t border-gray-100 bg-white/95 backdrop-blur-xl shadow-lg sm:px-6 sm:py-4 sm:shadow-none">
             <Button
               variant="default"
               onClick={handleClose}

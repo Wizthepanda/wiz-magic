@@ -471,7 +471,7 @@ export const YouTubeCreatorProfile: React.FC<YouTubeCreatorProfileProps> = ({
                         : "bg-gradient-to-r from-red-600/90 to-red-700/90 hover:from-red-700 hover:to-red-800 text-white border-red-500/30"
                     )}
                   >
-                    🔴 {subscriptionStatus?.isSubscribed ? 'Subscribed' : 'Subscribe'}
+{subscriptionStatus?.isSubscribed ? 'Subscribed' : 'Subscribe'}
                   </Button>
                 </motion.div>
                 
@@ -480,8 +480,7 @@ export const YouTubeCreatorProfile: React.FC<YouTubeCreatorProfileProps> = ({
                     variant="outline"
                     className="px-6 py-3 bg-white/15 border-2 border-white/30 text-white hover:bg-white/25 backdrop-blur-md font-semibold shadow-lg transition-all duration-300"
                   >
-                    <Heart className="w-4 h-4 mr-2" />
-                    Follow
+Follow
                   </Button>
                 </motion.div>
                 
@@ -619,9 +618,41 @@ export const YouTubeCreatorProfile: React.FC<YouTubeCreatorProfileProps> = ({
               </motion.div>
             </div>
 
-            {/* Action buttons - stacked vertically with Tip as primary CTA */}
+            {/* Action buttons - stacked vertically in new order: Subscribe, Follow, Tip Crypto */}
             <div className="space-y-3">
-              {/* Primary: Tip Button (Hero CTA) */}
+              {/* First: Subscribe Button */}
+              <motion.div
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+              >
+                <Button
+                  onClick={handleSubscriptionToggle}
+                  disabled={subscriptionLoading || !user}
+                  className={cn(
+                    "w-full h-12 font-bold text-base transition-all duration-300 shadow-lg hover:shadow-xl",
+                    subscriptionStatus?.isSubscribed
+                      ? "bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white border-0"
+                      : "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white border-0"
+                  )}
+                >
+                  {subscriptionStatus?.isSubscribed ? 'Subscribed' : 'Subscribe'}
+                </Button>
+              </motion.div>
+              
+              {/* Second: Follow Button */}
+              <motion.div
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+              >
+                <Button 
+                  variant="outline" 
+                  className="w-full h-12 bg-white/80 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 font-semibold text-base transition-all duration-300 backdrop-blur-sm"
+                >
+                  Follow
+                </Button>
+              </motion.div>
+              
+              {/* Third: Tip Crypto Button (unchanged) */}
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -637,39 +668,6 @@ export const YouTubeCreatorProfile: React.FC<YouTubeCreatorProfileProps> = ({
                 />
                 {/* Enhanced glow effect for tip button */}
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-rose-500/20 rounded-2xl blur-xl opacity-70 -z-10" />
-              </motion.div>
-              
-              {/* Secondary: Subscribe Button (Strong CTA) */}
-              <motion.div
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-              >
-                <Button
-                  onClick={handleSubscriptionToggle}
-                  disabled={subscriptionLoading || !user}
-                  className={cn(
-                    "w-full h-12 font-bold text-base transition-all duration-300 shadow-lg hover:shadow-xl",
-                    subscriptionStatus?.isSubscribed
-                      ? "bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white border-0"
-                      : "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white border-0"
-                  )}
-                >
-                  🔴 {subscriptionStatus?.isSubscribed ? 'Subscribed' : 'Subscribe'}
-                </Button>
-              </motion.div>
-              
-              {/* Tertiary: Follow Button (Neutral) */}
-              <motion.div
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-              >
-                <Button 
-                  variant="outline" 
-                  className="w-full h-12 bg-white/80 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 font-semibold text-base transition-all duration-300 backdrop-blur-sm"
-                >
-                  <Heart className="w-4 h-4 mr-2" />
-                  Follow
-                </Button>
               </motion.div>
             </div>
           </div>

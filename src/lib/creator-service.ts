@@ -36,6 +36,13 @@ export interface CreatorVideo {
   status: 'active' | 'inactive';
   isFeatured: boolean;
   originalYouTubeUrl: string;
+  contentType?: 'short' | 'video';
+  migrationHistory?: {
+    fromContentType?: string;
+    toContentType?: string;
+    migratedAt?: Date;
+    reason?: string;
+  };
 }
 
 export interface CreatorStats {
@@ -559,7 +566,7 @@ export class CreatorService {
   }
 
   /**
-   * Publish selected videos to Discover feed
+   * Publish selected videos to Discover feed with Smart Migration
    */
   static async publishVideosToDiscover(videos: Omit<CreatorVideo, 'addedToWiz' | 'lastUpdated'>[]): Promise<void> {
     try {
@@ -572,14 +579,41 @@ export class CreatorService {
       console.log('📋 Creator profile found:', creatorProfile ? 'Yes' : 'No', creatorProfile);
       
       for (const video of videos) {
-        // Save to creator videos collection
         const creatorVideoRef = doc(db, 'creatorVideos', video.videoId);
+        
+        // Check if video already exists for migration detection
+        const existingVideoDoc = await getDoc(creatorVideoRef);
+        const existingVideo = existingVideoDoc.exists() ? existingVideoDoc.data() as CreatorVideo : null;
+        
+        // Detect content type migration
+        const isMigration = existingVideo && 
+                           existingVideo.contentType !== video.contentType &&
+                           existingVideo.contentType && 
+                           video.contentType;
+        
+        if (isMigration) {
+          console.log(`🔄 Content Migration Detected: "${video.title}" from ${existingVideo.contentType} → ${video.contentType}`);
+          console.log(`📅 Preserving original addedToWiz date: ${existingVideo.addedToWiz}`);
+        }
+        
+        // Save to creator videos collection with migration tracking
         const creatorVideoData: CreatorVideo = {
           ...video,
-          addedToWiz: new Date(),
+          addedToWiz: existingVideo?.addedToWiz || new Date(),
           lastUpdated: new Date(),
           status: 'active',
-          isFeatured: true
+          isFeatured: true,
+          ...(isMigration && {
+            migrationHistory: {
+              fromContentType: existingVideo.contentType,
+              toContentType: video.contentType,
+              migratedAt: new Date(),
+              reason: 'creator_recategorization'
+            }
+          }),
+          ...(existingVideo?.migrationHistory && !isMigration && {
+            migrationHistory: existingVideo.migrationHistory
+          })
         };
 
         batch.push(
@@ -602,13 +636,14 @@ export class CreatorService {
           views: video.views,
           category: video.categoryTags[0] || 'tech',
           categoryTags: video.categoryTags,
+          contentType: video.contentType,
           creatorId: video.creatorId,
           channelId: video.channelId,
           channelName: creatorProfile?.channelName || 'Unknown Creator',
           channelAvatar: creatorProfile?.channelAvatar || '',
           isCreatorContent: true,
           publishedAt: video.publishedAt,
-          addedToWiz: serverTimestamp(),
+          addedToWiz: isMigration ? existingVideo.addedToWiz : serverTimestamp(),
           lastUpdated: serverTimestamp(),
           status: 'active',
           originalUrl: video.originalYouTubeUrl

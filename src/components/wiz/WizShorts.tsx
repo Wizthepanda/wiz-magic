@@ -8,10 +8,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { useXp } from '@/context/XpContext';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { db } from '@/lib/firebase';
+import { collection, query, where, orderBy, limit, onSnapshot } from 'firebase/firestore';
 
 // Types
 interface ShortVideo {
-  id: number;
+  id: string;
+  videoId: string;
   title: string;
   creator: string;
   thumbnail: string;
@@ -20,215 +23,37 @@ interface ShortVideo {
   category: string;
   xpReward: number;
   duration: string;
-  videoId: string;
   avatar?: string;
   channelId?: string;
+  contentType?: 'short' | 'video';
+  creatorName?: string;
+  creatorAvatar?: string;
 }
 
-// Flattened shorts data for unified carousel
-const allShortsData: ShortVideo[] = [
-  // AI Shorts
-  {
-    id: 1,
-    title: 'Quick AI Tip',
-    creator: 'TechGuru',
-    thumbnail: 'https://img.youtube.com/vi/2M4asXviuoo/maxresdefault.jpg',
-    views: '45K',
-    timeAgo: '12h',
-    category: 'AI',
-    xpReward: 15,
-    duration: '0:15',
-    videoId: '2M4asXviuoo',
-    avatar: '/Profile Pics/FERA.jpg',
-    channelId: 'UC1234567890'
-  },
-  {
-    id: 2,
-    title: 'ML in 30 Seconds',
-    creator: 'AIWizard',
-    thumbnail: 'https://img.youtube.com/vi/ScMzIvxBSi4/maxresdefault.jpg',
-    views: '89K',
-    timeAgo: '8h',
-    category: 'AI',
-    xpReward: 18,
-    duration: '0:30',
-    videoId: 'ScMzIvxBSi4',
-    avatar: '/Profile Pics/Captain Hahaa.jpg',
-    channelId: 'UC2345678901'
-  },
-  {
-    id: 7,
-    title: 'React Quick Tip',
-    creator: 'CodeMaster',
-    thumbnail: 'https://img.youtube.com/vi/ScMzIvxBSi4/maxresdefault.jpg',
-    views: '92K',
-    timeAgo: '8h',
-    category: 'Tech',
-    xpReward: 18,
-    duration: '0:45',
-    videoId: 'ScMzIvxBSi4',
-    avatar: '/Profile Pics/RoyalKongz.jpg',
-    channelId: 'UC3456789012'
-  },
-  {
-    id: 19,
-    title: 'Money Hack #1',
-    creator: 'WealthWiz',
-    thumbnail: 'https://img.youtube.com/vi/jNQXAC9IVRw/maxresdefault.jpg',
-    views: '128K',
-    timeAgo: '1d',
-    category: 'Money',
-    xpReward: 20,
-    duration: '0:30',
-    videoId: 'jNQXAC9IVRw',
-    avatar: '/Profile Pics/Ale.jpg',
-    channelId: 'UC4567890123'
-  },
-  {
-    id: 13,
-    title: 'Beat Making 101',
-    creator: 'MusicPro',
-    thumbnail: 'https://img.youtube.com/vi/ZbZSe6N_BXs/maxresdefault.jpg',
-    views: '67K',
-    timeAgo: '6h',
-    category: 'Music',
-    xpReward: 22,
-    duration: '0:20',
-    videoId: 'ZbZSe6N_BXs'
-  },
-  {
-    id: 3,
-    title: 'Neural Networks Explained',
-    creator: 'DeepMind',
-    thumbnail: 'https://img.youtube.com/vi/2M4asXviuoo/maxresdefault.jpg',
-    views: '156K',
-    timeAgo: '1d',
-    category: 'AI',
-    xpReward: 22,
-    duration: '0:45',
-    videoId: '2M4asXviuoo'
-  },
-  {
-    id: 25,
-    title: 'Health Hack',
-    creator: 'FitWiz',
-    thumbnail: 'https://img.youtube.com/vi/2M4asXviuoo/maxresdefault.jpg',
-    views: '34K',
-    timeAgo: '4h',
-    category: 'Health',
-    xpReward: 16,
-    duration: '0:25',
-    videoId: '2M4asXviuoo'
-  },
-  {
-    id: 8,
-    title: 'CSS Grid Magic',
-    creator: 'WebDev',
-    thumbnail: 'https://img.youtube.com/vi/2M4asXviuoo/maxresdefault.jpg',
-    views: '78K',
-    timeAgo: '6h',
-    category: 'Tech',
-    xpReward: 16,
-    duration: '0:30',
-    videoId: '2M4asXviuoo'
-  },
-  {
-    id: 20,
-    title: 'Crypto Update',
-    creator: 'CryptoKing',
-    thumbnail: 'https://img.youtube.com/vi/ScMzIvxBSi4/maxresdefault.jpg',
-    views: '156K',
-    timeAgo: '2h',
-    category: 'Money',
-    xpReward: 25,
-    duration: '0:35',
-    videoId: 'ScMzIvxBSi4'
-  },
-  {
-    id: 14,
-    title: 'Guitar Riff Tutorial',
-    creator: 'StringMaster',
-    thumbnail: 'https://img.youtube.com/vi/2M4asXviuoo/maxresdefault.jpg',
-    views: '123K',
-    timeAgo: '1d',
-    category: 'Music',
-    xpReward: 24,
-    duration: '0:35',
-    videoId: '2M4asXviuoo'
-  },
-  {
-    id: 4,
-    title: 'ChatGPT Hack',
-    creator: 'PromptPro',
-    thumbnail: 'https://img.youtube.com/vi/ScMzIvxBSi4/maxresdefault.jpg',
-    views: '203K',
-    timeAgo: '2d',
-    category: 'AI',
-    xpReward: 25,
-    duration: '0:20',
-    videoId: 'ScMzIvxBSi4'
-  },
-  {
-    id: 26,
-    title: 'Productivity Hack',
-    creator: 'LifeHacker',
-    thumbnail: 'https://img.youtube.com/vi/ZbZSe6N_BXs/maxresdefault.jpg',
-    views: '203K',
-    timeAgo: '1h',
-    category: 'Health',
-    xpReward: 24,
-    duration: '0:50',
-    videoId: 'ZbZSe6N_BXs'
-  },
-  {
-    id: 9,
-    title: 'JavaScript Tricks',
-    creator: 'JSNinja',
-    thumbnail: 'https://img.youtube.com/vi/ScMzIvxBSi4/maxresdefault.jpg',
-    views: '134K',
-    timeAgo: '12h',
-    category: 'Tech',
-    xpReward: 21,
-    duration: '0:40',
-    videoId: 'ScMzIvxBSi4'
-  },
-  {
-    id: 21,
-    title: 'Investment Strategy',
-    creator: 'FinanceGuru',
-    thumbnail: 'https://img.youtube.com/vi/jNQXAC9IVRw/maxresdefault.jpg',
-    views: '89K',
-    timeAgo: '6h',
-    category: 'Money',
-    xpReward: 22,
-    duration: '0:50',
-    videoId: 'jNQXAC9IVRw'
-  },
-  {
-    id: 15,
-    title: 'Mix & Master Tips',
-    creator: 'AudioEngineer',
-    thumbnail: 'https://img.youtube.com/vi/ZbZSe6N_BXs/maxresdefault.jpg',
-    views: '89K',
-    timeAgo: '8h',
-    category: 'Music',
-    xpReward: 20,
-    duration: '0:45',
-    videoId: 'ZbZSe6N_BXs'
-  },
-  {
-    id: 5,
-    title: 'AI Art Generator',
-    creator: 'CreativeAI',
-    thumbnail: 'https://img.youtube.com/vi/2M4asXviuoo/maxresdefault.jpg',
-    views: '67K',
-    timeAgo: '3h',
-    category: 'AI',
-    xpReward: 16,
-    duration: '0:35',
-    videoId: '2M4asXviuoo'
-  }
-];
+// Helper function to format time ago from date
+const formatTimeAgo = (date: Date): string => {
+  const now = new Date();
+  const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+  
+  if (diffInHours < 1) return 'Just now';
+  if (diffInHours < 24) return `${diffInHours}h`;
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) return `${diffInDays}d`;
+  const diffInWeeks = Math.floor(diffInDays / 7);
+  return `${diffInWeeks}w`;
+};
+
+// Helper function to calculate XP reward based on duration
+const calculateXPReward = (duration: string): number => {
+  // Parse duration (e.g., "0:30" = 30 seconds)
+  const parts = duration.split(':');
+  const minutes = parseInt(parts[0] || '0');
+  const seconds = parseInt(parts[1] || '0');
+  const totalSeconds = minutes * 60 + seconds;
+  
+  // Base XP for shorts: 15-25 XP based on length
+  return Math.min(25, Math.max(15, Math.floor(totalSeconds / 2.5)));
+};
 
 const getCategoryColor = (category: string) => {
   const colors = {
@@ -254,6 +79,73 @@ export const WizShorts = () => {
   const [cardWidth, setCardWidth] = useState('220px');
   const [currentPage, setCurrentPage] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+  
+  // Real shorts data from Firestore
+  const [allShortsData, setAllShortsData] = useState<ShortVideo[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch real shorts from Firestore
+  useEffect(() => {
+    console.log('🎬 WizShorts: Setting up Firestore listener for shorts');
+    setLoading(true);
+    
+    // Query for all videos first, then filter for shorts in code to avoid index issues
+    const shortsQuery = query(
+      collection(db, 'creatorVideos'),
+      orderBy('addedToWiz', 'desc'),
+      limit(50)
+    );
+
+    const unsubscribe = onSnapshot(shortsQuery, (snapshot) => {
+      console.log('🎬 WizShorts: Firestore listener triggered, docs:', snapshot.docs.length);
+      
+      const shortsData: ShortVideo[] = snapshot.docs
+        .map(doc => {
+          const data = doc.data();
+          console.log('🎬 WizShorts: Processing doc:', doc.id, 'contentType:', data.contentType, 'status:', data.status);
+          return { doc, data };
+        })
+        .filter(({ data }) => {
+          // Filter for shorts that are active
+          return data.contentType === 'short' && 
+                 (data.status === 'active' || !data.status); // Include if status is undefined for backwards compatibility
+        })
+        .map(({ doc, data }) => {
+          const publishedDate = data.addedToWiz?.toDate() || new Date();
+          
+          return {
+            id: doc.id,
+            videoId: data.videoId || doc.id,
+            title: data.title || 'Untitled Short',
+            creator: data.creatorName || data.channelName || 'Unknown Creator',
+            thumbnail: data.thumbnail || `https://img.youtube.com/vi/${data.videoId}/maxresdefault.jpg`,
+            views: data.views || '0',
+            timeAgo: formatTimeAgo(publishedDate),
+            category: data.categoryTags?.[0] || 'Other',
+            xpReward: calculateXPReward(data.duration || '0:30'),
+            duration: data.duration || '0:30',
+            avatar: data.creatorAvatar || data.channelAvatar,
+            channelId: data.channelId || data.creatorId,
+            contentType: data.contentType,
+            creatorName: data.creatorName,
+            creatorAvatar: data.creatorAvatar
+          };
+        })
+        .slice(0, 20); // Limit to 20 shorts
+
+      console.log('🎬 WizShorts: Processed shorts data:', shortsData);
+      setAllShortsData(shortsData);
+      setLoading(false);
+    }, (error) => {
+      console.error('🎬 WizShorts: Error loading shorts:', error);
+      setLoading(false);
+    });
+
+    return () => {
+      console.log('🎬 WizShorts: Cleaning up Firestore listener');
+      unsubscribe();
+    };
+  }, []);
 
   // Update card width based on screen size
   useEffect(() => {
@@ -350,6 +242,11 @@ export const WizShorts = () => {
     }
   };
 
+  // Don't render anything if no shorts available and not loading
+  if (!loading && allShortsData.length === 0) {
+    return null;
+  }
+
   return (
     <>
       {/* Shorts Section - Match Latest Videos */}
@@ -390,6 +287,13 @@ export const WizShorts = () => {
             </div>
           </div>
 
+          {/* Loading State */}
+          {loading ? (
+            <div className="flex items-center justify-center py-16">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-wiz-primary"></div>
+            </div>
+          ) : (
+          <>
           {/* Mobile: 4-Panel Grid */}
           {isMobile ? (
             <div className="px-3">
@@ -655,6 +559,8 @@ export const WizShorts = () => {
               );
             })}
             </div>
+          )}
+          </>
           )}
         </div>
 

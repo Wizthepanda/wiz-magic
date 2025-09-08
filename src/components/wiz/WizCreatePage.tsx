@@ -26,6 +26,7 @@ interface Video {
 
 interface SelectedVideo extends Video {
   category: string;
+  contentType?: 'short' | 'video';
 }
 
 type ChannelInfo = YouTubeChannelInfo;
@@ -45,6 +46,66 @@ const categories = [
   { value: 'movie', label: 'Movie' },
 ];
 
+// Helper function to detect if video is a short based on duration
+const isShortVideo = (duration: string): boolean => {
+  // Parse YouTube duration format (PT1M30S = 1 minute 30 seconds)
+  const match = duration.match(/PT(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!match) return false;
+  
+  const minutes = parseInt(match[1] || '0', 10);
+  const seconds = parseInt(match[2] || '0', 10);
+  const totalSeconds = minutes * 60 + seconds;
+  
+  return totalSeconds < 60; // Less than 60 seconds = short
+};
+
+// Helper function to auto-detect content type
+const detectContentType = (duration: string): 'short' | 'video' | undefined => {
+  if (!duration) return undefined;
+  return isShortVideo(duration) ? 'short' : 'video';
+};
+
+// Content Type Toggle Component
+const ContentTypeToggle = ({ 
+  videoId, 
+  currentType, 
+  onTypeChange, 
+  autoDetected 
+}: { 
+  videoId: string; 
+  currentType?: 'short' | 'video'; 
+  onTypeChange: (videoId: string, type: 'short' | 'video') => void;
+  autoDetected?: boolean;
+}) => {
+  return (
+    <div className="flex items-center justify-center space-x-1 bg-gray-50 rounded-full p-1 border border-gray-200">
+      <button
+        onClick={() => onTypeChange(videoId, 'short')}
+        className={`px-4 py-2 text-sm font-semibold rounded-full transition-all duration-300 ${
+          currentType === 'short'
+            ? 'bg-gradient-to-r from-wiz-primary to-wiz-secondary text-white shadow-md'
+            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+        }`}
+      >
+        Short (&lt;60s)
+      </button>
+      <button
+        onClick={() => onTypeChange(videoId, 'video')}
+        className={`px-4 py-2 text-sm font-semibold rounded-full transition-all duration-300 ${
+          currentType === 'video'
+            ? 'bg-gradient-to-r from-wiz-primary to-wiz-secondary text-white shadow-md'
+            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+        }`}
+      >
+        Full Video (≥60s)
+      </button>
+      {autoDetected && (
+        <span className="ml-2 text-xs text-green-600 font-medium">Auto-detected</span>
+      )}
+    </div>
+  );
+};
+
 export const WizCreatePage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -58,6 +119,9 @@ export const WizCreatePage = () => {
   const [channelInfo, setChannelInfo] = useState<ChannelInfo | null>(null);
   const [videos, setVideos] = useState<Video[]>([]);
   const [selectedVideos, setSelectedVideos] = useState<SelectedVideo[]>([]);
+  
+  // Content type state for each selected video
+  const [videoContentTypes, setVideoContentTypes] = useState<Record<string, 'short' | 'video'>>({});
 
   // Course creation state
   const [courseStep, setCourseStep] = useState(1);
@@ -192,17 +256,47 @@ export const WizCreatePage = () => {
     
     if (isSelected) {
       setSelectedVideos(prev => prev.filter(v => v.id !== video.id));
+      // Remove content type when deselecting
+      setVideoContentTypes(prev => {
+        const updated = { ...prev };
+        delete updated[video.id];
+        return updated;
+      });
     } else {
       // Auto-detect category based on title/description
       const autoCategory = detectCategory(video.title + ' ' + (video.description || ''));
+      // Auto-detect content type based on duration
+      const autoContentType = detectContentType(video.duration);
       
       const selectedVideo: SelectedVideo = {
         ...video,
-        category: autoCategory
+        category: autoCategory,
+        contentType: autoContentType
       };
       
       setSelectedVideos(prev => [...prev, selectedVideo]);
+      
+      // Set auto-detected content type if available
+      if (autoContentType) {
+        setVideoContentTypes(prev => ({
+          ...prev,
+          [video.id]: autoContentType
+        }));
+      }
     }
+  };
+
+  // Function to update content type for a specific video
+  const updateVideoContentType = (videoId: string, contentType: 'short' | 'video') => {
+    setVideoContentTypes(prev => ({
+      ...prev,
+      [videoId]: contentType
+    }));
+    
+    // Also update the selectedVideos array
+    setSelectedVideos(prev => prev.map(video => 
+      video.id === videoId ? { ...video, contentType } : video
+    ));
   };
 
   const detectCategory = (text: string): string => {
@@ -236,6 +330,18 @@ export const WizCreatePage = () => {
       });
       return;
     }
+    
+    // Check if all videos have content types assigned
+    const videosWithoutContentType = selectedVideos.filter(video => !videoContentTypes[video.id]);
+    if (videosWithoutContentType.length > 0) {
+      toast({
+        title: "Content Type Required",
+        description: "Please select content type (Short or Full Video) for all videos before continuing.",
+        duration: 4000,
+      });
+      return;
+    }
+    
     setCurrentStep(3);
   };
 
@@ -265,7 +371,9 @@ export const WizCreatePage = () => {
         channelId: channelInfo.id,
         status: 'active' as const,
         isFeatured: true,
-        originalYouTubeUrl: `https://www.youtube.com/watch?v=${video.id}`
+        originalYouTubeUrl: `https://www.youtube.com/watch?v=${video.id}`,
+        // Add content type metadata
+        contentType: videoContentTypes[video.id] || video.contentType || detectContentType(video.duration) || 'video'
       }));
 
       console.log('📝 Prepared creator videos for publishing:', creatorVideos);
@@ -728,6 +836,89 @@ export const WizCreatePage = () => {
                     );
                   })}
                 </div>
+              )}
+
+              {/* Content Type Selection */}
+              {selectedVideos.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="space-y-6 max-w-4xl mx-auto"
+                >
+                  <div className="text-center">
+                    <h3 className="text-xl font-semibold mb-2">Content Type Classification</h3>
+                    <p className="text-gray-600">
+                      Specify whether each video is a Short or Full Video to help viewers find the right content.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {selectedVideos.map((video, index) => {
+                      const currentType = videoContentTypes[video.id];
+                      const autoDetectedType = detectContentType(video.duration);
+                      const isAutoDetected = currentType === autoDetectedType;
+                      
+                      return (
+                        <motion.div
+                          key={video.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm"
+                        >
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            {/* Video Info */}
+                            <div className="flex items-center space-x-4 flex-1 min-w-0">
+                              <img 
+                                src={video.thumbnail} 
+                                alt={video.title}
+                                className="w-16 h-12 object-cover rounded-lg flex-shrink-0"
+                              />
+                              <div className="min-w-0 flex-1">
+                                <h4 className="font-medium text-sm line-clamp-1 mb-1">
+                                  {video.title}
+                                </h4>
+                                <div className="flex items-center space-x-3 text-xs text-gray-500">
+                                  <span>{video.duration}</span>
+                                  <span>•</span>
+                                  <span>{video.views} views</span>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Content Type Toggle */}
+                            <div className="flex-shrink-0">
+                              <ContentTypeToggle
+                                videoId={video.id}
+                                currentType={currentType}
+                                onTypeChange={updateVideoContentType}
+                                autoDetected={isAutoDetected && Boolean(autoDetectedType)}
+                              />
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Warning for unselected content types */}
+                  {selectedVideos.some(v => !videoContentTypes[v.id]) && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                      <div className="flex items-start space-x-3">
+                        <div className="w-5 h-5 text-amber-600 mt-0.5">⚠️</div>
+                        <div>
+                          <p className="text-sm font-medium text-amber-800">
+                            Please select content type for all videos
+                          </p>
+                          <p className="text-xs text-amber-700 mt-1">
+                            Some videos don't have a content type selected. This helps viewers find the right content.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
               )}
 
               <div className="text-center">

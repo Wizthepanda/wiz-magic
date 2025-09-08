@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Play, Crown, Zap, ChevronLeft, ChevronRight, X, Heart, Share2, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -8,88 +8,27 @@ import { VideoPanel } from './VideoPanel';
 import { useAuth } from '@/hooks/useAuth';
 import { useXp } from '@/context/XpContext';
 import { useToast } from '@/hooks/use-toast';
+import { db } from '@/lib/firebase';
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 
-// Enhanced Most Viewed data with landscape format
-const mostViewedVideos = [
-  {
-    id: 1,
-    title: 'The Future of AI: Complete Guide',
-    creator: 'TechVision',
-    thumbnail: 'https://img.youtube.com/vi/2M4asXviuoo/maxresdefault.jpg',
-    views: '2.3M',
-    duration: '18:45',
-    xpReward: 250,
-    category: 'AI',
-    ranking: 1,
-    videoId: '2M4asXviuoo',
-    avatar: '/Profile Pics/FERA.jpg',
-    channelId: 'UC1234567890'
-  },
-  {
-    id: 2,
-    title: 'Master React in 2024: Advanced Patterns',
-    creator: 'CodeGenius',
-    thumbnail: 'https://img.youtube.com/vi/ScMzIvxBSi4/maxresdefault.jpg',
-    views: '1.8M',
-    duration: '25:30',
-    xpReward: 320,
-    category: 'Tech',
-    ranking: 2,
-    videoId: 'ScMzIvxBSi4',
-    avatar: '/Profile Pics/RoyalKongz.jpg',
-    channelId: 'UC2345678901'
-  },
-  {
-    id: 3,
-    title: 'Millionaire Mindset: Wealth Building Secrets',
-    creator: 'WealthMaster',
-    thumbnail: 'https://img.youtube.com/vi/jNQXAC9IVRw/maxresdefault.jpg',
-    views: '1.5M',
-    duration: '22:15',
-    xpReward: 280,
-    category: 'Money',
-    ranking: 3,
-    videoId: 'jNQXAC9IVRw',
-    avatar: '/Profile Pics/Ale.jpg',
-    channelId: 'UC3456789012'
-  },
-  {
-    id: 4,
-    title: 'Music Production Masterclass',
-    creator: 'BeatKing',
-    thumbnail: 'https://img.youtube.com/vi/ZbZSe6N_BXs/maxresdefault.jpg',
-    views: '1.2M',
-    duration: '32:20',
-    xpReward: 400,
-    category: 'Music',
-    ranking: 4,
-    videoId: 'ZbZSe6N_BXs'
-  },
-  {
-    id: 5,
-    title: 'Transform Your Health in 30 Days',
-    creator: 'FitnessGuru',
-    thumbnail: 'https://img.youtube.com/vi/2M4asXviuoo/maxresdefault.jpg',
-    views: '980K',
-    duration: '28:40',
-    xpReward: 360,
-    category: 'Health',
-    ranking: 5,
-    videoId: '2M4asXviuoo'
-  },
-  {
-    id: 6,
-    title: 'Blockchain Revolution: DeFi Explained',
-    creator: 'CryptoExpert',
-    thumbnail: 'https://img.youtube.com/vi/ScMzIvxBSi4/maxresdefault.jpg',
-    views: '875K',
-    duration: '19:55',
-    xpReward: 240,
-    category: 'Money',
-    ranking: 6,
-    videoId: 'ScMzIvxBSi4'
-  }
-];
+// Type definition for most viewed video
+interface MostViewedVideo {
+  id: string;
+  title: string;
+  creator: string;
+  thumbnail: string;
+  views: string | number;
+  duration: string;
+  xpReward: number;
+  category: string;
+  ranking: number;
+  videoId: string;
+  avatar?: string;
+  channelId?: string;
+  channelName?: string;
+  channelAvatar?: string;
+  originalUrl?: string;
+}
 
 const getCategoryColor = (category: string) => {
   const colors = {
@@ -115,10 +54,118 @@ export const EnhancedMostViewed = () => {
   const { level, addXp } = useXp();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [selectedVideo, setSelectedVideo] = useState<null | typeof mostViewedVideos[0]>(null);
+  const [selectedVideo, setSelectedVideo] = useState<null | MostViewedVideo>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [mostViewedVideos, setMostViewedVideos] = useState<MostViewedVideo[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleVideoClick = (video: typeof mostViewedVideos[0]) => {
+  // Helper function to parse and sort by views
+  const parseViews = (views: string | number): number => {
+    if (typeof views === 'number') return views;
+    if (typeof views === 'string') {
+      const str = views.toLowerCase();
+      let num = parseFloat(str);
+      if (str.includes('k')) num *= 1000;
+      else if (str.includes('m')) num *= 1000000;
+      else if (str.includes('b')) num *= 1000000000;
+      return num;
+    }
+    return 0;
+  };
+
+  // Load most viewed videos from Firestore
+  useEffect(() => {
+    const loadMostViewedVideos = async () => {
+      try {
+        console.log('🔥 Loading Most Viewed videos from Firestore...');
+        
+        // Fetch from both collections and combine
+        const [videosSnapshot, creatorVideosSnapshot] = await Promise.all([
+          getDocs(query(collection(db, 'videos'), limit(20))).catch(err => {
+            console.warn('🔥 Videos collection query failed:', err);
+            return { docs: [] };
+          }),
+          getDocs(query(collection(db, 'creatorVideos'), limit(20))).catch(err => {
+            console.warn('🔥 CreatorVideos collection query failed:', err);
+            return { docs: [] };
+          })
+        ]);
+
+        const allVideos = [];
+        const processedVideoIds = new Set();
+
+        // Process videos collection
+        videosSnapshot.docs.forEach((doc) => {
+          const data = doc.data();
+          if (!processedVideoIds.has(data.videoId || doc.id)) {
+            processedVideoIds.add(data.videoId || doc.id);
+            allVideos.push({
+              id: data.videoId || doc.id,
+              title: data.title || 'Untitled',
+              creator: data.channelName || data.creator || 'Unknown Creator',
+              thumbnail: data.thumbnail || `https://img.youtube.com/vi/${data.videoId}/maxresdefault.jpg`,
+              views: data.views || 0,
+              duration: data.duration || '0:00',
+              xpReward: Math.floor(Math.random() * 200) + 100, // Random XP between 100-300
+              category: data.category || 'tech',
+              ranking: 0, // Will be set after sorting
+              videoId: data.videoId || doc.id,
+              avatar: data.channelAvatar,
+              channelId: data.channelId,
+              channelName: data.channelName,
+              channelAvatar: data.channelAvatar,
+              originalUrl: data.originalUrl
+            });
+          }
+        });
+
+        // Process creatorVideos collection
+        creatorVideosSnapshot.docs.forEach((doc) => {
+          const data = doc.data();
+          if (!processedVideoIds.has(data.videoId || doc.id)) {
+            processedVideoIds.add(data.videoId || doc.id);
+            allVideos.push({
+              id: data.videoId || doc.id,
+              title: data.title || 'Untitled',
+              creator: data.channelName || data.creator || 'Unknown Creator',
+              thumbnail: data.thumbnail || `https://img.youtube.com/vi/${data.videoId}/maxresdefault.jpg`,
+              views: data.views || 0,
+              duration: data.duration || '0:00',
+              xpReward: Math.floor(Math.random() * 200) + 100,
+              category: data.category || data.categoryTags?.[0] || 'tech',
+              ranking: 0,
+              videoId: data.videoId || doc.id,
+              avatar: data.channelAvatar,
+              channelId: data.channelId,
+              channelName: data.channelName,
+              channelAvatar: data.channelAvatar,
+              originalUrl: data.originalUrl
+            });
+          }
+        });
+
+        // Sort by views (descending) and assign rankings
+        const sortedVideos = allVideos
+          .sort((a, b) => parseViews(b.views) - parseViews(a.views))
+          .slice(0, 10) // Top 10 most viewed
+          .map((video, index) => ({
+            ...video,
+            ranking: index + 1
+          }));
+
+        console.log('🔥 Loaded and sorted most viewed videos:', sortedVideos.length);
+        setMostViewedVideos(sortedVideos);
+        setLoading(false);
+      } catch (error) {
+        console.error('❌ Error loading most viewed videos:', error);
+        setLoading(false);
+      }
+    };
+
+    loadMostViewedVideos();
+  }, []);
+
+  const handleVideoClick = (video: MostViewedVideo) => {
     setSelectedVideo(video);
   };
 
@@ -201,7 +248,20 @@ export const EnhancedMostViewed = () => {
             className="flex space-x-3 sm:space-x-6 overflow-x-auto scrollbar-hide pb-4 scroll-smooth px-2 sm:px-0"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {mostViewedVideos.map((video, index) => {
+            {loading ? (
+              // Loading skeleton
+              Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="flex-shrink-0 w-80 sm:w-96">
+                  <div className="h-96 sm:h-[28rem] bg-gray-200 animate-pulse rounded-2xl"></div>
+                </div>
+              ))
+            ) : mostViewedVideos.length === 0 ? (
+              // No videos message
+              <div className="flex-shrink-0 w-full text-center py-20">
+                <p className="text-gray-500 text-lg">No videos available</p>
+              </div>
+            ) : (
+              mostViewedVideos.map((video, index) => {
               const categoryColor = getCategoryColor(video.category);
               const rankingColor = getRankingColor(video.ranking);
 
@@ -289,7 +349,7 @@ export const EnhancedMostViewed = () => {
                         </h4>
                         
                         {/* Creator Profile - Below title */}
-                        {video.avatar && (
+                        {(video.avatar || video.channelAvatar) && (
                           <div className="flex items-center space-x-2 mb-3 cursor-pointer hover:opacity-80 transition-opacity duration-200"
                                onClick={(e) => {
                                  e.stopPropagation();
@@ -297,7 +357,7 @@ export const EnhancedMostViewed = () => {
                                }}>
                             <div className="w-6 h-6 rounded-full overflow-hidden border border-slate-200/50 hover:border-slate-300 hover:scale-105 transition-all duration-200">
                               <img 
-                                src={video.avatar} 
+                                src={video.avatar || video.channelAvatar} 
                                 alt={`${video.creator}'s profile`}
                                 className="w-full h-full object-cover"
                               />
@@ -318,14 +378,18 @@ export const EnhancedMostViewed = () => {
                                  }}>
                             {video.category}
                           </Badge>
-                          <span className="text-sm text-slate-500 font-medium">{video.views} views</span>
+                          <span className="text-sm text-slate-500 font-medium">
+                            {typeof video.views === 'number' 
+                              ? video.views.toLocaleString() 
+                              : video.views} views
+                          </span>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
               );
-            })}
+            }))}
           </div>
         </div>
 
