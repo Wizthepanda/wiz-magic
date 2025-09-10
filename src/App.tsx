@@ -8,6 +8,8 @@ import { ServiceBlockedAlert } from "@/components/ui/ServiceBlockedAlert";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import CreatorProfile from "./pages/CreatorProfile";
+import Watch from "./pages/Watch";
+import Shorts from "./pages/Shorts";
 import NotFound from "./pages/NotFound";
 import './lib/firebase'; // Initialize Firebase
 import { useEffect } from 'react';
@@ -39,6 +41,9 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/about" element={<About />} />
+              <Route path="/watch/:videoId" element={<Watch />} />
+              <Route path="/shorts" element={<Shorts />} />
+              <Route path="/shorts/:shortId" element={<Shorts />} />
               <Route path="/creator/:channelId" element={<CreatorProfile />} />
               <Route path="/c/:handle" element={<CreatorProfile />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

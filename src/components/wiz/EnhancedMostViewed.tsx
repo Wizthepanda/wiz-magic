@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { VideoPanel } from './VideoPanel';
 import { useAuth } from '@/hooks/useAuth';
 import { useXp } from '@/context/XpContext';
 import { useToast } from '@/hooks/use-toast';
@@ -54,7 +53,6 @@ export const EnhancedMostViewed = () => {
   const { level, addXp } = useXp();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [selectedVideo, setSelectedVideo] = useState<null | MostViewedVideo>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [mostViewedVideos, setMostViewedVideos] = useState<MostViewedVideo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -166,12 +164,21 @@ export const EnhancedMostViewed = () => {
   }, []);
 
   const handleVideoClick = (video: MostViewedVideo) => {
-    setSelectedVideo(video);
+    // Navigate to watch page instead of opening popup
+    const searchParams = new URLSearchParams({
+      title: video.title,
+      creator: video.creator,
+      xp: video.xpReward.toString(),
+      views: video.views.toString(),
+      ...(video.avatar && { avatar: video.avatar }),
+      ...(video.channelId && { channelId: video.channelId }),
+      ...(video.channelName && { creatorId: video.channelName }),
+      level: '1'
+    });
+    
+    navigate(`/watch/${video.videoId}?${searchParams.toString()}`);
   };
 
-  const closeModal = () => {
-    setSelectedVideo(null);
-  };
 
   const handleCreatorClick = (channelId: string | undefined, creatorName: string) => {
     if (channelId) {
@@ -393,29 +400,6 @@ export const EnhancedMostViewed = () => {
           </div>
         </div>
 
-      {/* Video Player Panel */}
-      <VideoPanel
-        videoId={selectedVideo?.videoId || ''}
-        title={selectedVideo?.title || ''}
-        creator={selectedVideo?.creator || ''}
-        xpReward={selectedVideo?.xpReward || 0}
-        isOpen={!!selectedVideo}
-        onClose={closeModal}
-        onReward={(xp: number) => {
-          console.log(`🎯 EnhancedMostViewed: Earned ${xp} XP for watching ${selectedVideo?.title}`);
-          
-          // Update both XP systems to ensure progress bar updates immediately
-          addXp(xp); // Update XP context immediately for instant UI feedback
-          addXP(xp); // Update auth context for persistence
-          
-          // Show success toast notification
-          toast({
-            title: "🎉 XP Earned!",
-            description: `You earned +${xp} XP! Your current level: Level ${level}`,
-            duration: 4000,
-          });
-        }}
-      />
     </>
   );
 };

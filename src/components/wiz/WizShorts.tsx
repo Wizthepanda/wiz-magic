@@ -11,6 +11,33 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { db } from '@/lib/firebase';
 import { collection, query, where, orderBy, limit, onSnapshot } from 'firebase/firestore';
 
+// Helper function to check if duration indicates a short video
+const isShortDuration = (duration: string): boolean => {
+  // Handle both YouTube format (PT1M30S) and simple format (1:30)
+  if (duration.startsWith('PT')) {
+    // YouTube duration format (PT1M30S = 1 minute 30 seconds)
+    const match = duration.match(/PT(?:(\d+)M)?(?:(\d+)S)?/);
+    if (!match) return false;
+    
+    const minutes = parseInt(match[1] || '0', 10);
+    const seconds = parseInt(match[2] || '0', 10);
+    const totalSeconds = minutes * 60 + seconds;
+    
+    return totalSeconds < 60; // Less than 60 seconds = short
+  } else {
+    // Simple format (1:30 or 0:45)
+    const parts = duration.split(':');
+    if (parts.length === 2) {
+      const minutes = parseInt(parts[0], 10);
+      const seconds = parseInt(parts[1], 10);
+      const totalSeconds = minutes * 60 + seconds;
+      
+      return totalSeconds < 60; // Less than 60 seconds = short
+    }
+    return false;
+  }
+};
+
 // Types
 interface ShortVideo {
   id: string;
@@ -106,9 +133,14 @@ export const WizShorts = () => {
           return { doc, data };
         })
         .filter(({ data }) => {
-          // Filter for shorts that are active
-          return data.contentType === 'short' && 
-                 (data.status === 'active' || !data.status); // Include if status is undefined for backwards compatibility
+          // Filter for shorts: either explicitly marked as 'short' OR duration < 60 seconds
+          const isExplicitShort = data.contentType === 'short';
+          const isDurationBasedShort = data.duration && isShortDuration(data.duration);
+          const isActive = data.status === 'active' || !data.status; // Include if status is undefined for backwards compatibility
+          
+          console.log(`🎬 WizShorts: Checking ${data.title} - contentType: ${data.contentType}, duration: ${data.duration}, isExplicitShort: ${isExplicitShort}, isDurationBasedShort: ${isDurationBasedShort}, isActive: ${isActive}`);
+          
+          return (isExplicitShort || isDurationBasedShort) && isActive;
         })
         .map(({ doc, data }) => {
           const publishedDate = data.addedToWiz?.toDate() || new Date();
@@ -173,7 +205,8 @@ export const WizShorts = () => {
   }, []);
 
   const handleVideoClick = (video: ShortVideo) => {
-    setSelectedVideo(video);
+    // Navigate to the shorts page with the specific short ID
+    navigate(`/shorts/${video.id}`);
   };
 
   const closeModal = () => {

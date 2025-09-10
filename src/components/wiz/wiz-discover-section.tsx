@@ -3,7 +3,6 @@ import { Play, Eye, Heart, Share2, CheckCircle, Zap, ChevronLeft, ChevronRight, 
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { WizVideoPlayer } from './wiz-video-player';
-import { VideoPanel } from './VideoPanel';
 import { useAuth } from '@/hooks/useAuth';
 import { useXp } from '@/context/XpContext';
 import { Button } from '@/components/ui/button';
@@ -307,7 +306,6 @@ export const WizDiscoverSection = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState('all');
-  const [selectedVideo, setSelectedVideo] = useState(null);
   const [leaderboardTab, setLeaderboardTab] = useState('creators');
   const [isPremiereVideoPlaying, setIsPremiereVideoPlaying] = useState(false);
   const [dynamicVideos, setDynamicVideos] = useState([]);
@@ -682,7 +680,18 @@ export const WizDiscoverSection = () => {
   const handleWatchVideo = (videoId: number | string) => {
     const video = allVideos.find(v => v.id === videoId);
     if (video) {
-      setSelectedVideo(video);
+      // Navigate to watch page instead of opening popup
+      const searchParams = new URLSearchParams({
+        title: video.title,
+        creator: video.creator,
+        xp: video.xpReward.toString(),
+        views: video.views.toString(),
+        ...(video.avatar && { avatar: video.avatar }),
+        ...(video.channelId && { channelId: video.channelId }),
+        level: '1'
+      });
+      
+      navigate(`/watch/${video.videoId}?${searchParams.toString()}`);
     }
   };
 
@@ -1989,16 +1998,6 @@ export const WizDiscoverSection = () => {
           </div>
         </div>
 
-      {/* Video Panel - Clean Dark Design */}
-      <VideoPanel
-        videoId={selectedVideo?.videoId || ''}
-        title={selectedVideo?.title || ''}
-        creator={selectedVideo?.creator || ''}
-        xpReward={selectedVideo?.xpReward || 0}
-        isOpen={!!selectedVideo}
-        onClose={() => setSelectedVideo(null)}
-        onReward={handleVideoReward}
-      />
       </div>
     </div>
   );

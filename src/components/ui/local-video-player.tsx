@@ -143,6 +143,15 @@ export const LocalVideoPlayer: React.FC<LocalVideoPlayerProps> = ({
     setDuration(duration);
   };
 
+  const handleError = (error: any) => {
+    console.error('🚨 Video Player Error:', error);
+    console.log('📹 Failed URL:', url);
+  };
+
+  const handleReady = () => {
+    console.log('✅ Video Player Ready:', url);
+  };
+
   const handleEnded = async () => {
     setIsWatching(false);
     
@@ -176,12 +185,13 @@ export const LocalVideoPlayer: React.FC<LocalVideoPlayerProps> = ({
     }
   };
 
-  // Show feature flag status
+  // Show feature flag status and URL
   useEffect(() => {
     if (!isYouTubeAPIEnabled()) {
       console.log('🎬 Using local video player (YouTube API disabled)');
     }
-  }, []);
+    console.log('🎬 LocalVideoPlayer initialized with URL:', url);
+  }, [url]);
 
   return (
     <div className={`relative ${className}`}>
@@ -195,12 +205,18 @@ export const LocalVideoPlayer: React.FC<LocalVideoPlayerProps> = ({
         onPause={handlePause}
         onEnded={handleEnded}
         onDuration={handleDuration}
+        onError={handleError}
+        onReady={handleReady}
         config={{
           youtube: {
             playerVars: {
               origin: window.location.origin,
               modestbranding: 1,
-              rel: 0
+              rel: 0,
+              autoplay: 1,
+              mute: 1,
+              playsinline: 1,
+              controls: 1
             }
           }
         }}

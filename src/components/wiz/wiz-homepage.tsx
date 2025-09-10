@@ -307,36 +307,6 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
     }
   ];
 
-  const features = [
-    {
-      icon: 'target',
-      title: 'Earn While You Learn',
-      description: 'Turn your curiosity into rewards. Every second counts toward your XP journey.',
-      gradient: 'linear-gradient(135deg, #C29FFF 0%, #A855F7 50%, #9333EA 100%)',
-      iconColor: '#C29FFF'
-    },
-    {
-      icon: 'graph',
-      title: 'Track Your Journey', 
-      description: 'Visualize your progress with beautiful, live XP dashboards.',
-      gradient: 'linear-gradient(135deg, #A855F7 0%, #8B5CF6 50%, #7C3AED 100%)',
-      iconColor: '#A855F7'
-    },
-    {
-      icon: 'gift',
-      title: 'Unlock Creator Perks',
-      description: 'Exclusive drops, private streams, and community recognition await.',
-      gradient: 'linear-gradient(135deg, #EC4899 0%, #DB2777 50%, #BE185D 100%)',
-      iconColor: '#EC4899'
-    },
-    {
-      icon: 'lightning',
-      title: 'Cash Out Instantly',
-      description: 'From XP to currency — instant, seamless withdrawals.',
-      gradient: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 50%, #6D28D9 100%)',
-      iconColor: '#8B5CF6'
-    }
-  ];
 
   // Video click handler for Featured Content
   const handleVideoClick = (video) => {
@@ -955,179 +925,472 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
       </main>
       </div>
 
-      {/* Why WIZ is Different Section with dedicated background */}
-      <div className="relative">
-        <WhyWizBackground />
+      {/* 🎨 Premium WHY WIZ Section - Hero Gradient Matched */}
+      <div className="relative py-32 px-8">
+        {/* Matching Hero Background with Purple Gradient */}
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: `
+              radial-gradient(circle at 50% 40%, rgba(194, 159, 255, 0.08) 0%, transparent 70%),
+              radial-gradient(circle at 30% 70%, rgba(124, 58, 237, 0.06) 0%, transparent 50%),
+              linear-gradient(135deg, #F6F0FF 0%, rgba(255, 255, 255, 0.95) 100%)
+            `
+          }}
+        />
         
-        <section className="relative z-20 py-32 px-8">
+        <section className="relative z-10">
           <div className="max-w-6xl mx-auto">
-          <motion.div
-            className="text-center mb-20"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <h3 
-              className="text-5xl md:text-6xl font-bold mb-6"
-              style={{
-                background: 'linear-gradient(135deg, #C29FFF 0%, #5A2D82 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
-                filter: 'drop-shadow(0 4px 8px rgba(194, 159, 255, 0.1))'
-              }}
+            
+            {/* Premium Header - Matching Hero Style */}
+            <motion.div
+              className="text-center mb-20"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
             >
-              Why WIZ
-            </h3>
-            <p 
-              className="text-xl max-w-2xl mx-auto leading-relaxed"
-              style={{ 
-                color: '#5C5C5C',
-                fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
-                lineHeight: '1.7'
-              }}
-            >
-              Experience the future of content consumption with rewards
-            </p>
-          </motion.div>
-
-          {/* Premium Glass Grid - 2x2 Desktop */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {features.map((feature, index) => (
-              <motion.div
-                key={index}
-                className="group relative"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
+              <motion.h3 
+                className="text-4xl md:text-5xl font-bold mb-6 tracking-wide uppercase"
+                style={{
+                  background: 'linear-gradient(135deg, #C29FFF 0%, #5A2D82 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+                  fontWeight: 800,
+                  letterSpacing: '0.05em'
+                }}
+                initial={{ scale: 0.95, opacity: 0 }}
+                whileInView={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
                 viewport={{ once: true }}
-            whileHover={{ 
-                  y: -5,
-                  transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] }
+              >
+                WHY WIZ
+              </motion.h3>
+              <motion.p 
+                className="text-lg md:text-xl font-medium max-w-2xl mx-auto"
+                style={{ 
+                  color: '#6B7280',
+                  fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+                  lineHeight: '1.6'
+                }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                viewport={{ once: true }}
+              >
+                Because viewers level up, and creators earn fairly.
+              </motion.p>
+            </motion.div>
+
+            {/* Dual Glass Panels */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+              
+              {/* 👀 For Viewers Panel */}
+              <motion.div
+                className="group"
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                viewport={{ once: true }}
+                whileHover={{ 
+                  y: -4,
+                  transition: { duration: 0.3, ease: "easeOut" }
                 }}
               >
-                {/* Floating Glassmorphic Panel */}
                 <div 
-                  className="relative p-8 rounded-2xl overflow-hidden transition-all duration-500"
+                  className="relative p-8 rounded-3xl overflow-hidden transition-all duration-500"
                   style={{
                     background: `
-                      linear-gradient(135deg, rgba(246, 240, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%),
-                      rgba(255, 255, 255, 0.12)
+                      linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%),
+                      rgba(255, 255, 255, 0.3)
                     `,
-                    backdropFilter: 'blur(25px)',
+                    backdropFilter: 'blur(20px)',
                     border: '1px solid rgba(255, 255, 255, 0.2)',
-                    boxShadow: '0 12px 40px rgba(194, 159, 255, 0.06), 0 4px 16px rgba(194, 159, 255, 0.04)'
+                    boxShadow: `
+                      0 20px 60px rgba(0, 0, 0, 0.05),
+                      0 8px 25px rgba(0, 0, 0, 0.03),
+                      inset 0 1px 0 rgba(255, 255, 255, 0.8)
+                    `
                   }}
                 >
-                  {/* Subtle Prismatic Edge Highlights */}
+                  {/* Subtle Hover Glow */}
                   <div 
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-2xl pointer-events-none"
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl pointer-events-none"
                     style={{
-                      background: 'linear-gradient(135deg, rgba(194, 159, 255, 0.06) 0%, rgba(236, 72, 153, 0.03) 50%, transparent 100%)',
-                      filter: 'blur(0.5px)'
+                      background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.03) 0%, rgba(124, 58, 237, 0.01) 100%)'
                     }}
                   />
                   
-                  {/* Gentle Shimmer on Hover */}
-                  <motion.div
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 rounded-2xl pointer-events-none"
-                    animate={{
-                      x: ['-100%', '100%']
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      repeatDelay: 4,
-                      ease: "easeInOut"
-                    }}
-                    style={{
-                      background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent)',
-                      transform: 'skewX(-15deg)'
-                    }}
-                  />
-
-                  {/* Floating Apple-Style Icon */}
-                  <motion.div
-                    className="relative mb-6"
-                    animate={{ 
-                      y: [0, -2, 0]
-                    }}
-                    transition={{ 
-                      duration: 6, 
-                      repeat: Infinity,
-                      delay: index * 1.5,
-                      ease: "easeInOut"
-                    }}
-                  >
-                    <div 
-                      className="w-16 h-16 mx-auto rounded-xl flex items-center justify-center relative"
+                  {/* Header */}
+                  <div className="mb-8">
+                    {/* Glowing Purple Gradient Icon - Matching Hero Stats */}
+                    <motion.div
+                      className="w-16 h-16 mb-6 flex items-center justify-center rounded-3xl relative overflow-hidden"
                       style={{
-                        background: feature.gradient,
-                        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-                        transform: 'translateY(-4px)'
+                        background: `
+                          linear-gradient(135deg, rgba(194, 159, 255, 0.15) 0%, rgba(124, 58, 237, 0.1) 100%),
+                          rgba(255, 255, 255, 0.8)
+                        `,
+                        border: '1px solid rgba(194, 159, 255, 0.2)',
+                        boxShadow: `
+                          0 8px 32px rgba(194, 159, 255, 0.15),
+                          inset 0 1px 0 rgba(255, 255, 255, 0.8)
+                        `
+                      }}
+                      whileHover={{ 
+                        scale: 1.05,
+                        boxShadow: `
+                          0 12px 40px rgba(194, 159, 255, 0.2),
+                          inset 0 1px 0 rgba(255, 255, 255, 0.9)
+                        `
+                      }}
+                      animate={{ 
+                        boxShadow: [
+                          "0 8px 32px rgba(194, 159, 255, 0.15)",
+                          "0 8px 32px rgba(194, 159, 255, 0.25)",
+                          "0 8px 32px rgba(194, 159, 255, 0.15)"
+                        ]
+                      }}
+                      transition={{ 
+                        duration: 2, 
+                        repeat: Infinity, 
+                        ease: "easeInOut"
                       }}
                     >
-                      <MinimalIcon type={feature.icon} color="rgba(255, 255, 255, 0.9)" />
-                      
-                      {/* Icon Floating Shadow */}
+                      {/* Gradient Glow Effect */}
                       <div 
-                        className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-12 h-3 rounded-full opacity-20"
+                        className="absolute inset-0 rounded-3xl opacity-50"
                         style={{
-                          background: 'radial-gradient(ellipse, rgba(194, 159, 255, 0.4) 0%, transparent 70%)',
-                          filter: 'blur(4px)'
+                          background: 'linear-gradient(135deg, rgba(194, 159, 255, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%)',
                         }}
                       />
-                      
-                      {/* Subtle Icon Pulse on Hover */}
-                      <motion.div
-                        className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100"
-                        animate={{ 
-                          scale: [1, 1.05, 1],
-                          opacity: [0, 0.2, 0]
-                        }}
-                        transition={{ 
-                          duration: 1.5, 
-                          repeat: Infinity,
-                          delay: index * 0.3
-                        }}
-                        style={{
-                          background: feature.gradient,
-                          filter: 'blur(8px)'
-                        }}
+                      <Play 
+                        className="w-7 h-7 relative z-10" 
+                        style={{ 
+                          color: '#7C3AED', 
+                          strokeWidth: 1.5,
+                          filter: 'drop-shadow(0 2px 4px rgba(124, 58, 237, 0.3))'
+                        }} 
+                        fill="currentColor"
                       />
-                    </div>
-                  </motion.div>
-
-                  {/* Clean Typography */}
-                  <div className="relative z-10 text-center">
-                    <h4 
-                      className="text-xl font-semibold mb-4"
-                      style={{ 
-                        color: '#2B2B2B',
-                        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
-                      }}
-                    >
-                      {feature.title}
-                    </h4>
+                    </motion.div>
                     
-                    <p 
-                      className="text-sm leading-relaxed"
+                    <h4 
+                      className="text-2xl font-bold mb-2"
                       style={{ 
-                        color: '#5C5C5C',
-                        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
-                        lineHeight: '1.6'
+                        color: '#1F2937',
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", Inter, sans-serif',
+                        fontWeight: 700,
+                        letterSpacing: '-0.01em'
                       }}
                     >
-                      {feature.description}
+                      Watch. Earn. Level Up.
+                    </h4>
+                    <p 
+                      className="text-sm font-medium"
+                      style={{ 
+                        color: '#9CA3AF',
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, sans-serif'
+                      }}
+                    >
+                      For Viewers
                     </p>
                   </div>
+
+                  {/* Clean Bullet Points */}
+                  <div className="space-y-4 mb-8">
+                    {[
+                      { text: 'Watch videos → earn XP automatically' },
+                      { text: 'Unlock perks from creators' },
+                      { text: 'Take free & paid courses' },
+                      { text: 'Get rewards for your progress' },
+                      { text: 'Climb the leaderboard & flex your rank' }
+                    ].map((item, index) => (
+                      <motion.div
+                        key={index}
+                        className="flex items-start space-x-3"
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.4 + index * 0.1 }}
+                        viewport={{ once: true }}
+                      >
+                        {/* Minimal bullet point */}
+                        <div 
+                          className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
+                          style={{ background: '#7C3AED' }}
+                        />
+                        <p 
+                          className="text-base font-medium leading-relaxed"
+                          style={{ 
+                            color: '#374151',
+                            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, sans-serif'
+                          }}
+                        >
+                          {item.text}
+                        </p>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Premium CTA Button - Matching Hero Style */}
+                  <motion.button
+                    className="w-full group flex items-center justify-center py-4 px-6 rounded-3xl font-bold transition-all duration-500"
+                    style={{
+                      background: `
+                        linear-gradient(135deg, rgba(194, 159, 255, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%),
+                        rgba(255, 255, 255, 0.8)
+                      `,
+                      backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(194, 159, 255, 0.3)',
+                      color: '#7C3AED',
+                      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+                      fontWeight: 700,
+                      boxShadow: '0 8px 32px rgba(194, 159, 255, 0.08), 0 4px 16px rgba(194, 159, 255, 0.04)'
+                    }}
+                    whileHover={{ 
+                      y: -2,
+                      scale: 1.02,
+                      background: `
+                        linear-gradient(135deg, rgba(194, 159, 255, 0.15) 0%, rgba(124, 58, 237, 0.08) 100%),
+                        rgba(255, 255, 255, 0.9)
+                      `,
+                      boxShadow: '0 12px 40px rgba(194, 159, 255, 0.12), 0 6px 20px rgba(194, 159, 255, 0.08)'
+                    }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={onEnterPlatform}
+                  >
+                    {/* Magic Sparkle Icon */}
+                    <motion.div 
+                      className="mr-3"
+                      animate={{ 
+                        rotate: [0, 5, -5, 0],
+                        scale: [1, 1.05, 1]
+                      }}
+                      transition={{ 
+                        duration: 4, 
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    >
+                      <Sparkles 
+                        className="w-5 h-5"
+                        style={{ 
+                          color: '#C29FFF',
+                          filter: 'drop-shadow(0 2px 4px rgba(194, 159, 255, 0.3))'
+                        }} 
+                      />
+                    </motion.div>
+                    Start Watching
+                  </motion.button>
                 </div>
               </motion.div>
-            ))}
+
+              {/* 🎥 For Creators Panel */}
+              <motion.div
+                className="group"
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+                viewport={{ once: true }}
+                whileHover={{ 
+                  y: -4,
+                  transition: { duration: 0.3, ease: "easeOut" }
+                }}
+              >
+                <div 
+                  className="relative p-8 rounded-3xl overflow-hidden transition-all duration-500"
+                  style={{
+                    background: `
+                      linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%),
+                      rgba(255, 255, 255, 0.3)
+                    `,
+                    backdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    boxShadow: `
+                      0 20px 60px rgba(0, 0, 0, 0.05),
+                      0 8px 25px rgba(0, 0, 0, 0.03),
+                      inset 0 1px 0 rgba(255, 255, 255, 0.8)
+                    `
+                  }}
+                >
+                  {/* Subtle Hover Glow */}
+                  <div 
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl pointer-events-none"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.03) 0%, rgba(124, 58, 237, 0.01) 100%)'
+                    }}
+                  />
+                  
+                  {/* Header */}
+                  <div className="mb-8">
+                    {/* Glowing Purple Gradient Icon - Matching Hero Stats */}
+                    <motion.div
+                      className="w-16 h-16 mb-6 flex items-center justify-center rounded-3xl relative overflow-hidden"
+                      style={{
+                        background: `
+                          linear-gradient(135deg, rgba(194, 159, 255, 0.15) 0%, rgba(124, 58, 237, 0.1) 100%),
+                          rgba(255, 255, 255, 0.8)
+                        `,
+                        border: '1px solid rgba(194, 159, 255, 0.2)',
+                        boxShadow: `
+                          0 8px 32px rgba(194, 159, 255, 0.15),
+                          inset 0 1px 0 rgba(255, 255, 255, 0.8)
+                        `
+                      }}
+                      whileHover={{ 
+                        scale: 1.05,
+                        boxShadow: `
+                          0 12px 40px rgba(194, 159, 255, 0.2),
+                          inset 0 1px 0 rgba(255, 255, 255, 0.9)
+                        `
+                      }}
+                      animate={{ 
+                        boxShadow: [
+                          "0 8px 32px rgba(194, 159, 255, 0.15)",
+                          "0 8px 32px rgba(194, 159, 255, 0.25)",
+                          "0 8px 32px rgba(194, 159, 255, 0.15)"
+                        ]
+                      }}
+                      transition={{ 
+                        duration: 2.5, 
+                        repeat: Infinity, 
+                        ease: "easeInOut",
+                        delay: 1 // Offset from viewer card
+                      }}
+                    >
+                      {/* Gradient Glow Effect */}
+                      <div 
+                        className="absolute inset-0 rounded-3xl opacity-50"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(194, 159, 255, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%)',
+                        }}
+                      />
+                      <Star 
+                        className="w-7 h-7 relative z-10" 
+                        style={{ 
+                          color: '#7C3AED', 
+                          strokeWidth: 1.5,
+                          filter: 'drop-shadow(0 2px 4px rgba(124, 58, 237, 0.3))'
+                        }} 
+                        fill="currentColor"
+                      />
+                    </motion.div>
+                    
+                    <h4 
+                      className="text-2xl font-bold mb-2"
+                      style={{ 
+                        color: '#1F2937',
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", Inter, sans-serif',
+                        fontWeight: 700,
+                        letterSpacing: '-0.01em'
+                      }}
+                    >
+                      Create. Share. Earn.
+                    </h4>
+                    <p 
+                      className="text-sm font-medium"
+                      style={{ 
+                        color: '#9CA3AF',
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, sans-serif'
+                      }}
+                    >
+                      For Creators
+                    </p>
+                  </div>
+
+                  {/* Clean Bullet Points */}
+                  <div className="space-y-4 mb-8">
+                    {[
+                      { text: 'No fees — upload free' },
+                      { text: 'Sell courses (Stripe / USDT / BTC)' },
+                      { text: 'Get tips in USDT or BTC — cash out anytime' },
+                      { text: 'No chargebacks, no holds' },
+                      { text: 'Accept anonymous tips securely' }
+                    ].map((item, index) => (
+                      <motion.div
+                        key={index}
+                        className="flex items-start space-x-3"
+                        initial={{ opacity: 0, x: 20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
+                        viewport={{ once: true }}
+                      >
+                        {/* Minimal bullet point */}
+                        <div 
+                          className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
+                          style={{ background: '#7C3AED' }}
+                        />
+                        <p 
+                          className="text-base font-medium leading-relaxed"
+                          style={{ 
+                            color: '#374151',
+                            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, sans-serif'
+                          }}
+                        >
+                          {item.text}
+                        </p>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Premium CTA Button - Matching Hero Style */}
+                  <motion.button
+                    className="w-full group flex items-center justify-center py-4 px-6 rounded-3xl font-bold transition-all duration-500"
+                    style={{
+                      background: `
+                        linear-gradient(135deg, rgba(194, 159, 255, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%),
+                        rgba(255, 255, 255, 0.8)
+                      `,
+                      backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(194, 159, 255, 0.3)',
+                      color: '#7C3AED',
+                      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+                      fontWeight: 700,
+                      boxShadow: '0 8px 32px rgba(194, 159, 255, 0.08), 0 4px 16px rgba(194, 159, 255, 0.04)'
+                    }}
+                    whileHover={{ 
+                      y: -2,
+                      scale: 1.02,
+                      background: `
+                        linear-gradient(135deg, rgba(194, 159, 255, 0.15) 0%, rgba(124, 58, 237, 0.08) 100%),
+                        rgba(255, 255, 255, 0.9)
+                      `,
+                      boxShadow: '0 12px 40px rgba(194, 159, 255, 0.12), 0 6px 20px rgba(194, 159, 255, 0.08)'
+                    }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={onEnterPlatform}
+                  >
+                    {/* Rocket Icon */}
+                    <motion.div 
+                      className="mr-3"
+                      animate={{ 
+                        y: [0, -2, 0],
+                        rotate: [0, 2, -2, 0]
+                      }}
+                      transition={{ 
+                        duration: 3, 
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    >
+                      <div 
+                        className="text-lg"
+                        style={{ 
+                          filter: 'drop-shadow(0 2px 4px rgba(194, 159, 255, 0.3))'
+                        }}
+                      >
+                        🚀
+                      </div>
+                    </motion.div>
+                    Start Creating
+                  </motion.button>
+                </div>
+              </motion.div>
+
+            </div>
           </div>
-        </div>
         </section>
       </div>
 
