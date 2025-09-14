@@ -1,8 +1,8 @@
 import { WizXPShortsDesktop } from "@/components/wiz/WizXPShortsDesktop";
-import { useNavigate } from "react-router-dom";
+import { useSafeNavigate } from "@/hooks/useSafeNavigate";
 
 const Shorts = () => {
-  const navigate = useNavigate();
+  const navigate = useSafeNavigate();
   
   return (
     <WizXPShortsDesktop 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { Share2, Star, Coins, X, Play, Pause, Volume2, VolumeX, ChevronUp, ChevronDown } from "lucide-react";
-import { LocalVideoPlayer } from "@/components/ui/local-video-player";
+import { AntiCheatVideoPlayer } from "@/components/ui/anti-cheat-video-player";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -525,12 +525,18 @@ export function WizXPShortsDesktop({ onClose }: WizXPShortsDesktopProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            {/* Video Player */}
-            <LocalVideoPlayer
+            {/* Anti-Cheat Video Player */}
+            <AntiCheatVideoPlayer
               url={`https://www.youtube.com/watch?v=${currentShort.videoId}`}
+              videoId={currentShort.videoId}
+              videoDuration={currentShort.xpReward * 30} // Estimate duration from XP
+              onXpEarned={(xp, validatedSeconds) => {
+                handleWatched();
+                console.log(`🔒 Anti-cheat XP: ${xp} (${validatedSeconds}s validated)`);
+              }}
               onProgress={() => {}}
-              onXpEarned={handleWatched}
               className="w-full h-full object-cover"
+              showSecurityIndicator={true}
             />
 
             {/* Video Controls - Bottom Right Inside Video */}

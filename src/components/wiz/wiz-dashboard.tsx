@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { WizSidebar } from './wiz-sidebar';
 import { WizMobileMenu } from './WizMobileMenu';
 import { WizUserProfile } from './wiz-user-profile';
@@ -24,6 +25,18 @@ interface WizDashboardProps {
 export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
   const [activeSection, setActiveSection] = useState('discover');
   const isMobile = useIsMobile();
+  const location = useLocation();
+
+  // Handle URL parameters for section navigation
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const sectionParam = searchParams.get('section');
+    if (sectionParam && ['discover', 'create', 'learn', 'premiere', 'leaderboard', 'profile', 'settings'].includes(sectionParam)) {
+      setActiveSection(sectionParam);
+      // Clean up the URL parameter after setting the section
+      window.history.replaceState({}, '', '/');
+    }
+  }, [location.search]);
 
   const handleSearch = (query: string) => {
     console.log('🔍 Global search for:', query);

@@ -27,6 +27,7 @@ export {
   awardWatchXP,
   awardWizShareXP,
   awardWizReferralXP,
+  awardWizSubscriptionXP,
   getWizXPData,
   wizDailyReset,
   getWizLeaderboard
@@ -41,3 +42,10 @@ export {
   getNowPaymentsStatus,
   nowPaymentsTipWebhook
 } from './nowpayments-functions';
+
+// Export Anti-Cheat System functions
+export {
+  startWatchSession,
+  sendWatchEvents,
+  closeWatchSession
+} from './anti-cheat-system';

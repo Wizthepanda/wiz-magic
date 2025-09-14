@@ -1,13 +1,13 @@
 import React from "react";
 import { WizXPShortsScreen } from "./WizXPShortsScreen";
-import { useNavigate } from "react-router-dom";
+import { useSafeNavigate } from "@/hooks/useSafeNavigate";
 
 interface ShortsPageProps {
   initialShortId?: string;
 }
 
 export const ShortsPage: React.FC<ShortsPageProps> = ({ initialShortId }) => {
-  const navigate = useNavigate();
+  const navigate = useSafeNavigate();
 
   return (
     <WizXPShortsScreen

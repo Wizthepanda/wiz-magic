@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TipModal } from "./creator/components/TipModal";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useNavigate } from "react-router-dom";
+import { useSafeNavigate } from "@/hooks/useSafeNavigate";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
@@ -76,7 +76,7 @@ export const WizXPShortsScreen: React.FC<WizXPShortsScreenProps> = ({
   const { addXp } = useXp();
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  const navigate = useNavigate();
+  const navigate = useSafeNavigate();
 
   // State
   const [shorts, setShorts] = useState<WizXPShort[]>([]);

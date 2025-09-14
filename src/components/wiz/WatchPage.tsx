@@ -14,7 +14,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { TipModal } from "./creator/components/TipModal";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useNavigate } from "react-router-dom";
+import { useSafeNavigate } from "@/hooks/useSafeNavigate";
+import { useYouTubeSubscription } from "@/hooks/useYouTubeSubscription";
+import { useWizXP } from "@/hooks/useWizXP";
+import { YouTubeSubscriptionService } from "@/lib/youtube-subscription-service";
 
 interface WatchPageProps {
   videoId: string;
@@ -51,7 +54,18 @@ export const WatchPage: React.FC<WatchPageProps> = ({
   const { addXp } = useXp();
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  const navigate = useNavigate();
+  const navigate = useSafeNavigate();
+  
+  // YouTube subscription hooks
+  const { 
+    subscriptionStatus, 
+    subscribe, 
+    isLoading: subscriptionLoading,
+    hasPermissions 
+  } = useYouTubeSubscription(channelId || '');
+  
+  // XP system hook
+  const { refreshData: refreshXP } = useWizXP();
   const [progress, setProgress] = useState(0);
   const [player, setPlayer] = useState<any>(null);
   const [rewarded, setRewarded] = useState(false);
@@ -59,8 +73,8 @@ export const WatchPage: React.FC<WatchPageProps> = ({
   const [isVideoCompleted, setIsVideoCompleted] = useState(false);
   const [activeTab, setActiveTab] = useState("videos");
   const [showTipModal, setShowTipModal] = useState(false);
-  const [isSubscribed, setIsSubscribed] = useState(false);
   const [isFollowed, setIsFollowed] = useState(false);
+  const [actualSubscriberCount, setActualSubscriberCount] = useState<string | null>(null);
   
   // Progress bar and XP reward states
   const [currentTime, setCurrentTime] = useState(0);
@@ -120,6 +134,22 @@ export const WatchPage: React.FC<WatchPageProps> = ({
     }
   }, [videoId, useLocalPlayer]);
 
+  // Fetch actual subscriber count from YouTube API
+  useEffect(() => {
+    const fetchSubscriberCount = async () => {
+      if (channelId) {
+        try {
+          const count = await YouTubeSubscriptionService.getChannelSubscriberCount(channelId);
+          setActualSubscriberCount(count);
+        } catch (error) {
+          console.error('Failed to fetch subscriber count:', error);
+        }
+      }
+    };
+
+    fetchSubscriberCount();
+  }, [channelId]);
+
   // Track progress without continuous XP rewards
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -170,10 +200,29 @@ export const WatchPage: React.FC<WatchPageProps> = ({
 
   // Handler functions for actions
   const handleSubscribe = async () => {
-    if (!channelId) return;
+    if (!channelId || subscriptionLoading) return;
+    
     try {
-      window.open(`https://www.youtube.com/channel/${channelId}?sub_confirmation=1`, '_blank');
-      setIsSubscribed(true);
+      console.log('🔔 Initiating subscription...');
+      const result = await subscribe();
+      
+      if (result.success) {
+        console.log('✅ Subscription successful! XP should be awarded automatically.');
+        
+        // Refresh XP data to show new total
+        await refreshXP();
+        
+        // Show success notification
+        window.dispatchEvent(new CustomEvent('wizXPUpdate', {
+          detail: {
+            userId: user?.uid,
+            xpGained: 30, // SUBSCRIPTION_XP amount
+            newTotal: null, // Will be updated by refresh
+            source: 'subscription',
+            message: `+30 XP for subscribing to ${creator}!`
+          }
+        }));
+      }
     } catch (error) {
       console.error('Subscribe error:', error);
     }
@@ -510,7 +559,10 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                     </div>
                   </div>
                   <span className="text-gray-400 text-xs">
-                    0 followers
+                    {actualSubscriberCount ? `${actualSubscriberCount} subscribers` : 
+                     (typeof subscriberCount === 'string' && subscriberCount.includes('subscribers') ? 
+                      subscriberCount : 
+                      `${typeof subscriberCount === 'number' ? subscriberCount.toLocaleString() : subscriberCount} subscribers`)}
                   </span>
                 </div>
               </div>
@@ -519,9 +571,15 @@ export const WatchPage: React.FC<WatchPageProps> = ({
               <div className="flex items-center space-x-2">
                 <button
                   onClick={handleSubscribe}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded transition-colors"
+                  disabled={subscriptionStatus?.isSubscribed || subscriptionLoading}
+                  className="px-4 py-2 text-white text-sm font-semibold rounded transition-colors"
+                  style={{
+                    backgroundColor: subscriptionStatus?.isSubscribed ? '#6B7280' : '#DC2626',
+                    opacity: subscriptionLoading ? 0.7 : 1,
+                    cursor: (subscriptionStatus?.isSubscribed || subscriptionLoading) ? 'not-allowed' : 'pointer'
+                  }}
                 >
-                  Subscribe
+                  {subscriptionLoading ? 'Loading...' : (subscriptionStatus?.isSubscribed ? 'Subscribed' : 'Subscribe')}
                 </button>
                 
                 <button

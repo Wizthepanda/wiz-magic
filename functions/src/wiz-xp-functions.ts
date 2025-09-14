@@ -15,6 +15,7 @@ const WIZ_XP_CONFIG = {
   COMPLETION_BONUS_RATE: 0.1, // +10% XP bonus
   SHARE_XP: 20, // +20 XP per share
   REFERRAL_XP: 50, // +50 XP per referral
+  SUBSCRIPTION_XP: 30, // +30 XP per subscription
   DAILY_XP_CAP: 360, // Maximum XP per day
   MAX_DAILY_SHARES: 5,
   MIN_WATCH_TIME: 5,
@@ -680,5 +681,78 @@ export const getWizLeaderboard = onCall(
       console.error('Error getting leaderboard:', error);
       throw new HttpsError('internal', 'Failed to get leaderboard');
     }
+  }
+);
+
+/**
+ * Award XP for YouTube subscriptions
+ */
+export const awardWizSubscriptionXP = onCall(
+  { cors: true, region: 'us-central1' },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
+    }
+
+    const { channelId } = request.data;
+    const userId = request.auth.uid;
+
+    if (!channelId || typeof channelId !== 'string') {
+      throw new HttpsError('invalid-argument', 'Valid channel ID is required');
+    }
+
+    return await db.runTransaction(async (transaction) => {
+      // Check if subscription already exists (prevent duplicate XP)
+      const subscriptionId = `${userId}_${channelId}`;
+      const subscriptionRef = db.collection('youtubeSubscriptions').doc(subscriptionId);
+      const subscriptionDoc = await transaction.get(subscriptionRef);
+
+      if (subscriptionDoc.exists && subscriptionDoc.data()?.xpAwarded) {
+        return {
+          success: true,
+          xpAwarded: 0,
+          reason: 'XP already awarded for this subscription',
+          alreadyAwarded: true,
+        };
+      }
+
+      const result = await awardXPTransaction(
+        transaction,
+        userId,
+        WIZ_XP_CONFIG.SUBSCRIPTION_XP,
+        'subscription',
+        { channelId }
+      );
+
+      if (result.xpAwarded > 0) {
+        // Mark subscription as having awarded XP
+        transaction.set(subscriptionRef, {
+          xpAwarded: true,
+          xpAwardedAt: FieldValue.serverTimestamp(),
+          xpAmount: result.xpAwarded,
+        }, { merge: true });
+
+        // Log XP transaction
+        const xpLogRef = db.collection('xpLogs').doc();
+        transaction.set(xpLogRef, {
+          userId,
+          source: 'subscription',
+          xpAmount: result.xpAwarded,
+          channelId,
+          timestamp: FieldValue.serverTimestamp(),
+          details: {
+            subscriptionId,
+          },
+        });
+
+        console.log(`🔔 Subscription XP awarded: ${userId} -> ${channelId} (+${result.xpAwarded} XP)`);
+      }
+
+      return {
+        ...result,
+        source: 'subscription',
+        channelId,
+      };
+    });
   }
 );

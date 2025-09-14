@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { Play, Star, TrendingUp, Users, Sparkles, Zap, Award, DollarSign, ChevronLeft, ChevronRight, Target, BarChart3, Gift, Wand2, ExternalLink, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useSafeNavigate } from '@/hooks/useSafeNavigate';
 import { useAuth } from '@/hooks/useAuth';
 import { useXp } from '@/context/XpContext';
 import { isYouTubeAPIEnabled, isGoogleAuthEnabled, logFeatureFlag } from '@/lib/feature-flags';
@@ -108,7 +109,7 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const carouselRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
+  const navigate = useSafeNavigate();
   const { user, signInWithGoogle, connectYouTube } = useAuth();
   const { addXp } = useXp();
 
@@ -1627,221 +1628,255 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
               />
             </svg>
 
-            {/* Living Digital Art Tiles */}
-            {creators.slice(0, 6).map((creator, index) => {
-              // Asymmetrical constellation positions
-              const positions = [
-                { x: '12%', y: '15%', size: 280 },
-                { x: '65%', y: '8%', size: 260 },
-                { x: '45%', y: '28%', size: 300 },
-                { x: '18%', y: '55%', size: 270 },
-                { x: '70%', y: '48%', size: 290 },
-                { x: '85%', y: '25%', size: 250 }
-              ];
-              
-              const pos = positions[index];
-              
-              return (
-                <motion.div
-                  key={`constellation-${creator.id}`}
-                  className="absolute group cursor-pointer z-10"
-                  style={{
-                    left: pos.x,
-                    top: pos.y,
-                    width: `${pos.size}px`,
-                    height: `${pos.size}px`,
-                  }}
-                  initial={{ 
-                    opacity: 0, 
-                    scale: 0,
-                    y: 100
-                  }}
-                  animate={{ 
-                    opacity: 1, 
-                    scale: 1,
-                    y: 0
-                  }}
-                  transition={{ 
-                    duration: 1.2, 
-                    delay: 1.5 + index * 0.3,
-                    type: "spring",
-                    bounce: 0.3
-                  }}
-                  whileHover={{ 
-                    scale: 1.05,
-                    transition: { duration: 0.4, ease: "easeOut" }
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setSelectedCreator(creator)}
-                >
-                  {/* Main Video Showcase */}
-                  <div
-                    className="relative w-full h-full rounded-3xl overflow-hidden transition-all duration-700"
+            {/* Desktop: Living Digital Art Tiles */}
+            <div className="hidden md:block">
+              {creators.slice(0, 6).map((creator, index) => {
+                // Asymmetrical constellation positions
+                const positions = [
+                  { x: '12%', y: '15%', size: 280 },
+                  { x: '65%', y: '8%', size: 260 },
+                  { x: '45%', y: '28%', size: 300 },
+                  { x: '18%', y: '55%', size: 270 },
+                  { x: '70%', y: '48%', size: 290 },
+                  { x: '85%', y: '25%', size: 250 }
+                ];
+                
+                const pos = positions[index];
+                
+                return (
+                  <motion.div
+                    key={`constellation-${creator.id}`}
+                    className="absolute group cursor-pointer z-10"
                     style={{
-                      background: `
-                        linear-gradient(135deg, 
-                          rgba(0, 0, 0, 0.8) 0%, 
-                          rgba(168, 85, 247, 0.1) 30%,
-                          rgba(99, 102, 241, 0.1) 70%,
-                          rgba(0, 0, 0, 0.8) 100%
-                        )
-                      `,
-                      backdropFilter: 'blur(20px)',
-                      border: '1px solid rgba(168, 85, 247, 0.2)',
-                      boxShadow: '0 8px 40px rgba(168, 85, 247, 0.15)',
+                      left: pos.x,
+                      top: pos.y,
+                      width: `${pos.size}px`,
+                      height: `${pos.size}px`,
                     }}
+                    initial={{ 
+                      opacity: 0, 
+                      scale: 0,
+                      y: 100
+                    }}
+                    animate={{ 
+                      opacity: 1, 
+                      scale: 1,
+                      y: 0
+                    }}
+                    transition={{ 
+                      duration: 1.2, 
+                      delay: 1.5 + index * 0.3,
+                      type: "spring",
+                      bounce: 0.3
+                    }}
+                    whileHover={{ 
+                      scale: 1.05,
+                      transition: { duration: 0.4, ease: "easeOut" }
+                    }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setSelectedCreator(creator)}
                   >
-                    {/* Video Content */}
-                    <div className="absolute inset-6 rounded-2xl overflow-hidden">
-                      <img 
-                        src={creator.thumbnail} 
-                        alt={`${creator.name}'s showcase`}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      />
-                      
-                      {/* Glass Glow Overlay */}
-                      <motion.div
-                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    {/* Main Video Showcase */}
+                    <div
+                      className="relative w-full h-full rounded-3xl overflow-hidden transition-all duration-700"
+                      style={{
+                        background: `
+                          linear-gradient(135deg, 
+                            rgba(0, 0, 0, 0.8) 0%, 
+                            rgba(168, 85, 247, 0.1) 30%,
+                            rgba(99, 102, 241, 0.1) 70%,
+                            rgba(0, 0, 0, 0.8) 100%
+                          )
+                        `,
+                        backdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(168, 85, 247, 0.2)',
+                        boxShadow: '0 8px 40px rgba(168, 85, 247, 0.15)',
+                      }}
+                    >
+                      {/* Video Content */}
+                      <div className="absolute inset-6 rounded-2xl overflow-hidden">
+                        <img 
+                          src={creator.thumbnail} 
+                          alt={`${creator.name}'s showcase`}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                        
+                        {/* Glass Glow Overlay */}
+                        <motion.div
+                          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                          style={{
+                            background: `
+                              radial-gradient(circle at center, 
+                                rgba(168, 85, 247, 0.2) 0%, 
+                                rgba(99, 102, 241, 0.1) 40%, 
+                                transparent 70%
+                              )
+                            `
+                          }}
+                        />
+                      </div>
+
+                      {/* Overlapping Profile Picture */}
+                      <motion.div 
+                        className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 z-20"
+                        animate={{
+                          boxShadow: [
+                            '0 0 30px rgba(168, 85, 247, 0.6)',
+                            '0 0 50px rgba(168, 85, 247, 0.8)',
+                            '0 0 30px rgba(168, 85, 247, 0.6)'
+                          ]
+                        }}
+                        transition={{
+                          duration: 3,
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                        whileHover={{
+                          scale: 1.1,
+                          boxShadow: '0 0 60px rgba(168, 85, 247, 1)'
+                        }}
+                      >
+                        <div
+                          className="w-24 h-24 rounded-full overflow-hidden border-4 border-white/20"
+                          style={{
+                            background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(99, 102, 241, 0.2))',
+                            backdropFilter: 'blur(10px)',
+                            boxShadow: '0 0 30px rgba(168, 85, 247, 0.6)'
+                          }}
+                        >
+                          {creator.avatar ? (
+                            <img 
+                              src={creator.avatar} 
+                              alt={creator.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div 
+                              className="w-full h-full flex items-center justify-center text-white font-bold text-2xl"
+                              style={{
+                                background: 'linear-gradient(135deg, #a855f7 0%, #6366f1 100%)'
+                              }}
+                            >
+                              {creator.name.charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+
+                      {/* Twitter/X Icon */}
+                      <motion.button
+                        className="absolute top-4 right-4 p-3 rounded-xl transition-all duration-300 z-20"
                         style={{
-                          background: `
-                            radial-gradient(circle at center, 
-                              rgba(168, 85, 247, 0.2) 0%, 
-                              rgba(99, 102, 241, 0.1) 40%, 
-                              transparent 70%
-                            )
-                          `
+                          background: 'rgba(255, 255, 255, 0.08)',
+                          backdropFilter: 'blur(20px)',
+                          border: '1px solid rgba(255, 255, 255, 0.15)'
+                        }}
+                        whileHover={{
+                          scale: 1.1,
+                          background: 'rgba(29, 155, 240, 0.2)',
+                          boxShadow: '0 0 20px rgba(29, 155, 240, 0.5)'
+                        }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(creator.twitterUrl, '_blank');
+                        }}
+                      >
+                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        </svg>
+                      </motion.button>
+
+                      {/* Ripple Glow Effect */}
+                      <motion.div
+                        className="absolute inset-0 rounded-3xl pointer-events-none opacity-0 group-hover:opacity-100"
+                        style={{
+                          background: 'radial-gradient(circle at center, rgba(168, 85, 247, 0.1) 0%, transparent 70%)',
+                          filter: 'blur(20px)'
+                        }}
+                        animate={{
+                          scale: [1, 1.3, 1],
+                          opacity: [0, 0.3, 0]
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeOut"
                         }}
                       />
                     </div>
 
-                    {/* Overlapping Profile Picture */}
+                    {/* Name + Role */}
                     <motion.div 
-                      className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 z-20"
-                      animate={{
-                        boxShadow: [
-                          '0 0 30px rgba(168, 85, 247, 0.6)',
-                          '0 0 50px rgba(168, 85, 247, 0.8)',
-                          '0 0 30px rgba(168, 85, 247, 0.6)'
-                        ]
-                      }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                      whileHover={{
-                        scale: 1.1,
-                        boxShadow: '0 0 60px rgba(168, 85, 247, 1)'
-                      }}
+                      className="text-center mt-8"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 2 + index * 0.3 }}
                     >
-                      <div
-                        className="w-24 h-24 rounded-full overflow-hidden border-4 border-white/20"
-                        style={{
-                          background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(99, 102, 241, 0.2))',
-                          backdropFilter: 'blur(10px)',
-                          boxShadow: '0 0 30px rgba(168, 85, 247, 0.6)'
+                      <motion.h3 
+                        className="text-2xl font-bold text-white mb-2"
+                        whileHover={{
+                          background: 'linear-gradient(90deg, #ffffff, #a855f7, #6366f1, #ffffff)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          backgroundClip: 'text',
+                        }}
+                        animate={{
+                          backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                        }}
+                        transition={{
+                          backgroundPosition: {
+                            duration: 3,
+                            repeat: Infinity,
+                            ease: "linear"
+                          }
                         }}
                       >
-                        {creator.avatar ? (
-                          <img 
-                            src={creator.avatar} 
-                            alt={creator.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div 
-                            className="w-full h-full flex items-center justify-center text-white font-bold text-2xl"
-                            style={{
-                              background: 'linear-gradient(135deg, #a855f7 0%, #6366f1 100%)'
-                            }}
-                          >
-                            {creator.name.charAt(0)}
-                          </div>
-                        )}
-                      </div>
+                        {creator.name}
+                      </motion.h3>
+                      <motion.p 
+                        className="text-gray-400 font-medium"
+                        whileHover={{ color: '#a855f7' }}
+                      >
+                        AI Animation Artist
+                      </motion.p>
                     </motion.div>
-
-                    {/* Twitter/X Icon */}
-                    <motion.button
-                      className="absolute top-4 right-4 p-3 rounded-xl transition-all duration-300 z-20"
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.08)',
-                        backdropFilter: 'blur(20px)',
-                        border: '1px solid rgba(255, 255, 255, 0.15)'
-                      }}
-                      whileHover={{
-                        scale: 1.1,
-                        background: 'rgba(29, 155, 240, 0.2)',
-                        boxShadow: '0 0 20px rgba(29, 155, 240, 0.5)'
-                      }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        window.open(creator.twitterUrl, '_blank');
-                      }}
-                    >
-                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                      </svg>
-                    </motion.button>
-
-                    {/* Ripple Glow Effect */}
-                    <motion.div
-                      className="absolute inset-0 rounded-3xl pointer-events-none opacity-0 group-hover:opacity-100"
-                      style={{
-                        background: 'radial-gradient(circle at center, rgba(168, 85, 247, 0.1) 0%, transparent 70%)',
-                        filter: 'blur(20px)'
-                      }}
-                      animate={{
-                        scale: [1, 1.3, 1],
-                        opacity: [0, 0.3, 0]
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeOut"
-                      }}
-                    />
-                  </div>
-
-                  {/* Name + Role */}
-                  <motion.div 
-                    className="text-center mt-8"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 2 + index * 0.3 }}
-                  >
-                    <motion.h3 
-                      className="text-2xl font-bold text-white mb-2"
-                      whileHover={{
-                        background: 'linear-gradient(90deg, #ffffff, #a855f7, #6366f1, #ffffff)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text',
-                      }}
-                      animate={{
-                        backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-                      }}
-                      transition={{
-                        backgroundPosition: {
-                          duration: 3,
-                          repeat: Infinity,
-                          ease: "linear"
-                        }
-                      }}
-                    >
-                      {creator.name}
-                    </motion.h3>
-                    <motion.p 
-                      className="text-gray-400 font-medium"
-                      whileHover={{ color: '#a855f7' }}
-                    >
-                      AI Animation Artist
-                    </motion.p>
                   </motion.div>
-                </motion.div>
-              );
-            })}
+                );
+              })}
+            </div>
+
+            {/* Mobile: Simple Vertical Profile List */}
+            <div className="md:hidden px-6 space-y-4">
+              {creators.slice(0, 6).map((creator, index) => (
+                <motion.a
+                  key={`mobile-creator-${creator.id}`}
+                  href={creator.twitterUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-4 p-4 bg-white/5 rounded-xl shadow-sm hover:bg-white/10 transition-all duration-300"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1, duration: 0.5 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Avatar className="size-12 ring-2 ring-white/20">
+                    <AvatarImage src={creator.avatar} alt={creator.name} />
+                    <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-600 text-white font-semibold">
+                      {creator.name.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-base font-semibold text-white truncate">{creator.name}</p>
+                    <p className="text-sm text-muted-foreground">AI Animation Artist</p>
+                  </div>
+                  <svg className="w-5 h-5 text-white/60" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                </motion.a>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -1927,6 +1962,9 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
           </motion.button>
         </div>
       </motion.div>
+
+
+
 
       {/* Featured Content Section with dedicated background */}
       <div className="relative">

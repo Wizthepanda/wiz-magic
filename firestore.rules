@@ -81,6 +81,13 @@ service cloud.firestore {
     match /youtubeSubscriptions/{subscriptionId} {
       allow read, write: if request.auth != null;
     }
+    
+    // Anti-cheat watch sessions - users can read their own sessions only
+    // Only Cloud Functions can write to prevent tampering
+    match /watchSessions/{sessionId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow write: if false; // Only Cloud Functions can write
+    }
   }
 }
 

@@ -23,7 +23,7 @@ export interface Creator {
   id: number;
   name: string;
   username: string;
-  followers: string;
+  subscribers: string;
   videos: number;
   totalViews: string;
   specialty: string;
@@ -181,7 +181,7 @@ const creators: Creator[] = [
     id: 1,
     name: 'FERA',
     username: '@imagineFERA',
-    followers: '125K',
+    subscribers: '125K',
     videos: 89,
     totalViews: '2.3M',
     specialty: 'Creative Visionary',
@@ -195,7 +195,7 @@ const creators: Creator[] = [
     id: 2,
     name: 'Captain HaHaa',
     username: '@CaptainHaHaa',
-    followers: '89K',
+    subscribers: '89K',
     videos: 156,
     totalViews: '1.8M',
     specialty: 'Gaming & Entertainment',
@@ -209,7 +209,7 @@ const creators: Creator[] = [
     id: 3,
     name: 'TechNinja',
     username: '@TechNinja',
-    followers: '156K',
+    subscribers: '156K',
     videos: 203,
     totalViews: '4.1M',
     specialty: 'Technology Reviews',
@@ -222,7 +222,7 @@ const creators: Creator[] = [
     id: 4,
     name: 'MoneyWizard',
     username: '@MoneyWizard',
-    followers: '78K',
+    subscribers: '78K',
     videos: 124,
     totalViews: '1.9M',
     specialty: 'Financial Education',
@@ -235,7 +235,7 @@ const creators: Creator[] = [
     id: 5,
     name: 'CodeMaster',
     username: '@CodeMaster',
-    followers: '92K',
+    subscribers: '92K',
     videos: 167,
     totalViews: '2.1M',
     specialty: 'Programming Tutorials',
@@ -248,7 +248,7 @@ const creators: Creator[] = [
     id: 6,
     name: 'BeatCreator',
     username: '@BeatCreator',
-    followers: '67K',
+    subscribers: '67K',
     videos: 89,
     totalViews: '1.5M',
     specialty: 'Music Production',
@@ -298,7 +298,7 @@ export class SearchService {
         id: `creator-${creator.id}`,
         type: 'creator' as const,
         title: creator.name,
-        subtitle: `${creator.followers} followers • ${creator.videos} videos • ${creator.specialty}`,
+        subtitle: `${creator.subscribers} subscribers • ${creator.videos} videos • ${creator.specialty}`,
         avatar: creator.avatar || creator.thumbnail,
         data: creator
       }));

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { 
   Menu, 
   Compass, 
@@ -9,7 +10,8 @@ import {
   Plus,
   LogOut,
   Zap,
-  GraduationCap
+  GraduationCap,
+  Gift
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,14 +30,27 @@ export const WizMobileMenu = ({ activeSection, onSectionChange }: WizMobileMenuP
   const [isOpen, setIsOpen] = useState(false);
   const { user, signOut } = useAuth();
   const { level, xp, xpToNextLevel } = useXp();
+  const location = useLocation();
 
   // Mobile-only check for handlers
   const isMobile = () => window.innerWidth <= 768;
 
   // Handle section selection - mobile only
-  const handleSectionSelect = (sectionId: string) => {
+  const handleSectionSelect = (item: any) => {
     if (isMobile()) {
-      onSectionChange(sectionId);
+      if (item.route) {
+        // External route navigation
+        window.location.href = item.route;
+      } else if (item.internalNav) {
+        // Check if we're currently on the Claim page
+        if (location.pathname === '/claim') {
+          // Navigate to dashboard with the selected section
+          window.location.href = `/?section=${item.id}`;
+        } else {
+          // Internal dashboard navigation
+          onSectionChange(item.id);
+        }
+      }
       setIsOpen(false);
     }
   };
@@ -47,44 +62,59 @@ export const WizMobileMenu = ({ activeSection, onSectionChange }: WizMobileMenuP
       id: 'discover', 
       label: 'Discover', 
       icon: Compass,
-      gradient: 'from-blue-500 to-purple-600'
+      gradient: 'from-blue-500 to-purple-600',
+      internalNav: true
     },
     { 
       id: 'create', 
       label: 'Create', 
       icon: Plus,
-      gradient: 'from-green-500 to-teal-600'
+      gradient: 'from-green-500 to-teal-600',
+      internalNav: true
     },
     { 
       id: 'learn', 
       label: 'Learn', 
       icon: GraduationCap,
-      gradient: 'from-amber-500 to-orange-600'
+      gradient: 'from-amber-500 to-orange-600',
+      internalNav: true
+    },
+    { 
+      id: 'claim', 
+      label: 'Claim', 
+      icon: Gift,
+      gradient: 'from-emerald-500 to-green-600',
+      badge: 'New',
+      route: '/claim'
     },
     { 
       id: 'premiere', 
       label: 'WIZ Premiere', 
       icon: Crown,
       gradient: 'from-yellow-500 to-orange-600',
-      level: 5
+      level: 5,
+      internalNav: true
     },
     { 
       id: 'leaderboard', 
       label: 'Leaderboard', 
       icon: Trophy,
-      gradient: 'from-purple-500 to-pink-600'
+      gradient: 'from-purple-500 to-pink-600',
+      internalNav: true
     },
     { 
       id: 'profile', 
       label: 'Profile', 
       icon: User,
-      gradient: 'from-indigo-500 to-blue-600'
+      gradient: 'from-indigo-500 to-blue-600',
+      internalNav: true
     },
     { 
       id: 'settings', 
       label: 'Settings', 
       icon: Settings,
-      gradient: 'from-gray-500 to-slate-600'
+      gradient: 'from-gray-500 to-slate-600',
+      internalNav: true
     },
   ];
 
@@ -169,7 +199,7 @@ export const WizMobileMenu = ({ activeSection, onSectionChange }: WizMobileMenuP
                   <Button
                     key={item.id}
                     variant="ghost"
-                    onClick={() => handleSectionSelect(item.id)}
+                    onClick={() => handleSectionSelect(item)}
                     className={cn(
                       "w-full justify-start p-3 h-auto rounded-lg hover:bg-gray-100 transition-all duration-200",
                       isActive && "bg-gray-100"
@@ -197,6 +227,11 @@ export const WizMobileMenu = ({ activeSection, onSectionChange }: WizMobileMenuP
                         {item.level && (
                           <Badge className="text-xs px-1.5 py-0.5 bg-orange-500 text-white border-0">
                             Lv{item.level}+
+                          </Badge>
+                        )}
+                        {item.badge && (
+                          <Badge className="text-xs px-1.5 py-0.5 bg-emerald-500 text-white border-0">
+                            {item.badge}
                           </Badge>
                         )}
                       </div>

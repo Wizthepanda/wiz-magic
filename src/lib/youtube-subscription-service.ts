@@ -5,6 +5,8 @@ import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { youTubeAPI } from './youtube-api';
 import { isYouTubeAPIEnabled, logFeatureFlag } from './feature-flags';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from './firebase';
 
 export interface SubscriptionResult {
   success: boolean;
@@ -38,8 +40,39 @@ export class YouTubeSubscriptionService {
         youTubeAPI.setAccessToken(accessToken);
       }
 
+      // If not authenticated, prompt for authentication
       if (!youTubeAPI.isAuthenticated()) {
-        return { success: false, error: 'No YouTube access token available' };
+        console.log('🔐 YouTube not authenticated, initiating OAuth flow...');
+        
+        // Show user-friendly message
+        window.dispatchEvent(new CustomEvent('wizNotification', {
+          detail: {
+            type: 'info',
+            message: 'Connecting to YouTube to enable subscriptions...',
+            duration: 3000
+          }
+        }));
+        
+        try {
+          const authResult = await youTubeAPI.authenticate();
+          if (!authResult) {
+            return { success: false, error: 'YouTube authentication was cancelled. Please try again to subscribe to this channel.' };
+          }
+          console.log('✅ YouTube authentication successful');
+          
+          // Show success message
+          window.dispatchEvent(new CustomEvent('wizNotification', {
+            detail: {
+              type: 'success',
+              message: 'Connected to YouTube! Subscribing now...',
+              duration: 2000
+            }
+          }));
+          
+        } catch (authError) {
+          console.error('❌ YouTube authentication failed:', authError);
+          return { success: false, error: 'Failed to connect to YouTube. Please check your internet connection and try again.' };
+        }
       }
 
       // Check if already subscribed to avoid duplicate API calls
@@ -78,6 +111,16 @@ export class YouTubeSubscriptionService {
         await updateDoc(userDocRef, {
           youtubeSubscriptions: [...currentSubscriptions, channelId],
         });
+      }
+
+      // Award XP for subscription
+      try {
+        const awardSubscriptionXP = httpsCallable(functions, 'awardWizSubscriptionXP');
+        const xpResult = await awardSubscriptionXP({ channelId });
+        console.log(`🎯 Subscription XP awarded:`, xpResult.data);
+      } catch (xpError) {
+        console.error('❌ Failed to award subscription XP:', xpError);
+        // Don't fail the subscription if XP award fails
       }
 
       console.log(`✅ Successfully subscribed user ${userId} to channel ${channelId}`);
@@ -138,6 +181,8 @@ export class YouTubeSubscriptionService {
         }
       }
 
+      // For now, assume not subscribed if we can't verify
+      // In the future, we could implement a more sophisticated check
       return { isSubscribed: false };
 
     } catch (error) {
@@ -258,6 +303,19 @@ export class YouTubeSubscriptionService {
     } catch (error) {
       console.error('Error checking subscription permissions:', error);
       return false;
+    }
+  }
+
+  /**
+   * Get subscriber count for a YouTube channel
+   */
+  static async getChannelSubscriberCount(channelId: string): Promise<string> {
+    try {
+      const channelInfo = await youTubeAPI.getPublicChannelInfo(channelId);
+      return channelInfo.subscriberCount;
+    } catch (error) {
+      console.error(`Error getting subscriber count for ${channelId}:`, error);
+      return '0';
     }
   }
 }

@@ -72,7 +72,8 @@ class YouTubeAPIService {
       clientId: import.meta.env.VITE_YOUTUBE_CLIENT_ID || '',
       apiKey: import.meta.env.VITE_YOUTUBE_API_KEY || '',
       scopes: [
-        'https://www.googleapis.com/auth/youtube.readonly'
+        'https://www.googleapis.com/auth/youtube.readonly',
+        'https://www.googleapis.com/auth/youtube' // Required for subscriptions
       ]
     };
     
@@ -203,6 +204,18 @@ class YouTubeAPIService {
     }
   }
 
+  /**
+   * Authenticate user with YouTube and return success status
+   */
+  async authenticate(): Promise<boolean> {
+    try {
+      const result = await this.initiateOAuth();
+      return !!result.access_token;
+    } catch (error) {
+      console.error('YouTube authentication failed:', error);
+      return false;
+    }
+  }
 
   /**
    * Get authenticated user's channel information

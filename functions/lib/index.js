@@ -4,7 +4,7 @@
  * Production XP System with YouTube API Integration
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.nowPaymentsTipWebhook = exports.getNowPaymentsStatus = exports.createNowPaymentsPayment = exports.getNowPaymentsEstimate = exports.getNowPaymentsMinAmount = exports.getNowPaymentsCurrencies = exports.getWizLeaderboard = exports.wizDailyReset = exports.getWizXPData = exports.awardWizReferralXP = exports.awardWizShareXP = exports.awardWatchXP = exports.awardWizXP = exports.initializeYouTubeTracking = exports.dailyYouTubeProfileSync = exports.dailyYouTubeSync = exports.syncYouTubeHistory = exports.dailyReset = exports.awardReferralXP = exports.awardShareXP = exports.awardXP = void 0;
+exports.closeWatchSession = exports.sendWatchEvents = exports.startWatchSession = exports.nowPaymentsTipWebhook = exports.getNowPaymentsStatus = exports.createNowPaymentsPayment = exports.getNowPaymentsEstimate = exports.getNowPaymentsMinAmount = exports.getNowPaymentsCurrencies = exports.getWizLeaderboard = exports.wizDailyReset = exports.getWizXPData = exports.awardWizSubscriptionXP = exports.awardWizReferralXP = exports.awardWizShareXP = exports.awardWatchXP = exports.awardWizXP = exports.initializeYouTubeTracking = exports.dailyYouTubeProfileSync = exports.dailyYouTubeSync = exports.syncYouTubeHistory = exports.dailyReset = exports.awardReferralXP = exports.awardShareXP = exports.awardXP = void 0;
 const app_1 = require("firebase-admin/app");
 // Initialize Firebase Admin SDK
 if ((0, app_1.getApps)().length === 0) {
@@ -28,6 +28,7 @@ Object.defineProperty(exports, "awardWizXP", { enumerable: true, get: function (
 Object.defineProperty(exports, "awardWatchXP", { enumerable: true, get: function () { return wiz_xp_functions_1.awardWatchXP; } });
 Object.defineProperty(exports, "awardWizShareXP", { enumerable: true, get: function () { return wiz_xp_functions_1.awardWizShareXP; } });
 Object.defineProperty(exports, "awardWizReferralXP", { enumerable: true, get: function () { return wiz_xp_functions_1.awardWizReferralXP; } });
+Object.defineProperty(exports, "awardWizSubscriptionXP", { enumerable: true, get: function () { return wiz_xp_functions_1.awardWizSubscriptionXP; } });
 Object.defineProperty(exports, "getWizXPData", { enumerable: true, get: function () { return wiz_xp_functions_1.getWizXPData; } });
 Object.defineProperty(exports, "wizDailyReset", { enumerable: true, get: function () { return wiz_xp_functions_1.wizDailyReset; } });
 Object.defineProperty(exports, "getWizLeaderboard", { enumerable: true, get: function () { return wiz_xp_functions_1.getWizLeaderboard; } });
@@ -39,4 +40,9 @@ Object.defineProperty(exports, "getNowPaymentsEstimate", { enumerable: true, get
 Object.defineProperty(exports, "createNowPaymentsPayment", { enumerable: true, get: function () { return nowpayments_functions_1.createNowPaymentsPayment; } });
 Object.defineProperty(exports, "getNowPaymentsStatus", { enumerable: true, get: function () { return nowpayments_functions_1.getNowPaymentsStatus; } });
 Object.defineProperty(exports, "nowPaymentsTipWebhook", { enumerable: true, get: function () { return nowpayments_functions_1.nowPaymentsTipWebhook; } });
+// Export Anti-Cheat System functions
+var anti_cheat_system_1 = require("./anti-cheat-system");
+Object.defineProperty(exports, "startWatchSession", { enumerable: true, get: function () { return anti_cheat_system_1.startWatchSession; } });
+Object.defineProperty(exports, "sendWatchEvents", { enumerable: true, get: function () { return anti_cheat_system_1.sendWatchEvents; } });
+Object.defineProperty(exports, "closeWatchSession", { enumerable: true, get: function () { return anti_cheat_system_1.closeWatchSession; } });
 //# sourceMappingURL=index.js.map

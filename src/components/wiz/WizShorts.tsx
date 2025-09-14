@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Play, ChevronLeft, ChevronRight, X, Heart, Share2, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useSafeNavigate } from '@/hooks/useSafeNavigate';
 import { Button } from '@/components/ui/button';
 import { VideoPanel } from './VideoPanel';
 import { useAuth } from '@/hooks/useAuth';
@@ -98,7 +98,7 @@ export const WizShorts = () => {
   const { user, addXP } = useAuth();
   const { level, addXp } = useXp();
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const navigate = useSafeNavigate();
   const isMobile = useIsMobile();
   const [selectedVideo, setSelectedVideo] = useState<ShortVideo | null>(null);
   const [startX, setStartX] = useState(0);

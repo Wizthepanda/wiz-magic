@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Play, Crown, Zap, ChevronLeft, ChevronRight, X, Heart, Share2, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useSafeNavigate } from '@/hooks/useSafeNavigate';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
@@ -52,7 +52,7 @@ export const EnhancedMostViewed = () => {
   const { user, addXP } = useAuth();
   const { level, addXp } = useXp();
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const navigate = useSafeNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [mostViewedVideos, setMostViewedVideos] = useState<MostViewedVideo[]>([]);
   const [loading, setLoading] = useState(true);

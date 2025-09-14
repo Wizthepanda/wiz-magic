@@ -4,7 +4,7 @@
  * Implements milder progression curve with secure server-side processing
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getWizLeaderboard = exports.wizDailyReset = exports.getWizXPData = exports.awardWizReferralXP = exports.awardWizShareXP = exports.awardWatchXP = exports.awardWizXP = void 0;
+exports.awardWizSubscriptionXP = exports.getWizLeaderboard = exports.wizDailyReset = exports.getWizXPData = exports.awardWizReferralXP = exports.awardWizShareXP = exports.awardWatchXP = exports.awardWizXP = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const scheduler_1 = require("firebase-functions/v2/scheduler");
 const firestore_1 = require("firebase-admin/firestore");
@@ -15,6 +15,7 @@ const WIZ_XP_CONFIG = {
     COMPLETION_BONUS_RATE: 0.1,
     SHARE_XP: 20,
     REFERRAL_XP: 50,
+    SUBSCRIPTION_XP: 30,
     DAILY_XP_CAP: 360,
     MAX_DAILY_SHARES: 5,
     MIN_WATCH_TIME: 5,
@@ -558,5 +559,56 @@ exports.getWizLeaderboard = (0, https_1.onCall)({ cors: true, region: 'us-centra
         console.error('Error getting leaderboard:', error);
         throw new https_1.HttpsError('internal', 'Failed to get leaderboard');
     }
+});
+/**
+ * Award XP for YouTube subscriptions
+ */
+exports.awardWizSubscriptionXP = (0, https_1.onCall)({ cors: true, region: 'us-central1' }, async (request) => {
+    if (!request.auth) {
+        throw new https_1.HttpsError('unauthenticated', 'User must be authenticated');
+    }
+    const { channelId } = request.data;
+    const userId = request.auth.uid;
+    if (!channelId || typeof channelId !== 'string') {
+        throw new https_1.HttpsError('invalid-argument', 'Valid channel ID is required');
+    }
+    return await db.runTransaction(async (transaction) => {
+        var _a;
+        // Check if subscription already exists (prevent duplicate XP)
+        const subscriptionId = `${userId}_${channelId}`;
+        const subscriptionRef = db.collection('youtubeSubscriptions').doc(subscriptionId);
+        const subscriptionDoc = await transaction.get(subscriptionRef);
+        if (subscriptionDoc.exists && ((_a = subscriptionDoc.data()) === null || _a === void 0 ? void 0 : _a.xpAwarded)) {
+            return {
+                success: true,
+                xpAwarded: 0,
+                reason: 'XP already awarded for this subscription',
+                alreadyAwarded: true,
+            };
+        }
+        const result = await awardXPTransaction(transaction, userId, WIZ_XP_CONFIG.SUBSCRIPTION_XP, 'subscription', { channelId });
+        if (result.xpAwarded > 0) {
+            // Mark subscription as having awarded XP
+            transaction.set(subscriptionRef, {
+                xpAwarded: true,
+                xpAwardedAt: firestore_1.FieldValue.serverTimestamp(),
+                xpAmount: result.xpAwarded,
+            }, { merge: true });
+            // Log XP transaction
+            const xpLogRef = db.collection('xpLogs').doc();
+            transaction.set(xpLogRef, {
+                userId,
+                source: 'subscription',
+                xpAmount: result.xpAwarded,
+                channelId,
+                timestamp: firestore_1.FieldValue.serverTimestamp(),
+                details: {
+                    subscriptionId,
+                },
+            });
+            console.log(`🔔 Subscription XP awarded: ${userId} -> ${channelId} (+${result.xpAwarded} XP)`);
+        }
+        return Object.assign(Object.assign({}, result), { source: 'subscription', channelId });
+    });
 });
 //# sourceMappingURL=wiz-xp-functions.js.map

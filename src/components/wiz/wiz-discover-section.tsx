@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Play, Eye, Heart, Share2, CheckCircle, Zap, ChevronLeft, ChevronRight, Crown, Medal, Trophy, Star, Users, Award, X } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useSafeNavigate } from '@/hooks/useSafeNavigate';
 import { WizVideoPlayer } from './wiz-video-player';
 import { useAuth } from '@/hooks/useAuth';
 import { useXp } from '@/context/XpContext';
@@ -12,7 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { FloatingParticles } from '@/components/ui/floating-particles';
 import { WizShorts } from './WizShorts';
-import { EnhancedMostViewed } from './EnhancedMostViewed';
+import { ClaimPreviewSection } from './ClaimPreviewSection';
 import { WizMobileFilters } from './WizMobileFilters';
 import { WizPremiumLeaderboard } from './WizPremiumLeaderboard';
 import { db } from '@/lib/firebase';
@@ -180,7 +180,7 @@ const creators = [
     id: 1,
     name: 'FERA',
     username: '@imagineFERA',
-    followers: '125K',
+    subscribers: '125K',
     videos: 89,
     totalViews: '2.3M',
     specialty: 'Creative Visionary',
@@ -194,7 +194,7 @@ const creators = [
     id: 2,
     name: 'Captain HaHaa',
     username: '@CaptainHaHaa',
-    followers: '89K',
+    subscribers: '89K',
     videos: 156,
     totalViews: '1.8M',
     specialty: 'Gaming & Entertainment',
@@ -208,7 +208,7 @@ const creators = [
     id: 3,
     name: 'RoyalKongz',
     username: '@RoyalKongz',
-    followers: '203K',
+    subscribers: '203K',
     videos: 234,
     totalViews: '4.1M',
     specialty: 'Digital Art & Animation',
@@ -222,7 +222,7 @@ const creators = [
     id: 4,
     name: 'Alexandria',
     username: '@AleRVG',
-    followers: '67K',
+    subscribers: '67K',
     videos: 78,
     totalViews: '1.2M',
     specialty: 'Tech & Innovation',
@@ -236,7 +236,7 @@ const creators = [
     id: 5,
     name: 'Bogdan',
     username: '@SMKP_Films',
-    followers: '145K',
+    subscribers: '145K',
     videos: 198,
     totalViews: '3.2M',
     specialty: 'Film & Photography',
@@ -250,7 +250,7 @@ const creators = [
     id: 6,
     name: 'MadPencil',
     username: '@madpencil_',
-    followers: '98K',
+    subscribers: '98K',
     videos: 134,
     totalViews: '2.1M',
     specialty: 'Art & Design',
@@ -304,7 +304,7 @@ const getCategoryShadow = (category: string) => {
 
 export const WizDiscoverSection = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const navigate = useSafeNavigate();
   const [activeCategory, setActiveCategory] = useState('all');
   const [leaderboardTab, setLeaderboardTab] = useState('creators');
   const [isPremiereVideoPlaying, setIsPremiereVideoPlaying] = useState(false);
@@ -1216,10 +1216,11 @@ export const WizDiscoverSection = () => {
           <WizShorts />
         </div>
 
-        {/* 🔥 Enhanced Most Viewed Section */}
+        {/* 🎁 Claim Preview Section */}
         <div className={cn("mb-8", isMobile && "px-3")}>
-          <EnhancedMostViewed />
+          <ClaimPreviewSection />
         </div>
+
 
         {/* WIZ Premiere — Elevated Abstract UI */}
         <div className={cn("mb-8", isMobile && "px-3")}>
@@ -1352,21 +1353,22 @@ export const WizDiscoverSection = () => {
                 }}
               />
 
-              {/* Title */}
+              {/* Mobile-Optimized Title with Purple-to-Pink Gradient */}
               <motion.h2 
-                className="text-5xl md:text-6xl font-bold mb-4 relative"
+                className="text-2xl sm:text-5xl md:text-6xl font-bold mb-4 relative"
                 style={{
-                  background: 'linear-gradient(135deg, #ffffff 0%, #e879f9 30%, #a855f7 70%, #ffffff 100%)',
+                  // Mobile: 24px gradient text, Desktop: original styling
+                  background: 'linear-gradient(135deg, #a855f7 0%, #d946ef 30%, #ec4899 60%, #f97316 90%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
-                  filter: 'drop-shadow(0 4px 12px rgba(168, 85, 247, 0.4))'
+                  filter: 'drop-shadow(0 4px 20px rgba(168, 85, 247, 0.8))'
                 }}
                 animate={{
                   backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
                 }}
                 transition={{
-                  duration: 6,
+                  duration: 8,
                   repeat: Infinity,
                   ease: "linear"
                 }}
@@ -1374,14 +1376,14 @@ export const WizDiscoverSection = () => {
                 WIZ Premiere
               </motion.h2>
               
-              {/* Subtitle */}
+              {/* Mobile-Optimized Tagline */}
               <motion.p 
-                className="text-xl text-gray-300 font-light max-w-2xl mx-auto"
+                className="text-sm sm:text-xl text-gray-300 font-light max-w-2xl mx-auto"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.8 }}
               >
-                A Hollywood-level AI animation brought to life by 6 visionary animators
+                Hollywood-level AI animation brought to life by visionary creators
               </motion.p>
             </motion.div>
 
@@ -1751,32 +1753,162 @@ export const WizDiscoverSection = () => {
                 </div>
               </div>
 
-              {/* Mobile & Tablet: Enhanced Grid Layout */}
-              <div className="block lg:hidden">
-                <div className="mobile-creator-grid grid grid-cols-1 sm:grid-cols-2 gap-6 px-4 max-w-4xl mx-auto">
+              {/* Mobile: Vertical Card Showcase - One Card Per Row */}
+              <div className="block lg:hidden relative">
+                {/* Soft Gradient Background with Animated Particles */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  {/* Soft gradient background */}
+                  <div 
+                    className="absolute inset-0 opacity-40"
+                    style={{
+                      background: `
+                        linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(30, 64, 175, 0.1) 100%),
+                        radial-gradient(circle at 30% 20%, rgba(168, 85, 247, 0.05) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 80%, rgba(30, 64, 175, 0.05) 0%, transparent 50%)
+                      `
+                    }}
+                  />
+                  
+                  {/* Abstract animated lines */}
+                  <motion.div
+                    className="absolute inset-0"
+                    style={{
+                      background: `
+                        repeating-linear-gradient(
+                          45deg,
+                          transparent,
+                          transparent 100px,
+                          rgba(155, 0, 255, 0.02) 101px,
+                          rgba(155, 0, 255, 0.02) 103px
+                        )
+                      `
+                    }}
+                    animate={{
+                      backgroundPosition: ['0% 0%', '100% 100%']
+                    }}
+                    transition={{
+                      duration: 25,
+                      repeat: Infinity,
+                      ease: "linear"
+                    }}
+                  />
+                  
+                  {/* Subtle particle sparkles */}
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <motion.div
+                      key={`particle-${i}`}
+                      className="absolute rounded-full opacity-20"
+                      style={{
+                        width: `${1 + Math.random() * 2}px`,
+                        height: `${1 + Math.random() * 2}px`,
+                        background: 'linear-gradient(135deg, rgba(155, 0, 255, 0.8) 0%, rgba(30, 64, 175, 0.8) 100%)',
+                      }}
+                      initial={{
+                        x: Math.random() * window.innerWidth,
+                        y: Math.random() * 800,
+                      }}
+                      animate={{
+                        x: Math.random() * window.innerWidth,
+                        y: Math.random() * 800,
+                        scale: [1, 1.5, 1],
+                        opacity: [0.2, 0.5, 0.2]
+                      }}
+                      transition={{
+                        duration: 12 + Math.random() * 6,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* Mobile Cards: Full-width with generous padding */}
+                <div className="mobile-creator-showcase px-4 sm:px-6 space-y-4 max-w-lg mx-auto">
                   {creators.slice(0, 6).map((creator, index) => (
                     <motion.div
                       key={creator.id}
-                      className="group cursor-pointer"
+                      className="group cursor-pointer relative w-full"
                       initial={{ 
                         opacity: 0, 
-                        y: 30
+                        y: 40,
+                        scale: 0.95
                       }}
                       animate={{ 
                         opacity: 1, 
-                        y: 0
+                        y: 0,
+                        scale: 1
                       }}
                       transition={{ 
-                        duration: 0.6, 
-                        delay: 0.1 * index,
-                        ease: "easeOut"
+                        duration: 0.8, 
+                        delay: 0.15 * index,
+                        ease: "easeOut",
+                        type: "spring",
+                        stiffness: 100
                       }}
-                      whileTap={{ scale: 0.98 }}
+                      whileInView={{
+                        opacity: 1,
+                        transition: { duration: 0.6 }
+                      }}
+                      whileTap={{ 
+                        scale: 1.05,
+                        transition: { duration: 0.2 }
+                      }}
                     >
-                      {/* Enhanced Creator Card */}
-                      <div className="mobile-creator-card relative bg-white/95 backdrop-blur-sm rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-200/50 min-h-[280px]">
-                        {/* Creator Image */}
-                        <div className="aspect-[16/10] relative overflow-hidden">
+                      {/* Glow Pulse Animation on Tap */}
+                      <motion.div
+                        className="absolute inset-0 rounded-3xl pointer-events-none"
+                        style={{
+                          background: 'radial-gradient(circle, rgba(155, 0, 255, 0.3) 0%, rgba(30, 64, 175, 0.2) 50%, transparent 70%)',
+                          filter: 'blur(4px)',
+                        }}
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 0, opacity: 0 }}
+                        whileTap={{
+                          scale: [0, 1.1, 1.3],
+                          opacity: [0, 0.8, 0]
+                        }}
+                        transition={{ duration: 0.6, ease: "easeOut" }}
+                      />
+
+                      {/* Rounded-Square Creator Card (1:1.1 ratio) */}
+                      <div 
+                        className="mobile-creator-card relative w-full aspect-[10/11] rounded-3xl overflow-hidden transition-all duration-500"
+                        style={{
+                          background: `
+                            linear-gradient(135deg, 
+                              rgba(255, 255, 255, 0.05) 0%, 
+                              rgba(240, 240, 250, 0.03) 100%
+                            )
+                          `,
+                          backdropFilter: 'blur(20px)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          boxShadow: `
+                            0 0 20px rgba(155, 0, 255, 0.15),
+                            0 8px 32px rgba(30, 64, 175, 0.1),
+                            inset 0 1px 0 rgba(255, 255, 255, 0.05)
+                          `,
+                        }}
+                      >
+                        {/* Purple-to-Blue Edge Glow Animation */}
+                        <motion.div
+                          className="absolute inset-0 rounded-3xl pointer-events-none"
+                          style={{
+                            background: 'linear-gradient(135deg, rgba(155, 0, 255, 0.1) 0%, rgba(30, 64, 175, 0.1) 100%)',
+                            filter: 'blur(1px)',
+                          }}
+                          animate={{
+                            opacity: [0.5, 0.8, 0.5],
+                            scale: [0.98, 1, 0.98]
+                          }}
+                          transition={{
+                            duration: 3,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                        />
+                        {/* Full-Bleed Creator Artwork */}
+                        <div className="h-3/5 relative overflow-hidden"
+                             style={{ borderRadius: '24px 24px 0 0' }}>
                           <img 
                             src={creator.thumbnail}
                             alt={`${creator.name}'s showcase`}
@@ -1824,75 +1956,62 @@ export const WizDiscoverSection = () => {
                           {/* Followers Count Badge */}
                           <div className="absolute bottom-4 left-4">
                             <div className="px-2 py-1 bg-white/90 backdrop-blur-sm rounded-full">
-                              <span className="text-xs font-semibold text-gray-700">{creator.followers} followers</span>
+                              <span className="text-xs font-semibold text-gray-700">{creator.subscribers} subscribers</span>
                             </div>
                           </div>
                         </div>
                         
-                        {/* Enhanced Creator Info */}
-                        <div className="mobile-creator-info p-5">
-                          <div className="flex items-start space-x-4">
-                            {/* Enhanced Avatar */}
-                            <div className="relative flex-shrink-0">
+                        {/* Mobile Creator Info Section */}
+                        <div className="relative h-2/5 p-4 flex flex-col justify-between">
+                          {/* Micro-Avatar Badge - Overlapping bottom of image */}
+                          <motion.div 
+                            className="absolute -top-6 left-4 z-10"
+                            initial={{ scale: 0, y: 10 }}
+                            animate={{ scale: 1, y: 0 }}
+                            transition={{ delay: 0.3 + index * 0.1, duration: 0.4 }}
+                          >
+                            <div 
+                              className="w-12 h-12 rounded-full overflow-hidden border-3 border-white shadow-lg"
+                              style={{
+                                boxShadow: '0 4px 16px rgba(155, 0, 255, 0.3)'
+                              }}
+                            >
                               <img 
                                 src={creator.avatar} 
                                 alt={creator.name}
-                                className="w-12 h-12 rounded-full border-2 border-white shadow-md bg-gray-100"
+                                className="w-full h-full object-cover"
                               />
-                              {creator.verified && (
-                                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white">
-                                  <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                  </svg>
-                                </div>
-                              )}
                             </div>
-                            
-                            {/* Enhanced Name and Details */}
-                            <div className="flex-1 min-w-0 space-y-1">
-                              <h3 className="font-bold text-gray-900 text-base leading-tight">
-                                {creator.name}
-                              </h3>
-                              <p className="text-sm text-gray-600 font-medium">
-                                {creator.username}
-                              </p>
-                              <p className="text-sm text-gray-500 leading-relaxed">
-                                {creator.specialty}
-                              </p>
-                              
-                              {/* Stats Row */}
-                              <div className="flex items-center space-x-4 text-xs text-gray-500 pt-2">
-                                <div className="flex items-center space-x-1">
-                                  <span className="font-semibold">{creator.videos}</span>
-                                  <span>videos</span>
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                  <span className="font-semibold">{creator.totalViews}</span>
-                                  <span>views</span>
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                  <Star className="w-3 h-3 text-yellow-400 fill-current" />
-                                  <span className="font-semibold">{creator.rating}</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                          </motion.div>
 
-                          {/* Mobile-Friendly Twitter Link Button */}
-                          <motion.button
-                            className="mt-4 w-full py-2.5 px-4 bg-gray-100 hover:bg-blue-50 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2 touch-manipulation"
-                            whileTap={{ scale: 0.98 }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              window.open(creator.twitterUrl, '_blank');
-                            }}
-                            aria-label={`Follow ${creator.name} on Twitter`}
-                          >
-                            <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                            </svg>
-                            <span className="font-medium text-gray-700">Follow on X</span>
-                          </motion.button>
+                          {/* Creator Info - Beneath Image */}
+                          <div className="mt-6 text-center space-y-2">
+                            {/* Creator Name - Bold 16px Gradient */}
+                            <motion.h3 
+                              className="font-bold text-base leading-tight"
+                              style={{
+                                background: 'linear-gradient(135deg, #a855f7 0%, #d946ef 70%, #ec4899 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text',
+                              }}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.4 + index * 0.1 }}
+                            >
+                              {creator.name}
+                            </motion.h3>
+                            
+                            {/* AI Animation Artist - Light Grey 13px */}
+                            <motion.p 
+                              className="text-sm text-gray-400 font-medium"
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.5 + index * 0.1 }}
+                            >
+                              AI Animation Artist
+                            </motion.p>
+                          </div>
                         </div>
                       </div>
                     </motion.div>

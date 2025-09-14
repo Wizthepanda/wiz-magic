@@ -15,7 +15,7 @@ const Watch = () => {
   const creatorAvatar = searchParams.get('avatar');
   const channelId = searchParams.get('channelId');
   const creatorId = searchParams.get('creatorId');
-  const subscriberCount = searchParams.get('subscribers') || '0 followers';
+  const subscriberCount = searchParams.get('subscribers') || '0 subscribers';
   const creatorLevel = parseInt(searchParams.get('level') || '1');
 
   // Redirect to home if no videoId

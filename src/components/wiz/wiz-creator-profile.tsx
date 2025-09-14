@@ -21,7 +21,7 @@ export const WizCreatorProfile = ({ creatorId, creatorName, onBack }: CreatorPro
     username: '@codemaster',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop',
     banner: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&h=300&fit=crop',
-    followers: '203K',
+    subscribers: '203K',
     videos: 234,
     totalViews: '4.1M',
     rating: 4.8,
@@ -228,8 +228,8 @@ export const WizCreatorProfile = ({ creatorId, creatorName, onBack }: CreatorPro
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-indigo-600">{creatorData.followers}</div>
-                    <div className="text-sm text-gray-600">Followers</div>
+                    <div className="text-2xl font-bold text-indigo-600">{creatorData.subscribers}</div>
+                    <div className="text-sm text-gray-600">Subscribers</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-purple-600">{creatorData.videos}</div>

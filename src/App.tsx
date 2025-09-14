@@ -10,7 +10,10 @@ import About from "./pages/About";
 import CreatorProfile from "./pages/CreatorProfile";
 import Watch from "./pages/Watch";
 import Shorts from "./pages/Shorts";
+import Claim from "./pages/Claim";
 import NotFound from "./pages/NotFound";
+import AntiCheatTest from "./pages/AntiCheatTest";
+import { AntiCheatDashboard } from "./components/admin/AntiCheatDashboard";
 import './lib/firebase'; // Initialize Firebase
 import { useEffect } from 'react';
 import authSingleton from './lib/authSingleton';
@@ -44,8 +47,11 @@ const App = () => {
               <Route path="/watch/:videoId" element={<Watch />} />
               <Route path="/shorts" element={<Shorts />} />
               <Route path="/shorts/:shortId" element={<Shorts />} />
+              <Route path="/claim" element={<Claim />} />
               <Route path="/creator/:channelId" element={<CreatorProfile />} />
               <Route path="/c/:handle" element={<CreatorProfile />} />
+              <Route path="/admin/anti-cheat" element={<AntiCheatDashboard />} />
+              <Route path="/test/anti-cheat" element={<AntiCheatTest />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

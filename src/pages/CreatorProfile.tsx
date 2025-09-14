@@ -1,4 +1,5 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { useSafeNavigate } from '@/hooks/useSafeNavigate';
 import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 const CreatorProfile = () => {
   const { channelId, handle } = useParams<{ channelId?: string; handle?: string }>();
-  const navigate = useNavigate();
+  const navigate = useSafeNavigate();
   const { user } = useAuth();
   const [error, setError] = useState<string | null>(null);
   

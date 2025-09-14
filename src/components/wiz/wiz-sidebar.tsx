@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useSafeNavigate } from '@/hooks/useSafeNavigate';
 import { 
   Compass, 
   Crown, 
@@ -13,7 +15,8 @@ import {
   Sparkles,
   Wand2,
   Plus,
-  GraduationCap
+  GraduationCap,
+  Gift
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -28,6 +31,8 @@ interface WizSidebarProps {
 export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(true); // Start collapsed on mobile
   const { signOut } = useAuth();
+  const navigate = useSafeNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     try {
@@ -40,14 +45,31 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
   };
 
   const navigation = [
-    { id: 'discover', label: 'Discover', icon: Compass },
-    { id: 'create', label: 'Create', icon: Plus },
-    { id: 'learn', label: 'Learn', icon: GraduationCap },
-    { id: 'premiere', label: 'WIZ Premiere', icon: Crown, level: 5 },
-    { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'discover', label: 'Discover', icon: Compass, internalNav: true },
+    { id: 'create', label: 'Create', icon: Plus, internalNav: true },
+    { id: 'learn', label: 'Learn', icon: GraduationCap, internalNav: true },
+    { id: 'claim', label: 'Claim', icon: Gift, badge: 'Hot', route: '/claim', hasShimmer: true, tooltip: 'Redeem XP + USD for exclusive courses & digital rewards', hotDeal: { title: 'Udemy Courses 50% Off', discount: '-50%', originalPrice: '199', xpCost: '2500', usdCost: '99' } },
+    { id: 'premiere', label: 'WIZ Premiere', icon: Crown, level: 5, internalNav: true },
+    { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, internalNav: true },
+    { id: 'profile', label: 'Profile', icon: User, internalNav: true },
+    { id: 'settings', label: 'Settings', icon: Settings, internalNav: true },
   ];
+
+  const handleNavigation = (item: any) => {
+    if (item.route) {
+      // External route navigation
+      navigate(item.route);
+    } else if (item.internalNav) {
+      // Check if we're currently on the Claim page
+      if (location.pathname === '/claim') {
+        // Navigate to dashboard with the selected section
+        navigate(`/?section=${item.id}`);
+      } else {
+        // Internal dashboard navigation
+        onSectionChange(item.id);
+      }
+    }
+  };
 
   return (
     <>
@@ -212,7 +234,7 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
                 transition={{ duration: 0.4, delay: 0.3 + index * 0.1 }}
               >
                 <motion.button
-                  onClick={() => onSectionChange(item.id)}
+                  onClick={() => handleNavigation(item)}
                   className={cn(
                     "w-full relative transition-all duration-500 overflow-hidden",
                     isCollapsed ? "h-14 px-0 rounded-xl" : "h-12 px-4 rounded-2xl"
@@ -289,25 +311,27 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
                     "flex items-center relative z-10",
                     isCollapsed ? "justify-center" : "justify-start space-x-3"
                   )}>
-                    <motion.div
-                      className="relative"
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <item.icon 
-                        className={cn(
-                          "w-5 h-5 transition-colors duration-300",
-                          activeSection === item.id 
-                            ? "text-indigo-600" 
-                            : "text-gray-600 group-hover:text-indigo-500"
-                        )} 
-                      />
-                    </motion.div>
+                    {item.icon && (
+                      <motion.div
+                        className="relative"
+                        whileHover={{ scale: 1.1 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <item.icon 
+                          className={cn(
+                            "w-5 h-5 transition-colors duration-300",
+                            activeSection === item.id 
+                              ? "text-indigo-600" 
+                              : "text-gray-600 group-hover:text-indigo-500"
+                          )} 
+                        />
+                      </motion.div>
+                    )}
                     
                     <AnimatePresence>
                       {!isCollapsed && (
                         <motion.div 
-                          className="flex-1 flex items-center justify-between"
+                          className="flex items-center justify-between flex-1"
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -10 }}
@@ -333,6 +357,53 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
                               Lv{item.level}+
                             </motion.span>
                           )}
+                          {item.badge && (
+                            <motion.div className="relative">
+                              <motion.span 
+                                className="px-2 py-1 text-xs font-bold text-white rounded-full relative overflow-hidden"
+                                style={{
+                                  background: item.hasShimmer 
+                                    ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.9) 0%, rgba(220, 38, 38, 0.9) 100%)'
+                                    : 'linear-gradient(135deg, rgba(34, 197, 94, 0.9) 0%, rgba(22, 163, 74, 0.9) 100%)',
+                                  boxShadow: item.hasShimmer 
+                                    ? '0 2px 8px rgba(239, 68, 68, 0.4)'
+                                    : '0 2px 8px rgba(34, 197, 94, 0.3)'
+                                }}
+                                whileHover={{ scale: 1.05 }}
+                                animate={item.hasShimmer ? {
+                                  boxShadow: [
+                                    '0 2px 8px rgba(239, 68, 68, 0.4)',
+                                    '0 4px 16px rgba(239, 68, 68, 0.6)',
+                                    '0 2px 8px rgba(239, 68, 68, 0.4)'
+                                  ]
+                                } : {}}
+                                transition={item.hasShimmer ? {
+                                  duration: 2,
+                                  repeat: Infinity,
+                                  ease: "easeInOut"
+                                } : {}}
+                              >
+                                <span className="relative z-10">{item.badge}</span>
+                                {item.hasShimmer && (
+                                  <motion.div
+                                    className="absolute inset-0 rounded-full"
+                                    style={{
+                                      background: 'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.4) 50%, transparent 70%)'
+                                    }}
+                                    animate={{
+                                      x: ['-100%', '100%']
+                                    }}
+                                    transition={{
+                                      duration: 1.5,
+                                      repeat: Infinity,
+                                      repeatDelay: 2,
+                                      ease: "easeInOut"
+                                    }}
+                                  />
+                                )}
+                              </motion.span>
+                            </motion.div>
+                          )}
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -357,11 +428,46 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
                       exit={{ opacity: 0, x: -10, scale: 0.9 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <span className="text-gray-200 font-medium">{item.label}</span>
-                      {item.level && (
-                        <span className="ml-2 px-1.5 py-0.5 text-xs bg-yellow-500/20 text-yellow-400 rounded">
-                          Lv{item.level}+
-                        </span>
+                      {item.hotDeal ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-gray-200 font-medium">{item.label}</span>
+                            <span className="px-1.5 py-0.5 text-xs bg-red-500/20 text-red-400 rounded font-bold">
+                              {item.badge}
+                            </span>
+                          </div>
+                          <div 
+                            className="p-3 rounded-xl"
+                            style={{
+                              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                              backdropFilter: 'blur(10px)',
+                              border: '1px solid rgba(255, 255, 255, 0.2)'
+                            }}
+                          >
+                            <div className="text-white font-semibold text-sm mb-1">{item.hotDeal.title}</div>
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-red-400 font-bold">{item.hotDeal.discount}</span>
+                              <div className="text-gray-300">
+                                <span className="line-through text-gray-500">${item.hotDeal.originalPrice}</span>
+                                <span className="ml-1">💎{item.hotDeal.xpCost} + ${item.hotDeal.usdCost}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <span className="text-gray-200 font-medium">{item.label}</span>
+                          {item.level && (
+                            <span className="ml-2 px-1.5 py-0.5 text-xs bg-yellow-500/20 text-yellow-400 rounded">
+                              Lv{item.level}+
+                            </span>
+                          )}
+                          {item.badge && (
+                            <span className="ml-2 px-1.5 py-0.5 text-xs bg-green-500/20 text-green-400 rounded">
+                              {item.badge}
+                            </span>
+                          )}
+                        </div>
                       )}
                     </motion.div>
                   )}

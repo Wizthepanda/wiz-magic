@@ -14,6 +14,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { TipModal } from "./creator/components/TipModal";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { YouTubeSubscriptionService } from "@/lib/youtube-subscription-service";
+import { useYouTubeSubscription } from "@/hooks/useYouTubeSubscription";
+import { useWizXP } from "@/hooks/useWizXP";
 
 interface VideoPanelProps {
   videoId: string;
@@ -54,6 +57,17 @@ export const VideoPanel: React.FC<VideoPanelProps> = ({
   const { addXp } = useXp();
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  
+  // YouTube subscription hook
+  const { 
+    subscriptionStatus, 
+    subscribe, 
+    isLoading: subscriptionLoading,
+    hasPermissions 
+  } = useYouTubeSubscription(channelId || '');
+  
+  // XP system hook
+  const { refreshData: refreshXP } = useWizXP();
   const [progress, setProgress] = useState(0);
   const [player, setPlayer] = useState<any>(null);
   const [rewarded, setRewarded] = useState(false);
@@ -61,8 +75,8 @@ export const VideoPanel: React.FC<VideoPanelProps> = ({
   const [isVideoCompleted, setIsVideoCompleted] = useState(false);
   const [activeTab, setActiveTab] = useState("videos");
   const [showTipModal, setShowTipModal] = useState(false);
-  const [isSubscribed, setIsSubscribed] = useState(false);
   const [isFollowed, setIsFollowed] = useState(false);
+  const [actualSubscriberCount, setActualSubscriberCount] = useState<string | null>(null);
 
   // Handle local video player XP
   const handleLocalXpEarned = (xp: number, reason: string) => {
@@ -105,6 +119,22 @@ export const VideoPanel: React.FC<VideoPanelProps> = ({
     }
   }, [videoId, useLocalPlayer]);
 
+  // Fetch actual subscriber count from YouTube API
+  useEffect(() => {
+    const fetchSubscriberCount = async () => {
+      if (channelId && isYouTubeAPIEnabled()) {
+        try {
+          const count = await YouTubeSubscriptionService.getChannelSubscriberCount(channelId);
+          setActualSubscriberCount(count);
+        } catch (error) {
+          console.error('Failed to fetch subscriber count:', error);
+        }
+      }
+    };
+
+    fetchSubscriberCount();
+  }, [channelId]);
+
   // Track progress without continuous XP rewards
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -145,10 +175,29 @@ export const VideoPanel: React.FC<VideoPanelProps> = ({
 
   // Handler functions for actions
   const handleSubscribe = async () => {
-    if (!channelId) return;
+    if (!channelId || subscriptionLoading) return;
+    
     try {
-      window.open(`https://www.youtube.com/channel/${channelId}?sub_confirmation=1`, '_blank');
-      setIsSubscribed(true);
+      console.log('🔔 Initiating subscription...');
+      const result = await subscribe();
+      
+      if (result.success) {
+        console.log('✅ Subscription successful! XP should be awarded automatically.');
+        
+        // Refresh XP data to show new total
+        await refreshXP();
+        
+        // Show success notification
+        window.dispatchEvent(new CustomEvent('wizXPUpdate', {
+          detail: {
+            userId: user?.uid,
+            xpGained: 30, // SUBSCRIPTION_XP amount
+            newTotal: null, // Will be updated by refresh
+            source: 'subscription',
+            message: `+30 XP for subscribing to ${creator}!`
+          }
+        }));
+      }
     } catch (error) {
       console.error('Subscribe error:', error);
     }
@@ -365,7 +414,10 @@ export const VideoPanel: React.FC<VideoPanelProps> = ({
                             className="font-medium"
                             style={{ color: '#B0B3C7', fontSize: '13px' }}
                           >
-                            {typeof subscriberCount === 'number' ? subscriberCount.toLocaleString() : subscriberCount} followers
+                            {actualSubscriberCount ? `${actualSubscriberCount} subscribers` : 
+                             (typeof subscriberCount === 'string' && subscriberCount.includes('subscribers') ? 
+                              subscriberCount : 
+                              `${typeof subscriberCount === 'number' ? subscriberCount.toLocaleString() : subscriberCount} subscribers`)}
                           </span>
                           
                           {creatorLevel && (
@@ -386,16 +438,17 @@ export const VideoPanel: React.FC<VideoPanelProps> = ({
                       <div className="flex items-center space-x-3">
                         <Button
                           onClick={handleSubscribe}
-                          disabled={isSubscribed}
+                          disabled={subscriptionStatus?.isSubscribed || subscriptionLoading}
                           className="px-4 py-2 font-semibold rounded-xl border-0 transition-all duration-200"
                           style={{
-                            background: isSubscribed ? '#343846' : '#FF3B30',
+                            background: subscriptionStatus?.isSubscribed ? '#343846' : '#FF3B30',
                             color: '#FFFFFF',
                             fontSize: '14px',
-                            fontWeight: 600
+                            fontWeight: 600,
+                            opacity: subscriptionLoading ? 0.7 : 1
                           }}
                         >
-                          {isSubscribed ? 'Subscribed' : 'Subscribe'}
+                          {subscriptionLoading ? 'Loading...' : (subscriptionStatus?.isSubscribed ? 'Subscribed' : 'Subscribe')}
                         </Button>
                         
                         <Button
