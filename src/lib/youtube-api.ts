@@ -107,7 +107,17 @@ class YouTubeAPIService {
         const script = document.createElement('script');
         script.src = 'https://accounts.google.com/gsi/client';
         script.async = true;
+        script.crossOrigin = 'anonymous';
+
+        // Handle CSP compliance
+        script.setAttribute('nonce', this.generateNonce());
+
         script.onload = () => {
+          // Handle potential SES lockdown if the function exists
+          if (typeof (window as any).handleSESLockdown === 'function') {
+            (window as any).handleSESLockdown();
+          }
+
           // Wait for Google Identity Services to be available
           const checkGIS = setInterval(() => {
             if (window.google?.accounts?.oauth2) {
@@ -115,7 +125,7 @@ class YouTubeAPIService {
               resolve();
             }
           }, 100);
-          
+
           // Timeout after 10 seconds
           setTimeout(() => {
             clearInterval(checkGIS);
@@ -134,7 +144,7 @@ class YouTubeAPIService {
             resolve();
           }
         }, 100);
-        
+
         setTimeout(() => {
           clearInterval(checkGIS);
           if (!window.google?.accounts?.oauth2) {
@@ -143,6 +153,15 @@ class YouTubeAPIService {
         }, 10000);
       }
     });
+  }
+
+  /**
+   * Generate a simple nonce for CSP compliance
+   */
+  private generateNonce(): string {
+    const array = new Uint8Array(16);
+    crypto.getRandomValues(array);
+    return btoa(String.fromCharCode(...array));
   }
 
   /**

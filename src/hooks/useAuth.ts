@@ -107,34 +107,36 @@ const getUserData = async (firebaseUser: User): Promise<WizUser> => {
   }
 };
 
-// Create a singleton auth state manager
+// Create a global auth state manager
+let globalUser: WizUser | null = null;
+let globalLoading = true;
 let authListenerInitialized = false;
 let authUnsubscribe: (() => void) | null = null;
+const authStateListeners = new Set<(user: WizUser | null, loading: boolean) => void>();
+
+const updateGlobalAuthState = (user: WizUser | null, loading: boolean) => {
+  globalUser = user;
+  globalLoading = loading;
+  authStateListeners.forEach(listener => listener(user, loading));
+};
 
 export const useAuth = () => {
-  const [user, setUser] = useState<WizUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<WizUser | null>(globalUser);
+  const [loading, setLoading] = useState(globalLoading);
 
   useEffect(() => {
-    // Only setup listener once across all instances
+    // Register this component as a listener for global auth state changes
+    const listener = (newUser: WizUser | null, newLoading: boolean) => {
+      setUser(newUser);
+      setLoading(newLoading);
+    };
+    authStateListeners.add(listener);
+
+    // Only setup the Firebase listener once across all instances
     if (authListenerInitialized) {
-      // If listener exists, just get current state
-      const currentUser = auth.currentUser;
-      if (currentUser) {
-        // Get user data immediately if already authenticated
-        getUserData(currentUser)
-          .then(wizUser => {
-            setUser(wizUser);
-            setLoading(false);
-          })
-          .catch(error => {
-            console.error('Error getting user data:', error);
-            setLoading(false);
-          });
-      } else {
-        setLoading(false);
-      }
-      return;
+      return () => {
+        authStateListeners.delete(listener);
+      };
     }
     
     console.log('🔧 Setting up singleton auth state listener...');
@@ -147,22 +149,20 @@ export const useAuth = () => {
         console.log('🔄 Auth state changed:', firebaseUser ? `${firebaseUser.email} (uid: ${firebaseUser.uid})` : 'No user');
         hasLoggedState = true;
       }
-      
+
       try {
         if (firebaseUser) {
           console.log('📥 Getting user data from Firestore...');
           const wizUser = await getUserData(firebaseUser);
           console.log('✅ User authenticated:', { email: wizUser.email, level: wizUser.level, totalXP: wizUser.totalXP });
-          setUser(wizUser);
+          updateGlobalAuthState(wizUser, false);
         } else {
           console.log('❌ No Firebase user');
-          setUser(null);
+          updateGlobalAuthState(null, false);
         }
       } catch (error) {
         console.error('❌ Error in auth state change:', error);
-        setUser(null);
-      } finally {
-        setLoading(false);
+        updateGlobalAuthState(null, false);
       }
     });
 
@@ -226,9 +226,10 @@ export const useAuth = () => {
     };
 
     handleRedirectResult();
-    
+
     return () => {
       // Don't unsubscribe the global listener, just mark unmounted
+      authStateListeners.delete(listener);
       console.log('🔄 Auth hook unmounted');
     };
   }, []);
@@ -384,7 +385,7 @@ export const useAuth = () => {
                 photoURL: user.photoURL || channelInfo.avatar,
               };
               
-              setUser(updatedUser);
+              updateGlobalAuthState(updatedUser, false);
             }
           }
         } catch (profileError) {
@@ -425,61 +426,36 @@ export const useAuth = () => {
   };
 
   const refreshUserData = async () => {
-    if (user) {
+    if (globalUser) {
       try {
         console.log('🔄 Starting user data refresh...');
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        const userDoc = await getDoc(doc(db, 'users', globalUser.uid));
         const userData = userDoc.data();
-        
+
         const updatedUser: WizUser = {
-          ...user,
+          ...globalUser,
           level: userData?.level || 1,
           totalXP: userData?.totalXP || 0,
           youtubeConnected: userData?.youtubeConnected || false,
           createdAt: userData?.createdAt?.toDate() || new Date(),
         };
-        
-        console.log('🔄 Updating user state:', { 
-          oldXP: user.totalXP, 
-          newXP: updatedUser.totalXP, 
-          level: updatedUser.level 
+
+        console.log('🔄 Updating user state:', {
+          oldXP: globalUser.totalXP,
+          newXP: updatedUser.totalXP,
+          level: updatedUser.level
         });
-        
-        setUser(updatedUser);
-        
+
+        updateGlobalAuthState(updatedUser, false);
+
         // Dispatch event to sync XP context
         if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('xpUpdated', { 
-            detail: { totalXP: updatedUser.totalXP } 
+          window.dispatchEvent(new CustomEvent('xpUpdated', {
+            detail: { totalXP: updatedUser.totalXP }
           }));
           console.log('🔄 Dispatched xpUpdated event from refreshUserData with totalXP:', updatedUser.totalXP);
         }
-        
-        // Force a re-render by updating the state again after a short delay
-        setTimeout(async () => {
-          const recheckDoc = await getDoc(doc(db, 'users', user.uid));
-          const recheckData = recheckDoc.data();
-          if (recheckData?.totalXP !== user.totalXP) {
-            const finalUser: WizUser = {
-              ...user,
-              level: recheckData?.level || 1,
-              totalXP: recheckData?.totalXP || 0,
-              youtubeConnected: recheckData?.youtubeConnected || false,
-              createdAt: recheckData?.createdAt?.toDate() || new Date(),
-            };
-            setUser(finalUser);
-            console.log('🔄 Final user data update:', { totalXP: finalUser.totalXP });
-            
-            // Dispatch final update event
-            if (typeof window !== 'undefined') {
-              window.dispatchEvent(new CustomEvent('xpUpdated', { 
-                detail: { totalXP: finalUser.totalXP } 
-              }));
-              console.log('🔄 Dispatched final xpUpdated event with totalXP:', finalUser.totalXP);
-            }
-          }
-        }, 1000);
-        
+
       } catch (error) {
         console.error('Error refreshing user data:', error);
       }
@@ -487,66 +463,36 @@ export const useAuth = () => {
   };
 
   const addXP = (amount: number) => {
-    console.log('🎯 addXP called with amount:', amount, 'current user:', user?.uid);
-    
-    if (user) {
-      const newTotalXP = user.totalXP + amount;
+    console.log('🎯 addXP called with amount:', amount, 'current user:', globalUser?.uid);
+
+    if (globalUser) {
+      const newTotalXP = globalUser.totalXP + amount;
       const newLevel = Math.floor(newTotalXP / 1000) + 1;
-      
+
       const updatedUser: WizUser = {
-        ...user,
+        ...globalUser,
         totalXP: newTotalXP,
         level: newLevel,
-        // Add a timestamp to force React to detect the change
-        lastUpdate: new Date(),
-      } as WizUser;
-      
-      console.log('⚡ Instant XP update:', { 
-        oldXP: user.totalXP, 
-        newXP: newTotalXP, 
-        oldLevel: user.level, 
-        newLevel: newLevel 
+      };
+
+      console.log('⚡ XP update:', {
+        oldXP: globalUser.totalXP,
+        newXP: newTotalXP,
+        oldLevel: globalUser.level,
+        newLevel: newLevel
       });
-      
-      // Force immediate state update
-      setUser(updatedUser);
-      
+
+      // Single global state update
+      updateGlobalAuthState(updatedUser, false);
+
       // Dispatch custom event to sync XP context
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('xpUpdated', { 
-          detail: { totalXP: newTotalXP } 
+        window.dispatchEvent(new CustomEvent('xpUpdated', {
+          detail: { totalXP: newTotalXP }
         }));
       }
-      
-      console.log('✅ User state updated with new XP immediately');
-      
-      // Force React to re-render by triggering multiple state changes
-      setTimeout(() => {
-        setUser(prevUser => {
-          if (!prevUser) return null;
-          return {
-            ...prevUser,
-            totalXP: newTotalXP,
-            level: newLevel,
-            lastUpdate: new Date(),
-          } as WizUser;
-        });
-        console.log('🔄 Secondary state update for React re-render');
-      }, 10);
-      
-      // Third update to ensure all components re-render
-      setTimeout(() => {
-        setUser(prevUser => {
-          if (!prevUser) return null;
-          return {
-            ...prevUser,
-            totalXP: newTotalXP,
-            level: newLevel,
-            lastUpdate: new Date(),
-          } as WizUser;
-        });
-        console.log('🔄 Final state update to ensure UI consistency');
-      }, 50);
+
+      console.log('✅ Global auth state updated with new XP');
     } else {
       console.log('❌ No user found for addXP');
     }

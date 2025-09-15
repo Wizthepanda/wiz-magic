@@ -88,6 +88,56 @@ service cloud.firestore {
       allow read: if request.auth != null && request.auth.uid == resource.data.userId;
       allow write: if false; // Only Cloud Functions can write
     }
+
+    // Course collections for Learn tab (free and paid courses)
+    match /courses_learn/{courseId} {
+      allow read: if true; // Public read for course discovery
+      allow create: if request.auth != null &&
+                   request.auth.uid == request.resource.data.creatorId &&
+                   validateCourseData(request.resource.data);
+      allow update: if request.auth != null &&
+                   request.auth.uid == resource.data.creatorId &&
+                   validateCourseData(request.resource.data);
+      allow delete: if request.auth != null && request.auth.uid == resource.data.creatorId;
+    }
+
+    // Course collections for Claim tab (XP-based courses)
+    match /courses_claim/{courseId} {
+      allow read: if true; // Public read for course discovery
+      allow create: if request.auth != null &&
+                   request.auth.uid == request.resource.data.creatorId &&
+                   validateCourseData(request.resource.data);
+      allow update: if request.auth != null &&
+                   request.auth.uid == resource.data.creatorId &&
+                   validateCourseData(request.resource.data);
+      allow delete: if request.auth != null && request.auth.uid == resource.data.creatorId;
+    }
+
+    // Draft courses collection
+    match /courses_drafts/{courseId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.creatorId;
+      allow create: if request.auth != null &&
+                   request.auth.uid == request.resource.data.creatorId &&
+                   validateCourseData(request.resource.data);
+      allow update: if request.auth != null &&
+                   request.auth.uid == resource.data.creatorId &&
+                   validateCourseData(request.resource.data);
+      allow delete: if request.auth != null && request.auth.uid == resource.data.creatorId;
+    }
+
+    // Course enrollments - users can manage their own enrollments
+    match /courseEnrollments/{enrollmentId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null &&
+                   request.auth.uid == request.resource.data.userId;
+      allow update: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+
+    // Course progress tracking
+    match /courseProgress/{userId}/courses/{courseId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
   }
 }
 
@@ -110,10 +160,29 @@ function validateXPUpdate(newData, existingData) {
   let newXP = 'currentXP' in newData ? newData.currentXP : currentXP;
   let currentDailyXP = 'dailyXpEarned' in existingData ? existingData.dailyXpEarned : 0;
   let newDailyXP = 'dailyXpEarned' in newData ? newData.dailyXpEarned : currentDailyXP;
-  
+
   // Allow reasonable XP increases (max 500 XP per update, max 360 daily XP)
   return (newXP >= currentXP) &&
          (newXP - currentXP <= 500) &&
          (newDailyXP <= 360) &&
          (newDailyXP >= 0);
+}
+
+// Validation function for course data
+function validateCourseData(courseData) {
+  // Ensure required fields are present and valid
+  return 'title' in courseData && courseData.title is string && courseData.title.size() > 0 &&
+         'description' in courseData && courseData.description is string &&
+         'category' in courseData && courseData.category is string &&
+         'creatorId' in courseData && courseData.creatorId is string &&
+         'creatorName' in courseData && courseData.creatorName is string &&
+         'accessType' in courseData && courseData.accessType in ['free', 'xp', 'xp-copay', 'paid'] &&
+         'status' in courseData && courseData.status in ['draft', 'published'] &&
+         'publishedTo' in courseData && courseData.publishedTo in ['learn', 'claim'] &&
+         // Validate XP requirements
+         ('xpRequired' in courseData ? courseData.xpRequired is number && courseData.xpRequired >= 0 : true) &&
+         // Validate price
+         ('price' in courseData ? courseData.price is number && courseData.price >= 0 : true) &&
+         // Validate modules structure
+         ('modules' in courseData ? courseData.modules is list : true);
 }

@@ -22,7 +22,18 @@ const Index = () => {
   // Add keyboard listener for testing - press 'H' to go back to homepage
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.key === 'h' || event.key === 'H') {
+      // Only trigger if user is not typing in an input field, textarea, or any editable element
+      const target = event.target as HTMLElement;
+      const isTyping = target && (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable ||
+        target.closest('[contenteditable="true"]') ||
+        target.closest('input') ||
+        target.closest('textarea')
+      );
+
+      if ((event.key === 'h' || event.key === 'H') && !isTyping) {
         // console.log('🏠 Going back to homepage for testing...');
         setShowDashboard(false);
       }

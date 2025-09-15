@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Crown, Shield, Database, TestTube, CheckCircle, ChevronDown, ChevronUp, Settings } from 'lucide-react';
+import { User, Crown, Shield, Database, TestTube, CheckCircle, ChevronDown, ChevronUp, Settings, Play } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { CreatorPromotion } from './CreatorPromotion';
+import { AuthConfigTestPanel } from './AuthConfigTestPanel';
+import { testAuthConfig, testYouTubeAuth } from '@/lib/auth-config-test';
 
 export const AdminTestPanel = () => {
   const { user } = useAuth();
@@ -110,6 +112,43 @@ export const AdminTestPanel = () => {
               className="pointer-events-auto"
             >
               <CreatorPromotion />
+            </div>
+          </div>
+
+          {/* Auth Testing Buttons */}
+          <div className="mt-4 pt-3 border-t border-purple-400/20 space-y-2">
+            <div className="text-xs text-gray-400 mb-2">Authentication Testing:</div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <motion.button
+                className="p-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-white font-medium text-xs transition-all duration-200"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  console.log('🧪 Running auth config tests...');
+                  const results = await testAuthConfig();
+                  console.log('Auth test results:', results);
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <TestTube className="w-3 h-3 mb-1 mx-auto" />
+                Test Config
+              </motion.button>
+
+              <motion.button
+                className="p-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 rounded-lg text-white font-medium text-xs transition-all duration-200"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  console.log('🎬 Testing YouTube authentication...');
+                  const result = await testYouTubeAuth();
+                  console.log('YouTube auth test result:', result);
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Play className="w-3 h-3 mb-1 mx-auto" />
+                Test YouTube
+              </motion.button>
             </div>
           </div>
 

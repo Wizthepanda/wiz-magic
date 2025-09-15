@@ -11,6 +11,7 @@ import { isYouTubeAPIEnabled, isGoogleAuthEnabled, logFeatureFlag } from '@/lib/
 import { AdminTestPanel } from '@/components/admin/AdminTestPanel';
 import { YouTubeAuthModal } from './YouTubeAuthModal';
 import { VideoPanel } from './VideoPanel';
+import WizUp from '@/components/WizUp';
 import { db } from '@/lib/firebase';
 import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
 
@@ -35,8 +36,8 @@ const HeroBackground = () => {
   );
 };
 
-// Why WIZ Section Background
-const WhyWizBackground = () => {
+// Why WIZUP Section Background
+const WhyWizupBackground = () => {
   return (
     <div className="absolute inset-0 overflow-hidden">
       <div 
@@ -711,7 +712,7 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
                 fontWeight: '900'
               }}
             >
-              WIZ
+              WIZUP
             </motion.h1>
             
             {/* Premium Tagline */}
@@ -926,474 +927,9 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
       </main>
       </div>
 
-      {/* 🎨 Premium WHY WIZ Section - Hero Gradient Matched */}
-      <div className="relative py-32 px-8">
-        {/* Matching Hero Background with Purple Gradient */}
-        <div 
-          className="absolute inset-0"
-          style={{
-            background: `
-              radial-gradient(circle at 50% 40%, rgba(194, 159, 255, 0.08) 0%, transparent 70%),
-              radial-gradient(circle at 30% 70%, rgba(124, 58, 237, 0.06) 0%, transparent 50%),
-              linear-gradient(135deg, #F6F0FF 0%, rgba(255, 255, 255, 0.95) 100%)
-            `
-          }}
-        />
-        
-        <section className="relative z-10">
-          <div className="max-w-6xl mx-auto">
-            
-            {/* Premium Header - Matching Hero Style */}
-            <motion.div
-              className="text-center mb-20"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-            >
-              <motion.h3 
-                className="text-4xl md:text-5xl font-bold mb-6 tracking-wide uppercase"
-                style={{
-                  background: 'linear-gradient(135deg, #C29FFF 0%, #5A2D82 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
-                  fontWeight: 800,
-                  letterSpacing: '0.05em'
-                }}
-                initial={{ scale: 0.95, opacity: 0 }}
-                whileInView={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                viewport={{ once: true }}
-              >
-                WHY WIZ
-              </motion.h3>
-              <motion.p 
-                className="text-lg md:text-xl font-medium max-w-2xl mx-auto"
-                style={{ 
-                  color: '#6B7280',
-                  fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
-                  lineHeight: '1.6'
-                }}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                viewport={{ once: true }}
-              >
-                Because viewers level up, and creators earn fairly.
-              </motion.p>
-            </motion.div>
+      {/* WHY WIZUP Section - Minimal Glassmorphic Design */}
+      <WizUp />
 
-            {/* Dual Glass Panels */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-              
-              {/* 👀 For Viewers Panel */}
-              <motion.div
-                className="group"
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                viewport={{ once: true }}
-                whileHover={{ 
-                  y: -4,
-                  transition: { duration: 0.3, ease: "easeOut" }
-                }}
-              >
-                <div 
-                  className="relative p-8 rounded-3xl overflow-hidden transition-all duration-500"
-                  style={{
-                    background: `
-                      linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%),
-                      rgba(255, 255, 255, 0.3)
-                    `,
-                    backdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    boxShadow: `
-                      0 20px 60px rgba(0, 0, 0, 0.05),
-                      0 8px 25px rgba(0, 0, 0, 0.03),
-                      inset 0 1px 0 rgba(255, 255, 255, 0.8)
-                    `
-                  }}
-                >
-                  {/* Subtle Hover Glow */}
-                  <div 
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl pointer-events-none"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.03) 0%, rgba(124, 58, 237, 0.01) 100%)'
-                    }}
-                  />
-                  
-                  {/* Header */}
-                  <div className="mb-8">
-                    {/* Glowing Purple Gradient Icon - Matching Hero Stats */}
-                    <motion.div
-                      className="w-16 h-16 mb-6 flex items-center justify-center rounded-3xl relative overflow-hidden"
-                      style={{
-                        background: `
-                          linear-gradient(135deg, rgba(194, 159, 255, 0.15) 0%, rgba(124, 58, 237, 0.1) 100%),
-                          rgba(255, 255, 255, 0.8)
-                        `,
-                        border: '1px solid rgba(194, 159, 255, 0.2)',
-                        boxShadow: `
-                          0 8px 32px rgba(194, 159, 255, 0.15),
-                          inset 0 1px 0 rgba(255, 255, 255, 0.8)
-                        `
-                      }}
-                      whileHover={{ 
-                        scale: 1.05,
-                        boxShadow: `
-                          0 12px 40px rgba(194, 159, 255, 0.2),
-                          inset 0 1px 0 rgba(255, 255, 255, 0.9)
-                        `
-                      }}
-                      animate={{ 
-                        boxShadow: [
-                          "0 8px 32px rgba(194, 159, 255, 0.15)",
-                          "0 8px 32px rgba(194, 159, 255, 0.25)",
-                          "0 8px 32px rgba(194, 159, 255, 0.15)"
-                        ]
-                      }}
-                      transition={{ 
-                        duration: 2, 
-                        repeat: Infinity, 
-                        ease: "easeInOut"
-                      }}
-                    >
-                      {/* Gradient Glow Effect */}
-                      <div 
-                        className="absolute inset-0 rounded-3xl opacity-50"
-                        style={{
-                          background: 'linear-gradient(135deg, rgba(194, 159, 255, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%)',
-                        }}
-                      />
-                      <Play 
-                        className="w-7 h-7 relative z-10" 
-                        style={{ 
-                          color: '#7C3AED', 
-                          strokeWidth: 1.5,
-                          filter: 'drop-shadow(0 2px 4px rgba(124, 58, 237, 0.3))'
-                        }} 
-                        fill="currentColor"
-                      />
-                    </motion.div>
-                    
-                    <h4 
-                      className="text-2xl font-bold mb-2"
-                      style={{ 
-                        color: '#1F2937',
-                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", Inter, sans-serif',
-                        fontWeight: 700,
-                        letterSpacing: '-0.01em'
-                      }}
-                    >
-                      Watch. Earn. Level Up.
-                    </h4>
-                    <p 
-                      className="text-sm font-medium"
-                      style={{ 
-                        color: '#9CA3AF',
-                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, sans-serif'
-                      }}
-                    >
-                      For Viewers
-                    </p>
-                  </div>
-
-                  {/* Clean Bullet Points */}
-                  <div className="space-y-4 mb-8">
-                    {[
-                      { text: 'Watch videos → earn XP automatically' },
-                      { text: 'Unlock perks from creators' },
-                      { text: 'Take free & paid courses' },
-                      { text: 'Get rewards for your progress' },
-                      { text: 'Climb the leaderboard & flex your rank' }
-                    ].map((item, index) => (
-                      <motion.div
-                        key={index}
-                        className="flex items-start space-x-3"
-                        initial={{ opacity: 0, x: -20 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.5, delay: 0.4 + index * 0.1 }}
-                        viewport={{ once: true }}
-                      >
-                        {/* Minimal bullet point */}
-                        <div 
-                          className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
-                          style={{ background: '#7C3AED' }}
-                        />
-                        <p 
-                          className="text-base font-medium leading-relaxed"
-                          style={{ 
-                            color: '#374151',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, sans-serif'
-                          }}
-                        >
-                          {item.text}
-                        </p>
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  {/* Premium CTA Button - Matching Hero Style */}
-                  <motion.button
-                    className="w-full group flex items-center justify-center py-4 px-6 rounded-3xl font-bold transition-all duration-500"
-                    style={{
-                      background: `
-                        linear-gradient(135deg, rgba(194, 159, 255, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%),
-                        rgba(255, 255, 255, 0.8)
-                      `,
-                      backdropFilter: 'blur(20px)',
-                      border: '1px solid rgba(194, 159, 255, 0.3)',
-                      color: '#7C3AED',
-                      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
-                      fontWeight: 700,
-                      boxShadow: '0 8px 32px rgba(194, 159, 255, 0.08), 0 4px 16px rgba(194, 159, 255, 0.04)'
-                    }}
-                    whileHover={{ 
-                      y: -2,
-                      scale: 1.02,
-                      background: `
-                        linear-gradient(135deg, rgba(194, 159, 255, 0.15) 0%, rgba(124, 58, 237, 0.08) 100%),
-                        rgba(255, 255, 255, 0.9)
-                      `,
-                      boxShadow: '0 12px 40px rgba(194, 159, 255, 0.12), 0 6px 20px rgba(194, 159, 255, 0.08)'
-                    }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={onEnterPlatform}
-                  >
-                    {/* Magic Sparkle Icon */}
-                    <motion.div 
-                      className="mr-3"
-                      animate={{ 
-                        rotate: [0, 5, -5, 0],
-                        scale: [1, 1.05, 1]
-                      }}
-                      transition={{ 
-                        duration: 4, 
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                    >
-                      <Sparkles 
-                        className="w-5 h-5"
-                        style={{ 
-                          color: '#C29FFF',
-                          filter: 'drop-shadow(0 2px 4px rgba(194, 159, 255, 0.3))'
-                        }} 
-                      />
-                    </motion.div>
-                    Start Watching
-                  </motion.button>
-                </div>
-              </motion.div>
-
-              {/* 🎥 For Creators Panel */}
-              <motion.div
-                className="group"
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
-                viewport={{ once: true }}
-                whileHover={{ 
-                  y: -4,
-                  transition: { duration: 0.3, ease: "easeOut" }
-                }}
-              >
-                <div 
-                  className="relative p-8 rounded-3xl overflow-hidden transition-all duration-500"
-                  style={{
-                    background: `
-                      linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%),
-                      rgba(255, 255, 255, 0.3)
-                    `,
-                    backdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    boxShadow: `
-                      0 20px 60px rgba(0, 0, 0, 0.05),
-                      0 8px 25px rgba(0, 0, 0, 0.03),
-                      inset 0 1px 0 rgba(255, 255, 255, 0.8)
-                    `
-                  }}
-                >
-                  {/* Subtle Hover Glow */}
-                  <div 
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl pointer-events-none"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.03) 0%, rgba(124, 58, 237, 0.01) 100%)'
-                    }}
-                  />
-                  
-                  {/* Header */}
-                  <div className="mb-8">
-                    {/* Glowing Purple Gradient Icon - Matching Hero Stats */}
-                    <motion.div
-                      className="w-16 h-16 mb-6 flex items-center justify-center rounded-3xl relative overflow-hidden"
-                      style={{
-                        background: `
-                          linear-gradient(135deg, rgba(194, 159, 255, 0.15) 0%, rgba(124, 58, 237, 0.1) 100%),
-                          rgba(255, 255, 255, 0.8)
-                        `,
-                        border: '1px solid rgba(194, 159, 255, 0.2)',
-                        boxShadow: `
-                          0 8px 32px rgba(194, 159, 255, 0.15),
-                          inset 0 1px 0 rgba(255, 255, 255, 0.8)
-                        `
-                      }}
-                      whileHover={{ 
-                        scale: 1.05,
-                        boxShadow: `
-                          0 12px 40px rgba(194, 159, 255, 0.2),
-                          inset 0 1px 0 rgba(255, 255, 255, 0.9)
-                        `
-                      }}
-                      animate={{ 
-                        boxShadow: [
-                          "0 8px 32px rgba(194, 159, 255, 0.15)",
-                          "0 8px 32px rgba(194, 159, 255, 0.25)",
-                          "0 8px 32px rgba(194, 159, 255, 0.15)"
-                        ]
-                      }}
-                      transition={{ 
-                        duration: 2.5, 
-                        repeat: Infinity, 
-                        ease: "easeInOut",
-                        delay: 1 // Offset from viewer card
-                      }}
-                    >
-                      {/* Gradient Glow Effect */}
-                      <div 
-                        className="absolute inset-0 rounded-3xl opacity-50"
-                        style={{
-                          background: 'linear-gradient(135deg, rgba(194, 159, 255, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%)',
-                        }}
-                      />
-                      <Star 
-                        className="w-7 h-7 relative z-10" 
-                        style={{ 
-                          color: '#7C3AED', 
-                          strokeWidth: 1.5,
-                          filter: 'drop-shadow(0 2px 4px rgba(124, 58, 237, 0.3))'
-                        }} 
-                        fill="currentColor"
-                      />
-                    </motion.div>
-                    
-                    <h4 
-                      className="text-2xl font-bold mb-2"
-                      style={{ 
-                        color: '#1F2937',
-                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", Inter, sans-serif',
-                        fontWeight: 700,
-                        letterSpacing: '-0.01em'
-                      }}
-                    >
-                      Create. Share. Earn.
-                    </h4>
-                    <p 
-                      className="text-sm font-medium"
-                      style={{ 
-                        color: '#9CA3AF',
-                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, sans-serif'
-                      }}
-                    >
-                      For Creators
-                    </p>
-                  </div>
-
-                  {/* Clean Bullet Points */}
-                  <div className="space-y-4 mb-8">
-                    {[
-                      { text: 'No fees — upload free' },
-                      { text: 'Sell courses (Stripe / USDT / BTC)' },
-                      { text: 'Get tips in USDT or BTC — cash out anytime' },
-                      { text: 'No chargebacks, no holds' },
-                      { text: 'Accept anonymous tips securely' }
-                    ].map((item, index) => (
-                      <motion.div
-                        key={index}
-                        className="flex items-start space-x-3"
-                        initial={{ opacity: 0, x: 20 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
-                        viewport={{ once: true }}
-                      >
-                        {/* Minimal bullet point */}
-                        <div 
-                          className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
-                          style={{ background: '#7C3AED' }}
-                        />
-                        <p 
-                          className="text-base font-medium leading-relaxed"
-                          style={{ 
-                            color: '#374151',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, sans-serif'
-                          }}
-                        >
-                          {item.text}
-                        </p>
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  {/* Premium CTA Button - Matching Hero Style */}
-                  <motion.button
-                    className="w-full group flex items-center justify-center py-4 px-6 rounded-3xl font-bold transition-all duration-500"
-                    style={{
-                      background: `
-                        linear-gradient(135deg, rgba(194, 159, 255, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%),
-                        rgba(255, 255, 255, 0.8)
-                      `,
-                      backdropFilter: 'blur(20px)',
-                      border: '1px solid rgba(194, 159, 255, 0.3)',
-                      color: '#7C3AED',
-                      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
-                      fontWeight: 700,
-                      boxShadow: '0 8px 32px rgba(194, 159, 255, 0.08), 0 4px 16px rgba(194, 159, 255, 0.04)'
-                    }}
-                    whileHover={{ 
-                      y: -2,
-                      scale: 1.02,
-                      background: `
-                        linear-gradient(135deg, rgba(194, 159, 255, 0.15) 0%, rgba(124, 58, 237, 0.08) 100%),
-                        rgba(255, 255, 255, 0.9)
-                      `,
-                      boxShadow: '0 12px 40px rgba(194, 159, 255, 0.12), 0 6px 20px rgba(194, 159, 255, 0.08)'
-                    }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={onEnterPlatform}
-                  >
-                    {/* Rocket Icon */}
-                    <motion.div 
-                      className="mr-3"
-                      animate={{ 
-                        y: [0, -2, 0],
-                        rotate: [0, 2, -2, 0]
-                      }}
-                      transition={{ 
-                        duration: 3, 
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                    >
-                      <div 
-                        className="text-lg"
-                        style={{ 
-                          filter: 'drop-shadow(0 2px 4px rgba(194, 159, 255, 0.3))'
-                        }}
-                      >
-                        🚀
-                      </div>
-                    </motion.div>
-                    Start Creating
-                  </motion.button>
-                </div>
-              </motion.div>
-
-            </div>
-          </div>
-        </section>
-      </div>
 
       {/* ✨ Meet the Creators — Elevated Abstract UI */}
       <motion.div 
@@ -1560,7 +1096,7 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
                 ease: "linear"
               }}
             >
-              WIZ Premiere
+              Wiz The Panda Premiere
             </motion.h2>
             
             <motion.p 
@@ -2466,7 +2002,7 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
                     <iframe
                       className="w-full h-full rounded-t-2xl"
                       src="https://www.youtube.com/embed/2M4asXviuoo?autoplay=1&enablejsapi=1&rel=0&modestbranding=1&showinfo=0&controls=1"
-                      title="WIZ Premiere Trailer"
+                      title="Wiz The Panda Premiere Trailer"
                       frameBorder="0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                       allowFullScreen
@@ -2501,7 +2037,7 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
                        backdropFilter: 'blur(10px)',
                        boxShadow: '0 4px 15px rgba(168, 85, 247, 0.3)'
                      }}>
-                  🎬 WIZ PREMIERE TRAILER
+                  🎬 WIZUP PREMIERE TRAILER
                 </div>
               </div>
 
@@ -2646,7 +2182,7 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
               ))}
             </div>
 
-            {/* Glowing WIZ Brand Mark */}
+            {/* Glowing WIZUP Brand Mark */}
             <motion.div
               className="inline-block relative"
               whileHover={{ 
@@ -2681,7 +2217,7 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
                     filter: 'drop-shadow(0 2px 8px rgba(194, 159, 255, 0.2))'
                   }}
                 >
-                  ✨ Powered by WIZ
+                  ✨ Powered by WIZUP
                 </p>
                 
                 {/* Subtle glow animation */}
