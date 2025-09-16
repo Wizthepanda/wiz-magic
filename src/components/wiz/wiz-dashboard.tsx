@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { WizSidebar } from './wiz-sidebar';
 import { WizMobileMenu } from './WizMobileMenu';
 import { WizUserProfile } from './wiz-user-profile';
-import { WizDiscoverSection } from './wiz-discover-section';
+import { CleanPremiumDashboard } from './CleanPremiumDashboard';
 import { WizLeaderboard } from './wiz-leaderboard';
 import { WizPremierePage } from './wiz-premiere-page';
 import { WizLeaderboardPage } from './wiz-leaderboard-page';
@@ -61,7 +61,7 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
   const renderActiveSection = () => {
     switch (activeSection) {
       case 'discover':
-        return <WizDiscoverSection />;
+        return <CleanPremiumDashboard />;
       case 'create':
         return <WizCreatePage />;
       case 'learn':
@@ -80,7 +80,7 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
           </div>
         );
       default:
-        return <WizDiscoverSection />;
+        return <CleanPremiumDashboard />;
     }
   };
 
