@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { WizSidebar } from './wiz-sidebar';
 import { WizMobileMenu } from './WizMobileMenu';
 import { WizUserProfile } from './wiz-user-profile';
-import { CleanPremiumDashboard } from './CleanPremiumDashboard';
+import { ApplePremiumDashboard } from './ApplePremiumDashboard';
 import { WizLeaderboard } from './wiz-leaderboard';
 import { WizPremierePage } from './wiz-premiere-page';
 import { WizLeaderboardPage } from './wiz-leaderboard-page';
@@ -61,7 +61,7 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
   const renderActiveSection = () => {
     switch (activeSection) {
       case 'discover':
-        return <CleanPremiumDashboard />;
+        return <ApplePremiumDashboard />;
       case 'create':
         return <WizCreatePage />;
       case 'learn':
@@ -80,97 +80,24 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
           </div>
         );
       default:
-        return <CleanPremiumDashboard />;
+        return <ApplePremiumDashboard />;
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-gradient-to-br from-background to-muted/20 relative">
       <FloatingParticles />
-      
+
       {/* Desktop Sidebar */}
       {!isMobile && (
-        <WizSidebar 
-          activeSection={activeSection} 
-          onSectionChange={setActiveSection} 
+        <WizSidebar
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
         />
       )}
-      
+
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Header - Mobile responsive */}
-        <header className="sticky top-0 z-30 border-b border-white/10 backdrop-blur-lg">
-          <div 
-            className={cn(
-              "flex items-center px-3 sm:px-6 py-3 sm:py-4",
-              isMobile ? "justify-between" : "justify-between"
-            )}
-            style={{
-              background: `
-                linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)
-              `,
-              backdropFilter: 'blur(20px)',
-              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
-            }}
-          >
-            {isMobile ? (
-              <>
-                {/* Mobile Layout */}
-                {/* Left: Hamburger Menu */}
-                <div className="flex-shrink-0">
-                  <WizMobileMenu 
-                    activeSection={activeSection} 
-                    onSectionChange={setActiveSection} 
-                  />
-                </div>
-                
-                {/* Center: Search Bar */}
-                <div className="flex-1 px-4 max-w-md mx-auto">
-                  <WizSearchBar 
-                    onSearch={handleSearch}
-                    onResultSelect={handleResultSelect}
-                    placeholder="Search videos, creators..."
-                  />
-                </div>
-                
-                {/* Right: Compact Profile */}
-                <div className="flex-shrink-0">
-                  <WizUserProfile />
-                </div>
-              </>
-            ) : (
-              <>
-                {/* Desktop Layout */}
-                {/* Left Section - Page Title */}
-                <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
-                  <h1 className="text-lg sm:text-xl font-bold text-gray-800 truncate">
-                    {activeSection === 'discover' && 'Discover'}
-                    {activeSection === 'create' && 'Create'}
-                    {activeSection === 'learn' && '🎓 Learn'}
-                    {activeSection === 'leaderboard' && 'Leaderboard'}
-                    {activeSection === 'premiere' && 'WIZ Premiere'}
-                    {activeSection === 'profile' && 'Profile'}
-                    {activeSection === 'settings' && 'Settings'}
-                  </h1>
-                </div>
-                
-                {/* Center Section - Search Bar */}
-                <div className="flex-1 flex justify-center px-4 sm:px-8 min-w-0">
-                  <WizSearchBar 
-                    onSearch={handleSearch}
-                    onResultSelect={handleResultSelect}
-                    placeholder="Search videos, creators..."
-                  />
-                </div>
-                
-                {/* Right Section - User Profile */}
-                <div className="flex-shrink-0">
-                  <WizUserProfile />
-                </div>
-              </>
-            )}
-          </div>
-        </header>
 
         {/* Content Area - Mobile responsive */}
         <div className="flex-1 overflow-auto">

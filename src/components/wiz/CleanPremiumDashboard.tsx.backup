@@ -1,0 +1,1652 @@
+import { useState, useEffect } from 'react';
+import { Play, Eye, Heart, Share2, CheckCircle, Zap, Crown, Medal, Trophy, Star, Users, Award, Search, Clock, TrendingUp, Gift, ShoppingBag, Timer, Sparkles, ChevronRight, Flame, Target, Calendar, Gamepad2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useSafeNavigate } from '@/hooks/useSafeNavigate';
+import { CinematicVideoPlayer } from './CinematicVideoPlayer';
+import { useAuth } from '@/hooks/useAuth';
+import { useXp } from '@/context/XpContext';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
+
+const categories = [
+  { id: 'all', label: 'All', icon: '🎯', gradient: 'from-slate-400 to-slate-500' },
+  { id: 'ai', label: 'AI', icon: '🤖', gradient: 'from-blue-400 to-blue-500' },
+  { id: 'crypto', label: 'Crypto', icon: '₿', gradient: 'from-yellow-400 to-yellow-500' },
+  { id: 'gaming', label: 'Gaming', icon: '🎮', gradient: 'from-green-400 to-green-500' },
+  { id: 'design', label: 'Design', icon: '🎨', gradient: 'from-pink-400 to-pink-500' },
+  { id: 'music', label: 'Music', icon: '🎵', gradient: 'from-orange-400 to-orange-500' },
+  { id: 'tech', label: 'Tech', icon: '⚡', gradient: 'from-cyan-400 to-cyan-500' },
+  { id: 'money', label: 'Money', icon: '💰', gradient: 'from-emerald-400 to-emerald-500' },
+];
+
+const feedVideos = [
+  {
+    id: 1,
+    title: 'AI Revolution: The Future is Here',
+    creator: 'TechGuru',
+    avatar: 'https://ui-avatars.com/api/?name=TechGuru&background=8B5CF6&color=ffffff&size=128',
+    thumbnail: 'https://img.youtube.com/vi/2M4asXviuoo/maxresdefault.jpg',
+    duration: '8:45',
+    xpReward: 85,
+    category: 'ai',
+    views: '2.1M',
+    videoId: '2M4asXviuoo',
+    uploaded: '2 hours ago'
+  },
+  {
+    id: 2,
+    title: 'Crypto Trading Mastery Course',
+    creator: 'CryptoMaster',
+    avatar: 'https://ui-avatars.com/api/?name=CryptoMaster&background=F59E0B&color=ffffff&size=128',
+    thumbnail: 'https://img.youtube.com/vi/jNQXAC9IVRw/maxresdefault.jpg',
+    duration: '12:30',
+    xpReward: 120,
+    category: 'crypto',
+    views: '890K',
+    videoId: 'jNQXAC9IVRw',
+    uploaded: '5 hours ago'
+  },
+  {
+    id: 3,
+    title: 'Game Design Fundamentals',
+    creator: 'GameDev Pro',
+    avatar: 'https://ui-avatars.com/api/?name=GameDev+Pro&background=10B981&color=ffffff&size=128',
+    thumbnail: 'https://img.youtube.com/vi/ScMzIvxBSi4/maxresdefault.jpg',
+    duration: '15:20',
+    xpReward: 150,
+    category: 'gaming',
+    views: '456K',
+    videoId: 'ScMzIvxBSi4',
+    uploaded: '1 day ago'
+  },
+  {
+    id: 4,
+    title: 'Modern UI/UX Design Principles',
+    creator: 'DesignWiz',
+    avatar: 'https://ui-avatars.com/api/?name=DesignWiz&background=EC4899&color=ffffff&size=128',
+    thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+    duration: '10:15',
+    xpReward: 95,
+    category: 'design',
+    views: '734K',
+    videoId: 'dQw4w9WgXcQ',
+    uploaded: '3 hours ago'
+  },
+  {
+    id: 5,
+    title: 'Music Production Essentials',
+    creator: 'BeatMaker',
+    avatar: 'https://ui-avatars.com/api/?name=BeatMaker&background=F97316&color=ffffff&size=128',
+    thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+    duration: '6:30',
+    xpReward: 65,
+    category: 'music',
+    views: '289K',
+    videoId: 'dQw4w9WgXcQ',
+    uploaded: '6 hours ago'
+  },
+  {
+    id: 6,
+    title: 'Next-Gen Technology Trends',
+    creator: 'FutureTech',
+    avatar: 'https://ui-avatars.com/api/?name=FutureTech&background=06B6D4&color=ffffff&size=128',
+    thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+    duration: '14:45',
+    xpReward: 140,
+    category: 'tech',
+    views: '1.2M',
+    videoId: 'dQw4w9WgXcQ',
+    uploaded: '4 hours ago'
+  }
+];
+
+const leaderboardData = [
+  { rank: 1, username: 'XPMaster', xp: 12540, avatar: 'https://ui-avatars.com/api/?name=XPMaster&background=FFD700&color=000000&size=64' },
+  { rank: 2, username: 'CryptoLord', xp: 11890, avatar: 'https://ui-avatars.com/api/?name=CryptoLord&background=C0C0C0&color=000000&size=64' },
+  { rank: 3, username: 'GameMaster', xp: 10450, avatar: 'https://ui-avatars.com/api/?name=GameMaster&background=CD7F32&color=ffffff&size=64' },
+  { rank: 4, username: 'DesignGuru', xp: 9820, avatar: 'https://ui-avatars.com/api/?name=DesignGuru&background=8B5CF6&color=ffffff&size=64' },
+  { rank: 5, username: 'TechWiz', xp: 8965, avatar: 'https://ui-avatars.com/api/?name=TechWiz&background=10B981&color=ffffff&size=64' },
+];
+
+const dailyQuests = [
+  {
+    id: 1,
+    title: 'Watch 5 AI Videos',
+    description: 'Complete 5 artificial intelligence videos',
+    progress: 3,
+    target: 5,
+    xpReward: 50,
+    icon: '🤖',
+    category: 'ai',
+    timeLeft: '18h 30m',
+    difficulty: 'easy'
+  },
+  {
+    id: 2,
+    title: 'Maintain Your Streak',
+    description: 'Keep your daily login streak alive',
+    progress: 1,
+    target: 1,
+    xpReward: 200,
+    icon: '🔥',
+    category: 'daily',
+    timeLeft: '23h 45m',
+    difficulty: 'medium',
+    bonus: true
+  },
+  {
+    id: 3,
+    title: 'Crypto Master Challenge',
+    description: 'Watch 3 crypto trading videos',
+    progress: 1,
+    target: 3,
+    xpReward: 75,
+    icon: '₿',
+    category: 'crypto',
+    timeLeft: '12h 15m',
+    difficulty: 'medium'
+  }
+];
+
+const weeklyQuests = [
+  {
+    id: 4,
+    title: 'Knowledge Seeker',
+    description: 'Watch videos from 5 different categories',
+    progress: 3,
+    target: 5,
+    xpReward: 300,
+    icon: '🎯',
+    timeLeft: '4d 12h',
+    difficulty: 'hard'
+  },
+  {
+    id: 5,
+    title: 'Social Butterfly',
+    description: 'Share 10 videos with friends',
+    progress: 0,
+    target: 10,
+    xpReward: 150,
+    icon: '🦋',
+    timeLeft: '6d 8h',
+    difficulty: 'medium'
+  }
+];
+
+const storeItems = [
+  {
+    id: 1,
+    title: 'Premium AI Course Bundle',
+    description: 'Complete artificial intelligence mastery',
+    price: 500,
+    originalPrice: 800,
+    image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400',
+    timeLeft: '2d 12h',
+    featured: true,
+    rarity: 'legendary'
+  },
+  {
+    id: 2,
+    title: 'Crypto Signals Pro',
+    description: '30-day premium trading signals',
+    price: 300,
+    originalPrice: 450,
+    image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400',
+    timeLeft: '5h 30m',
+    featured: false,
+    rarity: 'epic'
+  },
+  {
+    id: 3,
+    title: 'Design Assets Pack',
+    description: 'Premium UI/UX design resources',
+    price: 250,
+    originalPrice: 400,
+    image: 'https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=400',
+    timeLeft: '1d 8h',
+    featured: false,
+    rarity: 'rare'
+  },
+  {
+    id: 4,
+    title: 'Music Producer Kit',
+    description: 'Professional beats and samples',
+    price: 180,
+    originalPrice: 280,
+    image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400',
+    timeLeft: '3h 15m',
+    featured: false,
+    rarity: 'common'
+  },
+  {
+    id: 5,
+    title: 'Gaming Masterclass',
+    description: 'Pro gaming strategies & techniques',
+    price: 220,
+    originalPrice: 350,
+    image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=400',
+    timeLeft: '8h 45m',
+    featured: false,
+    rarity: 'rare'
+  },
+  {
+    id: 6,
+    title: 'NFT Creation Tools',
+    description: 'Everything needed to create NFTs',
+    price: 350,
+    originalPrice: 500,
+    image: 'https://images.unsplash.com/photo-1640161704729-cbe966a08476?w=400',
+    timeLeft: '12h 20m',
+    featured: false,
+    rarity: 'epic'
+  }
+];
+
+interface CleanPremiumDashboardProps {
+  className?: string;
+}
+
+export const CleanPremiumDashboard = ({ className }: CleanPremiumDashboardProps) => {
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [selectedVideo, setSelectedVideo] = useState<any>(null);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [watchedVideos, setWatchedVideos] = useState<Set<number>>(new Set());
+  const [todayXP, setTodayXP] = useState(120);
+  const [showXPCelebration, setShowXPCelebration] = useState(false);
+  const [earnedXP, setEarnedXP] = useState<number | null>(null);
+  const [userLevel, setUserLevel] = useState(7);
+  const [userXP, setUserXP] = useState(2450);
+  const [nextLevelXP] = useState(3000);
+  const [dailyStreak, setDailyStreak] = useState(12);
+  const [userRank, setUserRank] = useState(72);
+  const [nextRankXP, setNextRankXP] = useState(120);
+  const [completedQuests, setCompletedQuests] = useState<Set<number>>(new Set());
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [isAutoPlay, setIsAutoPlay] = useState(true);
+  const [selectedVideoPosition, setSelectedVideoPosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const isMobile = useIsMobile();
+  const { user } = useAuth();
+  const { addXp } = useXp();
+
+  const userName = user?.displayName || 'Champion';
+  const progressPercent = (userXP / nextLevelXP) * 100;
+
+  const filteredVideos = activeCategory === 'all'
+    ? feedVideos
+    : feedVideos.filter(video => video.category === activeCategory);
+
+  const featuredStoreItem = storeItems.find(item => item.featured);
+  const regularStoreItems = storeItems.filter(item => !item.featured);
+
+  const handleWatchVideo = (video: any, event?: React.MouseEvent) => {
+    // Get the clicked element's position for seamless transition
+    if (event) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      setSelectedVideoPosition({
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+        width: rect.width,
+        height: rect.height
+      });
+    }
+
+    setIsTransitioning(true);
+    setSelectedVideo(video);
+
+    // Small delay to allow position capture
+    setTimeout(() => {
+      setIsVideoModalOpen(true);
+      setIsTransitioning(false);
+    }, 100);
+  };
+
+  const handleContinueWatching = () => {
+    // Logic to continue to next video or back to feed
+    console.log('Continue watching more content');
+  };
+
+  const handleVideoComplete = (video: any) => {
+    if (!watchedVideos.has(video.id)) {
+      setWatchedVideos(prev => new Set([...prev, video.id]));
+      setEarnedXP(video.xpReward);
+      setTodayXP(prev => prev + video.xpReward);
+      setUserXP(prev => prev + video.xpReward);
+      setShowXPCelebration(true);
+      addXp(video.xpReward);
+
+      setTimeout(() => {
+        setShowXPCelebration(false);
+        setEarnedXP(null);
+      }, 2500);
+    }
+  };
+
+  return (
+    <div className={cn(
+      "min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden transition-all duration-500",
+      className,
+      isVideoModalOpen && "blur-sm scale-95" // Blur and scale dashboard when video popup is open
+    )}>
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Floating Particles */}
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full"
+            animate={{
+              y: [-20, -100],
+              x: Math.sin(i) * 100,
+              opacity: [0, 1, 0]
+            }}
+            transition={{
+              duration: Math.random() * 3 + 2,
+              repeat: Infinity,
+              delay: Math.random() * 2
+            }}
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: '100%'
+            }}
+          />
+        ))}
+
+        {/* Grid Pattern */}
+        <motion.div
+          className="absolute inset-0 opacity-5"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(139, 92, 246, 0.3) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(139, 92, 246, 0.3) 1px, transparent 1px)
+            `,
+            backgroundSize: '50px 50px'
+          }}
+          animate={{
+            backgroundPosition: ['0px 0px', '50px 50px']
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+        />
+
+        {/* Rotating Rings */}
+        <motion.div
+          className="absolute top-1/4 right-1/4 w-64 h-64 border border-purple-500/20 rounded-full"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        />
+        <motion.div
+          className="absolute bottom-1/4 left-1/4 w-48 h-48 border border-cyan-500/20 rounded-full"
+          animate={{ rotate: -360 }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+        />
+
+        {/* Glowing Orbs */}
+        <motion.div
+          className="absolute top-1/3 left-1/3 w-32 h-32 bg-gradient-radial from-purple-500/20 to-transparent rounded-full blur-xl"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.6, 0.3]
+          }}
+          transition={{ duration: 4, repeat: Infinity }}
+        />
+        <motion.div
+          className="absolute bottom-1/3 right-1/3 w-24 h-24 bg-gradient-radial from-cyan-500/20 to-transparent rounded-full blur-xl"
+          animate={{
+            scale: [1.2, 1, 1.2],
+            opacity: [0.6, 0.3, 0.6]
+          }}
+          transition={{ duration: 3, repeat: Infinity }}
+        />
+      </div>
+      {/* Top Hero Bar */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="sticky top-0 z-50 bg-gradient-to-r from-slate-900/95 via-purple-900/95 to-slate-900/95 backdrop-blur-xl border-b border-purple-500/20"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+
+            {/* Left: WIZUP Logo */}
+            <motion.div
+              className="flex items-center gap-3"
+              whileHover={{ scale: 1.05 }}
+            >
+              <motion.div
+                animate={{
+                  rotate: [0, 5, -5, 0],
+                  scale: [1, 1.1, 1]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="text-2xl font-bold bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 bg-clip-text text-transparent"
+              >
+                ✨ WIZUP
+              </motion.div>
+            </motion.div>
+
+            {/* Center: XP Progress Bar */}
+            <div className="flex-1 max-w-md mx-8">
+              <div className="relative">
+                <div className="flex items-center justify-between text-xs font-medium text-slate-300 mb-1">
+                  <span className="flex items-center gap-1">
+                    <Crown size={12} className="text-yellow-400" />
+                    Lv. {userLevel}
+                  </span>
+                  <span className="text-cyan-400">{userXP}/{nextLevelXP} XP</span>
+                </div>
+                <div className="relative h-3 bg-slate-800 rounded-full overflow-hidden border border-purple-500/30">
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressPercent}%` }}
+                    transition={{ duration: 1.5, ease: "easeOut" }}
+                  />
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                    animate={{ x: ["-100%", "100%"] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  />
+                </div>
+                {/* XP Popup Animation */}
+                <AnimatePresence>
+                  {earnedXP && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.8 }}
+                      animate={{ opacity: 1, y: -20, scale: 1 }}
+                      exit={{ opacity: 0, y: -40, scale: 0.6 }}
+                      className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-green-400 to-emerald-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg"
+                    >
+                      +{earnedXP} XP
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* Right: Avatar, Level Badge, Streak */}
+            <div className="flex items-center gap-4">
+
+              {/* Daily Streak */}
+              <motion.div
+                whileHover={{ scale: 1.1 }}
+                className="flex items-center gap-2 bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-full px-3 py-1.5 cursor-pointer"
+              >
+                <motion.div
+                  animate={{
+                    scale: [1, 1.2, 1],
+                    rotate: [0, 10, -10, 0]
+                  }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                >
+                  <Flame size={16} className="text-orange-400" />
+                </motion.div>
+                <span className="text-orange-300 font-bold text-sm">{dailyStreak}</span>
+              </motion.div>
+
+              {/* User Avatar with Level Badge */}
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                className="relative cursor-pointer"
+              >
+                <Avatar className="w-10 h-10 border-2 border-purple-400 ring-2 ring-purple-400/30">
+                  <AvatarImage src={user?.photoURL || `https://ui-avatars.com/api/?name=${userName}&background=8B5CF6&color=ffffff&size=128`} />
+                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold">{userName[0]}</AvatarFallback>
+                </Avatar>
+                <motion.div
+                  className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full px-2 py-0.5 text-xs font-bold text-slate-900"
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  {userLevel}
+                </motion.div>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Main Layout */}
+      <div className="flex">
+        {/* Main Content */}
+        <div className={cn(
+          "flex-1 transition-all duration-300",
+          isMobile ? "px-4 py-4 pb-20" : "px-4 sm:px-8 py-6"
+        )}>
+
+          {/* Quick Stats & Action Bar */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <div className="bg-gradient-to-r from-slate-800/50 to-purple-800/50 backdrop-blur-xl rounded-2xl border border-purple-500/30 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-1">Ready to Level Up?</h2>
+                  <p className="text-slate-300 text-sm">You're #{userRank} — {nextRankXP} XP to reach #{userRank - 10}</p>
+                </div>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    size="lg"
+                    className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:from-pink-600 hover:via-purple-600 hover:to-indigo-600 text-white rounded-xl px-6 py-3 font-bold shadow-lg shadow-purple-500/25 border-0"
+                  >
+                    <Play className="mr-2" size={18} />
+                    Start Earning XP
+                  </Button>
+                </motion.div>
+              </div>
+
+              {/* Today's Progress */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-cyan-400">+{todayXP}</div>
+                  <div className="text-xs text-slate-400">XP Today</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-yellow-400">{dailyStreak}</div>
+                  <div className="text-xs text-slate-400 flex items-center justify-center gap-1">
+                    <Flame size={10} className="text-orange-400" />
+                    Day Streak
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-400">#{userRank}</div>
+                  <div className="text-xs text-slate-400">Global Rank</div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Categories */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="mb-8"
+          >
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-purple-500/50">
+              {categories.map((category, index) => (
+                <motion.button
+                  key={category.id}
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setActiveCategory(category.id)}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap border backdrop-blur-sm",
+                    activeCategory === category.id
+                      ? `bg-gradient-to-r ${category.gradient} text-white border-transparent shadow-lg shadow-purple-500/25`
+                      : "bg-slate-800/50 text-slate-300 border-slate-700/50 hover:bg-slate-700/50 hover:border-purple-500/50 hover:shadow-md"
+                  )}
+                >
+                  <span className="text-sm">{category.icon}</span>
+                  <span>{category.label}</span>
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Video Feed - TikTok Style with Mobile Enhancements */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <div className={cn(
+              "grid gap-4",
+              isMobile
+                ? "grid-cols-1 gap-6" // Mobile: Single column with larger gaps for easier scrolling
+                : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+            )}>
+              {filteredVideos.map((video, index) => (
+                <motion.div
+                  key={video.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  whileHover={{ scale: 1.03, y: -4 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="group cursor-pointer relative"
+                  onClick={(e) => handleWatchVideo(video, e)}
+                  style={{
+                    transformOrigin: 'center center'
+                  }}
+                >
+                  <Card className={cn(
+                    "bg-gradient-to-br from-slate-800/80 to-purple-900/80 backdrop-blur-xl border border-purple-500/30 hover:border-pink-500/50 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-purple-500/25 relative",
+                    isMobile && "transform-gpu touch-pan-y", // Mobile: GPU acceleration + touch optimizations
+                    isTransitioning && selectedVideo?.id === video.id && "z-50 scale-110"
+                  )}>
+                    {/* Grid-to-popup expansion indicator */}
+                    {isTransitioning && selectedVideo?.id === video.id && (
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-xl"
+                        animate={{
+                          scale: [1, 1.05, 1],
+                          opacity: [0.5, 0.8, 0.5]
+                        }}
+                        transition={{ duration: 0.5, repeat: 2 }}
+                      />
+                    )}
+                    <div className="relative aspect-video overflow-hidden">
+                      <img
+                        src={video.thumbnail}
+                        alt={video.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      />
+
+                      {/* Gradient Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+
+                      {/* Category Tag - Top Left */}
+                      <motion.div
+                        className="absolute top-3 left-3"
+                        whileHover={{ scale: 1.1 }}
+                      >
+                        <Badge className={cn(
+                          "text-xs font-bold text-white border-0 shadow-lg backdrop-blur-sm",
+                          `bg-gradient-to-r ${categories.find(c => c.id === video.category)?.gradient}`
+                        )}>
+                          {categories.find(c => c.id === video.category)?.icon} {video.category.toUpperCase()}
+                        </Badge>
+                      </motion.div>
+
+                      {/* XP Reward - Top Right */}
+                      <motion.div
+                        className="absolute top-3 right-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full px-3 py-1.5 flex items-center gap-1 shadow-lg"
+                        animate={{
+                          scale: [1, 1.1, 1],
+                          rotate: [0, 5, -5, 0]
+                        }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                        >
+                          <Zap size={14} className="text-white" />
+                        </motion.div>
+                        <span className="text-white font-bold text-sm">+{video.xpReward}</span>
+                      </motion.div>
+
+                      {/* Duration */}
+                      <div className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-sm rounded-lg px-2 py-1 text-white text-xs font-bold">
+                        {video.duration}
+                      </div>
+
+                      {/* Big Play Button - Always visible on mobile */}
+                      <motion.div
+                        className={cn(
+                          "absolute inset-0 bg-black/40 transition-all duration-300 flex items-center justify-center",
+                          isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                        )}
+                        initial={{ opacity: isMobile ? 1 : 0 }}
+                        whileHover={{ opacity: 1 }}
+                      >
+                        <motion.div
+                          initial={{ scale: isMobile ? 1 : 0.8, opacity: isMobile ? 1 : 0 }}
+                          whileHover={{ scale: 1, opacity: 1 }}
+                          whileTap={{ scale: 0.9 }} // Mobile tap feedback
+                          transition={{ duration: 0.3, type: "spring", bounce: 0.4 }}
+                          className={cn(
+                            "bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-full shadow-2xl",
+                            isMobile ? "p-6" : "p-4" // Bigger on mobile for easier tapping
+                          )}
+                        >
+                          <Play size={isMobile ? 32 : 24} className="text-white ml-1" fill="white" />
+                        </motion.div>
+                      </motion.div>
+
+                      {/* Watch to Earn CTA - Always visible on mobile */}
+                      <motion.div
+                        className={cn(
+                          "absolute bottom-0 left-0 right-0 p-3 transition-transform duration-300",
+                          isMobile ? "transform translate-y-0" : "transform translate-y-full group-hover:translate-y-0"
+                        )}
+                        initial={{ y: isMobile ? 0 : "100%" }}
+                        whileHover={{ y: 0 }}
+                      >
+                        <motion.div
+                          whileTap={{ scale: 0.98 }}
+                          className="bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-xl px-4 py-3 text-center cursor-pointer"
+                        >
+                          <span className={cn(
+                            "text-white font-bold",
+                            isMobile ? "text-base" : "text-sm"
+                          )}>⚡ Watch to Earn +{video.xpReward} XP</span>
+                        </motion.div>
+                      </motion.div>
+                    </div>
+
+                    <CardContent className="p-4">
+                      <h3 className="font-bold text-white mb-2 line-clamp-2 group-hover:text-cyan-400 transition-colors text-lg">
+                        {video.title}
+                      </h3>
+
+                      <div className="flex items-center gap-3 mb-3">
+                        <Avatar className="w-10 h-10 border-2 border-purple-400 ring-2 ring-purple-400/30">
+                          <AvatarImage src={video.avatar} />
+                          <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold">{video.creator[0]}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-slate-200 font-semibold truncate">{video.creator}</p>
+                          <div className="flex items-center gap-2 text-xs text-slate-400">
+                            <Eye size={12} />
+                            <span>{video.views}</span>
+                            <span>•</span>
+                            <span>{video.uploaded}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {watchedVideos.has(video.id) ? (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="flex items-center justify-center gap-2 text-emerald-400 text-sm font-bold bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 rounded-xl py-3"
+                        >
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          >
+                            <CheckCircle size={16} />
+                          </motion.div>
+                          <span>+{video.xpReward} XP Earned!</span>
+                          <motion.div
+                            animate={{ scale: [1, 1.2, 1] }}
+                            transition={{ duration: 0.8, repeat: Infinity }}
+                          >
+                            <Sparkles size={14} className="text-yellow-400" />
+                          </motion.div>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/30 rounded-xl p-3 text-center cursor-pointer hover:from-pink-500/30 hover:to-purple-500/30 transition-all duration-300"
+                        >
+                          <span className="text-pink-300 font-bold text-sm">🎯 Ready to Earn XP?</span>
+                        </motion.div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Right Sidebar */}
+        {!isMobile && (
+          <div className="w-96 p-6 space-y-6">
+
+            {/* Competitive Leaderboard - Flex Zone */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              <Card className="bg-gradient-to-br from-slate-800/90 to-purple-900/90 backdrop-blur-xl border border-purple-500/30 shadow-xl overflow-hidden">
+                <CardContent className="p-0">
+                  {/* Leaderboard Header */}
+                  <div className="bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 p-4">
+                    <div className="flex items-center gap-3">
+                      <motion.div
+                        animate={{
+                          rotate: [0, 10, -10, 0],
+                          scale: [1, 1.1, 1]
+                        }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <Trophy size={20} className="text-white" />
+                      </motion.div>
+                      <div>
+                        <h3 className="font-bold text-white text-lg">Global Leaderboard</h3>
+                        <p className="text-white/80 text-xs">Flex Zone • Top Champions</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6">
+                    {/* Top 3 - Big Glowing Cards */}
+                    <div className="space-y-4 mb-6">
+                      {leaderboardData.slice(0, 3).map((player, index) => (
+                        <motion.div
+                          key={player.rank}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.5, delay: index * 0.1 }}
+                          whileHover={{ scale: 1.02 }}
+                          className={cn(
+                            "relative p-4 rounded-xl border-2 transition-all duration-300",
+                            player.rank === 1 && "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-400 shadow-lg shadow-yellow-400/20",
+                            player.rank === 2 && "bg-gradient-to-r from-slate-500/20 to-slate-400/20 border-slate-400 shadow-lg shadow-slate-400/20",
+                            player.rank === 3 && "bg-gradient-to-r from-amber-600/20 to-orange-600/20 border-amber-500 shadow-lg shadow-amber-500/20"
+                          )}
+                        >
+                          {/* Fire effects for top players */}
+                          {player.rank <= 3 && (
+                            <motion.div
+                              className="absolute -top-2 -right-2"
+                              animate={{
+                                scale: [1, 1.2, 1],
+                                rotate: [0, 10, -10, 0]
+                              }}
+                              transition={{ duration: 1.5, repeat: Infinity }}
+                            >
+                              {player.rank === 1 && <span className="text-2xl">🔥</span>}
+                              {player.rank === 2 && <span className="text-xl">✨</span>}
+                              {player.rank === 3 && <span className="text-lg">💫</span>}
+                            </motion.div>
+                          )}
+
+                          <div className="flex items-center gap-4">
+                            {/* Rank with Crown */}
+                            <div className="flex items-center justify-center relative">
+                              <div className={cn(
+                                "w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg",
+                                player.rank === 1 && "bg-gradient-to-r from-yellow-400 to-orange-500 text-black",
+                                player.rank === 2 && "bg-gradient-to-r from-slate-400 to-slate-500 text-white",
+                                player.rank === 3 && "bg-gradient-to-r from-amber-600 to-orange-600 text-white"
+                              )}>
+                                #{player.rank}
+                              </div>
+                              {player.rank === 1 && (
+                                <motion.div
+                                  className="absolute -top-2 text-2xl"
+                                  animate={{ rotate: [0, 10, -10, 0] }}
+                                  transition={{ duration: 2, repeat: Infinity }}
+                                >
+                                  👑
+                                </motion.div>
+                              )}
+                            </div>
+
+                            {/* Avatar */}
+                            <Avatar className="w-12 h-12 border-2 border-purple-400 ring-2 ring-purple-400/30">
+                              <AvatarImage src={player.avatar} />
+                              <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold">{player.username[0]}</AvatarFallback>
+                            </Avatar>
+
+                            {/* Player Info */}
+                            <div className="flex-1">
+                              <p className="font-bold text-white text-lg">{player.username}</p>
+                              <div className="flex items-center gap-2">
+                                <span className="text-cyan-400 font-bold">{player.xp.toLocaleString()} XP</span>
+                                {player.rank === 1 && <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs font-bold">CHAMPION</Badge>}
+                              </div>
+                            </div>
+
+                            {/* Level Badge */}
+                            <div className="text-right">
+                              <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-full px-3 py-1">
+                                <span className="text-white font-bold text-sm">Lv.{Math.floor(player.xp / 500) + 1}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    {/* Your Position */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.4 }}
+                      className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-xl p-4 mb-4"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-full w-10 h-10 flex items-center justify-center font-bold text-white">
+                            #{userRank}
+                          </div>
+                          <div>
+                            <p className="text-white font-bold">You ({userName})</p>
+                            <p className="text-blue-300 text-sm">{userXP.toLocaleString()} XP</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-yellow-400 font-bold text-sm">{nextRankXP} XP to #{userRank - 10}</p>
+                          <div className="flex items-center gap-1 text-xs text-slate-400">
+                            <TrendingUp size={10} />
+                            <span>Climb Higher!</span>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {/* Action Button */}
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Button
+                        className="w-full bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 hover:from-orange-600 hover:via-red-600 hover:to-pink-600 text-white font-bold rounded-xl py-3 border-0 shadow-lg"
+                      >
+                        <Target className="mr-2" size={16} />
+                        🏆 Dominate Leaderboard
+                        <ChevronRight className="ml-2" size={16} />
+                      </Button>
+                    </motion.div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Fortnite-Style XP Store */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <Card className="bg-gradient-to-br from-slate-800/90 to-purple-900/90 backdrop-blur-xl border border-purple-500/30 shadow-xl overflow-hidden">
+                <CardContent className="p-0">
+                  {/* Store Header */}
+                  <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <motion.div
+                          animate={{ rotate: [0, 360] }}
+                          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                        >
+                          <ShoppingBag size={20} className="text-white" />
+                        </motion.div>
+                        <div>
+                          <h3 className="font-bold text-white text-lg">Rewards Shop</h3>
+                          <p className="text-white/80 text-xs">Limited Time Offers!</p>
+                        </div>
+                      </div>
+                      <motion.div
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                        className="bg-gradient-to-r from-orange-400 to-red-500 rounded-full px-3 py-1 flex items-center gap-1"
+                      >
+                        <Timer size={12} className="text-white" />
+                        <span className="text-white font-bold text-xs">05:23:15</span>
+                      </motion.div>
+                    </div>
+                  </div>
+
+                  <div className="p-6 space-y-6">
+                    {/* Featured Item - Fortnite Style */}
+                    {featuredStoreItem && (
+                      <motion.div
+                        whileHover={{ scale: 1.02 }}
+                        className="relative group cursor-pointer"
+                      >
+                        <div className="relative rounded-xl overflow-hidden border-2 border-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 p-0.5">
+                          <div className="bg-gradient-to-br from-slate-800 to-purple-900 rounded-lg overflow-hidden">
+                            <div className="relative aspect-video">
+                              <img
+                                src={featuredStoreItem.image}
+                                alt={featuredStoreItem.title}
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+
+                              {/* Animated Border */}
+                              <motion.div
+                                className="absolute inset-0 border-2 border-transparent rounded-lg"
+                                animate={{
+                                  borderColor: ['#FFD700', '#FF6B35', '#FF1493', '#8A2BE2', '#FFD700']
+                                }}
+                                transition={{ duration: 3, repeat: Infinity }}
+                              />
+
+                              {/* Featured Badge */}
+                              <motion.div
+                                className="absolute top-3 left-3"
+                                animate={{
+                                  scale: [1, 1.1, 1],
+                                  rotate: [0, 5, -5, 0]
+                                }}
+                                transition={{ duration: 2, repeat: Infinity }}
+                              >
+                                <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold text-xs shadow-lg">
+                                  ✨ FEATURED ✨
+                                </Badge>
+                              </motion.div>
+
+                              {/* Scarcity Indicator */}
+                              <div className="absolute top-3 right-3 bg-red-500/90 backdrop-blur-sm rounded-full px-2 py-1">
+                                <span className="text-white font-bold text-xs">Only 100 left!</span>
+                              </div>
+
+                              <div className="absolute bottom-0 left-0 right-0 p-4">
+                                <h4 className="text-white font-bold text-lg mb-2">{featuredStoreItem.title}</h4>
+                                <p className="text-slate-300 text-sm mb-3">{featuredStoreItem.description}</p>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <motion.span
+                                      animate={{ scale: [1, 1.1, 1] }}
+                                      transition={{ duration: 1, repeat: Infinity }}
+                                      className="text-yellow-400 font-bold text-xl"
+                                    >
+                                      {featuredStoreItem.price} XP
+                                    </motion.span>
+                                    <span className="text-white/70 line-through text-sm">{featuredStoreItem.originalPrice} XP</span>
+                                    <Badge className="bg-green-500 text-white text-xs font-bold">
+                                      -{Math.round(((featuredStoreItem.originalPrice - featuredStoreItem.price) / featuredStoreItem.originalPrice) * 100)}%
+                                    </Badge>
+                                  </div>
+                                  <motion.div
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                  >
+                                    <Button className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-lg px-4 py-2 shadow-lg border-0">
+                                      🎁 Claim Now
+                                    </Button>
+                                  </motion.div>
+                                </div>
+
+                                {/* Time Left */}
+                                <div className="flex items-center gap-1 mt-2">
+                                  <Clock size={12} className="text-orange-400" />
+                                  <span className="text-orange-400 font-medium text-xs">{featuredStoreItem.timeLeft} left</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Regular Store Items - Grid Layout */}
+                    <div className="grid grid-cols-2 gap-3">
+                      {regularStoreItems.slice(0, 4).map((item, index) => (
+                        <motion.div
+                          key={item.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.4, delay: index * 0.1 }}
+                          whileHover={{ scale: 1.05, y: -2 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="group cursor-pointer"
+                        >
+                          <div className="bg-gradient-to-br from-slate-700/50 to-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-600/50 hover:border-purple-500/50 p-3 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20">
+                            <div className="relative aspect-square mb-3 rounded-lg overflow-hidden">
+                              <img
+                                src={item.image}
+                                alt={item.title}
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                              />
+
+                              {/* Hover glow effect */}
+                              <motion.div
+                                className="absolute inset-0 bg-gradient-to-t from-purple-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                initial={{ opacity: 0 }}
+                                whileHover={{ opacity: 1 }}
+                              />
+
+                              {/* Time left indicator */}
+                              <div className="absolute top-2 right-2 bg-orange-500/90 rounded-full px-1.5 py-0.5">
+                                <span className="text-white font-bold text-xs">{item.timeLeft}</span>
+                              </div>
+                            </div>
+
+                            <h4 className="text-white font-semibold text-sm mb-1 truncate">{item.title}</h4>
+                            <p className="text-slate-400 text-xs mb-2 line-clamp-2">{item.description}</p>
+
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-1">
+                                <span className="text-yellow-400 font-bold text-sm">{item.price} XP</span>
+                                <span className="text-slate-500 line-through text-xs">{item.originalPrice}</span>
+                              </div>
+                              {userXP >= item.price ? (
+                                <CheckCircle size={14} className="text-green-400" />
+                              ) : (
+                                <motion.div
+                                  animate={{ rotate: [0, 10, -10, 0] }}
+                                  transition={{ duration: 2, repeat: Infinity }}
+                                  className="text-red-400"
+                                >
+                                  🔒
+                                </motion.div>
+                              )}
+                            </div>
+
+                            <motion.div
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <Button
+                                size="sm"
+                                className={cn(
+                                  "w-full text-xs font-bold rounded-lg transition-all duration-300",
+                                  userXP >= item.price
+                                    ? "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white border-0"
+                                    : "bg-slate-600/50 text-slate-400 cursor-not-allowed border border-slate-500/30"
+                                )}
+                                disabled={userXP < item.price}
+                              >
+                                {userXP >= item.price ? '🎁 Claim' : `Need ${item.price - userXP} XP`}
+                              </Button>
+                            </motion.div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    {/* View Full Store */}
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Button
+                        className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 hover:from-purple-600 hover:via-pink-600 hover:to-purple-700 text-white font-bold rounded-xl py-3 border-0 shadow-lg"
+                      >
+                        <Gift className="mr-2" size={16} />
+                        🛍️ Explore Full Store
+                        <ChevronRight className="ml-2" size={16} />
+                      </Button>
+                    </motion.div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+        )}
+      </div>
+
+      {/* Mobile Bottom Navigation - Fortnite Style */}
+      {isMobile && (
+        <motion.div
+          initial={{ y: 100 }}
+          animate={{ y: 0 }}
+          transition={{ type: "spring", bounce: 0.2 }}
+          className="fixed bottom-0 left-0 right-0 z-50"
+        >
+          {/* Glass morphism background */}
+          <div className="bg-gradient-to-t from-slate-900 via-slate-900/95 to-slate-900/80 backdrop-blur-xl border-t border-purple-500/30">
+            {/* Subtle glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-t from-purple-500/5 to-transparent pointer-events-none" />
+
+            <div className="flex items-center justify-around px-2 py-4">
+              {[
+                { icon: '🏠', label: 'Home', active: true, color: 'from-blue-500 to-cyan-500' },
+                { icon: '🎥', label: 'Feed', active: false, color: 'from-pink-500 to-rose-500' },
+                { icon: '🏪', label: 'Shop', active: false, color: 'from-yellow-500 to-orange-500' },
+                { icon: '🏆', label: 'Leaderboard', active: false, color: 'from-purple-500 to-violet-500' },
+                { icon: '👤', label: 'Profile', active: false, color: 'from-emerald-500 to-green-500' }
+              ].map((tab, index) => (
+                <motion.div
+                  key={tab.label}
+                  whileTap={{ scale: 0.85 }}
+                  whileHover={{ scale: 1.05 }}
+                  className={cn(
+                    "relative flex flex-col items-center gap-2 px-4 py-3 rounded-2xl transition-all duration-300 min-w-[60px]",
+                    tab.active
+                      ? `bg-gradient-to-t ${tab.color} shadow-lg`
+                      : "hover:bg-slate-800/50 active:bg-slate-700/50"
+                  )}
+                >
+                  {/* Active indicator */}
+                  {tab.active && (
+                    <motion.div
+                      className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-white rounded-full"
+                      animate={{ scale: [1, 1.5, 1] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                    />
+                  )}
+
+                  <motion.span
+                    className="text-2xl"
+                    animate={tab.active ? {
+                      rotate: [0, 10, -10, 0],
+                      scale: [1, 1.1, 1]
+                    } : {}}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    {tab.icon}
+                  </motion.span>
+
+                  <span className={cn(
+                    "text-xs font-bold transition-colors duration-300",
+                    tab.active ? "text-white" : "text-slate-400"
+                  )}>
+                    {tab.label}
+                  </span>
+
+                  {/* Notification badges for some tabs */}
+                  {tab.label === 'Feed' && (
+                    <motion.div
+                      className="absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 flex items-center justify-center"
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                    >
+                      <span className="text-white text-xs font-bold">3</span>
+                    </motion.div>
+                  )}
+
+                  {tab.label === 'Shop' && (
+                    <motion.div
+                      className="absolute -top-1 -right-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full w-3 h-3"
+                      animate={{
+                        scale: [1, 1.3, 1],
+                        rotate: [0, 360]
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                  )}
+                </motion.div>
+              ))}
+            </div>
+
+            {/* iPhone-style home indicator */}
+            <div className="flex justify-center pb-1">
+              <div className="w-32 h-1 bg-white/30 rounded-full" />
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Quests & Challenges Modal/Panel */}
+      {!isMobile && (
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          className="fixed right-6 top-1/2 transform -translate-y-1/2 z-40"
+        >
+          <Card className="bg-gradient-to-br from-slate-800/95 to-purple-900/95 backdrop-blur-xl border border-purple-500/30 shadow-2xl w-80">
+            <CardContent className="p-0">
+              {/* Quests Header */}
+              <div className="bg-gradient-to-r from-emerald-500 via-cyan-500 to-blue-500 p-4">
+                <div className="flex items-center gap-3">
+                  <motion.div
+                    animate={{
+                      rotate: [0, 360],
+                      scale: [1, 1.1, 1]
+                    }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                  >
+                    <Target size={20} className="text-white" />
+                  </motion.div>
+                  <div>
+                    <h3 className="font-bold text-white text-lg">Daily Quests</h3>
+                    <p className="text-white/80 text-xs">Complete for massive XP!</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 space-y-4 max-h-96 overflow-y-auto">
+                {/* Daily Quests */}
+                <div className="space-y-3">
+                  {dailyQuests.map((quest, index) => (
+                    <motion.div
+                      key={quest.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                      className={cn(
+                        "relative p-3 rounded-xl border transition-all duration-300 hover:scale-102",
+                        quest.bonus
+                          ? "bg-gradient-to-r from-orange-500/20 to-red-500/20 border-orange-500/50"
+                          : quest.progress >= quest.target
+                          ? "bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/50"
+                          : "bg-gradient-to-r from-slate-700/50 to-slate-800/50 border-slate-600/50"
+                      )}
+                    >
+                      {/* High-stakes indicator */}
+                      {quest.bonus && (
+                        <motion.div
+                          className="absolute -top-1 -right-1"
+                          animate={{
+                            scale: [1, 1.2, 1],
+                            rotate: [0, 10, -10, 0]
+                          }}
+                          transition={{ duration: 1, repeat: Infinity }}
+                        >
+                          <span className="text-xl">⚡</span>
+                        </motion.div>
+                      )}
+
+                      <div className="flex items-start gap-3">
+                        <div className="text-2xl">{quest.icon}</div>
+                        <div className="flex-1">
+                          <h4 className="text-white font-semibold text-sm">{quest.title}</h4>
+                          <p className="text-slate-400 text-xs mb-2">{quest.description}</p>
+
+                          {/* Progress Bar */}
+                          <div className="mb-2">
+                            <div className="flex items-center justify-between text-xs mb-1">
+                              <span className="text-slate-300">
+                                {quest.progress}/{quest.target} completed
+                              </span>
+                              <span className={cn(
+                                "font-bold flex items-center gap-1",
+                                quest.bonus ? "text-orange-400" : "text-cyan-400"
+                              )}>
+                                <Zap size={10} />
+                                +{quest.xpReward} XP
+                              </span>
+                            </div>
+                            <div className="relative h-2 bg-slate-700 rounded-full overflow-hidden">
+                              <motion.div
+                                className={cn(
+                                  "absolute inset-y-0 left-0 rounded-full",
+                                  quest.bonus
+                                    ? "bg-gradient-to-r from-orange-400 to-red-500"
+                                    : quest.progress >= quest.target
+                                    ? "bg-gradient-to-r from-green-400 to-emerald-500"
+                                    : "bg-gradient-to-r from-blue-400 to-cyan-500"
+                                )}
+                                initial={{ width: 0 }}
+                                animate={{ width: `${(quest.progress / quest.target) * 100}%` }}
+                                transition={{ duration: 1, ease: "easeOut" }}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1 text-xs text-slate-400">
+                              <Clock size={10} />
+                              <span>{quest.timeLeft}</span>
+                            </div>
+                            {quest.progress >= quest.target ? (
+                              <motion.div
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                              >
+                                <Button size="sm" className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold text-xs px-3 py-1 h-auto border-0">
+                                  Claim!
+                                </Button>
+                              </motion.div>
+                            ) : (
+                              <Badge className={cn(
+                                "text-xs font-bold",
+                                quest.difficulty === 'easy' && "bg-green-500/20 text-green-400 border-green-500/30",
+                                quest.difficulty === 'medium' && "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+                                quest.difficulty === 'hard' && "bg-red-500/20 text-red-400 border-red-500/30"
+                              )}>
+                                {quest.difficulty.toUpperCase()}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Weekly Quests Section */}
+                <div className="border-t border-slate-600/50 pt-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Calendar size={14} className="text-purple-400" />
+                    <h4 className="text-white font-bold text-sm">Weekly Challenges</h4>
+                  </div>
+
+                  <div className="space-y-2">
+                    {weeklyQuests.map((quest, index) => (
+                      <motion.div
+                        key={quest.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.1 }}
+                        className="p-2 rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">{quest.icon}</span>
+                          <div className="flex-1">
+                            <h5 className="text-white font-medium text-xs">{quest.title}</h5>
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-slate-400">{quest.progress}/{quest.target}</span>
+                              <span className="text-purple-400 font-bold">+{quest.xpReward} XP</span>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Streak Tracker */}
+                <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-xl p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <motion.div
+                        animate={{
+                          scale: [1, 1.2, 1],
+                          rotate: [0, 10, -10, 0]
+                        }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                      >
+                        <Flame size={16} className="text-orange-400" />
+                      </motion.div>
+                      <span className="text-white font-bold text-sm">Daily Streak</span>
+                    </div>
+                    <span className="text-orange-400 font-bold text-lg">{dailyStreak} days</span>
+                  </div>
+                  <p className="text-orange-300 text-xs text-center font-medium">
+                    🚨 Don't break your streak! Miss a day = lose everything!
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Persistent XP Glow Indicators During Video */}
+      {isVideoModalOpen && (
+        <div className="fixed inset-0 z-40 pointer-events-none">
+          {/* XP Progress Reminder - Top */}
+          <motion.div
+            animate={{
+              opacity: [0.6, 0.9, 0.6],
+              scale: [1, 1.05, 1]
+            }}
+            transition={{ duration: 3, repeat: Infinity }}
+            className="absolute top-8 left-8 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 backdrop-blur-sm rounded-2xl border border-emerald-500/30 px-4 py-2"
+          >
+            <div className="flex items-center gap-2 text-emerald-300 text-sm font-bold">
+              <Zap size={14} />
+              <span>Earning XP...</span>
+            </div>
+          </motion.div>
+
+          {/* Level Progress Glow - Top Right */}
+          <motion.div
+            animate={{
+              opacity: [0.5, 0.8, 0.5],
+              boxShadow: [
+                '0 0 20px rgba(245, 158, 11, 0.3)',
+                '0 0 40px rgba(245, 158, 11, 0.6)',
+                '0 0 20px rgba(245, 158, 11, 0.3)'
+              ]
+            }}
+            transition={{ duration: 4, repeat: Infinity }}
+            className="absolute top-8 right-8 bg-gradient-to-r from-amber-500/20 to-orange-500/20 backdrop-blur-sm rounded-2xl border border-amber-500/30 px-4 py-2"
+          >
+            <div className="flex items-center gap-2 text-amber-300 text-sm font-bold">
+              <Crown size={14} />
+              <span>Lv. {userLevel}</span>
+            </div>
+          </motion.div>
+
+          {/* Streak Reminder - Bottom Left */}
+          <motion.div
+            animate={{
+              opacity: [0.4, 0.7, 0.4],
+              rotate: [0, 2, -2, 0]
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="absolute bottom-8 left-8 bg-gradient-to-r from-orange-500/20 to-red-500/20 backdrop-blur-sm rounded-2xl border border-orange-500/30 px-4 py-2"
+          >
+            <div className="flex items-center gap-2 text-orange-300 text-sm font-bold">
+              <Flame size={14} />
+              <span>{dailyStreak} Day Streak</span>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Enhanced Cinematic Video Player with Seamless Transition */}
+      <AnimatePresence>
+        {selectedVideo && (
+          <motion.div
+            initial={{
+              scale: 0,
+              x: selectedVideoPosition.x - window.innerWidth / 2,
+              y: selectedVideoPosition.y - window.innerHeight / 2,
+              opacity: 0
+            }}
+            animate={{
+              scale: 1,
+              x: 0,
+              y: 0,
+              opacity: 1
+            }}
+            exit={{
+              scale: 0,
+              x: selectedVideoPosition.x - window.innerWidth / 2,
+              y: selectedVideoPosition.y - window.innerHeight / 2,
+              opacity: 0
+            }}
+            transition={{
+              duration: 0.6,
+              type: "spring",
+              bounce: 0.3
+            }}
+            className="fixed inset-0 z-50"
+          >
+            <CinematicVideoPlayer
+          video={{
+            id: selectedVideo.id.toString(),
+            title: selectedVideo.title,
+            creator: selectedVideo.creator,
+            avatar: selectedVideo.avatar,
+            videoId: selectedVideo.videoId,
+            xpReward: selectedVideo.xpReward,
+            duration: selectedVideo.duration,
+            views: selectedVideo.views,
+            description: `Learn about ${selectedVideo.title} with ${selectedVideo.creator}`
+          }}
+          isOpen={isVideoModalOpen}
+          onClose={() => setIsVideoModalOpen(false)}
+          onVideoComplete={handleVideoComplete}
+              onContinueWatching={handleContinueWatching}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Enhanced XP Celebration with Sound Effects */}
+      <AnimatePresence>
+        {showXPCelebration && earnedXP && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5, y: 50 }}
+            animate={{
+              opacity: 1,
+              scale: [0.5, 1.2, 1],
+              y: [50, -10, 0]
+            }}
+            exit={{
+              opacity: 0,
+              scale: 0.8,
+              y: -100,
+              transition: { duration: 0.5 }
+            }}
+            className={cn(
+              "fixed z-50 pointer-events-none",
+              isMobile
+                ? "bottom-24 left-1/2 transform -translate-x-1/2"
+                : "bottom-8 left-1/2 transform -translate-x-1/2"
+            )}
+          >
+            {/* Particle explosion effect */}
+            <div className="absolute inset-0">
+              {[...Array(8)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-2 h-2 bg-yellow-400 rounded-full"
+                  initial={{ scale: 0, x: 0, y: 0 }}
+                  animate={{
+                    scale: [0, 1, 0],
+                    x: Math.cos((i * Math.PI * 2) / 8) * 40,
+                    y: Math.sin((i * Math.PI * 2) / 8) * 40
+                  }}
+                  transition={{ duration: 1, delay: 0.2 }}
+                />
+              ))}
+            </div>
+
+            <motion.div
+              animate={{
+                boxShadow: [
+                  "0 0 20px rgba(16, 185, 129, 0.5)",
+                  "0 0 40px rgba(6, 182, 212, 0.7)",
+                  "0 0 20px rgba(16, 185, 129, 0.5)"
+                ]
+              }}
+              transition={{ duration: 0.8, repeat: 2 }}
+              className="bg-gradient-to-r from-emerald-500 via-cyan-500 to-purple-500 rounded-2xl px-8 py-4 flex items-center gap-3 text-white font-bold shadow-2xl border border-white/20"
+            >
+              {/* Animated icons */}
+              <motion.div
+                animate={{
+                  rotate: [0, 360, 720],
+                  scale: [1, 1.3, 1]
+                }}
+                transition={{ duration: 1.5, ease: "easeInOut" }}
+              >
+                <Zap size={24} className="text-yellow-300" />
+              </motion.div>
+
+              <div className="text-center">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: [0, 1.2, 1] }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                  className={cn(
+                    "font-black",
+                    isMobile ? "text-xl" : "text-lg"
+                  )}
+                >
+                  +{earnedXP} XP
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="text-sm text-emerald-100"
+                >
+                  Amazing! Keep it up! 🚀
+                </motion.div>
+              </div>
+
+              <motion.div
+                animate={{
+                  scale: [1, 1.2, 1],
+                  rotate: [0, -10, 10, 0]
+                }}
+                transition={{ duration: 0.8, repeat: 3 }}
+              >
+                <Sparkles size={24} className="text-pink-300" />
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
