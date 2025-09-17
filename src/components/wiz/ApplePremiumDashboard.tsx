@@ -9,12 +9,18 @@ import { useXp } from '@/context/XpContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
-// Minimal Futurism Base Classes
-const minimalCard = "backdrop-blur-md bg-white/5 border border-white/10 rounded-xl shadow-sm";
-const softHover = "hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 ease-out";
-const cleanInput = "backdrop-blur-sm bg-white/3 border border-white/8 rounded-full";
-const elegantGradient = "bg-gradient-to-br from-slate-50/80 via-white/60 to-slate-100/70";
-const subtleAccent = "bg-gradient-to-r from-blue-600/80 via-violet-600/80 to-amber-500/80";
+// Ultra-Premium Design System
+const premiumCard = "bg-white/95 backdrop-blur-sm border border-gray-200/40 rounded-xl shadow-sm";
+const luxuryHover = "hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-out hover:bg-white";
+const cleanInput = "bg-white/80 backdrop-blur-sm border border-gray-200/30 rounded-full shadow-sm";
+const auroraAccent = "bg-gradient-to-r from-blue-500 via-violet-500 to-amber-400";
+const subtleGlass = "backdrop-blur-md bg-white/60 border border-white/40";
+const floatingCard = "bg-white shadow-lg border border-gray-100 rounded-xl";
+
+// Dark mode variants
+const premiumCardDark = "bg-slate-900/95 backdrop-blur-sm border border-slate-700/40 rounded-xl shadow-sm";
+const cleanInputDark = "bg-slate-800/80 backdrop-blur-sm border border-slate-700/30 rounded-full shadow-sm";
+const floatingCardDark = "bg-slate-900 shadow-xl border border-slate-700 rounded-xl";
 
 interface ApplePremiumDashboardProps {
   className?: string;
@@ -186,13 +192,15 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
     }
   }, [searchQuery, activeFilter]);
 
-  // Minimal filter categories
+  // Premium filter categories
   const filterCategories = [
     { id: 'All', label: 'All', gradient: 'from-slate-500 to-slate-600' },
     { id: 'Trending', label: 'Trending', gradient: 'from-orange-500 to-red-600' },
     { id: 'Tech', label: 'Tech', gradient: 'from-blue-500 to-indigo-600' },
+    { id: 'Design', label: 'Design', gradient: 'from-violet-500 to-purple-600' },
     { id: 'Finance', label: 'Finance', gradient: 'from-emerald-500 to-green-600' },
-    { id: 'Design', label: 'Design', gradient: 'from-violet-500 to-purple-600' }
+    { id: 'Health', label: 'Health', gradient: 'from-pink-500 to-rose-600' },
+    { id: 'AI', label: 'AI', gradient: 'from-cyan-500 to-blue-600' }
   ];
 
   // Enhanced XP handling
@@ -221,17 +229,17 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
     <div className={cn(
       "min-h-screen transition-all duration-500 ease-out flex",
       isDarkMode
-        ? "bg-gradient-to-br from-slate-950/95 via-slate-900/90 to-slate-950/95"
-        : "bg-gradient-to-br from-white/95 via-slate-50/90 to-gray-50/95",
-      "backdrop-blur-xl",
+        ? "bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"
+        : "bg-gradient-to-br from-white via-gray-50/30 to-white",
       className
     )}
       style={{
         backgroundImage: isDarkMode
-          ? `radial-gradient(circle at 20% 30%, rgba(100, 116, 139, 0.03) 0%, transparent 50%),
-             radial-gradient(circle at 80% 70%, rgba(148, 163, 184, 0.02) 0%, transparent 50%)`
-          : `radial-gradient(circle at 20% 30%, rgba(148, 163, 184, 0.04) 0%, transparent 50%),
-             radial-gradient(circle at 80% 70%, rgba(203, 213, 225, 0.03) 0%, transparent 50%)`
+          ? `radial-gradient(circle at 25% 25%, rgba(99, 102, 241, 0.02) 0%, transparent 50%),
+             radial-gradient(circle at 75% 75%, rgba(139, 92, 246, 0.02) 0%, transparent 50%)`
+          : `radial-gradient(circle at 25% 25%, rgba(99, 102, 241, 0.03) 0%, transparent 60%),
+             radial-gradient(circle at 75% 75%, rgba(139, 92, 246, 0.02) 0%, transparent 60%),
+             radial-gradient(circle at 50% 50%, rgba(251, 191, 36, 0.01) 0%, transparent 70%)`
       }}
     >
 
@@ -239,16 +247,16 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0">
 
-        {/* Minimal Top Bar */}
+        {/* Ultra-Premium Top Bar */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between px-8 py-4 border-b border-white/5 backdrop-blur-sm"
-          style={{
-            background: isDarkMode
-              ? "linear-gradient(135deg, rgba(15, 23, 42, 0.4) 0%, rgba(30, 41, 59, 0.3) 100%)"
-              : "linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(248, 250, 252, 0.3) 100%)"
-          }}
+          className={cn(
+            "flex items-center justify-between px-8 py-5 border-b transition-all duration-300",
+            isDarkMode
+              ? "border-slate-800/50 bg-slate-900/80 backdrop-blur-xl"
+              : "border-gray-200/40 bg-white/80 backdrop-blur-xl"
+          )}
         >
 
           {/* Minimal Pill Search */}
@@ -263,28 +271,21 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
               <div
                 className={cn(
                   "relative rounded-full transition-all duration-300 overflow-hidden",
-                  cleanInput,
-                  searchFocused && "ring-1 ring-slate-300/40"
+                  isDarkMode ? cleanInputDark : cleanInput,
+                  searchFocused && (isDarkMode ? "ring-1 ring-violet-400/30" : "ring-1 ring-blue-400/30")
                 )}
                 style={{
-                  background: searchFocused
-                    ? `linear-gradient(135deg,
-                        rgba(255, 255, 255, 0.08) 0%,
-                        rgba(255, 255, 255, 0.04) 100%),
-                       rgba(255, 255, 255, 0.03)`
-                    : `linear-gradient(135deg,
-                        rgba(255, 255, 255, 0.04) 0%,
-                        rgba(255, 255, 255, 0.02) 100%),
-                       rgba(255, 255, 255, 0.02)`,
-                  backdropFilter: 'blur(16px)',
-                  border: searchFocused
-                    ? '1px solid rgba(100, 116, 139, 0.2)'
-                    : '1px solid rgba(255, 255, 255, 0.08)',
                   boxShadow: searchFocused
-                    ? `0 4px 20px rgba(100, 116, 139, 0.1),
-                       inset 0 1px 0 rgba(255, 255, 255, 0.1)`
-                    : `0 2px 10px rgba(0, 0, 0, 0.04),
-                       inset 0 1px 0 rgba(255, 255, 255, 0.05)`
+                    ? isDarkMode
+                      ? `0 4px 20px rgba(139, 92, 246, 0.15),
+                         inset 0 1px 0 rgba(255, 255, 255, 0.05)`
+                      : `0 4px 20px rgba(99, 102, 241, 0.15),
+                         inset 0 1px 0 rgba(255, 255, 255, 0.4)`
+                    : isDarkMode
+                      ? `0 2px 10px rgba(0, 0, 0, 0.2),
+                         inset 0 1px 0 rgba(255, 255, 255, 0.03)`
+                      : `0 2px 10px rgba(0, 0, 0, 0.04),
+                         inset 0 1px 0 rgba(255, 255, 255, 0.6)`
                 }}
               >
                 <div className="flex items-center px-5 py-3">
@@ -344,75 +345,9 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
             </motion.div>
           </div>
 
-          {/* Right: Profile Avatar with Circular XP Progress + Premium Streak Badge */}
+          {/* Right: Profile Avatar with Circular XP Progress */}
           <div className="flex items-center gap-4 flex-shrink-0">
 
-            {/* Premium Fire Streak Badge */}
-            <motion.div
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              className={cn(
-                "relative cursor-pointer transition-all duration-300",
-                minimalCard,
-                softHover
-              )}
-            >
-              <div className="flex items-center gap-3 px-4 py-2">
-                {/* Glassmorphic Flame Container */}
-                <div className="relative">
-                  <motion.div
-                    animate={{
-                      scale: [1, 1.1, 1],
-                      rotate: [0, 3, -3, 0]
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "easeInOut"
-                    }}
-                    className="relative"
-                  >
-                    <Flame
-                      size={18}
-                      className="text-transparent bg-gradient-to-t from-orange-500 to-pink-500 bg-clip-text"
-                      style={{
-                        filter: "drop-shadow(0 0 8px rgba(251, 146, 60, 0.5))"
-                      }}
-                    />
-                  </motion.div>
-
-                  {/* Flicker animation */}
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-t from-orange-400 to-pink-400 rounded-full opacity-20 blur-sm"
-                    animate={{
-                      opacity: [0.2, 0.4, 0.2],
-                      scale: [1, 1.2, 1]
-                    }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                  />
-                </div>
-
-                {/* Number Badge */}
-                <Badge
-                  className={cn(
-                    "bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold border-none",
-                    "shadow-lg shadow-orange-500/30"
-                  )}
-                >
-                  {dailyStreak}
-                </Badge>
-              </div>
-
-              {/* Hover ripple */}
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-orange-400/10 to-pink-400/10 rounded-2xl opacity-0"
-                whileHover={{
-                  opacity: 1,
-                  scale: [1, 1.05, 1],
-                }}
-                transition={{ duration: 0.5 }}
-              />
-            </motion.div>
 
             {/* Profile Avatar with Circular XP Progress */}
             <motion.div
@@ -523,38 +458,55 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
             >
               <div className="flex gap-3 overflow-x-auto pb-2">
                 {filterCategories.map((filter, index) => (
-                  <motion.button
+                  <motion.div
                     key={filter.id}
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
-                    whileHover={softHover}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setActiveFilter(filter.id)}
-                    className={cn(
-                      "relative px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap",
-                      minimalCard,
-                      activeFilter === filter.id
-                        ? "text-white shadow-md ring-1 ring-white/10"
-                        : "text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
-                    )}
-                    style={{
-                      background: activeFilter === filter.id
-                        ? `linear-gradient(135deg, ${filter.gradient.includes('slate-500') ? 'rgba(100, 116, 139, 0.9)' : ''}${filter.gradient.includes('orange-500') ? 'rgba(249, 115, 22, 0.9)' : ''}${filter.gradient.includes('blue-500') ? 'rgba(59, 130, 246, 0.9)' : ''}${filter.gradient.includes('emerald-500') ? 'rgba(16, 185, 129, 0.9)' : ''}${filter.gradient.includes('violet-500') ? 'rgba(139, 92, 246, 0.9)' : ''} 0%, ${filter.gradient.includes('slate-600') ? 'rgba(71, 85, 105, 0.95)' : ''}${filter.gradient.includes('red-600') ? 'rgba(220, 38, 38, 0.95)' : ''}${filter.gradient.includes('indigo-600') ? 'rgba(79, 70, 229, 0.95)' : ''}${filter.gradient.includes('green-600') ? 'rgba(22, 163, 74, 0.95)' : ''}${filter.gradient.includes('purple-600') ? 'rgba(147, 51, 234, 0.95)' : ''} 100%)`
-                        : `linear-gradient(135deg,
-                            rgba(255, 255, 255, 0.04) 0%,
-                            rgba(255, 255, 255, 0.02) 100%)`,
-                      backdropFilter: 'blur(16px)',
-                      border: activeFilter === filter.id
-                        ? '1px solid rgba(255, 255, 255, 0.15)'
-                        : '1px solid rgba(255, 255, 255, 0.08)',
-                      boxShadow: activeFilter === filter.id
-                        ? `0 4px 20px ${filter.gradient.includes('slate') ? 'rgba(100, 116, 139, 0.2)' : ''}${filter.gradient.includes('orange') ? 'rgba(249, 115, 22, 0.2)' : ''}${filter.gradient.includes('blue') ? 'rgba(59, 130, 246, 0.2)' : ''}${filter.gradient.includes('emerald') ? 'rgba(16, 185, 129, 0.2)' : ''}${filter.gradient.includes('violet') ? 'rgba(139, 92, 246, 0.2)' : ''},
-                           inset 0 1px 0 rgba(255, 255, 255, 0.1)`
-                        : `0 2px 8px rgba(0, 0, 0, 0.04),
-                           inset 0 1px 0 rgba(255, 255, 255, 0.05)`
-                    }}
+                    className="relative"
                   >
+                    {/* Subtle Aura for Active State */}
+                    {activeFilter === filter.id && (
+                      <motion.div
+                        className="absolute -inset-1 rounded-full"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%)',
+                          filter: 'blur(8px)'
+                        }}
+                        animate={{
+                          opacity: [0.6, 1, 0.6],
+                          scale: [1, 1.05, 1]
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                      />
+                    )}
+
+                    <motion.button
+                      whileHover={{
+                        y: -2,
+                        scale: 1.02,
+                        transition: { duration: 0.3, ease: "easeOut" }
+                      }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setActiveFilter(filter.id)}
+                      className={cn(
+                        "relative px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap",
+                        activeFilter === filter.id
+                          ? "text-white shadow-md"
+                          : isDarkMode
+                            ? "bg-slate-800/40 border border-slate-600/30 text-slate-300 hover:text-white hover:bg-slate-700/60"
+                            : "bg-gray-100/60 border border-gray-200/50 text-slate-600 hover:text-slate-800 hover:bg-gray-200/80"
+                      )}
+                      style={activeFilter === filter.id ? {
+                        background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(139, 92, 246, 0.9) 100%)',
+                        boxShadow: '0 4px 20px rgba(99, 102, 241, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+                        border: 'none'
+                      } : {}}
+                    >
                     {/* Subtle gradient underline for active state */}
                     {activeFilter === filter.id && (
                       <motion.div
@@ -574,7 +526,8 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
                       }}>
                       {filter.label}
                     </span>
-                  </motion.button>
+                    </motion.button>
+                  </motion.div>
                 ))}
               </div>
             </motion.div>
@@ -596,37 +549,20 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
                       damping: 25,
                       stiffness: 120
                     }}
-                    whileHover={{
-                      y: -4,
-                      transition: { duration: 0.3, ease: "easeOut" }
-                    }}
+                    whileHover={luxuryHover}
                     onClick={() => handleWatchVideo(video)}
                     className="group cursor-pointer"
                   >
-                    {/* Clean Card Container */}
+                    {/* Premium Floating Card */}
                     <motion.div
                       className={cn(
                         "relative rounded-xl overflow-hidden transition-all duration-300",
-                        minimalCard,
-                        "group-hover:shadow-lg"
+                        isDarkMode ? floatingCardDark : floatingCard,
+                        "group-hover:shadow-xl"
                       )}
-                      style={{
-                        background: `linear-gradient(135deg,
-                          rgba(255, 255, 255, 0.08) 0%,
-                          rgba(255, 255, 255, 0.04) 100%)`,
-                        backdropFilter: 'blur(16px)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        boxShadow: `
-                          0 4px 20px rgba(0, 0, 0, 0.08),
-                          inset 0 1px 0 rgba(255, 255, 255, 0.1)
-                        `
-                      }}
                       whileHover={{
-                        boxShadow: `
-                          0 8px 40px rgba(0, 0, 0, 0.12),
-                          0 0 0 1px rgba(100, 116, 139, 0.15),
-                          inset 0 1px 0 rgba(255, 255, 255, 0.15)
-                        `
+                        y: -2,
+                        transition: { duration: 0.3, ease: "easeOut" }
                       }}
                     >
                     {/* Clean Thumbnail Area */}
@@ -665,11 +601,13 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
                         className="absolute top-3 right-3"
                       >
                         <div
-                          className="px-3 py-1.5 rounded-full text-white text-xs font-semibold shadow-sm"
+                          className="px-3 py-1.5 rounded-full text-white text-xs font-bold shadow-lg backdrop-blur-sm"
                           style={{
-                            background: subtleAccent,
-                            backdropFilter: 'blur(16px)',
-                            border: '1px solid rgba(255, 255, 255, 0.2)'
+                            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.95) 0%, rgba(139, 92, 246, 0.95) 100%)',
+                            boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2)',
+                            fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+                            fontWeight: '700',
+                            letterSpacing: '0.025em'
                           }}
                         >
                           <span>+{video.xpReward} XP</span>
@@ -732,15 +670,18 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
                           className="cursor-pointer"
                         >
                           <motion.div
-                            className="px-3 py-1.5 rounded-full text-white text-xs font-medium"
+                            className="px-3 py-1.5 rounded-full text-white text-xs font-bold backdrop-blur-sm"
                             style={{
-                              background: subtleAccent,
-                              backdropFilter: 'blur(16px)',
-                              border: '1px solid rgba(255, 255, 255, 0.2)',
-                              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.95) 0%, rgba(139, 92, 246, 0.95) 100%)',
+                              boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2)',
+                              fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+                              fontWeight: '700',
+                              letterSpacing: '0.025em'
                             }}
                             whileHover={{
-                              boxShadow: '0 4px 16px rgba(100, 116, 139, 0.2)'
+                              boxShadow: '0 6px 30px rgba(99, 102, 241, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.3)',
+                              scale: 1.05,
+                              y: -1
                             }}
                           >
                             <span>+{video.xpReward} XP</span>
