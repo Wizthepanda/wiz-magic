@@ -203,7 +203,7 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
               
               <AnimatePresence>
                 {!isCollapsed && (
-                  <motion.span 
+                  <motion.span
                     className="text-2xl font-bold text-gray-800"
                     style={{
                       background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.9) 0%, rgba(99, 102, 241, 0.8) 50%, rgba(139, 92, 246, 0.9) 100%)',

@@ -9,10 +9,12 @@ import { useXp } from '@/context/XpContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
-// Glassmorphism Base Classes
-const glassCard = "backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-lg";
-const glowHover = "hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all duration-300";
-const glassInput = "backdrop-blur-lg bg-white/5 border border-white/10 rounded-full";
+// Minimal Futurism Base Classes
+const minimalCard = "backdrop-blur-md bg-white/5 border border-white/10 rounded-xl shadow-sm";
+const softHover = "hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 ease-out";
+const cleanInput = "backdrop-blur-sm bg-white/3 border border-white/8 rounded-full";
+const elegantGradient = "bg-gradient-to-br from-slate-50/80 via-white/60 to-slate-100/70";
+const subtleAccent = "bg-gradient-to-r from-blue-600/80 via-violet-600/80 to-amber-500/80";
 
 interface ApplePremiumDashboardProps {
   className?: string;
@@ -37,6 +39,7 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
   const [videoProgress, setVideoProgress] = useState(0);
   const [showRewardCeremony, setShowRewardCeremony] = useState(false);
   const [earnedVideoXP, setEarnedVideoXP] = useState(0);
+  const [filteredVideos, setFilteredVideos] = useState<any[]>([]);
 
   const isMobile = useIsMobile();
   const { user } = useAuth();
@@ -157,13 +160,39 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
     setEarnedVideoXP(0);
   };
 
-  // Filter categories
+  // Initialize filtered videos
+  useEffect(() => {
+    setFilteredVideos(sampleVideos);
+  }, []);
+
+  // Search functionality
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      // Filter by active category when no search query
+      if (activeFilter === 'All') {
+        setFilteredVideos(sampleVideos);
+      } else {
+        // Filter by category (you can enhance this logic)
+        setFilteredVideos(sampleVideos);
+      }
+    } else {
+      // Filter videos based on search query
+      const filtered = sampleVideos.filter(video =>
+        video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        video.creator.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        video.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredVideos(filtered);
+    }
+  }, [searchQuery, activeFilter]);
+
+  // Minimal filter categories
   const filterCategories = [
-    { id: 'All', label: 'All', icon: '🎯', gradient: 'from-slate-400 to-slate-500' },
-    { id: 'Trending', label: 'Trending', icon: '🔥', gradient: 'from-orange-400 to-red-500' },
-    { id: 'Tech', label: 'Tech', icon: '⚡', gradient: 'from-cyan-400 to-blue-500' },
-    { id: 'Finance', label: 'Finance', icon: '💰', gradient: 'from-green-400 to-emerald-500' },
-    { id: 'Design', label: 'Design', icon: '🎨', gradient: 'from-pink-400 to-purple-500' }
+    { id: 'All', label: 'All', gradient: 'from-slate-500 to-slate-600' },
+    { id: 'Trending', label: 'Trending', gradient: 'from-orange-500 to-red-600' },
+    { id: 'Tech', label: 'Tech', gradient: 'from-blue-500 to-indigo-600' },
+    { id: 'Finance', label: 'Finance', gradient: 'from-emerald-500 to-green-600' },
+    { id: 'Design', label: 'Design', gradient: 'from-violet-500 to-purple-600' }
   ];
 
   // Enhanced XP handling
@@ -190,99 +219,128 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
 
   return (
     <div className={cn(
-      "min-h-screen transition-all duration-700 ease-in-out flex",
+      "min-h-screen transition-all duration-500 ease-out flex",
       isDarkMode
-        ? "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
-        : "bg-gradient-to-br from-white via-gray-50 to-gray-100",
+        ? "bg-gradient-to-br from-slate-950/95 via-slate-900/90 to-slate-950/95"
+        : "bg-gradient-to-br from-white/95 via-slate-50/90 to-gray-50/95",
+      "backdrop-blur-xl",
       className
-    )}>
+    )}
+      style={{
+        backgroundImage: isDarkMode
+          ? `radial-gradient(circle at 20% 30%, rgba(100, 116, 139, 0.03) 0%, transparent 50%),
+             radial-gradient(circle at 80% 70%, rgba(148, 163, 184, 0.02) 0%, transparent 50%)`
+          : `radial-gradient(circle at 20% 30%, rgba(148, 163, 184, 0.04) 0%, transparent 50%),
+             radial-gradient(circle at 80% 70%, rgba(203, 213, 225, 0.03) 0%, transparent 50%)`
+      }}
+    >
 
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0">
 
-        {/* New Top Layout - Logo | Search | Profile */}
+        {/* Minimal Top Bar */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between p-6 border-b border-white/10 backdrop-blur-lg"
+          className="flex items-center justify-between px-8 py-4 border-b border-white/5 backdrop-blur-sm"
           style={{
             background: isDarkMode
-              ? "linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%)"
-              : "linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 250, 252, 0.6) 100%)"
+              ? "linear-gradient(135deg, rgba(15, 23, 42, 0.4) 0%, rgba(30, 41, 59, 0.3) 100%)"
+              : "linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(248, 250, 252, 0.3) 100%)"
           }}
         >
-          {/* Left: WIZUP Logo (flush to top-left) */}
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            className="flex-shrink-0"
-          >
-            <motion.h1
-              animate={{
-                rotate: [0, 1, -1, 0],
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              className={cn(
-                "text-3xl font-black tracking-tight bg-gradient-to-r bg-clip-text text-transparent",
-                isDarkMode
-                  ? "from-blue-400 via-purple-400 to-pink-400"
-                  : "from-blue-600 via-purple-600 to-pink-600"
-              )}
-            >
-              WIZUP
-            </motion.h1>
-          </motion.div>
 
-          {/* Center: Primary Search Bar (full-width alignment, max-w-xl) */}
-          <div className="flex-1 max-w-xl mx-8">
+          {/* Minimal Pill Search */}
+          <div className="flex-1 max-w-lg mx-6">
             <motion.div
-              whileHover={{ scale: 1.01 }}
-              className={cn(
-                "relative transition-all duration-300",
-                glassInput,
-                searchFocused && "ring-2 ring-blue-400/50 shadow-lg shadow-blue-400/20"
-              )}
+              whileHover={{
+                scale: 1.01,
+                transition: { duration: 0.3 }
+              }}
+              className="relative group"
             >
-              <div className="flex items-center px-6 py-3">
-                <Search
-                  size={20}
-                  className={cn(
-                    "flex-shrink-0 mr-4 transition-colors duration-300",
-                    searchFocused
-                      ? "text-blue-500"
-                      : isDarkMode
-                        ? "text-slate-400"
-                        : "text-gray-500"
-                  )}
-                />
-                <input
-                  type="text"
-                  placeholder="Search videos, creators..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => setSearchFocused(true)}
-                  onBlur={() => setSearchFocused(false)}
-                  className={cn(
-                    "flex-1 bg-transparent outline-none placeholder-opacity-60 transition-all duration-300",
-                    isDarkMode
-                      ? "text-white placeholder-slate-400"
-                      : "text-gray-900 placeholder-gray-500",
-                    "font-medium"
-                  )}
-                />
-              </div>
+              <div
+                className={cn(
+                  "relative rounded-full transition-all duration-300 overflow-hidden",
+                  cleanInput,
+                  searchFocused && "ring-1 ring-slate-300/40"
+                )}
+                style={{
+                  background: searchFocused
+                    ? `linear-gradient(135deg,
+                        rgba(255, 255, 255, 0.08) 0%,
+                        rgba(255, 255, 255, 0.04) 100%),
+                       rgba(255, 255, 255, 0.03)`
+                    : `linear-gradient(135deg,
+                        rgba(255, 255, 255, 0.04) 0%,
+                        rgba(255, 255, 255, 0.02) 100%),
+                       rgba(255, 255, 255, 0.02)`,
+                  backdropFilter: 'blur(16px)',
+                  border: searchFocused
+                    ? '1px solid rgba(100, 116, 139, 0.2)'
+                    : '1px solid rgba(255, 255, 255, 0.08)',
+                  boxShadow: searchFocused
+                    ? `0 4px 20px rgba(100, 116, 139, 0.1),
+                       inset 0 1px 0 rgba(255, 255, 255, 0.1)`
+                    : `0 2px 10px rgba(0, 0, 0, 0.04),
+                       inset 0 1px 0 rgba(255, 255, 255, 0.05)`
+                }}
+              >
+                <div className="flex items-center px-5 py-3">
+                  <Search
+                    size={18}
+                    className={cn(
+                      "flex-shrink-0 mr-3 transition-colors duration-300",
+                      searchFocused
+                        ? "text-slate-600"
+                        : isDarkMode
+                          ? "text-slate-500"
+                          : "text-slate-400"
+                    )}
+                    style={{ opacity: 0.7 }}
+                  />
 
-              {/* Ripple glow effect on hover */}
-              <motion.div
-                className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-400/10 to-purple-400/10 opacity-0"
-                whileHover={{ opacity: 1, scale: 1.02 }}
-                transition={{ duration: 0.3 }}
-              />
+                  <input
+                    type="text"
+                    placeholder="Search videos, creators..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => setSearchFocused(true)}
+                    onBlur={() => setSearchFocused(false)}
+                    className={cn(
+                      "flex-1 bg-transparent outline-none transition-all duration-300",
+                      isDarkMode
+                        ? "text-white placeholder-slate-400"
+                        : "text-slate-800 placeholder-slate-500",
+                      "font-normal text-sm",
+                      "placeholder:font-normal"
+                    )}
+                    style={{
+                      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+                    }}
+                  />
+
+                  <AnimatePresence>
+                    {searchQuery && (
+                      <motion.button
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setSearchQuery('')}
+                        className={cn(
+                          "ml-2 w-5 h-5 rounded-full flex items-center justify-center transition-all duration-200",
+                          "hover:bg-slate-200/20 text-slate-400 hover:text-slate-600"
+                        )}
+                      >
+                        <X size={12} />
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
             </motion.div>
           </div>
 
@@ -295,8 +353,8 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
               whileTap={{ scale: 0.95 }}
               className={cn(
                 "relative cursor-pointer transition-all duration-300",
-                glassCard,
-                glowHover
+                minimalCard,
+                softHover
               )}
             >
               <div className="flex items-center gap-3 px-4 py-2">
@@ -445,6 +503,7 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
           </div>
         </motion.div>
 
+
         {/* Content Area */}
         <div className="flex-1 overflow-auto p-6">
           <motion.div
@@ -455,12 +514,12 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
           >
             {/* Premium Discovery Hub */}
             <div className="mb-8">
-            {/* Filter Bubbles */}
+            {/* Clean Pill Filter Toggles */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="mb-8"
+              className="mb-10"
             >
               <div className="flex gap-3 overflow-x-auto pb-2">
                 {filterCategories.map((filter, index) => (
@@ -469,45 +528,52 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={softHover}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => setActiveFilter(filter.id)}
                     className={cn(
-                      "flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-500 whitespace-nowrap relative overflow-hidden",
-                      glassCard,
+                      "relative px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap",
+                      minimalCard,
                       activeFilter === filter.id
-                        ? cn(
-                            "text-white shadow-2xl",
-                            `bg-gradient-to-r ${filter.gradient}`,
-                            glowHover
-                          )
-                        : cn(
-                            "text-gray-700 dark:text-slate-300 hover:text-white",
-                            glowHover
-                          )
+                        ? "text-white shadow-md ring-1 ring-white/10"
+                        : "text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                     )}
+                    style={{
+                      background: activeFilter === filter.id
+                        ? `linear-gradient(135deg, ${filter.gradient.includes('slate-500') ? 'rgba(100, 116, 139, 0.9)' : ''}${filter.gradient.includes('orange-500') ? 'rgba(249, 115, 22, 0.9)' : ''}${filter.gradient.includes('blue-500') ? 'rgba(59, 130, 246, 0.9)' : ''}${filter.gradient.includes('emerald-500') ? 'rgba(16, 185, 129, 0.9)' : ''}${filter.gradient.includes('violet-500') ? 'rgba(139, 92, 246, 0.9)' : ''} 0%, ${filter.gradient.includes('slate-600') ? 'rgba(71, 85, 105, 0.95)' : ''}${filter.gradient.includes('red-600') ? 'rgba(220, 38, 38, 0.95)' : ''}${filter.gradient.includes('indigo-600') ? 'rgba(79, 70, 229, 0.95)' : ''}${filter.gradient.includes('green-600') ? 'rgba(22, 163, 74, 0.95)' : ''}${filter.gradient.includes('purple-600') ? 'rgba(147, 51, 234, 0.95)' : ''} 100%)`
+                        : `linear-gradient(135deg,
+                            rgba(255, 255, 255, 0.04) 0%,
+                            rgba(255, 255, 255, 0.02) 100%)`,
+                      backdropFilter: 'blur(16px)',
+                      border: activeFilter === filter.id
+                        ? '1px solid rgba(255, 255, 255, 0.15)'
+                        : '1px solid rgba(255, 255, 255, 0.08)',
+                      boxShadow: activeFilter === filter.id
+                        ? `0 4px 20px ${filter.gradient.includes('slate') ? 'rgba(100, 116, 139, 0.2)' : ''}${filter.gradient.includes('orange') ? 'rgba(249, 115, 22, 0.2)' : ''}${filter.gradient.includes('blue') ? 'rgba(59, 130, 246, 0.2)' : ''}${filter.gradient.includes('emerald') ? 'rgba(16, 185, 129, 0.2)' : ''}${filter.gradient.includes('violet') ? 'rgba(139, 92, 246, 0.2)' : ''},
+                           inset 0 1px 0 rgba(255, 255, 255, 0.1)`
+                        : `0 2px 8px rgba(0, 0, 0, 0.04),
+                           inset 0 1px 0 rgba(255, 255, 255, 0.05)`
+                    }}
                   >
-                    {/* Active glow effect */}
+                    {/* Subtle gradient underline for active state */}
                     {activeFilter === filter.id && (
                       <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-2xl"
-                        animate={{
-                          opacity: [0.3, 0.6, 0.3],
-                          scale: [1, 1.02, 1]
+                        className="absolute bottom-0 left-1/2 transform -translate-x-1/2 h-0.5 rounded-full"
+                        style={{
+                          width: '60%',
+                          background: `linear-gradient(90deg, ${filter.gradient.replace('from-', '').replace('to-', '').split(' ').join(', ')})`
                         }}
-                        transition={{ duration: 2, repeat: Infinity }}
+                        layoutId="activeFilter"
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
                       />
                     )}
-                    <span className="text-base relative z-10">{filter.icon}</span>
-                    <span className="relative z-10">{filter.label}</span>
 
-                    {/* Ripple effect */}
-                    <motion.div
-                      className="absolute inset-0 bg-white/20 rounded-2xl"
-                      initial={{ scale: 0, opacity: 0 }}
-                      whileTap={{ scale: 1, opacity: [0, 0.4, 0] }}
-                      transition={{ duration: 0.3 }}
-                    />
+                    <span className="relative z-10 font-medium"
+                      style={{
+                        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+                      }}>
+                      {filter.label}
+                    </span>
                   </motion.button>
                 ))}
               </div>
@@ -518,225 +584,171 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
                 "grid gap-8",
                 isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
               )}>
-                {/* Enhanced Glassmorphic Video Cards */}
-                {sampleVideos.map((video, index) => (
+                {/* Clean Material You Video Cards */}
+                {filteredVideos.map((video, index) => (
                   <motion.div
                     key={video.id}
-                    initial={{ opacity: 0, y: 30, rotateX: 15 }}
-                    animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{
-                      delay: 0.6 + index * 0.1,
+                      delay: 0.4 + index * 0.08,
                       type: "spring",
-                      damping: 20,
-                      stiffness: 100
+                      damping: 25,
+                      stiffness: 120
                     }}
                     whileHover={{
-                      y: -8,
-                      scale: 1.03,
-                      rotateX: -2,
-                      rotateY: 2,
-                      transition: { duration: 0.3 }
+                      y: -4,
+                      transition: { duration: 0.3, ease: "easeOut" }
                     }}
                     onClick={() => handleWatchVideo(video)}
-                    className={cn(
-                      "group cursor-pointer rounded-3xl overflow-hidden transition-all duration-700 relative transform-gpu",
-                      glassCard,
-                      glowHover,
-                      "hover:border-blue-400/50 hover:shadow-blue-500/20"
-                    )}
+                    className="group cursor-pointer"
                   >
-                    {/* Enhanced Video Thumbnail Area */}
-                    <div className="relative aspect-video overflow-hidden rounded-t-3xl">
+                    {/* Clean Card Container */}
+                    <motion.div
+                      className={cn(
+                        "relative rounded-xl overflow-hidden transition-all duration-300",
+                        minimalCard,
+                        "group-hover:shadow-lg"
+                      )}
+                      style={{
+                        background: `linear-gradient(135deg,
+                          rgba(255, 255, 255, 0.08) 0%,
+                          rgba(255, 255, 255, 0.04) 100%)`,
+                        backdropFilter: 'blur(16px)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        boxShadow: `
+                          0 4px 20px rgba(0, 0, 0, 0.08),
+                          inset 0 1px 0 rgba(255, 255, 255, 0.1)
+                        `
+                      }}
+                      whileHover={{
+                        boxShadow: `
+                          0 8px 40px rgba(0, 0, 0, 0.12),
+                          0 0 0 1px rgba(100, 116, 139, 0.15),
+                          inset 0 1px 0 rgba(255, 255, 255, 0.15)
+                        `
+                      }}
+                    >
+                    {/* Clean Thumbnail Area */}
+                    <div className="relative aspect-video overflow-hidden rounded-t-xl">
                       <img
                         src={video.thumbnail}
                         alt={video.title}
-                        className="w-full h-full object-cover group-hover:scale-115 transition-transform duration-700"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                       />
 
-                      {/* Enhanced Gradient Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-500" />
+                      {/* Subtle Gradient Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80 group-hover:opacity-60 transition-opacity duration-300" />
 
-                      {/* Premium Play Button with Ripple */}
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500">
+                      {/* Minimal Play Button */}
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
                         <motion.div
-                          whileHover={{ scale: 1.15 }}
+                          whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.95 }}
-                          className="relative"
+                          className="w-16 h-16 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg"
                         >
-                          {/* Ripple effect */}
-                          <motion.div
-                            className="absolute inset-0 bg-white/30 rounded-full"
-                            animate={{
-                              scale: [1, 1.4, 1.8],
-                              opacity: [0.6, 0.3, 0]
-                            }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                          />
-                          <div className="w-20 h-20 bg-white/95 backdrop-blur-xl rounded-full flex items-center justify-center shadow-2xl border border-white/20">
-                            <div className="w-0 h-0 border-l-[12px] border-l-black border-y-[9px] border-y-transparent ml-1" />
-                          </div>
+                          <div className="w-0 h-0 border-l-[10px] border-l-slate-800 border-y-[7px] border-y-transparent ml-1" />
                         </motion.div>
                       </div>
 
-                      {/* Duration with Glass Effect */}
-                      <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-xl rounded-xl px-3 py-1.5 border border-white/10">
+                      {/* Duration Badge */}
+                      <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur-sm rounded-lg px-2.5 py-1">
                         <span className="text-white text-xs font-medium">{video.duration}</span>
                       </div>
 
-                      {/* Enhanced XP Badge with Neon Glow */}
+                      {/* Minimal XP Badge */}
                       <motion.div
-                        animate={{
-                          scale: [1, 1.08, 1],
+                        whileHover={{
+                          scale: 1.05,
+                          transition: { duration: 0.2 }
                         }}
-                        transition={{ duration: 3, repeat: Infinity }}
-                        className="absolute top-4 right-4"
+                        className="absolute top-3 right-3"
                       >
-                        <div className="relative">
-                          {/* Neon glow aura */}
-                          <motion.div
-                            className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-2xl blur-md"
-                            animate={{
-                              opacity: [0.5, 0.8, 0.5],
-                              scale: [1, 1.1, 1]
-                            }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                          />
-                          <div className="relative bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white px-4 py-2 rounded-2xl font-bold shadow-xl border border-white/20 flex items-center gap-2 backdrop-blur-xl">
-                            <motion.div
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                            >
-                              <Zap size={14} className="text-yellow-200" />
-                            </motion.div>
-                            <span className="text-sm">+{video.xpReward} XP</span>
-                          </div>
+                        <div
+                          className="px-3 py-1.5 rounded-full text-white text-xs font-semibold shadow-sm"
+                          style={{
+                            background: subtleAccent,
+                            backdropFilter: 'blur(16px)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)'
+                          }}
+                        >
+                          <span>+{video.xpReward} XP</span>
                         </div>
                       </motion.div>
                     </div>
 
-                    {/* Enhanced Card Content */}
-                    <div className="p-6 space-y-4">
+                    {/* Clean Card Content */}
+                    <div className="p-5 space-y-3">
                       <h3 className={cn(
-                        "font-bold text-xl mb-2 line-clamp-2 group-hover:bg-gradient-to-r group-hover:from-blue-500 group-hover:to-purple-500 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-500",
-                        isDarkMode ? "text-white" : "text-gray-900"
-                      )}>
+                        "font-semibold text-lg line-clamp-2 leading-tight transition-colors duration-300",
+                        isDarkMode ? "text-white group-hover:text-slate-100" : "text-slate-900 group-hover:text-slate-700"
+                      )}
+                        style={{
+                          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+                        }}>
                         {video.title}
                       </h3>
                       <p className={cn(
-                        "text-sm mb-4 line-clamp-1 leading-relaxed",
-                        isDarkMode ? "text-slate-400" : "text-gray-600"
-                      )}>
+                        "text-sm line-clamp-2 leading-relaxed",
+                        isDarkMode ? "text-slate-400" : "text-slate-600"
+                      )}
+                        style={{
+                          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+                        }}>
                         {video.description}
                       </p>
 
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between pt-2">
                         <div className="flex items-center gap-3">
-                          <div className="relative">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold shadow-lg">
-                              {video.creator[0]}
-                            </div>
-                            {/* Creator glow effect */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full opacity-20 blur-sm group-hover:opacity-40 transition-opacity duration-300" />
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-400 to-slate-600 flex items-center justify-center text-white text-sm font-medium">
+                            {video.creator[0]}
                           </div>
                           <div>
                             <span className={cn(
-                              "text-sm font-semibold",
-                              isDarkMode ? "text-slate-200" : "text-gray-800"
-                            )}>
+                              "text-sm font-medium",
+                              isDarkMode ? "text-slate-200" : "text-slate-700"
+                            )}
+                              style={{
+                                fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+                              }}>
                               {video.creator}
                             </span>
                             <p className={cn(
                               "text-xs",
-                              isDarkMode ? "text-slate-500" : "text-gray-500"
+                              isDarkMode ? "text-slate-500" : "text-slate-500"
                             )}>
                               {video.views} views
                             </p>
                           </div>
                         </div>
 
-                        {/* Enhanced XP Badge with Sparkle Animations */}
+                        {/* Minimal XP Action Badge */}
                         <motion.div
                           whileHover={{
-                            scale: 1.1,
-                            rotate: [0, -2, 2, 0],
-                            transition: { duration: 0.3 }
+                            scale: 1.05,
+                            transition: { duration: 0.2 }
                           }}
                           whileTap={{ scale: 0.95 }}
-                          className="relative group/xp cursor-pointer"
+                          className="cursor-pointer"
                         >
-                          {/* Multiple Sparkles flying toward nav bar */}
-                          {[...Array(3)].map((_, i) => (
-                            <motion.div
-                              key={i}
-                              className="absolute text-yellow-400 pointer-events-none"
-                              style={{
-                                left: `${-10 + i * 5}px`,
-                                top: `${-10 + i * 3}px`
-                              }}
-                              animate={{
-                                x: [-20, -200],
-                                y: [-20, -150],
-                                scale: [0, 1, 0],
-                                rotate: [0, 360],
-                                opacity: [0, 1, 0]
-                              }}
-                              transition={{
-                                duration: 2,
-                                repeat: Infinity,
-                                delay: i * 0.3 + Math.random() * 2,
-                                ease: "easeOut"
-                              }}
-                            >
-                              ✨
-                            </motion.div>
-                          ))}
-
-                          {/* Main XP Badge with Enhanced Glassmorphism */}
-                          <div className={cn("relative", glassCard)}>
-                            {/* Enhanced Glow effect */}
-                            <motion.div
-                              className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 rounded-2xl blur-lg"
-                              animate={{
-                                opacity: [0.6, 1, 0.6],
-                                scale: [1, 1.1, 1]
-                              }}
-                              transition={{ duration: 2, repeat: Infinity }}
-                            />
-
-                            <div className="relative bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 text-white px-5 py-2.5 rounded-2xl font-bold shadow-xl flex items-center gap-2">
-                              <motion.div
-                                animate={{
-                                  scale: [1, 1.3, 1],
-                                  rotate: [0, 20, -20, 0]
-                                }}
-                                transition={{ duration: 1.5, repeat: Infinity }}
-                              >
-                                ✨
-                              </motion.div>
-                              <span className="text-sm font-black">+{video.xpReward} XP</span>
-
-                              {/* Enhanced Tooltip */}
-                              <motion.div
-                                initial={{ opacity: 0, y: 10, scale: 0.8 }}
-                                whileHover={{ opacity: 1, y: -8, scale: 1 }}
-                                className={cn(
-                                  "absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 px-3 py-2 rounded-xl text-xs whitespace-nowrap shadow-xl",
-                                  glassCard,
-                                  isDarkMode ? "text-white" : "text-gray-900",
-                                  "pointer-events-none opacity-0 group-hover/xp:opacity-100 transition-all duration-200"
-                                )}
-                              >
-                                Click to earn XP!
-                                <div className={cn(
-                                  "absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 rotate-45",
-                                  isDarkMode ? "bg-slate-800/80" : "bg-white/80"
-                                )} />
-                              </motion.div>
-                            </div>
-                          </div>
+                          <motion.div
+                            className="px-3 py-1.5 rounded-full text-white text-xs font-medium"
+                            style={{
+                              background: subtleAccent,
+                              backdropFilter: 'blur(16px)',
+                              border: '1px solid rgba(255, 255, 255, 0.2)',
+                              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                            }}
+                            whileHover={{
+                              boxShadow: '0 4px 16px rgba(100, 116, 139, 0.2)'
+                            }}
+                          >
+                            <span>+{video.xpReward} XP</span>
+                          </motion.div>
                         </motion.div>
                       </div>
                     </div>
+                    </motion.div>
                   </motion.div>
                 ))}
               </div>
