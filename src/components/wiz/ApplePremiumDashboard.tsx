@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Flame, Trophy, Target, Gift, Zap, Crown, Users, ChevronRight, X } from 'lucide-react';
+import { Search, Flame, Trophy, Target, Gift, Zap, Crown, Users, ChevronRight, X, ShoppingBag, TrendingUp, Sparkles, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
@@ -8,6 +8,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { useXp } from '@/context/XpContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { LuxuryCircularIcon } from '@/components/ui/luxury-circular-icon';
+import { LeaderboardDropdown } from '@/components/ui/leaderboard-dropdown';
+import { XPShopDropdown } from '@/components/ui/xp-shop-dropdown';
+import { NotificationsDropdown } from '@/components/ui/notifications-dropdown';
+import { XPRewardsDropdown } from '@/components/ui/xp-rewards-dropdown';
+import { EnhancedProfileDropdown } from '@/components/ui/enhanced-profile-dropdown';
 
 // Ultra-Premium Design System
 const premiumCard = "bg-white/95 backdrop-blur-sm border border-gray-200/40 rounded-xl shadow-sm";
@@ -345,9 +351,40 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
             </motion.div>
           </div>
 
-          {/* Right: Profile Avatar with Circular XP Progress */}
+          {/* Right: Premium Luxury Dropdowns + Profile Avatar */}
           <div className="flex items-center gap-4 flex-shrink-0">
 
+            {/* Premium Luxury Dropdown Icons */}
+            <div className="flex items-center gap-3">
+              {/* Notifications Dropdown */}
+              <NotificationsDropdown
+                onMarkAsRead={(id) => console.log('Mark notification as read:', id)}
+                onMarkAllAsRead={() => console.log('Mark all notifications as read')}
+                onViewAll={() => console.log('View all notifications')}
+              />
+
+              {/* Leaderboard Dropdown */}
+              <LeaderboardDropdown
+                onViewFullLeaderboard={() => setShowLeaderboardDrawer(true)}
+              />
+
+              {/* XP Shop Dropdown */}
+              <XPShopDropdown
+                userXP={userXP}
+                onVisitShop={() => setShowShopDrawer(true)}
+                onPurchaseItem={(id) => console.log('Purchase item:', id)}
+              />
+            </div>
+
+            {/* Divider */}
+            <div
+              className="w-px h-8"
+              style={{
+                background: isDarkMode
+                  ? 'linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.2), transparent)'
+                  : 'linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.1), transparent)'
+              }}
+            />
 
             {/* Profile Avatar with Circular XP Progress */}
             <motion.div
