@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, Flame, Trophy, Target, Gift, Zap, Crown, Users, ChevronRight, X, ShoppingBag, TrendingUp, Sparkles, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -15,6 +15,7 @@ import { XPShopDropdown } from '@/components/ui/xp-shop-dropdown';
 import { NotificationsDropdown } from '@/components/ui/notifications-dropdown';
 import { XPRewardsDropdown } from '@/components/ui/xp-rewards-dropdown';
 import { EnhancedProfileDropdown } from '@/components/ui/enhanced-profile-dropdown';
+import { XPProfileDropdown } from '@/components/ui/xp-profile-dropdown';
 
 // Ultra-Premium Design System
 const premiumCard = "bg-white/95 backdrop-blur-sm border border-gray-200/40 rounded-xl shadow-sm";
@@ -53,10 +54,14 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
   const [showRewardCeremony, setShowRewardCeremony] = useState(false);
   const [earnedVideoXP, setEarnedVideoXP] = useState(0);
   const [filteredVideos, setFilteredVideos] = useState<any[]>([]);
+  const [showXpProfileDropdown, setShowXpProfileDropdown] = useState(false);
 
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const { addXp } = useXp();
+
+  // Refs
+  const xpRingRef = useRef<HTMLDivElement>(null);
 
   const userName = user?.displayName || 'Champion';
   const progressPercent = (userXP / nextLevelXP) * 100;
@@ -267,7 +272,10 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
         >
 
           {/* Minimal Pill Search */}
-          <div className="flex-1 max-w-lg mx-6">
+          <div className={cn(
+            "flex-1 max-w-lg",
+            isMobile ? "mx-3" : "mx-6"
+          )}>
             <motion.div
               whileHover={{
                 scale: 1.01,
@@ -295,7 +303,10 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
                          inset 0 1px 0 rgba(255, 255, 255, 0.6)`
                 }}
               >
-                <div className="flex items-center px-5 py-3">
+                <div className={cn(
+                  "flex items-center",
+                  isMobile ? "px-4 py-2.5" : "px-5 py-3"
+                )}>
                   <Search
                     size={18}
                     className={cn(
@@ -389,8 +400,10 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
 
             {/* Profile Avatar with Circular XP Progress */}
             <motion.div
+              ref={xpRingRef}
               whileHover={{ scale: 1.02 }}
               className="relative cursor-pointer group"
+              onClick={() => setShowXpProfileDropdown(!showXpProfileDropdown)}
             >
               {/* Circular XP Progress Ring */}
               <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
@@ -483,7 +496,10 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="max-w-7xl mx-auto"
+            className={cn(
+              "max-w-7xl mx-auto",
+              isMobile ? "px-4" : "px-6"
+            )}
           >
             {/* Premium Discovery Hub */}
             <div className="mb-8">
@@ -572,8 +588,8 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
 
               {/* Premium Hero Video Grid */}
               <div className={cn(
-                "grid gap-8",
-                isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+                "grid",
+                isMobile ? "grid-cols-1 gap-6" : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8"
               )}>
                 {/* Clean Material You Video Cards */}
                 {filteredVideos.map((video, index) => (
@@ -654,7 +670,10 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
                     </div>
 
                     {/* Clean Card Content */}
-                    <div className="p-5 space-y-3">
+                    <div className={cn(
+                      "space-y-3",
+                      isMobile ? "p-4" : "p-5"
+                    )}>
                       <h3 className={cn(
                         "font-semibold text-lg line-clamp-2 leading-tight transition-colors duration-300",
                         isDarkMode ? "text-white group-hover:text-slate-100" : "text-slate-900 group-hover:text-slate-700"
@@ -1095,6 +1114,18 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
           isDarkMode={isDarkMode}
         />
       )}
+
+      {/* XP Profile Dropdown */}
+      <XPProfileDropdown
+        isOpen={showXpProfileDropdown}
+        onClose={() => setShowXpProfileDropdown(false)}
+        triggerRef={xpRingRef}
+        userXP={userXP}
+        nextLevelXP={nextLevelXP}
+        userLevel={userLevel}
+        streakDays={dailyStreak}
+        userName={userName}
+      />
 
       {/* Dark Mode Toggle (Hidden but available for development) */}
       <motion.button
