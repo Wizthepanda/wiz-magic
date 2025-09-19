@@ -387,7 +387,7 @@ const FeaturedHeroCourse = ({ course, userLevel, setSelectedCourse, setIsModalOp
                   ) : (
                     <div className="flex items-center space-x-4">
                       <div className="text-3xl font-bold text-white">
-                        💎 {course.xpRequired.toLocaleString()} XP
+                        💎 {(course.xpRequired || 0).toLocaleString()} XP
                       </div>
                       {course.originalPrice && (
                         <div className="text-white/70 line-through text-lg">
@@ -430,7 +430,7 @@ const FeaturedHeroCourse = ({ course, userLevel, setSelectedCourse, setIsModalOp
 
 // Premium Course Card Component
 const PremiumCourseCard = ({ course, userLevel, userXP, setSelectedCourse, setIsModalOpen }: { course: any, userLevel: number, userXP: number, setSelectedCourse?: any, setIsModalOpen?: any }) => {
-  const canAfford = userXP >= course.xpRequired;
+  const canAfford = userXP >= (course?.xpRequired || 0);
   const meetsLevelReq = !course.levelRequirement || userLevel >= course.levelRequirement;
   const isUnlocked = canAfford && meetsLevelReq;
 
@@ -500,7 +500,7 @@ const PremiumCourseCard = ({ course, userLevel, userXP, setSelectedCourse, setIs
               <div className="text-center text-white">
                 <Lock className="w-8 h-8 mx-auto mb-2" />
                 <div className="text-sm font-medium">
-                  {!canAfford ? `Need ${course.xpRequired} XP` : `Level ${course.levelRequirement} Required`}
+                  {!canAfford ? `Need ${(course?.xpRequired || 0).toLocaleString()} XP` : `Level ${course.levelRequirement} Required`}
                 </div>
               </div>
             </div>
@@ -576,7 +576,7 @@ const PremiumCourseCard = ({ course, userLevel, userXP, setSelectedCourse, setIs
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">
                     <span className="text-xl font-bold text-purple-600">
-                      💎 {course.xpRequired.toLocaleString()}
+                      💎 {(course?.xpRequired || 0).toLocaleString()}
                     </span>
                     <span className="text-sm text-gray-500">XP</span>
                   </div>

@@ -72,7 +72,7 @@ export const JoinCommunityModal: React.FC<JoinCommunityModalProps> = ({
   const isMobile = useIsMobile();
   const { theme } = useTheme();
 
-  const canAfford = userXP >= community.xpRequired;
+  const canAfford = userXP >= (community?.xpRequired || 0);
 
   const handleJoin = () => {
     if (!canAfford) return;
@@ -87,7 +87,7 @@ export const JoinCommunityModal: React.FC<JoinCommunityModalProps> = ({
     }, 2000);
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !community) return null;
 
   return (
     <AnimatePresence>
@@ -154,9 +154,9 @@ export const JoinCommunityModal: React.FC<JoinCommunityModalProps> = ({
 
                 {/* Community Info */}
                 <div className="text-white">
-                  <h2 className="text-2xl font-bold mb-1">{community.title}</h2>
-                  <p className="text-white/90 font-medium">{community.creator} • {community.role}</p>
-                  <p className="text-white/80 text-sm">{community.members.toLocaleString()} members enrolled</p>
+                  <h2 className="text-2xl font-bold mb-1">{community?.title || 'Community'}</h2>
+                  <p className="text-white/90 font-medium">{community?.creator || 'Creator'} • {community?.role || 'Expert'}</p>
+                  <p className="text-white/80 text-sm">{(community?.members || 0).toLocaleString()} members enrolled</p>
                 </div>
               </div>
             </div>
@@ -212,12 +212,12 @@ export const JoinCommunityModal: React.FC<JoinCommunityModalProps> = ({
                         What You'll Get
                       </h3>
                       <p className={cn("leading-relaxed mb-6", theme === 'dark' ? "text-slate-300" : "text-gray-700")}>
-                        {community.description}
+                        {community?.description || 'Join this amazing community to connect with like-minded individuals and learn from experts.'}
                       </p>
 
                       {/* Community Features */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {community.features?.map((feature: string, index: number) => (
+                        {(community?.features || []).map((feature: string, index: number) => (
                           <div key={index} className="flex items-center gap-3">
                             <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
                             <span className={cn("text-sm", theme === 'dark' ? "text-slate-300" : "text-gray-700")}>
@@ -232,7 +232,7 @@ export const JoinCommunityModal: React.FC<JoinCommunityModalProps> = ({
                     <div className="grid grid-cols-3 gap-6 py-6">
                       <div className="text-center">
                         <div className={cn("text-2xl font-bold", theme === 'dark' ? "text-white" : "text-gray-900")}>
-                          {community.members.toLocaleString()}
+                          {(community?.members || 0).toLocaleString()}
                         </div>
                         <div className={cn("text-sm", theme === 'dark' ? "text-slate-400" : "text-gray-600")}>
                           Members
@@ -240,7 +240,7 @@ export const JoinCommunityModal: React.FC<JoinCommunityModalProps> = ({
                       </div>
                       <div className="text-center">
                         <div className={cn("text-2xl font-bold", theme === 'dark' ? "text-white" : "text-gray-900")}>
-                          {community.rating}★
+                          {community?.rating || 5}★
                         </div>
                         <div className={cn("text-sm", theme === 'dark' ? "text-slate-400" : "text-gray-600")}>
                           Rating
@@ -337,10 +337,10 @@ export const JoinCommunityModal: React.FC<JoinCommunityModalProps> = ({
                 <Zap className="w-5 h-5 text-yellow-500" />
                 <div>
                   <div className={cn("text-sm font-semibold", theme === 'dark' ? "text-white" : "text-gray-900")}>
-                    {community.xpRequired.toLocaleString()} XP to Join
+                    {(community?.xpRequired || 0).toLocaleString()} XP to Join
                   </div>
                   <div className={cn("text-xs", theme === 'dark' ? "text-slate-400" : "text-gray-500")}>
-                    {canAfford ? 'You have enough XP!' : `Need ${(community.xpRequired - userXP).toLocaleString()} more XP`}
+                    {canAfford ? 'You have enough XP!' : `Need ${((community?.xpRequired || 0) - userXP).toLocaleString()} more XP`}
                   </div>
                 </div>
               </div>
