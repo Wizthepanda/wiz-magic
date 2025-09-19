@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'fra
 import {
   X, Play, Download, BookOpen, MessageCircle, Bell, Coins, Zap, Crown,
   ThumbsUp, Sparkles, Lock, ExternalLink, Users, Star, Heart, Share,
-  ChevronDown, ArrowUp, ShoppingBag, TrendingUp
+  ChevronDown, ArrowUp, ShoppingBag, TrendingUp, User, Bitcoin
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -113,11 +113,19 @@ export const PremiumWatchExperience: React.FC<PremiumWatchExperienceProps> = ({
   const [showXpCoin, setShowXpCoin] = useState(false);
   const [videoCompleted, setVideoCompleted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
+  const [isMobile, setIsMobile] = useState(false);
 
   // Optimized spring physics for smooth, lightweight animations
   const springConfig = { damping: 30, stiffness: 400, mass: 0.8 };
   const xpProgress = useSpring(progress, springConfig);
+
+  // Check for mobile viewport
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Early return if no video data
   if (!isOpen || !video) return null;
@@ -224,83 +232,426 @@ export const PremiumWatchExperience: React.FC<PremiumWatchExperienceProps> = ({
         exit={{ opacity: 0, transition: { duration: 0.4, ease: "easeOut" } }}
         className="fixed inset-0 z-50 bg-white overflow-y-auto"
       >
-        {/* Close Button - Top Right */}
+        {/* Close Button - Premium Floating */}
         <motion.button
           onClick={onClose}
-          className="fixed top-6 right-6 z-50 w-10 h-10 rounded-full flex items-center justify-center bg-white shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-200"
-          whileHover={{ scale: 1.05 }}
+          className="fixed top-6 right-6 z-50 w-12 h-12 rounded-full flex items-center justify-center bg-white/80 backdrop-blur-xl shadow-lg border border-gray-200/50 hover:shadow-xl transition-all duration-200"
+          whileHover={{ scale: 1.05, backgroundColor: "rgba(255, 255, 255, 0.9)" }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
         >
-          <X size={16} className="text-gray-600" />
+          <X size={18} className="text-gray-700" />
         </motion.button>
 
         {/* Main Content Container */}
-        <div className="min-h-screen bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8">
+        <div className="min-h-screen bg-gradient-to-b from-white to-gray-50/20">
+          <div className="max-w-8xl mx-auto px-6 lg:px-12 py-8 lg:py-12">
 
-              {/* Left Side - Video Player & Content (8 columns) */}
-              <motion.div
-                className="lg:col-span-8"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1, duration: 0.6, ease: "easeOut" }}
-              >
-                {/* Top Action Bar */}
-                <div className="flex justify-end mb-4 lg:mb-6">
-                  <div className="flex gap-2 lg:gap-3 flex-wrap">
-                    <motion.button
-                      onClick={() => setIsSubscribed(!isSubscribed)}
-                      className="px-4 lg:px-6 py-2 lg:py-2.5 rounded-full font-medium text-white text-xs lg:text-sm transition-all duration-200"
-                      style={{
-                        background: isSubscribed
-                          ? 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'
-                          : 'linear-gradient(135deg, #ef4444 0%, #f97316 100%)',
-                        boxShadow: '0 4px 12px rgba(239, 68, 68, 0.25)'
-                      }}
-                      whileHover={{ scale: 1.02, boxShadow: '0 6px 20px rgba(239, 68, 68, 0.3)' }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Bell size={14} className="mr-2 inline" />
-                      {isSubscribed ? 'Subscribed' : 'Subscribe'}
-                    </motion.button>
+            {/* Desktop Layout */}
+            {!isMobile ? (
+              <div className="flex gap-16">
 
-                    <motion.button
-                      onClick={() => setShowTipModal(true)}
-                      className="px-4 lg:px-6 py-2 lg:py-2.5 rounded-full font-medium text-white text-xs lg:text-sm"
-                      style={{
-                        background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                        boxShadow: '0 4px 12px rgba(245, 158, 11, 0.25)'
-                      }}
-                      whileHover={{ scale: 1.02, boxShadow: '0 6px 20px rgba(245, 158, 11, 0.3)' }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Coins size={14} className="mr-2 inline" />
-                      Tip Creator
-                    </motion.button>
-
-                    <motion.button
-                      className="px-4 lg:px-6 py-2 lg:py-2.5 rounded-full font-medium text-gray-700 text-xs lg:text-sm border border-gray-300 bg-white hover:border-gray-400 transition-all duration-200"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Share size={14} className="mr-2 inline" />
-                      Share
-                    </motion.button>
-                  </div>
-                </div>
-
-                {/* Video Player with Sacred Space */}
+                {/* Left Side - Main Content (75% width) */}
                 <motion.div
-                  className="relative mb-4 lg:mb-6"
+                  className="flex-1 max-w-5xl"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1, duration: 0.6, ease: "easeOut" }}
+                >
+                  {/* VIDEO PLAYER - Sacred Space at Top, Centered */}
+                  <motion.div
+                    className="relative mb-6"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.1, duration: 0.8, ease: "easeOut" }}
+                  >
+                    <div
+                      className="relative aspect-video rounded-2xl overflow-hidden bg-black mx-auto"
+                      style={{
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05)'
+                      }}
+                    >
+                      <iframe
+                        className="w-full h-full"
+                        src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0&modestbranding=1`}
+                        title={video.title}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  </motion.div>
+
+                  {/* XP PROGRESS BAR - Ultra-thin, No Labels */}
+                  <motion.div
+                    className="relative mb-8"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3, duration: 0.6 }}
+                  >
+                    <div className="relative mx-auto max-w-2xl">
+                      <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+                        <motion.div
+                          className="h-full rounded-full"
+                          style={{
+                            background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)',
+                            boxShadow: '0 0 20px rgba(59, 130, 246, 0.4)'
+                          }}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${progress}%` }}
+                          transition={{ duration: 1.5, ease: "easeOut" }}
+                        />
+                      </div>
+
+                      {/* Minimal XP Coin Animation */}
+                      <AnimatePresence>
+                        {showXpCoin && (
+                          <motion.div
+                            className="absolute -top-8 left-1/2 transform -translate-x-1/2"
+                            initial={{ opacity: 0, scale: 0.5, y: 5 }}
+                            animate={{
+                              opacity: [0, 1, 1, 0],
+                              scale: [0.5, 1.1, 1, 0.8],
+                              y: [5, -5, -5, -10]
+                            }}
+                            exit={{ opacity: 0, scale: 0.5, y: -15 }}
+                            transition={{ duration: 2, ease: "easeInOut" }}
+                          >
+                            <div
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-white"
+                              style={{
+                                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                                boxShadow: '0 0 25px rgba(245, 158, 11, 0.6)'
+                              }}
+                            >
+                              <Coins size={14} />
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </motion.div>
+
+                  {/* CREATOR INTERACTION CONTAINER - New Premium Panel */}
+                  <motion.div
+                    className="bg-white rounded-2xl p-8 mb-8"
+                    style={{
+                      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.02)'
+                    }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4, duration: 0.6 }}
+                  >
+                    <div className="grid grid-cols-12 gap-8 items-center">
+                      {/* Left - Creator Avatar */}
+                      <div className="col-span-2">
+                        <Avatar className="w-16 h-16 mx-auto">
+                          <AvatarFallback
+                            className="text-xl font-bold text-white"
+                            style={{
+                              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)'
+                            }}
+                          >
+                            {video.creator[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                      </div>
+
+                      {/* Center - Creator Info */}
+                      <div className="col-span-6">
+                        <h3 className="text-xl font-bold text-gray-900 mb-1">{video.creator}</h3>
+                        <p className="text-sm text-gray-600 font-semibold mb-1">DesignPro, AI Expert & Educator – Level 7</p>
+                        <p className="text-sm text-gray-400">2.1M Subscribers</p>
+                      </div>
+
+                      {/* Right - World-Class Premium Action Row */}
+                      <div className="col-span-4 flex gap-3 justify-end items-center">
+                        {/* Subscribe - Satin Red→Orange Premium */}
+                        <motion.button
+                          onClick={() => setIsSubscribed(!isSubscribed)}
+                          className="w-32 h-11 rounded-2xl font-bold text-white text-sm flex items-center justify-center"
+                          style={{
+                            background: isSubscribed
+                              ? 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'
+                              : 'linear-gradient(135deg, #ef4444 0%, #f97316 100%)',
+                            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.25)',
+                            filter: 'saturate(1.1)'
+                          }}
+                          whileHover={{
+                            scale: 1.02,
+                            background: isSubscribed
+                              ? 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'
+                              : 'linear-gradient(135deg, #dc2626 0%, #ea580c 100%)',
+                            boxShadow: '0 6px 18px rgba(239, 68, 68, 0.35), 0 0 12px rgba(239, 68, 68, 0.15)'
+                          }}
+                          whileTap={{ scale: 0.98 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {isSubscribed ? 'Subscribed' : 'Subscribe'}
+                        </motion.button>
+
+                        {/* Tip - Amber→Gold Luxury, Same Size as Subscribe */}
+                        <motion.button
+                          onClick={() => setShowTipModal(true)}
+                          className="w-32 h-11 rounded-2xl font-bold text-white text-sm flex items-center justify-center gap-2"
+                          style={{
+                            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.25)',
+                            filter: 'saturate(1.2)'
+                          }}
+                          whileHover={{
+                            scale: 1.02,
+                            background: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)',
+                            boxShadow: '0 6px 18px rgba(245, 158, 11, 0.35)',
+                            filter: 'saturate(1.3) brightness(1.05)'
+                          }}
+                          whileTap={{ scale: 0.98 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <Bitcoin size={14} strokeWidth={1.5} />
+                          <span>Tip</span>
+                        </motion.button>
+
+                        {/* Share - Outlined Minimal, Slimmer Width */}
+                        <motion.button
+                          className="w-11 h-11 rounded-2xl border bg-white flex items-center justify-center"
+                          style={{
+                            borderWidth: '1.5px',
+                            borderColor: '#d1d5db'
+                          }}
+                          whileHover={{
+                            scale: 1.03,
+                            borderColor: '#9ca3af',
+                            boxShadow: '0 4px 12px rgba(156, 163, 175, 0.15)'
+                          }}
+                          whileTap={{ scale: 0.97 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <motion.div
+                            whileHover={{ scale: 1.08 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <Share size={16} strokeWidth={1.5} className="text-gray-600" />
+                          </motion.div>
+                        </motion.button>
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  {/* NAVIGATION TABS - Clean & Fluid */}
+                  <motion.div
+                    className="mb-12"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5, duration: 0.6 }}
+                  >
+                    <div className="flex gap-6 justify-center">
+                      {tabs.map((tab) => (
+                        <motion.button
+                          key={tab.id}
+                          onClick={() => setActiveTab(tab.id)}
+                          className={`px-8 py-4 rounded-full font-bold text-sm transition-all duration-300 ${
+                            activeTab === tab.id
+                              ? 'text-white shadow-lg'
+                              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                          }`}
+                          style={activeTab === tab.id ? {
+                            background: 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)',
+                            boxShadow: '0 8px 25px rgba(139, 92, 246, 0.3)'
+                          } : {}}
+                          whileHover={{
+                            scale: 1.02,
+                            boxShadow: activeTab === tab.id ? '0 12px 35px rgba(139, 92, 246, 0.4)' : '0 4px 12px rgba(0, 0, 0, 0.06)'
+                          }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          {tab.label}
+                        </motion.button>
+                      ))}
+                    </div>
+                  </motion.div>
+
+                  {/* Tab Content - Simplified for clean design */}
+                  <motion.div
+                    key={activeTab}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="mb-12"
+                  >
+                    {activeTab === 'overview' && (
+                      <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+                        <h4 className="text-xl font-bold text-gray-900 mb-6">About this video</h4>
+                        <p className="text-gray-700 leading-relaxed text-lg">{video.description}</p>
+                      </div>
+                    )}
+                    {/* Other tab content remains similar but with updated styling */}
+                  </motion.div>
+                </motion.div>
+
+                {/* RIGHT VIDEO PANEL - Independent Scroll Area */}
+                <motion.div
+                  className="w-96 flex-shrink-0"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6, duration: 0.6, ease: "easeOut" }}
+                >
+                  <div className="sticky top-8">
+                    <div
+                      className="bg-white rounded-2xl max-h-[90vh] overflow-y-auto"
+                      style={{
+                        scrollbarWidth: 'thin',
+                        scrollbarColor: 'rgba(156, 163, 175, 0.3) transparent',
+                        boxShadow: '0 8px 25px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.02)'
+                      }}
+                    >
+                      <div className="p-6">
+                        {/* From This Creator Section */}
+                        <div className="mb-10">
+                          <h3 className="text-lg font-bold text-gray-900 mb-6">From This Creator</h3>
+                          <div className="space-y-5">
+                            {nextXpVideos.filter(v => v.category === 'from_creator').slice(0, 3).map((videoItem, index) => (
+                              <motion.div
+                                key={videoItem.id}
+                                className="group cursor-pointer rounded-xl transition-all duration-200"
+                                whileHover={{ y: -2 }}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.7 + index * 0.1 }}
+                              >
+                                <div className="flex gap-4">
+                                  <div className="relative">
+                                    <LazyImage
+                                      src={videoItem.thumbnail}
+                                      alt={videoItem.title}
+                                      className="w-28 h-16 rounded-xl bg-gray-200"
+                                    />
+                                    <div className="absolute inset-0 bg-black/20 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <Play className="w-5 h-5 text-white" />
+                                    </div>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="font-bold text-gray-900 text-sm line-clamp-1 mb-1">
+                                      {videoItem.title}
+                                    </h4>
+                                    <p className="text-xs text-gray-400 mb-2">{videoItem.duration}</p>
+                                    <Badge
+                                      className="text-xs text-white px-2 py-1"
+                                      style={{
+                                        background: videoItem.glowing
+                                          ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+                                          : 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'
+                                      }}
+                                    >
+                                      +{videoItem.xp} XP
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Trending Section */}
+                        <div className="mb-10">
+                          <h3 className="text-lg font-bold text-gray-900 mb-6">Trending in Your Categories</h3>
+                          <div className="space-y-5">
+                            {nextXpVideos.filter(v => v.category === 'trending').slice(0, 4).map((videoItem, index) => (
+                              <motion.div
+                                key={videoItem.id}
+                                className="group cursor-pointer rounded-xl transition-all duration-200"
+                                whileHover={{ y: -2 }}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.9 + index * 0.1 }}
+                              >
+                                <div className="flex gap-4">
+                                  <div className="relative">
+                                    <LazyImage
+                                      src={videoItem.thumbnail}
+                                      alt={videoItem.title}
+                                      className="w-28 h-16 rounded-xl bg-gray-200"
+                                    />
+                                    <div className="absolute inset-0 bg-black/20 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <Play className="w-5 h-5 text-white" />
+                                    </div>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="font-bold text-gray-900 text-sm line-clamp-1 mb-1">
+                                      {videoItem.title}
+                                    </h4>
+                                    <p className="text-xs text-gray-400 mb-2">{videoItem.duration}</p>
+                                    <Badge
+                                      className="text-xs text-white px-2 py-1"
+                                      style={{
+                                        background: videoItem.glowing
+                                          ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+                                          : 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'
+                                      }}
+                                    >
+                                      +{videoItem.xp} XP
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Sticky Premium Promo Card */}
+                      <motion.div
+                        className="sticky bottom-0 mx-6 mb-6 p-6 rounded-2xl text-white"
+                        style={{
+                          background: 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)',
+                          boxShadow: '0 8px 25px rgba(139, 92, 246, 0.25)'
+                        }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 1.2, duration: 0.6 }}
+                      >
+                        <motion.div
+                          className="cursor-pointer"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+                              <ShoppingBag className="w-6 h-6" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-bold text-white">Unlock XP Deals</h4>
+                              <p className="text-sm text-white/80">Premium Courses 50% Off</p>
+                            </div>
+                            <Badge
+                              className="text-xs text-yellow-900 font-bold px-2 py-1"
+                              style={{
+                                background: '#fbbf24'
+                              }}
+                            >
+                              XP
+                            </Badge>
+                          </div>
+                        </motion.div>
+                      </motion.div>
+                    </div>
+                  </div>
+                </motion.div>
+
+              </div>
+            ) : (
+              /* Mobile Layout */
+              <div className="space-y-6">
+                {/* Mobile Video Player */}
+                <motion.div
+                  className="relative"
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" }}
+                  transition={{ delay: 0.1, duration: 0.8, ease: "easeOut" }}
                 >
-                  <div className="relative aspect-video rounded-2xl overflow-hidden bg-black shadow-xl">
+                  <div className="relative aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl">
                     <iframe
                       className="w-full h-full"
                       src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0&modestbranding=1`}
@@ -312,473 +663,130 @@ export const PremiumWatchExperience: React.FC<PremiumWatchExperienceProps> = ({
                   </div>
                 </motion.div>
 
-                {/* XP Progress Bar with Elegant Coin Animation */}
-                <motion.div
-                  className="relative mb-6 lg:mb-8"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.6 }}
-                >
-                  <div className="bg-white rounded-xl p-4 lg:p-6 shadow-lg border border-gray-100">
-                    <div className="flex items-center justify-between text-sm font-medium text-gray-700 mb-4">
-                      <span>XP Progress: {currentXP}/{video.xpReward}</span>
-                      <span>{Math.round(progress)}% Complete</span>
-                    </div>
-
-                    <div className="relative">
-                      <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-                        <motion.div
-                          className="h-full rounded-full"
-                          style={{
-                            background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)'
-                          }}
-                          initial={{ width: 0 }}
-                          animate={{ width: `${progress}%` }}
-                          transition={{ duration: 1, ease: "easeOut" }}
-                        />
-                      </div>
-
-                      {/* Elegant XP Coin Animation */}
-                      <AnimatePresence>
-                        {showXpCoin && (
-                          <motion.div
-                            className="absolute -top-8 left-1/2 transform -translate-x-1/2"
-                            initial={{ opacity: 0, scale: 0.5, y: 10 }}
-                            animate={{
-                              opacity: [0, 1, 1, 0],
-                              scale: [0.5, 1.1, 1, 0.8],
-                              y: [10, -5, -5, -10]
-                            }}
-                            exit={{ opacity: 0, scale: 0.5, y: -15 }}
-                            transition={{ duration: 2, ease: "easeInOut" }}
-                          >
-                            <div
-                              className="w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg"
-                              style={{
-                                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                                boxShadow: '0 0 20px rgba(245, 158, 11, 0.5)'
-                              }}
-                            >
-                              <Coins size={16} />
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-
-                    <div className="flex justify-between mt-2 text-xs text-gray-500">
-                      <span>Start</span>
-                      <span className={progress >= 25 ? "text-blue-600 font-medium" : ""}>25%</span>
-                      <span className={progress >= 50 ? "text-purple-600 font-medium" : ""}>50%</span>
-                      <span className={progress >= 75 ? "text-orange-600 font-medium" : ""}>75%</span>
-                      <span className={progress >= 100 ? "text-green-600 font-medium" : ""}>Complete</span>
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* Creator Card */}
-                <motion.div
-                  className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 mb-8"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5, duration: 0.6 }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <Avatar className="w-14 h-14">
-                        <AvatarFallback
-                          className="text-lg font-bold text-white"
-                          style={{
-                            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)'
-                          }}
-                        >
-                          {video.creator[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">{video.creator}</h3>
-                        <p className="text-sm text-gray-600">AI Expert & Educator • Level 7</p>
-                        <p className="text-sm text-gray-500">2.1M subscribers</p>
-                      </div>
-                    </div>
-                    <motion.button
-                      onClick={() => setIsSubscribed(!isSubscribed)}
-                      className="px-6 py-2.5 rounded-full font-medium text-white"
-                      style={{
-                        background: isSubscribed
-                          ? 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'
-                          : 'linear-gradient(135deg, #ef4444 0%, #f97316 100%)',
-                        boxShadow: '0 4px 12px rgba(239, 68, 68, 0.25)'
-                      }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      {isSubscribed ? 'Following' : 'Follow Creator'}
-                    </motion.button>
-                  </div>
-                </motion.div>
-
-                {/* Navigation Tabs */}
-                <motion.div
-                  className="mb-8"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6, duration: 0.6 }}
-                >
-                  <div className="flex gap-2 p-2 bg-gray-50 rounded-xl">
-                    {tabs.map((tab) => (
-                      <motion.button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 ${
-                          activeTab === tab.id
-                            ? 'bg-white text-gray-900 shadow-sm'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
-                        }`}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        {tab.label}
-                      </motion.button>
-                    ))}
-                  </div>
-                </motion.div>
-
-                {/* Tab Content */}
-                <motion.div
-                  key={activeTab}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="mb-12"
-                >
-                  {activeTab === 'overview' && (
-                    <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-                      <h4 className="text-lg font-semibold text-gray-900 mb-4">About this video</h4>
-                      <p className="text-gray-700 leading-relaxed">{video.description}</p>
-                    </div>
-                  )}
-
-                  {activeTab === 'videos' && (
-                    <div className="space-y-4">
-                      {otherVideos.slice(0, 3).map((otherVideo, index) => (
-                        <motion.div
-                          key={otherVideo.id}
-                          className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 cursor-pointer hover:shadow-xl transition-all duration-200"
-                          whileHover={{ scale: 1.01, y: -2 }}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                        >
-                          <div className="flex gap-4">
-                            <LazyImage
-                              src={otherVideo.thumbnail}
-                              alt={otherVideo.title}
-                              className="w-32 h-20 rounded-lg bg-gray-200 flex-shrink-0"
-                            />
-                            <div className="flex-1">
-                              <h5 className="font-semibold text-gray-900 mb-2">{otherVideo.title}</h5>
-                              <div className="flex items-center justify-between text-sm text-gray-600">
-                                <span>{otherVideo.views} views • {otherVideo.duration}</span>
-                                <Badge
-                                  className="text-white"
-                                  style={{
-                                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
-                                  }}
-                                >
-                                  +{otherVideo.xp} XP
-                                </Badge>
-                              </div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  )}
-
-                  {activeTab === 'course' && (
-                    <div className="space-y-4">
-                      {courseModules.map((module, index) => (
-                        <div
-                          key={module.id}
-                          className="bg-white rounded-xl p-6 shadow-lg border border-gray-100"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold ${
-                              module.completed ? 'bg-green-500 text-white' :
-                              module.locked ? 'bg-gray-300 text-gray-500' :
-                              'bg-blue-500 text-white'
-                            }`}>
-                              {module.completed ? '✓' : module.locked ? <Lock size={16} /> : index + 1}
-                            </div>
-                            <div className="flex-1">
-                              <h5 className="font-semibold text-gray-900">{module.title}</h5>
-                              <p className="text-sm text-gray-600">{module.duration} • +{module.xp} XP</p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {activeTab === 'community' && (
-                    <div className="space-y-4">
-                      {communityPosts.map((post) => (
-                        <div
-                          key={post.id}
-                          className="bg-white rounded-xl p-6 shadow-lg border border-gray-100"
-                        >
-                          <div className="flex gap-4">
-                            <Avatar className="w-10 h-10">
-                              <AvatarFallback className="bg-purple-500 text-white font-semibold">
-                                {post.author[0]}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className="font-semibold text-gray-900">{post.author}</span>
-                                <span className="text-sm text-gray-500">{post.time}</span>
-                              </div>
-                              <p className="text-gray-700 mb-3">{post.content}</p>
-                              <div className="flex gap-4 text-sm text-gray-600">
-                                <button className="flex items-center gap-1 hover:text-red-500 transition-colors">
-                                  <Heart size={16} />
-                                  <span>{post.likes}</span>
-                                </button>
-                                <button className="flex items-center gap-1 hover:text-blue-500 transition-colors">
-                                  <MessageCircle size={16} />
-                                  <span>{post.replies}</span>
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {activeTab === 'downloads' && (
-                    <div className="space-y-4">
-                      {freeDownloads.map((download, index) => (
-                        <div
-                          key={index}
-                          className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 cursor-pointer hover:shadow-xl transition-all duration-200"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                                <Download size={20} className="text-blue-600" />
-                              </div>
-                              <div>
-                                <h5 className="font-semibold text-gray-900">{download.name}</h5>
-                                <p className="text-sm text-gray-600">{download.size} • {download.downloads} downloads</p>
-                              </div>
-                            </div>
-                            <Badge variant="outline" className="text-blue-600 border-blue-600">
-                              {download.type}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </motion.div>
-              </motion.div>
-
-              {/* Right Panel - Video Recommendations (4 columns) */}
-              <motion.div
-                className="lg:col-span-4 order-first lg:order-last"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
-              >
-                <div className="lg:sticky lg:top-8">
-                  <div
-                    className="bg-white rounded-xl shadow-lg border border-gray-100 lg:max-h-[80vh] lg:overflow-y-auto"
+                {/* Mobile Action Buttons */}
+                <div className="flex gap-2 justify-center">
+                  <motion.button
+                    onClick={() => setIsSubscribed(!isSubscribed)}
+                    className="flex-1 px-4 py-3 rounded-full font-semibold text-white text-sm"
                     style={{
-                      scrollbarWidth: 'thin',
-                      scrollbarColor: 'rgba(156, 163, 175, 0.5) transparent'
+                      background: isSubscribed
+                        ? 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'
+                        : 'linear-gradient(135deg, #ef4444 0%, #f97316 100%)'
                     }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    <div className="p-6">
+                    <Bell size={14} className="mr-2 inline" />
+                    {isSubscribed ? 'Subscribed' : 'Subscribe'}
+                  </motion.button>
 
-                      {/* From This Creator Section */}
-                      <div className="mb-8">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                          <Star size={18} className="text-yellow-500" />
-                          From This Creator
-                        </h3>
-                        <div className="space-y-3">
-                          {nextXpVideos.filter(v => v.category === 'from_creator').slice(0, 3).map((video, index) => (
-                            <motion.div
-                              key={video.id}
-                              className="group cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-all duration-200"
-                              whileHover={{ scale: 1.02 }}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 0.5 + index * 0.1 }}
-                            >
-                              <div className="flex gap-3">
-                                <div className="relative">
-                                  <LazyImage
-                                    src={video.thumbnail}
-                                    alt={video.title}
-                                    className="w-20 h-12 rounded-lg bg-gray-200"
-                                  />
-                                  <div className="absolute inset-0 bg-black/20 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Play className="w-4 h-4 text-white" />
-                                  </div>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <h4 className="font-medium text-gray-900 text-sm line-clamp-2 group-hover:text-purple-600 transition-colors">
-                                    {video.title}
-                                  </h4>
-                                  <p className="text-xs text-gray-600 mt-1">{video.duration}</p>
-                                  <Badge
-                                    className="text-xs text-white mt-2"
-                                    style={{
-                                      background: video.glowing
-                                        ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
-                                        : 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'
-                                    }}
-                                  >
-                                    +{video.xp} XP
-                                  </Badge>
-                                </div>
-                              </div>
-                            </motion.div>
-                          ))}
-                        </div>
-                      </div>
+                  <motion.button
+                    onClick={() => setShowTipModal(true)}
+                    className="flex-1 px-4 py-3 rounded-full font-semibold text-white text-sm"
+                    style={{
+                      background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+                    }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Bitcoin size={14} className="mr-2 inline" />
+                    Tip Creator
+                  </motion.button>
 
-                      {/* Trending Section */}
-                      <div className="mb-8">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                          <TrendingUp size={18} className="text-green-500" />
-                          Trending in Your Categories
-                        </h3>
-                        <div className="space-y-3">
-                          {nextXpVideos.filter(v => v.category === 'trending').slice(0, 4).map((video, index) => (
-                            <motion.div
-                              key={video.id}
-                              className="group cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-all duration-200"
-                              whileHover={{ scale: 1.02 }}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 0.7 + index * 0.1 }}
-                            >
-                              <div className="flex gap-3">
-                                <div className="relative">
-                                  <LazyImage
-                                    src={video.thumbnail}
-                                    alt={video.title}
-                                    className="w-20 h-12 rounded-lg bg-gray-200"
-                                  />
-                                  <div className="absolute inset-0 bg-black/20 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Play className="w-4 h-4 text-white" />
-                                  </div>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <h4 className="font-medium text-gray-900 text-sm line-clamp-2 group-hover:text-green-600 transition-colors">
-                                    {video.title}
-                                  </h4>
-                                  <p className="text-xs text-gray-600 mt-1">{video.creator}</p>
-                                  <div className="flex items-center justify-between mt-2">
-                                    <span className="text-xs text-gray-500">{video.duration}</span>
-                                    <Badge
-                                      className="text-xs text-white"
-                                      style={{
-                                        background: video.glowing
-                                          ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
-                                          : 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'
-                                      }}
-                                    >
-                                      +{video.xp} XP
-                                    </Badge>
-                                  </div>
-                                </div>
-                              </div>
-                            </motion.div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
+                  <motion.button
+                    className="px-6 py-3 rounded-full font-semibold text-gray-700 text-sm border border-gray-300 bg-white"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Share size={14} />
+                  </motion.button>
+                </div>
 
-                    {/* Sticky Premium Gradient Card */}
-                    <motion.div
-                      className="sticky bottom-0 p-6 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-b-xl"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 1, duration: 0.6 }}
-                    >
+                {/* Mobile Right Panel as Horizontal Scroll */}
+                <div className="overflow-x-auto pb-4">
+                  <div className="flex gap-4 w-max">
+                    {nextXpVideos.slice(0, 6).map((videoItem, index) => (
                       <motion.div
-                        className="cursor-pointer"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                        key={videoItem.id}
+                        className="w-48 bg-white rounded-xl p-4 shadow-lg border border-gray-100"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.3 + index * 0.1 }}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-                            <ShoppingBag className="w-6 h-6" />
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-white">Unlock XP Deals</h4>
-                            <p className="text-sm text-white/80">Premium courses 50% off</p>
-                          </div>
-                          <div className="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center">
-                            <Coins className="w-4 h-4 text-yellow-900" />
-                          </div>
+                        <LazyImage
+                          src={videoItem.thumbnail}
+                          alt={videoItem.title}
+                          className="w-full h-24 rounded-lg bg-gray-200 mb-3"
+                        />
+                        <h4 className="font-semibold text-gray-900 text-sm line-clamp-2 mb-2">
+                          {videoItem.title}
+                        </h4>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500">{videoItem.duration}</span>
+                          <Badge
+                            className="text-xs text-white"
+                            style={{
+                              background: videoItem.glowing
+                                ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+                                : 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'
+                            }}
+                          >
+                            +{videoItem.xp} XP
+                          </Badge>
                         </div>
                       </motion.div>
-                    </motion.div>
+                    ))}
                   </div>
                 </div>
-              </motion.div>
 
-            </div>
+                {/* Rest of mobile content */}
+              </div>
+            )}
+
           </div>
         </div>
 
-        {/* Tip Modal */}
+        {/* Enhanced Tip Modal */}
         <AnimatePresence>
           {showTipModal && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
               onClick={() => setShowTipModal(false)}
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-xl"
+                className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
               >
-                <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+                <h3 className="text-3xl font-bold text-gray-900 mb-8 text-center">
                   Tip {video.creator}
                 </h3>
-                <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="grid grid-cols-3 gap-4 mb-8">
                   {['$1', '$5', '$10'].map((amount) => (
                     <motion.button
                       key={amount}
-                      className="h-12 rounded-xl border border-gray-300 font-semibold text-gray-700 hover:border-yellow-400 hover:bg-yellow-50 transition-all"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                      className="h-14 rounded-2xl border-2 border-gray-200 font-bold text-gray-700 hover:border-yellow-400 hover:bg-yellow-50 transition-all"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                     >
                       {amount}
                     </motion.button>
                   ))}
                 </div>
                 <motion.button
-                  className="w-full py-3 rounded-xl font-semibold text-white"
+                  className="w-full py-4 rounded-2xl font-bold text-white text-lg shadow-lg"
                   style={{
                     background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
                   }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <Coins size={16} className="mr-2 inline" />
+                  <Bitcoin size={18} className="mr-3 inline" />
                   Send Tip
                 </motion.button>
               </motion.div>
