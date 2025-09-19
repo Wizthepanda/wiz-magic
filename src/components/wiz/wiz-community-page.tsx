@@ -41,23 +41,24 @@ import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
 import { useXp } from '@/context/XpContext';
-import { PremiumCourseModal } from '@/components/ui/premium-course-modal';
+import { JoinCommunityModal } from '@/components/ui/join-community-modal';
 
 // Enhanced course data with gamification
-const featuredHeroCourse = {
+const featuredHeroCommunity = {
   id: 'hero-ai-mastery',
-  title: 'AI Mastery: From Zero to Hero',
+  title: 'AI Mastery Community',
   creator: 'Dr. Sarah Chen',
+  role: 'AI Expert & Educator',
   creatorAvatar: '/Profile Pics/FERA.jpg',
   thumbnail: '/course-thumbnails/ai-mastery.jpg',
-  description: 'Master artificial intelligence from fundamentals to advanced applications. Learn neural networks, machine learning, and deep learning with hands-on projects that real companies use.',
+  description: 'Join an exclusive community of AI practitioners and experts. Get direct access to Dr. Sarah Chen\'s insights, weekly Q&As, project reviews, and collaboration opportunities with fellow AI enthusiasts.',
   category: 'AI & ML',
   difficulty: 'Beginner',
   duration: '8 weeks',
-  students: 15420,
+  members: 15420,
   rating: 4.9,
   reviews: 2834,
-  xpPrice: 2500,
+  xpRequired: 2500,
   originalPrice: 199,
   isPaid: false,
   lessons: 24,
@@ -67,31 +68,47 @@ const featuredHeroCourse = {
   levelRequirement: null,
   isFreeForLevel: 3,
   tags: ['Neural Networks', 'Machine Learning', 'Deep Learning', 'Python'],
-  introVideo: 'dQw4w9WgXcQ'
+  introVideo: 'dQw4w9WgXcQ',
+  features: [
+    'Weekly live Q&A sessions with Dr. Sarah Chen',
+    'Exclusive project collaboration opportunities',
+    'Direct access to industry insights and trends',
+    'Personalized feedback on your AI projects',
+    'Private Discord community with 24/7 support',
+    'Monthly guest expert sessions'
+  ]
 };
 
 const allCourses = [
   {
     id: 1,
-    title: 'Creative Video Production Masterclass',
+    title: 'Creative Video Production Community',
     creator: 'Mike Rodriguez',
+    role: 'Video Producer & Creator',
     creatorAvatar: '/Profile Pics/Bogdan.jpg',
     thumbnail: '/course-thumbnails/video-production.jpg',
-    description: 'Learn professional video production techniques used by top creators and film studios.',
+    description: 'Join a thriving community of video creators. Share projects, get feedback, and collaborate with fellow content creators in this exclusive community.',
     category: 'Video',
     difficulty: 'Intermediate',
     duration: '6 weeks',
-    students: 8750,
+    members: 8750,
     rating: 4.8,
     reviews: 1256,
-    xpPrice: 1800,
+    xpRequired: 1800,
     originalPrice: 149,
     isPaid: false,
     lessons: 18,
     completionRate: 65,
     levelRequirement: 2,
     tags: ['Editing', 'Color Grading', 'Audio'],
-    isPopular: true
+    isPopular: true,
+    features: [
+      'Weekly video critique sessions',
+      'Access to premium editing tools and plugins',
+      'Collaboration on real client projects',
+      'Industry networking opportunities',
+      '24/7 creative support community'
+    ]
   },
   {
     id: 2,
@@ -106,7 +123,7 @@ const allCourses = [
     students: 12300,
     rating: 4.7,
     reviews: 1890,
-    xpPrice: 0,
+    xpRequired: 0,
     originalPrice: 99,
     isPaid: false,
     lessons: 16,
@@ -128,7 +145,7 @@ const allCourses = [
     students: 6580,
     rating: 4.6,
     reviews: 892,
-    xpPrice: 1200,
+    xpRequired: 1200,
     originalPrice: 79,
     isPaid: false,
     lessons: 15,
@@ -149,7 +166,7 @@ const allCourses = [
     students: 9840,
     rating: 4.8,
     reviews: 1456,
-    xpPrice: 2000,
+    xpRequired: 2000,
     originalPrice: 159,
     isPaid: false,
     lessons: 21,
@@ -171,7 +188,7 @@ const allCourses = [
     students: 4200,
     rating: 4.5,
     reviews: 623,
-    xpPrice: 3200,
+    xpRequired: 3200,
     originalPrice: 249,
     isPaid: false,
     lessons: 19,
@@ -192,7 +209,7 @@ const allCourses = [
     students: 7890,
     rating: 4.9,
     reviews: 1234,
-    xpPrice: 2800,
+    xpRequired: 2800,
     originalPrice: 199,
     isPaid: false,
     lessons: 28,
@@ -370,7 +387,7 @@ const FeaturedHeroCourse = ({ course, userLevel, setSelectedCourse, setIsModalOp
                   ) : (
                     <div className="flex items-center space-x-4">
                       <div className="text-3xl font-bold text-white">
-                        💎 {course.xpPrice.toLocaleString()} XP
+                        💎 {course.xpRequired.toLocaleString()} XP
                       </div>
                       {course.originalPrice && (
                         <div className="text-white/70 line-through text-lg">
@@ -413,7 +430,7 @@ const FeaturedHeroCourse = ({ course, userLevel, setSelectedCourse, setIsModalOp
 
 // Premium Course Card Component
 const PremiumCourseCard = ({ course, userLevel, userXP, setSelectedCourse, setIsModalOpen }: { course: any, userLevel: number, userXP: number, setSelectedCourse?: any, setIsModalOpen?: any }) => {
-  const canAfford = userXP >= course.xpPrice;
+  const canAfford = userXP >= course.xpRequired;
   const meetsLevelReq = !course.levelRequirement || userLevel >= course.levelRequirement;
   const isUnlocked = canAfford && meetsLevelReq;
 
@@ -483,7 +500,7 @@ const PremiumCourseCard = ({ course, userLevel, userXP, setSelectedCourse, setIs
               <div className="text-center text-white">
                 <Lock className="w-8 h-8 mx-auto mb-2" />
                 <div className="text-sm font-medium">
-                  {!canAfford ? `Need ${course.xpPrice} XP` : `Level ${course.levelRequirement} Required`}
+                  {!canAfford ? `Need ${course.xpRequired} XP` : `Level ${course.levelRequirement} Required`}
                 </div>
               </div>
             </div>
@@ -559,7 +576,7 @@ const PremiumCourseCard = ({ course, userLevel, userXP, setSelectedCourse, setIs
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">
                     <span className="text-xl font-bold text-purple-600">
-                      💎 {course.xpPrice.toLocaleString()}
+                      💎 {course.xpRequired.toLocaleString()}
                     </span>
                     <span className="text-sm text-gray-500">XP</span>
                   </div>
@@ -671,7 +688,11 @@ const CategoryCarousel = ({ title, courses, userLevel, userXP, setSelectedCourse
   );
 };
 
-export const WizLearnPage = () => {
+interface WizCommunityPageProps {
+  onSectionChange?: (section: string) => void;
+}
+
+export const WizCommunityPage = ({ onSectionChange }: WizCommunityPageProps = {}) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedDifficulty, setSelectedDifficulty] = useState('All');
@@ -735,13 +756,21 @@ export const WizLearnPage = () => {
               "font-bold bg-gradient-to-r from-purple-600 via-pink-500 to-blue-500 bg-clip-text text-transparent",
               isMobile ? "text-4xl" : "text-5xl md:text-6xl"
             )}>
-              🎓 Learn
+              Community
             </h1>
             <p className={cn(
               "text-gray-600 max-w-3xl leading-relaxed",
               isMobile ? "text-lg" : "text-xl"
             )}>
-              Level up your skills with insider-only courses from top creators — unlocked with XP.
+              Level up your skills with insider-only communities from top creators — unlocked with XP{' '}
+              <span
+                className="font-semibold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent cursor-pointer hover:underline transition-all duration-200"
+                onClick={() => {
+                  onSectionChange?.('create');
+                }}
+              >
+                or create your own
+              </span>.
             </p>
           </div>
 
@@ -926,19 +955,22 @@ export const WizLearnPage = () => {
         </motion.section>
       </div>
 
-      {/* Premium Course Modal */}
-      <PremiumCourseModal
-        course={selectedCourse}
+      {/* Join Community Modal */}
+      <JoinCommunityModal
+        community={selectedCourse}
         isOpen={isModalOpen}
         onClose={() => {
           setIsModalOpen(false);
           setSelectedCourse(null);
         }}
         userXP={userXP}
-        userLevel={userLevel}
+        onJoin={() => {
+          console.log('Joined community:', selectedCourse?.title);
+          // Handle XP deduction and community enrollment
+        }}
       />
     </div>
   );
 };
 
-export default WizLearnPage;
+export default WizCommunityPage;

@@ -15,7 +15,7 @@ import {
   Sparkles,
   Wand2,
   Plus,
-  GraduationCap,
+  Users,
   Gift,
   Sun,
   Moon
@@ -51,7 +51,7 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
   const navigation = [
     { id: 'discover', label: 'Discover', icon: Compass, internalNav: true },
     { id: 'create', label: 'Create', icon: Plus, internalNav: true },
-    { id: 'learn', label: 'Learn', icon: GraduationCap, internalNav: true },
+    { id: 'community', label: 'Community', icon: Users, internalNav: true },
     { id: 'claim', label: 'XP Shop', icon: Gift, badge: 'Hot', route: '/claim', hasShimmer: true, tooltip: 'Redeem XP + USD for exclusive courses & digital rewards', hotDeal: { title: 'Udemy Courses 50% Off', discount: '-50%', originalPrice: '199', xpCost: '2500', usdCost: '99' } },
     { id: 'premiere', label: 'WIZ Premiere', icon: Crown, level: 5, internalNav: true },
     { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, internalNav: true },

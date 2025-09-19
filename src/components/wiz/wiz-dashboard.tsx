@@ -9,7 +9,7 @@ import { WizPremierePage } from './wiz-premiere-page';
 import { WizLeaderboardPage } from './wiz-leaderboard-page';
 import { DynamicProfilePage } from './DynamicProfilePage';
 import { WizCreatePage } from './WizCreatePage';
-import { WizLearnPage } from './wiz-learn-page';
+import { WizCommunityPage } from './wiz-community-page';
 import { FloatingParticles } from '@/components/ui/floating-particles';
 import { AdminTestPanel } from '@/components/admin/AdminTestPanel';
 import { WizSearchBar } from './WizSearchBar';
@@ -31,7 +31,7 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const sectionParam = searchParams.get('section');
-    if (sectionParam && ['discover', 'create', 'learn', 'premiere', 'leaderboard', 'profile', 'settings'].includes(sectionParam)) {
+    if (sectionParam && ['discover', 'create', 'community', 'premiere', 'leaderboard', 'profile', 'settings'].includes(sectionParam)) {
       setActiveSection(sectionParam);
       // Clean up the URL parameter after setting the section
       window.history.replaceState({}, '', '/');
@@ -64,8 +64,8 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
         return <ApplePremiumDashboard />;
       case 'create':
         return <WizCreatePage />;
-      case 'learn':
-        return <WizLearnPage />;
+      case 'community':
+        return <WizCommunityPage onSectionChange={setActiveSection} />;
       case 'leaderboard':
         return <WizLeaderboardPage />;
       case 'premiere':
