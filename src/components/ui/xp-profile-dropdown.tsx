@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Flame, Share2, Settings, LogOut, Copy, Check, ShoppingBag, Link } from 'lucide-react';
+import { Flame, Share2, Settings, LogOut, Copy, Check, Link, Zap, Youtube, User, Sliders } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface XPProfileDropdownProps {
@@ -12,6 +12,9 @@ interface XPProfileDropdownProps {
   userLevel: number;
   streakDays: number;
   userName: string;
+  userEmail?: string;
+  dailyXP?: number;
+  isYouTubeConnected?: boolean;
 }
 
 export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
@@ -22,7 +25,10 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
   nextLevelXP,
   userLevel,
   streakDays,
-  userName
+  userName,
+  userEmail = "dean@wizxp.com",
+  dailyXP = 45,
+  isYouTubeConnected = true
 }) => {
   const [linkCopied, setLinkCopied] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -103,12 +109,12 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
       {isOpen && (
         <motion.div
           ref={dropdownRef}
-          initial={{ opacity: 0, y: -8, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -8, scale: 0.95 }}
+          initial={{ opacity: 0, y: 27 }} // 8% of 340px ≈ 27px
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 27 }}
           transition={{
-            duration: 0.25,
-            ease: [0.175, 0.885, 0.32, 1.1] // Spring easing for premium feel
+            duration: 0.3,
+            ease: [0.25, 0.46, 0.45, 0.94] // Smooth premium easing
           }}
           className="fixed z-50 w-[340px] max-w-[calc(100vw-32px)]"
           style={{
@@ -118,149 +124,163 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
           }}
         >
           <div
-            className={cn(
-              "bg-white/95 backdrop-blur-xl rounded-2xl border border-white/20 overflow-hidden",
-              "shadow-2xl"
-            )}
+            className="overflow-hidden rounded-2xl backdrop-blur-xl border border-white/10"
             style={{
-              boxShadow: '0 32px 64px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
+              background: 'linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%)',
+              boxShadow: '0 32px 64px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 0 40px rgba(139, 92, 246, 0.1)'
             }}
           >
-            {/* HEADER — PROFILE & XP SNAPSHOT */}
+            {/* HEADER */}
             <div className="p-6 pb-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  {/* Profile avatar with gradient border glow */}
+                  {/* Avatar with gradient glow border */}
                   <div className="relative">
                     <div
                       className="w-12 h-12 rounded-full p-0.5"
                       style={{
-                        background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%)'
+                        background: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)',
+                        boxShadow: '0 0 20px rgba(139, 92, 246, 0.3)'
                       }}
                     >
-                      <div className="w-full h-full rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
-                        <span className="text-lg font-bold text-gray-700">
+                      <div className="w-full h-full rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                        <span className="text-lg font-bold text-white">
                           {userName.charAt(0).toUpperCase()}
                         </span>
                       </div>
                     </div>
                   </div>
-                  {/* Name + Level */}
+                  {/* Name and Email */}
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900">
-                      {userName} — Lv.{userLevel} Wizard
+                    <h3 className="text-lg font-bold text-white">
+                      {userName}
                     </h3>
+                    <p className="text-sm text-gray-400">
+                      {userEmail}
+                    </p>
                   </div>
                 </div>
-                {/* XP Badge Pill */}
+                {/* Level Badge */}
                 <div
                   className="px-3 py-1.5 rounded-full text-xs font-bold text-white"
                   style={{
-                    background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)'
+                    background: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)',
+                    boxShadow: '0 0 15px rgba(139, 92, 246, 0.4)'
                   }}
                 >
-                  {userXP.toLocaleString()} XP
+                  Lv. {userLevel}
                 </div>
               </div>
             </div>
 
-            {/* XP PROGRESS — MINIMAL RING + BAR COMBO */}
+            {/* XP PROGRESS */}
             <div className="px-6 pb-5">
-              <div className="flex items-center gap-4">
-                {/* Mini progress ring */}
-                <div className="relative w-12 h-12 flex items-center justify-center">
-                  <svg className="w-12 h-12 transform -rotate-90" viewBox="0 0 36 36">
-                    {/* Background circle */}
-                    <path
-                      d="M18 3
-                         a 15 15 0 0 1 0 30
-                         a 15 15 0 0 1 0 -30"
-                      fill="none"
-                      stroke="rgb(229, 231, 235)"
-                      strokeWidth="2"
-                    />
-                    {/* Progress circle */}
-                    <motion.path
-                      d="M18 3
-                         a 15 15 0 0 1 0 30
-                         a 15 15 0 0 1 0 -30"
-                      fill="none"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      initial={{ strokeDasharray: "0, 94.24" }}
-                      animate={{ strokeDasharray: `${(progressPercent / 100) * 94.24}, 94.24` }}
-                      transition={{ duration: 1.2, ease: "easeOut" }}
-                      style={{
-                        stroke: 'url(#gradient-progress)'
-                      }}
-                    />
-                    <defs>
-                      <linearGradient id="gradient-progress" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#3b82f6" />
-                        <stop offset="100%" stopColor="#8b5cf6" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xs font-bold text-gray-600">
-                      {Math.round(progressPercent)}%
-                    </span>
-                  </div>
-                </div>
-
-                {/* Horizontal XP bar */}
-                <div className="flex-1">
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <h4 className="text-sm font-medium text-gray-300 mb-3">
+                Progress to Level {userLevel + 1}
+              </h4>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex-1 mr-4">
+                  <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden backdrop-blur-sm">
                     <motion.div
                       className="h-full rounded-full"
                       style={{
-                        background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)'
+                        background: 'linear-gradient(90deg, #8b5cf6 0%, #06b6d4 100%)',
+                        boxShadow: '0 0 10px rgba(139, 92, 246, 0.5)'
                       }}
                       initial={{ width: 0 }}
                       animate={{ width: `${progressPercent}%` }}
                       transition={{ duration: 1.2, ease: "easeOut" }}
                     />
                   </div>
-                  <p className="text-xs text-gray-600 mt-2 font-medium">
-                    {userXP.toLocaleString()} / {nextLevelXP.toLocaleString()} XP · {Math.round(progressPercent)}% to Level {userLevel + 1}
+                  <p className="text-xs text-gray-400 mt-2">
+                    {userXP.toLocaleString()} / {nextLevelXP.toLocaleString()} XP · {Math.round(progressPercent)}% complete
                   </p>
                 </div>
-              </div>
-            </div>
-
-            {/* STREAK STATUS — PREMIUM BADGE */}
-            <div className="px-6 pb-5">
-              <div className="flex items-center gap-4">
+                {/* Mini XP counter pill */}
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center"
+                  className="px-2 py-1 rounded-full text-xs font-bold text-white"
                   style={{
-                    background: 'linear-gradient(135deg, #f97316 0%, #ef4444 100%)'
+                    background: 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)',
+                    border: '1px solid rgba(139, 92, 246, 0.3)'
                   }}
                 >
-                  <Flame className="w-5 h-5 text-white" />
+                  {userXP}
+                </div>
+              </div>
+            </div>
+
+            {/* DAILY XP & STREAK */}
+            <div className="px-6 pb-5">
+              <div className="grid grid-cols-2 gap-3">
+                {/* Daily XP Box */}
+                <div
+                  className="p-3 rounded-xl border border-white/10 backdrop-blur-sm"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)'
+                  }}
+                >
+                  <p className="text-lg font-bold text-white">{dailyXP}</p>
+                  <p className="text-xs text-gray-400">Daily XP</p>
+                </div>
+                {/* Day Streak Box */}
+                <div
+                  className="p-3 rounded-xl border border-white/10 backdrop-blur-sm"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)'
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <div
+                      className="w-4 h-4 rounded-full flex items-center justify-center"
+                      style={{
+                        background: 'linear-gradient(135deg, #f97316 0%, #ef4444 100%)'
+                      }}
+                    >
+                      <Flame className="w-2.5 h-2.5 text-white" />
+                    </div>
+                    <p className="text-lg font-bold text-white">{streakDays}</p>
+                  </div>
+                  <p className="text-xs text-gray-400">Day Streak</p>
+                </div>
+              </div>
+            </div>
+
+            {/* XP TASK REMINDER */}
+            <div className="px-6 pb-5">
+              <div className="flex items-center gap-3 p-3 rounded-xl" style={{
+                background: 'rgba(16, 185, 129, 0.1)',
+                border: '1px solid rgba(16, 185, 129, 0.2)'
+              }}>
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                  }}
+                >
+                  <Zap className="w-4 h-4 text-white" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-bold text-gray-900">
-                    {streakDays}-Day Streak Active
+                  <p className="text-sm font-bold text-emerald-400">
+                    Watch 3 more videos today to max your XP!
                   </p>
-                  <p className="text-xs text-gray-500 font-medium">
-                    +50 XP bonus tomorrow
+                  <p className="text-xs text-gray-400">
+                    +150 XP bonus if completed
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* INVITE FRIENDS — REWARD CARD */}
+            {/* INVITE FRIENDS */}
             <div className="px-6 pb-5">
               <motion.div
-                className="relative rounded-xl p-4 border"
+                className="rounded-xl p-4 border"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%)',
-                  borderColor: 'rgba(59, 130, 246, 0.2)'
+                  background: 'rgba(139, 92, 246, 0.1)',
+                  borderColor: 'rgba(139, 92, 246, 0.2)'
                 }}
                 whileHover={{
                   scale: 1.02,
-                  boxShadow: '0 8px 32px rgba(59, 130, 246, 0.15)'
+                  boxShadow: '0 8px 32px rgba(139, 92, 246, 0.2)'
                 }}
                 transition={{ duration: 0.2 }}
               >
@@ -269,13 +289,13 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
                     <div
                       className="w-10 h-10 rounded-full flex items-center justify-center"
                       style={{
-                        background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)'
+                        background: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)'
                       }}
                     >
                       <Link className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-gray-900">
+                      <p className="text-sm font-bold text-white">
                         Invite friends, earn +100 XP
                       </p>
                     </div>
@@ -285,17 +305,17 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
                     className={cn(
                       "px-4 py-2 rounded-full text-xs font-bold transition-all duration-200",
                       linkCopied
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "text-white"
+                        ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                        : "text-white border border-transparent"
                     )}
                     style={{
                       background: linkCopied
                         ? undefined
-                        : 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)'
+                        : 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)'
                     }}
                     whileHover={{
                       scale: 1.05,
-                      boxShadow: linkCopied ? undefined : '0 4px 16px rgba(59, 130, 246, 0.4)'
+                      boxShadow: linkCopied ? undefined : '0 4px 16px rgba(139, 92, 246, 0.4)'
                     }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -317,51 +337,88 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
               </motion.div>
             </div>
 
-            {/* Divider */}
-            <div className="mx-6 h-px bg-gray-200/40" />
+            {/* CONNECTION STATUS */}
+            <div className="px-6 pb-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Youtube className="w-6 h-6 text-red-500" />
+                  <span className="text-sm font-medium text-gray-300">YouTube</span>
+                </div>
+                <div
+                  className={cn(
+                    "px-3 py-1.5 rounded-full text-xs font-bold",
+                    isYouTubeConnected
+                      ? "text-emerald-400 border border-emerald-500/30"
+                      : "text-red-400 border border-red-500/30"
+                  )}
+                  style={{
+                    background: isYouTubeConnected
+                      ? 'rgba(16, 185, 129, 0.1)'
+                      : 'rgba(239, 68, 68, 0.1)',
+                    boxShadow: isYouTubeConnected
+                      ? '0 0 10px rgba(16, 185, 129, 0.2)'
+                      : '0 0 10px rgba(239, 68, 68, 0.2)'
+                  }}
+                >
+                  {isYouTubeConnected ? 'Connected' : 'Not Connected'}
+                </div>
+              </div>
+            </div>
 
-            {/* QUICK ACTIONS — CLEAN LIST */}
+            {/* Divider */}
+            <div
+              className="mx-6 h-px"
+              style={{
+                background: 'linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.3), transparent)',
+                boxShadow: '0 0 10px rgba(139, 92, 246, 0.2)'
+              }}
+            />
+
+            {/* ACTIONS */}
             <div className="p-4">
               <motion.button
                 className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left transition-all duration-200"
                 whileHover={{
-                  backgroundColor: "rgba(249, 250, 251, 0.8)",
-                  backdropFilter: "blur(8px)"
+                  backgroundColor: "rgba(255, 255, 255, 0.05)",
+                  backdropFilter: "blur(8px)",
+                  boxShadow: '0 0 20px rgba(139, 92, 246, 0.1), inset 0 0 20px rgba(255, 255, 255, 0.05)'
                 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
-                  <Settings className="w-4.5 h-4.5 text-gray-600" />
+                <div className="w-9 h-9 rounded-full bg-slate-700/50 flex items-center justify-center backdrop-blur-sm">
+                  <User className="w-4.5 h-4.5 text-gray-300" />
                 </div>
-                <span className="text-sm font-semibold text-gray-700">Settings</span>
+                <span className="text-sm font-semibold text-gray-200">Profile Settings</span>
               </motion.button>
 
               <motion.button
                 className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left transition-all duration-200 mt-1"
                 whileHover={{
-                  backgroundColor: "rgba(249, 250, 251, 0.8)",
-                  backdropFilter: "blur(8px)"
+                  backgroundColor: "rgba(255, 255, 255, 0.05)",
+                  backdropFilter: "blur(8px)",
+                  boxShadow: '0 0 20px rgba(139, 92, 246, 0.1), inset 0 0 20px rgba(255, 255, 255, 0.05)'
                 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                  <ShoppingBag className="w-4.5 h-4.5 text-purple-600" />
+                <div className="w-9 h-9 rounded-full bg-slate-700/50 flex items-center justify-center backdrop-blur-sm">
+                  <Sliders className="w-4.5 h-4.5 text-gray-300" />
                 </div>
-                <span className="text-sm font-semibold text-gray-700">XP Shop</span>
+                <span className="text-sm font-semibold text-gray-200">Preferences</span>
               </motion.button>
 
               <motion.button
                 className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left transition-all duration-200 mt-1"
                 whileHover={{
-                  backgroundColor: "rgba(254, 242, 242, 0.8)",
-                  backdropFilter: "blur(8px)"
+                  backgroundColor: "rgba(239, 68, 68, 0.1)",
+                  backdropFilter: "blur(8px)",
+                  boxShadow: '0 0 20px rgba(239, 68, 68, 0.1), inset 0 0 20px rgba(255, 255, 255, 0.05)'
                 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center">
-                  <LogOut className="w-4.5 h-4.5 text-red-600" />
+                <div className="w-9 h-9 rounded-full bg-red-500/20 flex items-center justify-center backdrop-blur-sm">
+                  <LogOut className="w-4.5 h-4.5 text-red-400" />
                 </div>
-                <span className="text-sm font-semibold text-red-700">Logout</span>
+                <span className="text-sm font-semibold text-red-400">Sign Out</span>
               </motion.button>
             </div>
           </div>
