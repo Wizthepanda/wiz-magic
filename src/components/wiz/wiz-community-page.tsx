@@ -288,7 +288,7 @@ const XPBalanceCard = ({ xpData }: { xpData: any }) => {
 // Featured Hero Course Component
 const FeaturedHeroCourse = ({ course, userLevel, setSelectedCourse, setIsModalOpen }: { course: any, userLevel: number, setSelectedCourse: any, setIsModalOpen: any }) => {
   const isFreeForUser = course.isFreeForLevel && userLevel >= course.isFreeForLevel;
-  const progressPercentage = (course.slotsClaimed / course.slotsTotal) * 100;
+  const progressPercentage = ((course?.slotsClaimed || 0) / (course?.slotsTotal || 1000)) * 100;
 
   return (
     <motion.div
@@ -342,21 +342,21 @@ const FeaturedHeroCourse = ({ course, userLevel, setSelectedCourse, setIsModalOp
           <div className="absolute bottom-0 left-0 right-0 p-8">
             <div className="max-w-2xl">
               <h2 className="text-4xl font-bold text-white mb-3 leading-tight">
-                {course.title}
+                {course?.title || 'Community'}
               </h2>
               <p className="text-white/90 text-lg mb-6 leading-relaxed">
-                {course.description}
+                {course?.description || 'Join this amazing community'}
               </p>
 
               {/* Instructor and stats */}
               <div className="flex items-center space-x-6 mb-6">
                 <div className="flex items-center space-x-3">
                   <Avatar className="w-10 h-10 border-2 border-white/30">
-                    <AvatarImage src={course.creatorAvatar} />
-                    <AvatarFallback>{course.creator[0]}</AvatarFallback>
+                    <AvatarImage src={course?.creatorAvatar} />
+                    <AvatarFallback>{(course?.creator || 'C')[0]}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <div className="text-white font-semibold">{course.creator}</div>
+                    <div className="text-white font-semibold">{course?.creator || 'Expert Creator'}</div>
                     <div className="text-white/70 text-sm">Course Instructor</div>
                   </div>
                 </div>
@@ -364,12 +364,12 @@ const FeaturedHeroCourse = ({ course, userLevel, setSelectedCourse, setIsModalOp
                 <div className="flex items-center space-x-4 text-white/90">
                   <div className="flex items-center space-x-1">
                     <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                    <span className="font-semibold">{course.rating}</span>
-                    <span className="text-sm">({course.reviews.toLocaleString()})</span>
+                    <span className="font-semibold">{course?.rating || 5}</span>
+                    <span className="text-sm">({(course?.reviews || 0).toLocaleString()})</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Users className="w-4 h-4" />
-                    <span>{course.students.toLocaleString()} students</span>
+                    <span>{(course?.students || course?.members || 0).toLocaleString()} students</span>
                   </div>
                 </div>
               </div>
@@ -399,7 +399,7 @@ const FeaturedHeroCourse = ({ course, userLevel, setSelectedCourse, setIsModalOp
 
                   {/* Availability progress */}
                   <div className="text-white/80 text-sm">
-                    {course.slotsClaimed.toLocaleString()} / {course.slotsTotal.toLocaleString()} slots claimed
+                    {(course?.slotsClaimed || 0).toLocaleString()} / {(course?.slotsTotal || 1000).toLocaleString()} slots claimed
                   </div>
                   <Progress value={progressPercentage} className="w-64 h-2 bg-white/20" />
                 </div>
