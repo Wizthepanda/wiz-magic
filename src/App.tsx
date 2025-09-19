@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { XpProvider } from "@/context/XpContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ServiceBlockedAlert } from "@/components/ui/ServiceBlockedAlert";
 import Index from "./pages/Index";
 import About from "./pages/About";
@@ -35,29 +36,31 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <XpProvider>
-        <TooltipProvider>
-          <ServiceBlockedAlert />
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/watch/:videoId" element={<Watch />} />
-              <Route path="/shorts" element={<Shorts />} />
-              <Route path="/shorts/:shortId" element={<Shorts />} />
-              <Route path="/claim" element={<Claim />} />
-              <Route path="/creator/:channelId" element={<CreatorProfile />} />
-              <Route path="/c/:handle" element={<CreatorProfile />} />
-              <Route path="/admin/anti-cheat" element={<AntiCheatDashboard />} />
-              <Route path="/test/anti-cheat" element={<AntiCheatTest />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </XpProvider>
+      <ThemeProvider>
+        <XpProvider>
+          <TooltipProvider>
+            <ServiceBlockedAlert />
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/watch/:videoId" element={<Watch />} />
+                <Route path="/shorts" element={<Shorts />} />
+                <Route path="/shorts/:shortId" element={<Shorts />} />
+                <Route path="/claim" element={<Claim />} />
+                <Route path="/creator/:channelId" element={<CreatorProfile />} />
+                <Route path="/c/:handle" element={<CreatorProfile />} />
+                <Route path="/admin/anti-cheat" element={<AntiCheatDashboard />} />
+                <Route path="/test/anti-cheat" element={<AntiCheatTest />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </XpProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 };

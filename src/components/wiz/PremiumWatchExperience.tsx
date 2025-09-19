@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface VideoData {
   id: number;
@@ -114,6 +115,7 @@ export const PremiumWatchExperience: React.FC<PremiumWatchExperienceProps> = ({
   const [videoCompleted, setVideoCompleted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const { theme } = useTheme();
 
   // Optimized spring physics for smooth, lightweight animations
   const springConfig = { damping: 30, stiffness: 400, mass: 0.8 };
@@ -246,7 +248,12 @@ export const PremiumWatchExperience: React.FC<PremiumWatchExperienceProps> = ({
         </motion.button>
 
         {/* Main Content Container */}
-        <div className="min-h-screen bg-gradient-to-b from-white to-gray-50/20">
+        <div className={cn(
+          "min-h-screen transition-all duration-400",
+          theme === 'dark'
+            ? "bg-gradient-to-b from-slate-900 to-slate-800/90"
+            : "bg-gradient-to-b from-white to-gray-50/20"
+        )}>
           <div className="max-w-8xl mx-auto px-6 lg:px-12 py-8 lg:py-12">
 
             {/* Desktop Layout */}
@@ -336,9 +343,14 @@ export const PremiumWatchExperience: React.FC<PremiumWatchExperienceProps> = ({
 
                   {/* CREATOR INTERACTION CONTAINER - New Premium Panel */}
                   <motion.div
-                    className="bg-white rounded-2xl p-8 mb-8"
+                    className={cn(
+                      "rounded-2xl p-8 mb-8 transition-all duration-400",
+                      theme === 'dark' ? "bg-slate-800/90 border border-slate-700/50" : "bg-white"
+                    )}
                     style={{
-                      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.02)'
+                      boxShadow: theme === 'dark'
+                        ? '0 8px 25px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(139, 92, 246, 0.1)'
+                        : '0 8px 25px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.02)'
                     }}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -361,9 +373,18 @@ export const PremiumWatchExperience: React.FC<PremiumWatchExperienceProps> = ({
 
                       {/* Center - Creator Info */}
                       <div className="col-span-6">
-                        <h3 className="text-xl font-bold text-gray-900 mb-1">{video.creator}</h3>
-                        <p className="text-sm text-gray-600 font-semibold mb-1">DesignPro, AI Expert & Educator – Level 7</p>
-                        <p className="text-sm text-gray-400">2.1M Subscribers</p>
+                        <h3 className={cn(
+                          "text-xl font-bold mb-1 transition-colors duration-400",
+                          theme === 'dark' ? "text-white" : "text-gray-900"
+                        )}>{video.creator}</h3>
+                        <p className={cn(
+                          "text-sm font-semibold mb-1 transition-colors duration-400",
+                          theme === 'dark' ? "text-cyan-300" : "text-gray-600"
+                        )}>DesignPro, AI Expert & Educator – Level 7</p>
+                        <p className={cn(
+                          "text-sm transition-colors duration-400",
+                          theme === 'dark' ? "text-slate-400" : "text-gray-400"
+                        )}>2.1M Subscribers</p>
                       </div>
 
                       {/* Right - World-Class Premium Action Row */}
@@ -416,15 +437,19 @@ export const PremiumWatchExperience: React.FC<PremiumWatchExperienceProps> = ({
 
                         {/* Share - Outlined Minimal, Slimmer Width */}
                         <motion.button
-                          className="w-11 h-11 rounded-2xl border bg-white flex items-center justify-center"
+                          className={cn(
+                            "w-11 h-11 rounded-2xl border flex items-center justify-center transition-all duration-400",
+                            theme === 'dark' ? "bg-slate-700 border-slate-600" : "bg-white border-gray-300"
+                          )}
                           style={{
-                            borderWidth: '1.5px',
-                            borderColor: '#d1d5db'
+                            borderWidth: '1.5px'
                           }}
                           whileHover={{
                             scale: 1.03,
-                            borderColor: '#9ca3af',
-                            boxShadow: '0 4px 12px rgba(156, 163, 175, 0.15)'
+                            borderColor: theme === 'dark' ? '#06b6d4' : '#9ca3af',
+                            boxShadow: theme === 'dark'
+                              ? '0 4px 12px rgba(6, 182, 212, 0.25), 0 0 8px rgba(6, 182, 212, 0.15)'
+                              : '0 4px 12px rgba(156, 163, 175, 0.15)'
                           }}
                           whileTap={{ scale: 0.97 }}
                           transition={{ duration: 0.2 }}
@@ -433,7 +458,14 @@ export const PremiumWatchExperience: React.FC<PremiumWatchExperienceProps> = ({
                             whileHover={{ scale: 1.08 }}
                             transition={{ duration: 0.2 }}
                           >
-                            <Share size={16} strokeWidth={1.5} className="text-gray-600" />
+                            <Share
+                              size={16}
+                              strokeWidth={1.5}
+                              className={cn(
+                                "transition-colors duration-400",
+                                theme === 'dark' ? "text-slate-300" : "text-gray-600"
+                              )}
+                            />
                           </motion.div>
                         </motion.button>
                       </div>

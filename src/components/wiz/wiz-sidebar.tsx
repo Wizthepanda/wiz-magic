@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useSafeNavigate } from '@/hooks/useSafeNavigate';
-import { 
-  Compass, 
-  Crown, 
-  Trophy, 
-  User, 
-  Settings, 
+import {
+  Compass,
+  Crown,
+  Trophy,
+  User,
+  Settings,
   LogOut,
   Menu,
   X,
@@ -16,11 +16,14 @@ import {
   Wand2,
   Plus,
   GraduationCap,
-  Gift
+  Gift,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/contexts/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface WizSidebarProps {
@@ -31,6 +34,7 @@ interface WizSidebarProps {
 export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(true); // Start collapsed on mobile
   const { signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useSafeNavigate();
   const location = useLocation();
 
@@ -85,20 +89,31 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="h-10 w-10 p-0 rounded-full transition-all duration-300"
           style={{
-            background: `
-              linear-gradient(135deg, rgba(230, 230, 250, 0.9) 0%, rgba(147, 51, 234, 0.8) 100%),
-              rgba(255, 255, 255, 0.9)
-            `,
+            background: theme === 'dark'
+              ? `
+                  linear-gradient(135deg, rgba(11, 15, 25, 0.9) 0%, rgba(139, 92, 246, 0.8) 100%),
+                  rgba(22, 28, 39, 0.9)
+                `
+              : `
+                  linear-gradient(135deg, rgba(230, 230, 250, 0.9) 0%, rgba(147, 51, 234, 0.8) 100%),
+                  rgba(255, 255, 255, 0.9)
+                `,
             backdropFilter: 'blur(25px)',
             border: '1px solid rgba(255, 255, 255, 0.3)',
-            boxShadow: '0 4px 16px rgba(147, 51, 234, 0.2)'
+            boxShadow: theme === 'dark'
+              ? '0 4px 16px rgba(139, 92, 246, 0.3)'
+              : '0 4px 16px rgba(147, 51, 234, 0.2)'
           }}
         >
           <motion.div
             animate={{ rotate: isCollapsed ? 0 : 180 }}
             transition={{ duration: 0.3 }}
           >
-            {isCollapsed ? <Menu className="w-4 h-4 text-indigo-700" /> : <X className="w-4 h-4 text-indigo-700" />}
+            {isCollapsed ? (
+              <Menu className={cn("w-4 h-4", theme === 'dark' ? "text-cyan-300" : "text-indigo-700")} />
+            ) : (
+              <X className={cn("w-4 h-4", theme === 'dark' ? "text-cyan-300" : "text-indigo-700")} />
+            )}
           </motion.div>
         </Button>
       </motion.div>
@@ -115,13 +130,22 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
           isCollapsed ? "max-lg:hidden" : "max-lg:fixed max-lg:inset-y-0 max-lg:left-0 max-lg:w-72 max-lg:translate-x-0"
         )}
         style={{
-          background: `
-            linear-gradient(135deg, rgba(230, 230, 250, 0.15) 0%, rgba(25, 25, 112, 0.05) 100%),
-            rgba(255, 255, 255, 0.08)
-          `,
+          background: theme === 'dark'
+            ? `
+                linear-gradient(135deg, rgba(11, 15, 25, 0.95) 0%, rgba(16, 22, 36, 0.9) 100%),
+                rgba(22, 28, 39, 0.8)
+              `
+            : `
+                linear-gradient(135deg, rgba(230, 230, 250, 0.15) 0%, rgba(25, 25, 112, 0.05) 100%),
+                rgba(255, 255, 255, 0.08)
+              `,
           backdropFilter: 'blur(40px)',
-          borderRight: '1px solid rgba(255, 255, 255, 0.2)',
-          boxShadow: '0 20px 60px rgba(147, 51, 234, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+          borderRight: theme === 'dark'
+            ? '1px solid rgba(255, 255, 255, 0.1)'
+            : '1px solid rgba(255, 255, 255, 0.2)',
+          boxShadow: theme === 'dark'
+            ? '0 20px 60px rgba(139, 92, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+            : '0 20px 60px rgba(147, 51, 234, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
         }}
         initial={{ x: -100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
@@ -204,9 +228,11 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
               <AnimatePresence>
                 {!isCollapsed && (
                   <motion.span
-                    className="text-2xl font-bold text-gray-800"
+                    className="text-2xl font-bold"
                     style={{
-                      background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.9) 0%, rgba(99, 102, 241, 0.8) 50%, rgba(139, 92, 246, 0.9) 100%)',
+                      background: theme === 'dark'
+                        ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.95) 0%, rgba(6, 182, 212, 0.9) 50%, rgba(139, 92, 246, 0.95) 100%)'
+                        : 'linear-gradient(135deg, rgba(147, 51, 234, 0.9) 0%, rgba(99, 102, 241, 0.8) 50%, rgba(139, 92, 246, 0.9) 100%)',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text'
@@ -317,13 +343,13 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
                         whileHover={{ scale: 1.1 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <item.icon 
+                        <item.icon
                           className={cn(
                             "w-5 h-5 transition-colors duration-300",
-                            activeSection === item.id 
-                              ? "text-indigo-600" 
-                              : "text-gray-600 group-hover:text-indigo-500"
-                          )} 
+                            activeSection === item.id
+                              ? (theme === 'dark' ? "text-cyan-400" : "text-indigo-600")
+                              : (theme === 'dark' ? "text-gray-300 group-hover:text-cyan-300" : "text-gray-600 group-hover:text-indigo-500")
+                          )}
                         />
                       </motion.div>
                     )}
@@ -339,9 +365,9 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
                         >
                           <span className={cn(
                             "font-medium transition-colors duration-300",
-                            activeSection === item.id 
-                              ? "text-gray-800" 
-                              : "text-gray-600 group-hover:text-gray-800"
+                            activeSection === item.id
+                              ? (theme === 'dark' ? "text-white" : "text-gray-800")
+                              : (theme === 'dark' ? "text-gray-300 group-hover:text-white" : "text-gray-600 group-hover:text-gray-800")
                           )}>
                             {item.label}
                           </span>
@@ -477,7 +503,7 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
           </nav>
 
           {/* Liquid Glass Bottom Section */}
-          <motion.div 
+          <motion.div
             className="relative"
             style={{
               borderTop: '1px solid rgba(255, 255, 255, 0.1)'
@@ -486,6 +512,136 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.8 }}
           >
+            {/* Premium Dark Mode Toggle */}
+            <div className={cn(isCollapsed ? "p-3" : "p-6 pb-3")}>
+              <motion.div className="relative group">
+                <motion.div
+                  className={cn(
+                    "relative transition-all duration-500 overflow-hidden rounded-2xl",
+                    isCollapsed ? "h-14 px-3" : "h-12 px-4"
+                  )}
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                    backdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)'
+                  }}
+                  whileHover={{
+                    scale: 1.01,
+                    boxShadow: '0 8px 32px rgba(139, 92, 246, 0.1)',
+                    transition: { duration: 0.3 }
+                  }}
+                >
+                  <div className={cn(
+                    "flex items-center justify-center h-full relative z-10",
+                    !isCollapsed && "px-2"
+                  )}>
+                    {/* Theme Toggle Pill */}
+                    <div
+                      className="relative w-full max-w-32 h-8 rounded-full overflow-hidden"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)'
+                      }}
+                    >
+                      {/* Sliding Background */}
+                      <motion.div
+                        className="absolute inset-y-0 w-1/2 rounded-full"
+                        style={{
+                          background: 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)',
+                          boxShadow: '0 4px 12px rgba(139, 92, 246, 0.4)'
+                        }}
+                        animate={{
+                          x: theme === 'dark' ? '100%' : '0%'
+                        }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 400,
+                          damping: 30
+                        }}
+                      />
+
+                      {/* Light Mode Button */}
+                      <motion.button
+                        onClick={() => theme !== 'light' && toggleTheme()}
+                        className="absolute left-0 w-1/2 h-full flex items-center justify-center"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <motion.div
+                          animate={{
+                            scale: theme === 'light' ? 1.1 : 0.9,
+                            color: theme === 'light' ? '#ffffff' : '#6b7280'
+                          }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <Sun size={14} strokeWidth={2} />
+                        </motion.div>
+                      </motion.button>
+
+                      {/* Dark Mode Button */}
+                      <motion.button
+                        onClick={() => theme !== 'dark' && toggleTheme()}
+                        className="absolute right-0 w-1/2 h-full flex items-center justify-center"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <motion.div
+                          animate={{
+                            scale: theme === 'dark' ? 1.1 : 0.9,
+                            color: theme === 'dark' ? '#ffffff' : '#6b7280'
+                          }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <Moon size={14} strokeWidth={2} />
+                        </motion.div>
+                      </motion.button>
+                    </div>
+
+                    {/* Theme Label (when expanded) */}
+                    <AnimatePresence>
+                      {!isCollapsed && (
+                        <motion.span
+                          className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-xs font-medium text-gray-500"
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {theme === 'light' ? '☀️ Light' : '🌙 Dark'}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+
+                {/* Enhanced Theme Toggle Tooltip */}
+                <AnimatePresence>
+                  {isCollapsed && (
+                    <motion.div
+                      className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-2 text-sm rounded-xl pointer-events-none whitespace-nowrap z-50 opacity-0 group-hover:opacity-100"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(50, 50, 50, 0.9) 100%)',
+                        backdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(139, 92, 246, 0.3)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+                      }}
+                      initial={{ opacity: 0, x: -10, scale: 0.9 }}
+                      animate={{ opacity: 1, x: 0, scale: 1 }}
+                      exit={{ opacity: 0, x: -10, scale: 0.9 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <span className="text-violet-400 font-medium">
+                          {theme === 'light' ? '☀️ Light Mode' : '🌙 Dark Mode'}
+                        </span>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            </div>
+
             {/* Logout Button */}
             <div className={cn(isCollapsed ? "p-3" : "p-6 pb-3")}>
               <motion.div className="relative group">
@@ -532,13 +688,19 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
                       whileHover={{ scale: 1.1, rotate: 5 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <LogOut className="w-5 h-5 text-gray-600 group-hover:text-red-500 transition-colors duration-300" />
+                      <LogOut className={cn(
+                        "w-5 h-5 transition-colors duration-300",
+                        theme === 'dark' ? "text-gray-300 group-hover:text-red-400" : "text-gray-600 group-hover:text-red-500"
+                      )} />
                     </motion.div>
                     
                     <AnimatePresence>
                       {!isCollapsed && (
-                        <motion.span 
-                          className="font-medium text-gray-600 group-hover:text-red-500 transition-colors duration-300"
+                        <motion.span
+                          className={cn(
+                            "font-medium transition-colors duration-300",
+                            theme === 'dark' ? "text-gray-300 group-hover:text-red-400" : "text-gray-600 group-hover:text-red-500"
+                          )}
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -10 }}
