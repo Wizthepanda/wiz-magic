@@ -863,7 +863,7 @@ export const WizCommunityPage = ({ onSectionChange }: WizCommunityPageProps = {}
 
         {/* Featured Hero Course */}
         <FeaturedHeroCourse
-          course={featuredHeroCourse}
+          course={featuredHeroCommunity}
           userLevel={userLevel}
           setSelectedCourse={setSelectedCourse}
           setIsModalOpen={setIsModalOpen}
