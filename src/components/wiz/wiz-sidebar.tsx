@@ -1,25 +1,24 @@
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useSafeNavigate } from '@/hooks/useSafeNavigate';
-import * as Switch from '@radix-ui/react-switch';
+import * as Tooltip from '@radix-ui/react-tooltip';
 import {
   Compass,
-  Crown,
+  Users,
+  Plus,
   Trophy,
+  Gift,
   User,
-  Settings,
   LogOut,
   Menu,
   X,
+  Sun,
+  Moon,
   ChevronLeft,
   ChevronRight,
+  Settings,
   Sparkles,
-  Wand2,
-  Plus,
-  Users,
-  Gift,
-  Sun,
-  Moon
+  Minimize2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -32,9 +31,13 @@ interface WizSidebarProps {
   onSectionChange: (section: string) => void;
 }
 
+// Sidebar variant type
+type SidebarVariant = 'glassmorphic' | 'minimal';
+
 export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) => {
-  const [isCollapsed, setIsCollapsed] = useState(true); // Start collapsed on mobile
-  const { signOut } = useAuth();
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [sidebarVariant, setSidebarVariant] = useState<SidebarVariant>('glassmorphic');
+  const { signOut, user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useSafeNavigate();
   const location = useLocation();
@@ -42,43 +45,94 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
   const handleLogout = async () => {
     try {
       await signOut();
-      // Force page reload to return to homepage
       window.location.reload();
     } catch (error) {
       console.error('Error signing out:', error);
     }
   };
 
+  // Core navigation with Apple-like simplicity
   const navigation = [
-    { id: 'discover', label: 'Discover', icon: Compass, internalNav: true },
-    { id: 'create', label: 'Create', icon: Plus, internalNav: true },
-    { id: 'community', label: 'Community', icon: Users, internalNav: true },
-    { id: 'claim', label: 'XP Shop', icon: Gift, badge: 'Hot', route: '/claim', hasShimmer: true, tooltip: 'Redeem XP + USD for exclusive courses & digital rewards', hotDeal: { title: 'Udemy Courses 50% Off', discount: '-50%', originalPrice: '199', xpCost: '2500', usdCost: '99' } },
-    { id: 'premiere', label: 'WIZ Premiere', icon: Crown, level: 5, internalNav: true },
-    { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, internalNav: true },
-    { id: 'profile', label: 'Profile', icon: User, internalNav: true },
-    { id: 'settings', label: 'Settings', icon: Settings, internalNav: true },
+    { id: 'discover', label: 'Discover', icon: Compass },
+    { id: 'community', label: 'Community', icon: Users },
+    { id: 'create', label: 'Create', icon: Plus },
+    { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
+    { id: 'claim', label: 'Rewards', icon: Gift, route: '/claim' },
   ];
 
   const handleNavigation = (item: any) => {
     if (item.route) {
-      // External route navigation
       navigate(item.route);
-    } else if (item.internalNav) {
-      // Check if we're currently on the Claim page
+    } else {
       if (location.pathname === '/claim') {
-        // Navigate to dashboard with the selected section
         navigate(`/?section=${item.id}`);
       } else {
-        // Internal dashboard navigation
         onSectionChange(item.id);
       }
     }
   };
 
+  // Variant-specific styling
+  const getVariantStyles = () => {
+    if (sidebarVariant === 'glassmorphic') {
+      return {
+        background: theme === 'dark'
+          ? 'rgba(15, 18, 30, 0.85)'
+          : 'rgba(255, 255, 255, 0.85)',
+        backdropFilter: 'blur(24px) saturate(180%)',
+        border: theme === 'dark'
+          ? '1px solid rgba(255, 255, 255, 0.1)'
+          : '1px solid rgba(255, 255, 255, 0.2)',
+        boxShadow: theme === 'dark'
+          ? '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+          : '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8)'
+      };
+    } else {
+      return {
+        background: theme === 'dark' ? '#1f2937' : '#ffffff',
+        border: theme === 'dark'
+          ? '1px solid #374151'
+          : '1px solid #e5e7eb',
+        boxShadow: 'none'
+      };
+    }
+  };
+
+  const getItemStyles = (isActive: boolean) => {
+    if (sidebarVariant === 'glassmorphic') {
+      return {
+        base: cn(
+          "transition-all duration-300 rounded-2xl relative overflow-hidden",
+          isActive
+            ? theme === 'dark'
+              ? "bg-gradient-to-r from-violet-500/20 to-cyan-400/20 text-white shadow-lg shadow-violet-500/20"
+              : "bg-gradient-to-r from-violet-500/15 to-cyan-400/15 text-violet-700 shadow-md shadow-violet-500/10"
+            : theme === 'dark'
+            ? "text-gray-300 hover:bg-white/10 hover:shadow-lg hover:shadow-violet-500/10"
+            : "text-gray-600 hover:bg-white/50 hover:shadow-md"
+        ),
+        glow: isActive && sidebarVariant === 'glassmorphic'
+      };
+    } else {
+      return {
+        base: cn(
+          "transition-all duration-200 rounded-xl relative",
+          isActive
+            ? theme === 'dark'
+              ? "bg-gray-700 text-white"
+              : "bg-gray-100 text-gray-900"
+            : theme === 'dark'
+            ? "text-gray-400 hover:text-gray-200 hover:bg-gray-800"
+            : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+        ),
+        glow: false
+      };
+    }
+  };
+
   return (
     <>
-      {/* Mobile Toggle with Liquid Glass Styling */}
+      {/* Mobile Toggle */}
       <motion.div
         className="fixed top-4 left-4 z-50 lg:hidden"
         whileHover={{ scale: 1.05 }}
@@ -87,768 +141,474 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="h-10 w-10 p-0 rounded-full transition-all duration-300"
-          style={{
-            background: theme === 'dark'
-              ? `
-                  linear-gradient(135deg, rgba(11, 15, 25, 0.9) 0%, rgba(139, 92, 246, 0.8) 100%),
-                  rgba(22, 28, 39, 0.9)
-                `
-              : `
-                  linear-gradient(135deg, rgba(230, 230, 250, 0.9) 0%, rgba(147, 51, 234, 0.8) 100%),
-                  rgba(255, 255, 255, 0.9)
-                `,
-            backdropFilter: 'blur(25px)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            boxShadow: theme === 'dark'
-              ? '0 4px 16px rgba(139, 92, 246, 0.3)'
-              : '0 4px 16px rgba(147, 51, 234, 0.2)'
-          }}
+          onClick={() => setIsExpanded(!isExpanded)}
+          className={cn(
+            "h-11 w-11 p-0 rounded-xl transition-all duration-300",
+            sidebarVariant === 'glassmorphic' && "backdrop-blur-md",
+            theme === 'dark'
+              ? "bg-gray-900/80 border-gray-700/50 shadow-black/20"
+              : "bg-white/80 border-gray-200/50 shadow-gray-900/10"
+          )}
         >
           <motion.div
-            animate={{ rotate: isCollapsed ? 0 : 180 }}
-            transition={{ duration: 0.3 }}
+            animate={{ rotate: isExpanded ? 180 : 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
           >
-            {isCollapsed ? (
-              <Menu className={cn("w-4 h-4", theme === 'dark' ? "text-cyan-300" : "text-indigo-700")} />
+            {isExpanded ? (
+              <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
             ) : (
-              <X className={cn("w-4 h-4", theme === 'dark' ? "text-cyan-300" : "text-indigo-700")} />
+              <Menu className="w-5 h-5 text-gray-600 dark:text-gray-300" />
             )}
           </motion.div>
         </Button>
       </motion.div>
 
-      {/* Liquid Glassmorphic Sidebar */}
-      <motion.aside 
+      {/* WIZUP V4.0 Premium Dual-Variant Sidebar */}
+      <motion.aside
         className={cn(
-          "h-screen transition-all duration-500 z-40 overflow-hidden",
-          // Desktop: always visible, collapsible width
-          "hidden lg:block lg:sticky lg:top-0 lg:left-0",
-          isCollapsed ? "lg:w-20" : "lg:w-72",
-          // Mobile: full overlay when open, hidden when closed
-          "lg:translate-x-0",
-          isCollapsed ? "max-lg:hidden" : "max-lg:fixed max-lg:inset-y-0 max-lg:left-0 max-lg:w-72 max-lg:translate-x-0"
+          "flex flex-col h-screen transition-all duration-300 ease-out relative",
+          "border-r",
+          isExpanded ? "w-72" : "w-20",
+          "lg:block lg:sticky lg:top-0",
+          isExpanded ? "max-lg:fixed max-lg:inset-y-0 max-lg:left-0 max-lg:w-72 max-lg:z-40" : "max-lg:hidden"
         )}
-        style={{
-          background: theme === 'dark'
-            ? `
-                linear-gradient(135deg, rgba(11, 15, 25, 0.95) 0%, rgba(16, 22, 36, 0.9) 100%),
-                rgba(22, 28, 39, 0.8)
-              `
-            : `
-                linear-gradient(135deg, rgba(230, 230, 250, 0.15) 0%, rgba(25, 25, 112, 0.05) 100%),
-                rgba(255, 255, 255, 0.08)
-              `,
-          backdropFilter: 'blur(40px)',
-          borderRight: theme === 'dark'
-            ? '1px solid rgba(255, 255, 255, 0.1)'
-            : '1px solid rgba(255, 255, 255, 0.2)',
-          boxShadow: theme === 'dark'
-            ? '0 20px 60px rgba(139, 92, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-            : '0 20px 60px rgba(147, 51, 234, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-        }}
+        style={getVariantStyles()}
         initial={{ x: -100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
       >
-        {/* Liquid Glass Background Pattern */}
-        <motion.div
-          className="absolute inset-0 opacity-30"
-          style={{
-            background: `
-              radial-gradient(circle at 20% 30%, rgba(147, 51, 234, 0.1) 0%, transparent 50%),
-              radial-gradient(circle at 80% 70%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
-              radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.06) 0%, transparent 50%)
-            `
-          }}
-          animate={{
-            background: [
-              `radial-gradient(circle at 20% 30%, rgba(147, 51, 234, 0.1) 0%, transparent 50%),
-               radial-gradient(circle at 80% 70%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
-               radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.06) 0%, transparent 50%)`,
-              `radial-gradient(circle at 30% 80%, rgba(147, 51, 234, 0.1) 0%, transparent 50%),
-               radial-gradient(circle at 70% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
-               radial-gradient(circle at 40% 60%, rgba(139, 92, 246, 0.06) 0%, transparent 50%)`,
-              `radial-gradient(circle at 20% 30%, rgba(147, 51, 234, 0.1) 0%, transparent 50%),
-               radial-gradient(circle at 80% 70%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
-               radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.06) 0%, transparent 50%)`
-            ]
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-        <div className="relative flex flex-col h-full z-10">
-          {/* Liquid Glass Logo Section */}
-          <motion.div 
-            className={cn("p-6 relative", isCollapsed && "px-4")}
-            style={{
-              borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-            }}
+        {/* Glassmorphic Background Effects */}
+        {sidebarVariant === 'glassmorphic' && (
+          <div className="absolute inset-0 overflow-hidden">
+            {/* Animated gradient orbs */}
+            <motion.div
+              className="absolute w-32 h-32 rounded-full opacity-20"
+              style={{
+                background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)',
+                filter: 'blur(40px)'
+              }}
+              animate={{
+                x: [0, 50, 0],
+                y: [0, -30, 0],
+              }}
+              transition={{
+                duration: 8,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            />
+            <motion.div
+              className="absolute bottom-0 right-0 w-24 h-24 rounded-full opacity-15"
+              style={{
+                background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)',
+                filter: 'blur(30px)'
+              }}
+              animate={{
+                x: [0, -40, 0],
+                y: [0, 40, 0],
+              }}
+              transition={{
+                duration: 10,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 2
+              }}
+            />
+          </div>
+        )}
+
+        {/* Profile Section at Top */}
+        <div className="relative z-10 flex-shrink-0 p-6 border-b border-gray-200/20 dark:border-gray-700/20">
+          <motion.div
+            className="flex items-center"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
           >
-            <div className={cn("flex items-center", isCollapsed ? "justify-center" : "space-x-3")}>
-              <motion.div 
-                className="relative"
-                whileHover={{ scale: 1.1, rotate: 5 }}
+            {/* Enhanced Avatar */}
+            <motion.div
+              className={cn(
+                "rounded-2xl flex items-center justify-center relative overflow-hidden",
+                isExpanded ? "w-12 h-12 mr-4" : "w-14 h-14 mx-auto"
+              )}
+              style={{
+                background: theme === 'dark'
+                  ? 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)'
+                  : 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                boxShadow: sidebarVariant === 'glassmorphic'
+                  ? theme === 'dark'
+                    ? `0 8px 32px rgba(99, 102, 241, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)`
+                    : `0 8px 32px rgba(79, 70, 229, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.5)`
+                  : theme === 'dark'
+                    ? '0 4px 12px rgba(0, 0, 0, 0.3)'
+                    : '0 4px 12px rgba(0, 0, 0, 0.1)'
+              }}
+              whileHover={{
+                scale: isExpanded ? 1.05 : 1.08,
+                boxShadow: sidebarVariant === 'glassmorphic'
+                  ? theme === 'dark'
+                    ? '0 12px 40px rgba(99, 102, 241, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
+                    : '0 12px 40px rgba(79, 70, 229, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.6)'
+                  : theme === 'dark'
+                    ? '0 6px 16px rgba(0, 0, 0, 0.4)'
+                    : '0 6px 16px rgba(0, 0, 0, 0.15)'
+              }}
+              transition={{ duration: 0.2 }}
+            >
+              <motion.span
+                className="text-white font-bold relative z-10"
+                animate={{
+                  fontSize: isExpanded ? '1.125rem' : '1.25rem'
+                }}
                 transition={{ duration: 0.3 }}
               >
-                <div 
-                  className="w-10 h-10 rounded-full flex items-center justify-center shadow-2xl border border-white/20"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.9) 0%, rgba(99, 102, 241, 0.9) 100%)',
-                    backdropFilter: 'blur(20px)',
-                    boxShadow: '0 8px 32px rgba(147, 51, 234, 0.3)'
-                  }}
-                >
-                  <Wand2 className="w-5 h-5 text-white" />
-                </div>
-                
-                {/* Sparkle Effect */}
+                {user?.displayName?.[0] || user?.email?.[0] || 'W'}
+              </motion.span>
+
+              {/* Glassmorphic shimmer effect */}
+              {sidebarVariant === 'glassmorphic' && !isExpanded && (
                 <motion.div
-                  className="absolute -top-1 -right-1"
-                  animate={{ 
-                    scale: [1, 1.2, 1],
-                    rotate: [0, 180, 360]
-                  }}
-                  transition={{ 
-                    duration: 2, 
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                  animate={{ x: ['-100%', '100%'] }}
+                  transition={{
+                    duration: 3,
                     repeat: Infinity,
+                    repeatDelay: 5,
                     ease: "easeInOut"
                   }}
-                >
-                  <Sparkles className="w-3 h-3 text-yellow-400" />
-                </motion.div>
-              </motion.div>
-              
-              <AnimatePresence>
-                {!isCollapsed && (
-                  <motion.span
-                    className="text-2xl font-bold"
-                    style={{
-                      background: theme === 'dark'
-                        ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.95) 0%, rgba(6, 182, 212, 0.9) 50%, rgba(139, 92, 246, 0.95) 100%)'
-                        : 'linear-gradient(135deg, rgba(147, 51, 234, 0.9) 0%, rgba(99, 102, 241, 0.8) 50%, rgba(139, 92, 246, 0.9) 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text'
-                    }}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    WIZ
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
+                />
+              )}
+            </motion.div>
 
-          {/* Liquid Glass Navigation */}
-          <nav className={cn("flex-1 space-y-3", isCollapsed ? "p-3" : "p-6")}>
-            {navigation.map((item, index) => (
-              <motion.div 
-                key={item.id} 
-                className="relative group"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4, delay: 0.3 + index * 0.1 }}
-              >
-                <motion.button
-                  onClick={() => handleNavigation(item)}
-                  className={cn(
-                    "w-full relative transition-all duration-500 overflow-hidden",
-                    isCollapsed ? "h-14 px-0 rounded-xl" : "h-12 px-4 rounded-2xl"
-                  )}
-                  style={{
-                    background: activeSection === item.id 
-                      ? `
-                          linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(99, 102, 241, 0.15) 100%),
-                          rgba(255, 255, 255, 0.1)
-                        `
-                      : `
-                          linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)
-                        `,
-                    backdropFilter: 'blur(20px)',
-                    border: activeSection === item.id 
-                      ? '1px solid rgba(147, 51, 234, 0.3)' 
-                      : '1px solid rgba(255, 255, 255, 0.1)',
-                    boxShadow: activeSection === item.id 
-                      ? '0 8px 32px rgba(147, 51, 234, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-                      : '0 4px 16px rgba(0, 0, 0, 0.05)'
-                  }}
-                  whileHover={{ 
-                    scale: 1.02,
-                    y: -2,
-                    transition: { duration: 0.3 }
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                  onMouseEnter={(e) => {
-                    if (activeSection !== item.id) {
-                      e.currentTarget.style.background = `
-                        linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(99, 102, 241, 0.08) 100%),
-                        rgba(255, 255, 255, 0.08)
-                      `;
-                      e.currentTarget.style.border = '1px solid rgba(147, 51, 234, 0.2)';
-                      e.currentTarget.style.boxShadow = '0 8px 32px rgba(147, 51, 234, 0.1)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (activeSection !== item.id) {
-                      e.currentTarget.style.background = `
-                        linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)
-                      `;
-                      e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.1)';
-                      e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.05)';
-                    }
-                  }}
-                >
-                  {/* Active Background Shimmer */}
-                  {activeSection === item.id && (
-                    <motion.div
-                      className="absolute inset-0"
-                      style={{
-                        background: `
-                          linear-gradient(45deg, 
-                            transparent 30%, 
-                            rgba(255, 255, 255, 0.1) 50%, 
-                            transparent 70%
-                          )
-                        `
-                      }}
-                      animate={{
-                        x: ['-100%', '100%']
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        repeatDelay: 3,
-                        ease: "easeInOut"
-                      }}
-                    />
-                  )}
-
-                  <div className={cn(
-                    "flex items-center relative z-10",
-                    isCollapsed ? "justify-center" : "justify-start space-x-3"
-                  )}>
-                    {item.icon && (
-                      <motion.div
-                        className="relative"
-                        whileHover={{ scale: 1.1 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <item.icon
-                          className={cn(
-                            "w-5 h-5 transition-colors duration-300",
-                            activeSection === item.id
-                              ? (theme === 'dark' ? "text-cyan-400" : "text-indigo-600")
-                              : (theme === 'dark' ? "text-gray-300 group-hover:text-cyan-300" : "text-gray-600 group-hover:text-indigo-500")
-                          )}
-                        />
-                      </motion.div>
-                    )}
-                    
-                    <AnimatePresence>
-                      {!isCollapsed && (
-                        <motion.div 
-                          className="flex items-center justify-between flex-1"
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -10 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <span className={cn(
-                            "font-medium transition-colors duration-300",
-                            activeSection === item.id
-                              ? (theme === 'dark' ? "text-white" : "text-gray-800")
-                              : (theme === 'dark' ? "text-gray-300 group-hover:text-white" : "text-gray-600 group-hover:text-gray-800")
-                          )}>
-                            {item.label}
-                          </span>
-                          {item.level && (
-                            <motion.span 
-                              className="px-2 py-1 text-xs font-bold text-white rounded-full"
-                              style={{
-                                background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.9) 0%, rgba(255, 193, 7, 0.9) 100%)',
-                                boxShadow: '0 2px 8px rgba(255, 215, 0, 0.3)'
-                              }}
-                              whileHover={{ scale: 1.05 }}
-                            >
-                              Lv{item.level}+
-                            </motion.span>
-                          )}
-                          {item.badge && (
-                            <motion.div className="relative">
-                              <motion.span 
-                                className="px-2 py-1 text-xs font-bold text-white rounded-full relative overflow-hidden"
-                                style={{
-                                  background: item.hasShimmer 
-                                    ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.9) 0%, rgba(220, 38, 38, 0.9) 100%)'
-                                    : 'linear-gradient(135deg, rgba(34, 197, 94, 0.9) 0%, rgba(22, 163, 74, 0.9) 100%)',
-                                  boxShadow: item.hasShimmer 
-                                    ? '0 2px 8px rgba(239, 68, 68, 0.4)'
-                                    : '0 2px 8px rgba(34, 197, 94, 0.3)'
-                                }}
-                                whileHover={{ scale: 1.05 }}
-                                animate={item.hasShimmer ? {
-                                  boxShadow: [
-                                    '0 2px 8px rgba(239, 68, 68, 0.4)',
-                                    '0 4px 16px rgba(239, 68, 68, 0.6)',
-                                    '0 2px 8px rgba(239, 68, 68, 0.4)'
-                                  ]
-                                } : {}}
-                                transition={item.hasShimmer ? {
-                                  duration: 2,
-                                  repeat: Infinity,
-                                  ease: "easeInOut"
-                                } : {}}
-                              >
-                                <span className="relative z-10">{item.badge}</span>
-                                {item.hasShimmer && (
-                                  <motion.div
-                                    className="absolute inset-0 rounded-full"
-                                    style={{
-                                      background: 'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.4) 50%, transparent 70%)'
-                                    }}
-                                    animate={{
-                                      x: ['-100%', '100%']
-                                    }}
-                                    transition={{
-                                      duration: 1.5,
-                                      repeat: Infinity,
-                                      repeatDelay: 2,
-                                      ease: "easeInOut"
-                                    }}
-                                  />
-                                )}
-                              </motion.span>
-                            </motion.div>
-                          )}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </motion.button>
-                
-                {/* Enhanced Tooltip for collapsed state */}
-                <AnimatePresence>
-                  {isCollapsed && (
-                    <motion.div 
-                      className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-2 text-sm rounded-xl pointer-events-none whitespace-nowrap z-50 opacity-0 group-hover:opacity-100"
-                      style={{
-                        background: `
-                          linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(50, 50, 50, 0.9) 100%)
-                        `,
-                        backdropFilter: 'blur(20px)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
-                      }}
-                      initial={{ opacity: 0, x: -10, scale: 0.9 }}
-                      animate={{ opacity: 1, x: 0, scale: 1 }}
-                      exit={{ opacity: 0, x: -10, scale: 0.9 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      {item.hotDeal ? (
-                        <div className="space-y-2">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-gray-200 font-medium">{item.label}</span>
-                            <span className="px-1.5 py-0.5 text-xs bg-red-500/20 text-red-400 rounded font-bold">
-                              {item.badge}
-                            </span>
-                          </div>
-                          <div 
-                            className="p-3 rounded-xl"
-                            style={{
-                              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-                              backdropFilter: 'blur(10px)',
-                              border: '1px solid rgba(255, 255, 255, 0.2)'
-                            }}
-                          >
-                            <div className="text-white font-semibold text-sm mb-1">{item.hotDeal.title}</div>
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-red-400 font-bold">{item.hotDeal.discount}</span>
-                              <div className="text-gray-300">
-                                <span className="line-through text-gray-500">${item.hotDeal.originalPrice}</span>
-                                <span className="ml-1">💎{item.hotDeal.xpCost} + ${item.hotDeal.usdCost}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div>
-                          <span className="text-gray-200 font-medium">{item.label}</span>
-                          {item.level && (
-                            <span className="ml-2 px-1.5 py-0.5 text-xs bg-yellow-500/20 text-yellow-400 rounded">
-                              Lv{item.level}+
-                            </span>
-                          )}
-                          {item.badge && (
-                            <span className="ml-2 px-1.5 py-0.5 text-xs bg-green-500/20 text-green-400 rounded">
-                              {item.badge}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            ))}
-          </nav>
-
-          {/* Liquid Glass Bottom Section */}
-          <motion.div
-            className="relative"
-            style={{
-              borderTop: '1px solid rgba(255, 255, 255, 0.1)'
-            }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
-          >
-            {/* Premium Dark Mode Toggle with Radix UI Switch */}
-            <div className={cn(isCollapsed ? "p-3" : "p-6 pb-3")}>
-              <motion.div className="relative group">
+            <AnimatePresence>
+              {isExpanded && (
                 <motion.div
-                  className={cn(
-                    "relative transition-all duration-500 overflow-hidden rounded-2xl",
-                    isCollapsed ? "h-14 px-3" : "h-12 px-4"
-                  )}
-                  style={{
-                    background: `linear-gradient(135deg,
-                      ${theme === 'dark'
-                        ? 'rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%'
-                        : 'rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%'}
-                    )`,
-                    backdropFilter: 'blur(20px)',
-                    border: `1px solid ${theme === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.1)'}`,
-                    boxShadow: theme === 'dark'
-                      ? '0 4px 16px rgba(139, 92, 246, 0.08)'
-                      : '0 4px 16px rgba(0, 0, 0, 0.05)'
-                  }}
-                  whileHover={{
-                    scale: 1.01,
-                    boxShadow: '0 8px 32px rgba(139, 92, 246, 0.15)',
-                    transition: { duration: 0.3 }
-                  }}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
                 >
-                  <div className={cn(
-                    "flex items-center relative z-10 h-full",
-                    isCollapsed ? "justify-center" : "justify-between px-2"
+                  <h2 className={cn(
+                    "text-xl font-semibold",
+                    theme === 'dark' ? 'text-white' : 'text-gray-900'
                   )}>
-                    {/* Theme Icons */}
-                    <AnimatePresence>
-                      {!isCollapsed && (
+                    {user?.displayName || user?.email?.split('@')[0] || 'WIZUP'}
+                  </h2>
+                  <p className={cn(
+                    "text-sm",
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                  )}>
+                    Profile
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </div>
+
+        {/* Navigation Section */}
+        <nav className="relative z-10 flex-1 px-6 py-8 overflow-y-auto">
+          <div className="space-y-3">
+            {navigation.map((item, index) => {
+              const isActive = activeSection === item.id;
+              const Icon = item.icon;
+              const itemStyles = getItemStyles(isActive);
+
+              return (
+                <Tooltip.Provider key={item.id} delayDuration={400}>
+                  <Tooltip.Root>
+                    <Tooltip.Trigger asChild>
+                      <motion.button
+                        onClick={() => handleNavigation(item)}
+                        className={cn(
+                          "w-full flex items-center group",
+                          isExpanded ? "px-4 py-4" : "px-3 py-4 justify-center",
+                          itemStyles.base
+                        )}
+                        initial={{ opacity: 0, x: -30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{
+                          duration: 0.4,
+                          delay: index * 0.08,
+                          ease: "easeOut"
+                        }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        {/* Glassmorphic glow effect */}
+                        {itemStyles.glow && (
+                          <motion.div
+                            className="absolute inset-0 rounded-2xl bg-gradient-to-r from-violet-500/30 to-cyan-400/30"
+                            style={{ filter: 'blur(8px)' }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.3 }}
+                          />
+                        )}
+
+                        {/* Active indicator for minimal variant */}
+                        {isActive && sidebarVariant === 'minimal' && (
+                          <motion.div
+                            className="absolute left-0 top-1/2 w-1 bg-violet-500 rounded-r-full"
+                            style={{ height: '60%', transform: 'translateY(-50%)' }}
+                            initial={{ scaleY: 0 }}
+                            animate={{ scaleY: 1 }}
+                            transition={{ duration: 0.3 }}
+                          />
+                        )}
+
                         <motion.div
-                          className="flex items-center space-x-2"
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -10 }}
+                          className="relative z-10 flex items-center"
+                          whileHover={{ x: 2 }}
                           transition={{ duration: 0.2 }}
                         >
-                          <motion.div
-                            animate={{
-                              scale: theme === 'light' ? 1 : 0.8,
-                              opacity: theme === 'light' ? 1 : 0.6
-                            }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            <Sun className={cn(
-                              "w-4 h-4 transition-colors duration-300",
-                              theme === 'light'
-                                ? "text-amber-500"
-                                : theme === 'dark'
-                                  ? "text-dark-text-muted"
-                                  : "text-gray-500"
-                            )} />
-                          </motion.div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                          <Icon
+                            className={cn(
+                              "w-6 h-6",
+                              isExpanded ? "mr-4" : "mx-auto",
+                              isActive && sidebarVariant === 'minimal' && "text-violet-600 dark:text-violet-400"
+                            )}
+                            strokeWidth={1.5}
+                          />
 
-                    {/* Radix UI Switch */}
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Switch.Root
-                        checked={theme === 'dark'}
-                        onCheckedChange={toggleTheme}
-                        className={cn(
-                          "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-300 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2",
-                          theme === 'dark'
-                            ? "bg-gradient-to-r from-violet-600 to-blue-600 shadow-lg shadow-violet-500/25"
-                            : "bg-gradient-to-r from-gray-200 to-gray-300 shadow-md"
-                        )}
-                        style={{
-                          background: theme === 'dark'
-                            ? 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)'
-                            : 'linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%)',
-                          boxShadow: theme === 'dark'
-                            ? '0 4px 14px rgba(139, 92, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-                            : '0 2px 8px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8)'
-                        }}
-                      >
-                        <Switch.Thumb
-                          className={cn(
-                            "pointer-events-none relative inline-block h-5 w-5 transform rounded-full shadow-lg ring-0 transition-all duration-300 ease-in-out",
-                            theme === 'dark' ? "translate-x-5" : "translate-x-0.5"
-                          )}
+                          <AnimatePresence>
+                            {isExpanded && (
+                              <motion.span
+                                className={cn(
+                                  "font-medium text-base",
+                                  isActive && sidebarVariant === 'minimal' && "text-violet-600 dark:text-violet-400"
+                                )}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -10 }}
+                                transition={{ duration: 0.2 }}
+                              >
+                                {item.label}
+                              </motion.span>
+                            )}
+                          </AnimatePresence>
+                        </motion.div>
+                      </motion.button>
+                    </Tooltip.Trigger>
+
+                    {/* Clean tooltips for collapsed state */}
+                    {!isExpanded && (
+                      <Tooltip.Portal>
+                        <Tooltip.Content
+                          side="right"
+                          sideOffset={16}
+                          className="z-50 overflow-hidden rounded-xl border-0 px-4 py-2"
                           style={{
-                            background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+                            background: sidebarVariant === 'glassmorphic'
+                              ? theme === 'dark'
+                                ? 'rgba(17, 24, 39, 0.95)'
+                                : 'rgba(255, 255, 255, 0.95)'
+                              : theme === 'dark'
+                                ? '#1f2937'
+                                : '#ffffff',
+                            backdropFilter: sidebarVariant === 'glassmorphic' ? 'blur(16px)' : 'none',
+                            border: theme === 'dark'
+                              ? '1px solid rgba(75, 85, 99, 0.3)'
+                              : '1px solid rgba(229, 231, 235, 0.8)',
                             boxShadow: theme === 'dark'
-                              ? '0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)'
-                              : '0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.8)'
+                              ? '0 10px 25px rgba(0, 0, 0, 0.3)'
+                              : '0 10px 25px rgba(0, 0, 0, 0.1)'
                           }}
                         >
-                          <motion.div
-                            className="absolute inset-0 flex items-center justify-center"
-                            animate={{
-                              rotate: theme === 'dark' ? 0 : 180
-                            }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            {theme === 'dark' ? (
-                              <Moon className="w-3 h-3 text-violet-600" />
-                            ) : (
-                              <Sun className="w-3 h-3 text-amber-500" />
+                          <motion.span
+                            className={cn(
+                              "font-medium text-sm",
+                              theme === 'dark' ? 'text-white' : 'text-gray-900'
                             )}
-                          </motion.div>
-                        </Switch.Thumb>
-                      </Switch.Root>
-                    </motion.div>
-
-                    {/* Theme Icons */}
-                    <AnimatePresence>
-                      {!isCollapsed && (
-                        <motion.div
-                          className="flex items-center space-x-2"
-                          initial={{ opacity: 0, x: 10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: 10 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <motion.div
-                            animate={{
-                              scale: theme === 'dark' ? 1 : 0.8,
-                              opacity: theme === 'dark' ? 1 : 0.6
-                            }}
-                            transition={{ duration: 0.3 }}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.15 }}
                           >
-                            <Moon className={cn(
-                              "w-4 h-4 transition-colors duration-300",
-                              theme === 'dark'
-                                ? "text-blue-400"
-                                : theme === 'light'
-                                  ? "text-gray-500"
-                                  : "text-dark-text-muted"
-                            )} />
-                          </motion.div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    {/* Theme Label for collapsed state */}
-                    {isCollapsed && (
-                      <motion.div
-                        className="absolute inset-0 flex items-center justify-center"
-                        animate={{
-                          scale: [1, 1.05, 1]
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "easeInOut"
-                        }}
-                      >
-                        {theme === 'dark' ? (
-                          <Moon className="w-5 h-5 text-blue-400" />
-                        ) : (
-                          <Sun className="w-5 h-5 text-amber-500" />
-                        )}
-                      </motion.div>
+                            {item.label}
+                          </motion.span>
+                        </Tooltip.Content>
+                      </Tooltip.Portal>
                     )}
-                  </div>
-                </motion.div>
+                  </Tooltip.Root>
+                </Tooltip.Provider>
+              );
+            })}
+          </div>
+        </nav>
 
-                {/* Enhanced Theme Toggle Tooltip */}
-                <AnimatePresence>
-                  {isCollapsed && (
-                    <motion.div
-                      className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-2 text-sm rounded-xl pointer-events-none whitespace-nowrap z-50 opacity-0 group-hover:opacity-100"
-                      style={{
-                        background: theme === 'dark'
-                          ? 'linear-gradient(135deg, rgba(22, 28, 39, 0.95) 0%, rgba(31, 41, 55, 0.9) 100%)'
-                          : 'linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(50, 50, 50, 0.9) 100%)',
-                        backdropFilter: 'blur(20px)',
-                        border: `1px solid ${theme === 'dark' ? 'rgba(139, 92, 246, 0.3)' : 'rgba(139, 92, 246, 0.3)'}`,
-                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
-                      }}
-                      initial={{ opacity: 0, x: -10, scale: 0.9 }}
-                      animate={{ opacity: 1, x: 0, scale: 1 }}
-                      exit={{ opacity: 0, x: -10, scale: 0.9 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <span className={cn(
-                          "font-medium",
-                          theme === 'dark' ? "text-blue-400" : "text-violet-400"
-                        )}>
-                          {theme === 'light' ? '☀️ Switch to Dark' : '🌙 Switch to Light'}
-                        </span>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            </div>
+        {/* Bottom Section */}
+        <div className="relative z-10 flex-shrink-0 px-6 py-6 border-t border-gray-200/20 dark:border-gray-700/20 space-y-4">
+          {/* Variant Toggle */}
+          <motion.button
+            onClick={() => setSidebarVariant(sidebarVariant === 'glassmorphic' ? 'minimal' : 'glassmorphic')}
+            className={cn(
+              "w-full flex items-center transition-all duration-300 rounded-2xl group",
+              isExpanded ? "px-4 py-3" : "px-3 py-3 justify-center",
+              sidebarVariant === 'glassmorphic'
+                ? theme === 'dark'
+                  ? "text-gray-300 hover:text-white hover:bg-white/10"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
+                : theme === 'dark'
+                ? "text-gray-400 hover:text-gray-200 hover:bg-gray-800"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+            )}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            {sidebarVariant === 'glassmorphic' ? (
+              <Sparkles className={cn("w-5 h-5", isExpanded ? "mr-3" : "mx-auto")} strokeWidth={1.5} />
+            ) : (
+              <Minimize2 className={cn("w-5 h-5", isExpanded ? "mr-3" : "mx-auto")} strokeWidth={1.5} />
+            )}
 
-            {/* Logout Button */}
-            <div className={cn(isCollapsed ? "p-3" : "p-6 pb-3")}>
-              <motion.div className="relative group">
-                <motion.button
-                  onClick={handleLogout}
-                  className={cn(
-                    "w-full relative transition-all duration-500 overflow-hidden",
-                    isCollapsed ? "h-14 px-0 rounded-xl" : "h-12 px-4 rounded-2xl"
-                  )}
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                    backdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)'
-                  }}
-                  whileHover={{ 
-                    scale: 1.02,
-                    y: -2,
-                    transition: { duration: 0.3 }
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = `
-                      linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.08) 100%),
-                      rgba(255, 255, 255, 0.08)
-                    `;
-                    e.currentTarget.style.border = '1px solid rgba(239, 68, 68, 0.2)';
-                    e.currentTarget.style.boxShadow = '0 8px 32px rgba(239, 68, 68, 0.1)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = `
-                      linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)
-                    `;
-                    e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.1)';
-                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.05)';
-                  }}
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.span
+                  className="font-medium text-sm"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  <div className={cn(
-                    "flex items-center relative z-10",
-                    isCollapsed ? "justify-center" : "justify-start space-x-3"
-                  )}>
-                    <motion.div
-                      className="relative"
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <LogOut className={cn(
-                        "w-5 h-5 transition-colors duration-300",
-                        theme === 'dark' ? "text-gray-300 group-hover:text-red-400" : "text-gray-600 group-hover:text-red-500"
-                      )} />
-                    </motion.div>
-                    
-                    <AnimatePresence>
-                      {!isCollapsed && (
-                        <motion.span
-                          className={cn(
-                            "font-medium transition-colors duration-300",
-                            theme === 'dark' ? "text-gray-300 group-hover:text-red-400" : "text-gray-600 group-hover:text-red-500"
-                          )}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -10 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          Logout
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </motion.button>
-                
-                {/* Enhanced Logout Tooltip */}
-                <AnimatePresence>
-                  {isCollapsed && (
-                    <motion.div 
-                      className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-2 text-sm rounded-xl pointer-events-none whitespace-nowrap z-50 opacity-0 group-hover:opacity-100"
-                      style={{
-                        background: `
-                          linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(50, 50, 50, 0.9) 100%)
-                        `,
-                        backdropFilter: 'blur(20px)',
-                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
-                      }}
-                      initial={{ opacity: 0, x: -10, scale: 0.9 }}
-                      animate={{ opacity: 1, x: 0, scale: 1 }}
-                      exit={{ opacity: 0, x: -10, scale: 0.9 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <span className="text-red-400 font-medium">Logout</span>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            </div>
+                  {sidebarVariant === 'glassmorphic' ? 'Glassmorphic' : 'Minimal'}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.button>
 
-            {/* Collapse Toggle (Desktop) */}
-            <div className={cn("hidden md:block", isCollapsed ? "p-3 pt-0" : "p-6 pt-3")}>
-              <motion.button
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className="w-full h-10 relative transition-all duration-500 overflow-hidden rounded-xl"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)'
-                }}
-                whileHover={{ 
-                  scale: 1.02,
-                  boxShadow: '0 8px 32px rgba(147, 51, 234, 0.1)',
-                  transition: { duration: 0.3 }
-                }}
-                whileTap={{ scale: 0.98 }}
+          {/* Theme Toggle */}
+          <motion.button
+            onClick={toggleTheme}
+            className={cn(
+              "w-full flex items-center transition-all duration-300 rounded-2xl group",
+              isExpanded ? "px-4 py-3" : "px-3 py-3 justify-center",
+              sidebarVariant === 'glassmorphic'
+                ? theme === 'dark'
+                  ? "text-gray-300 hover:text-white hover:bg-white/10"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
+                : theme === 'dark'
+                ? "text-gray-400 hover:text-gray-200 hover:bg-gray-800"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+            )}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <motion.div
+              className={cn("w-5 h-5", isExpanded ? "mr-3" : "mx-auto")}
+              whileHover={{ rotate: 180 }}
+              transition={{ duration: 0.3 }}
+            >
+              {theme === 'dark' ? (
+                <Moon className="w-5 h-5" strokeWidth={1.5} />
+              ) : (
+                <Sun className="w-5 h-5" strokeWidth={1.5} />
+              )}
+            </motion.div>
+
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.span
+                  className="font-medium text-sm"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.button>
+
+          {/* Logout Button */}
+          <motion.button
+            onClick={handleLogout}
+            className={cn(
+              "w-full flex items-center transition-all duration-300 rounded-2xl group",
+              isExpanded ? "px-4 py-3" : "px-3 py-3 justify-center",
+              "text-red-500 hover:text-red-600",
+              sidebarVariant === 'glassmorphic'
+                ? "hover:bg-red-500/10"
+                : "hover:bg-red-50 dark:hover:bg-red-900/20"
+            )}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <LogOut className={cn("w-5 h-5", isExpanded ? "mr-3" : "mx-auto")} strokeWidth={1.5} />
+
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.span
+                  className="font-medium text-sm"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  Logout
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.button>
+
+          {/* Collapse/Expand Button */}
+          <div className="flex justify-center pt-4">
+            <motion.button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className={cn(
+                "flex items-center justify-center rounded-full transition-all duration-300",
+                isExpanded ? "w-10 h-10" : "w-12 h-12",
+                sidebarVariant === 'glassmorphic'
+                  ? theme === 'dark'
+                    ? "bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white"
+                    : "bg-white/50 hover:bg-white/70 text-gray-600 hover:text-gray-900"
+                  : theme === 'dark'
+                    ? "bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-gray-200"
+                    : "bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-900"
+              )}
+              style={{
+                backdropFilter: sidebarVariant === 'glassmorphic' ? 'blur(16px)' : 'none',
+                boxShadow: sidebarVariant === 'glassmorphic'
+                  ? theme === 'dark'
+                    ? '0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                    : '0 4px 16px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8)'
+                  : theme === 'dark'
+                    ? '0 4px 12px rgba(0, 0, 0, 0.3)'
+                    : '0 4px 12px rgba(0, 0, 0, 0.1)'
+              }}
+              whileHover={{
+                scale: 1.1,
+                boxShadow: sidebarVariant === 'glassmorphic'
+                  ? theme === 'dark'
+                    ? '0 6px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
+                    : '0 6px 20px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9)'
+                  : theme === 'dark'
+                    ? '0 6px 16px rgba(0, 0, 0, 0.4)'
+                    : '0 6px 16px rgba(0, 0, 0, 0.15)'
+              }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <motion.div
+                animate={{ rotate: isExpanded ? 0 : 180 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
               >
-                <motion.div
-                  className="flex items-center justify-center text-gray-500 hover:text-indigo-500 transition-colors duration-300"
-                  animate={{ 
-                    rotate: isCollapsed ? 0 : 180,
-                    scale: [1, 1.1, 1]
-                  }}
-                  transition={{ 
-                    rotate: { duration: 0.3 },
-                    scale: { duration: 2, repeat: Infinity }
-                  }}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </motion.div>
-              </motion.button>
-            </div>
-          </motion.div>
+                {isExpanded ? (
+                  <ChevronLeft className="w-5 h-5" strokeWidth={1.5} />
+                ) : (
+                  <ChevronRight className="w-5 h-5" strokeWidth={1.5} />
+                )}
+              </motion.div>
+            </motion.button>
+          </div>
         </div>
       </motion.aside>
 
       {/* Overlay for mobile */}
       <AnimatePresence>
-        {!isCollapsed && (
-          <motion.div 
-            className="fixed inset-0 bg-black/60 z-30 lg:hidden backdrop-blur-sm"
-            onClick={() => setIsCollapsed(true)}
+        {isExpanded && (
+          <motion.div
+            className="fixed inset-0 bg-black/40 z-30 lg:hidden backdrop-blur-sm"
+            onClick={() => setIsExpanded(false)}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
