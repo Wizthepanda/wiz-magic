@@ -177,7 +177,32 @@
 
   /* Smooth theme transitions for all elements */
   * {
-    transition: var(--theme-transition, all 400ms cubic-bezier(0.4, 0, 0.2, 1));
+    transition: var(--theme-transition, background-color 400ms cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 400ms cubic-bezier(0.4, 0, 0.2, 1),
+                color 400ms cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 400ms cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 300ms ease-out,
+                transform 200ms ease-out);
+  }
+
+  /* Enhanced element-specific transitions */
+  .transition-theme {
+    transition: background-color 400ms cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 400ms cubic-bezier(0.4, 0, 0.2, 1),
+                color 400ms cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Smooth hover transitions */
+  .transition-hover {
+    transition: transform 200ms ease-out,
+                box-shadow 300ms ease-out,
+                background-color 200ms ease-out;
+  }
+
+  /* XP and interactive element transitions */
+  .transition-interactive {
+    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Dark Mode specific component enhancements */
@@ -207,6 +232,88 @@
       0 0 20px hsl(180 100% 50% / 0.6),
       0 0 40px hsl(280 100% 60% / 0.4),
       0 0 60px hsl(45 90% 65% / 0.3);
+  }
+
+  /* Enhanced Dark Mode Component Styles */
+  .dark .premium-card {
+    background: linear-gradient(135deg,
+      hsl(231 25% 13% / 0.95) 0%,
+      hsl(233 20% 15% / 0.9) 100%);
+    backdrop-filter: blur(20px);
+    border: 1px solid hsl(231 20% 20%);
+    box-shadow: 0 8px 32px hsl(280 65% 60% / 0.1);
+  }
+
+  .dark .premium-card:hover {
+    box-shadow: 0 12px 40px hsl(280 65% 60% / 0.2);
+    transform: translateY(-2px);
+  }
+
+  .dark .floating-element {
+    box-shadow: 0 8px 32px hsl(0 0% 0% / 0.4);
+  }
+
+  .dark .text-gradient {
+    background: linear-gradient(135deg,
+      hsl(280 65% 60%) 0%,
+      hsl(220 70% 70%) 50%,
+      hsl(45 90% 65%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .dark .neon-border {
+    border: 1px solid hsl(280 65% 60% / 0.3);
+    box-shadow: 0 0 20px hsl(280 65% 60% / 0.2);
+  }
+
+  .dark .neon-border:hover {
+    border-color: hsl(280 65% 60% / 0.5);
+    box-shadow: 0 0 30px hsl(280 65% 60% / 0.3);
+  }
+
+  /* Dark Mode Button Enhancements */
+  .dark .btn-primary {
+    background: linear-gradient(135deg, hsl(280 65% 60%) 0%, hsl(220 70% 70%) 100%);
+    box-shadow: 0 4px 16px hsl(280 65% 60% / 0.3);
+  }
+
+  .dark .btn-primary:hover {
+    box-shadow: 0 8px 24px hsl(280 65% 60% / 0.5);
+    transform: translateY(-1px);
+  }
+
+  /* Dark Mode Text Colors */
+  .dark .text-primary {
+    color: hsl(218 20% 95%);
+  }
+
+  .dark .text-secondary {
+    color: hsl(220 15% 60%);
+  }
+
+  .dark .text-muted {
+    color: hsl(220 15% 45%);
+  }
+
+  /* Dark Mode Input Fields */
+  .dark input,
+  .dark textarea {
+    background: hsl(231 25% 13% / 0.8);
+    border: 1px solid hsl(231 20% 20%);
+    color: hsl(218 20% 95%);
+  }
+
+  .dark input:focus,
+  .dark textarea:focus {
+    border-color: hsl(280 65% 60%);
+    box-shadow: 0 0 0 3px hsl(280 65% 60% / 0.1);
+  }
+
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: hsl(220 15% 45%);
   }
 }
 

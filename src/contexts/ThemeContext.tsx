@@ -1,20 +1,16 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React from 'react';
+import { ThemeProvider as NextThemeProvider } from 'next-themes';
+import { useTheme as useNextTheme } from 'next-themes';
 
-type Theme = 'light' | 'dark';
-
-interface ThemeContextType {
-  theme: Theme;
-  toggleTheme: () => void;
-}
-
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
-
+// Re-export useTheme hook for existing components
 export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
+  const { theme, setTheme } = useNextTheme();
+
+  const toggleTheme = () => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  };
+
+  return { theme, toggleTheme };
 };
 
 interface ThemeProviderProps {
@@ -22,39 +18,16 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>(() => {
-    // Check if we're in the browser and get saved theme or default to light
-    if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('wiz-theme') as Theme;
-      return savedTheme || 'light';
-    }
-    return 'light';
-  });
-
-  useEffect(() => {
-    // Save theme to localStorage
-    localStorage.setItem('wiz-theme', theme);
-
-    // Apply theme to document root
-    const root = document.documentElement;
-
-    if (theme === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-
-    // Apply CSS custom properties for smooth transitions
-    root.style.setProperty('--theme-transition', 'all 400ms cubic-bezier(0.4, 0, 0.2, 1)');
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
-  };
-
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <NextThemeProvider
+      attribute="class"
+      defaultTheme="light"
+      enableSystem={false}
+      storageKey="wiz-theme"
+      themes={['light', 'dark']}
+      disableTransitionOnChange={false}
+    >
       {children}
-    </ThemeContext.Provider>
+    </NextThemeProvider>
   );
 };

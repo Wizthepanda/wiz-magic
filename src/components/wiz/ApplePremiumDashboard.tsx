@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { useXp } from '@/context/XpContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
 import { PremiumWatchExperience } from './PremiumWatchExperience';
 import { LuxuryCircularIcon } from '@/components/ui/luxury-circular-icon';
@@ -17,18 +18,29 @@ import { XPRewardsDropdown } from '@/components/ui/xp-rewards-dropdown';
 import { EnhancedProfileDropdown } from '@/components/ui/enhanced-profile-dropdown';
 import { XPProfileDropdown } from '@/components/ui/xp-profile-dropdown';
 
-// Ultra-Premium Design System
-const premiumCard = "bg-white/95 backdrop-blur-sm border border-gray-200/40 rounded-xl shadow-sm";
-const luxuryHover = "hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-out hover:bg-white";
-const cleanInput = "bg-white/80 backdrop-blur-sm border border-gray-200/30 rounded-full shadow-sm";
-const auroraAccent = "bg-gradient-to-r from-blue-500 via-violet-500 to-amber-400";
-const subtleGlass = "backdrop-blur-md bg-white/60 border border-white/40";
-const floatingCard = "bg-white shadow-lg border border-gray-100 rounded-xl";
+// Ultra-Premium Design System with Enhanced Dark Mode
+const premiumCard = "bg-white/95 dark:bg-dark-bg-secondary/95 backdrop-blur-sm border border-gray-200/40 dark:border-dark-surface-300 rounded-xl shadow-sm dark:shadow-xl dark:shadow-dark-accent-purple/10";
+const luxuryHover = "hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-out hover:bg-white dark:hover:bg-dark-bg-elevated";
+const cleanInput = "bg-white/80 dark:bg-dark-bg-tertiary/80 backdrop-blur-sm border border-gray-200/30 dark:border-dark-surface-300 rounded-full shadow-sm";
+const auroraAccent = "bg-gradient-to-r from-blue-500 via-violet-500 to-amber-400 dark:from-dark-accent-blue dark:via-dark-accent-purple dark:to-dark-accent-orange";
+const subtleGlass = "backdrop-blur-md bg-white/60 dark:bg-dark-bg-secondary/60 border border-white/40 dark:border-dark-surface-200";
+const floatingCard = "bg-white dark:bg-dark-bg-secondary shadow-lg dark:shadow-xl dark:shadow-dark-accent-purple/10 border border-gray-100 dark:border-dark-surface-300 rounded-xl";
 
-// Dark mode variants
-const premiumCardDark = "bg-slate-900/95 backdrop-blur-sm border border-slate-700/40 rounded-xl shadow-sm";
-const cleanInputDark = "bg-slate-800/80 backdrop-blur-sm border border-slate-700/30 rounded-full shadow-sm";
-const floatingCardDark = "bg-slate-900 shadow-xl border border-slate-700 rounded-xl";
+// Dynamic card styling based on theme
+const getDynamicCardClass = (isDark: boolean) =>
+  isDark
+    ? "bg-dark-bg-secondary/95 backdrop-blur-sm border border-dark-surface-300 rounded-xl shadow-xl shadow-dark-accent-purple/10"
+    : "bg-white/95 backdrop-blur-sm border border-gray-200/40 rounded-xl shadow-sm";
+
+const getDynamicInputClass = (isDark: boolean) =>
+  isDark
+    ? "bg-dark-bg-tertiary/80 backdrop-blur-sm border border-dark-surface-300 rounded-full shadow-sm text-dark-text-primary placeholder:text-dark-text-muted"
+    : "bg-white/80 backdrop-blur-sm border border-gray-200/30 rounded-full shadow-sm";
+
+const getDynamicFloatingClass = (isDark: boolean) =>
+  isDark
+    ? "bg-dark-bg-secondary shadow-xl shadow-dark-accent-purple/10 border border-dark-surface-300 rounded-xl"
+    : "bg-white shadow-lg border border-gray-100 rounded-xl";
 
 interface ApplePremiumDashboardProps {
   className?: string;
@@ -37,7 +49,6 @@ interface ApplePremiumDashboardProps {
 export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [userLevel, setUserLevel] = useState(7);
   const [userXP, setUserXP] = useState(2450);
   const [nextLevelXP] = useState(3000);
@@ -59,6 +70,8 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const { addXp } = useXp();
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
 
   // Refs
   const xpRingRef = useRef<HTMLDivElement>(null);
@@ -286,7 +299,7 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
               <div
                 className={cn(
                   "relative rounded-full transition-all duration-300 overflow-hidden",
-                  isDarkMode ? cleanInputDark : cleanInput,
+                  getDynamicInputClass(isDarkMode),
                   searchFocused && (isDarkMode ? "ring-1 ring-violet-400/30" : "ring-1 ring-blue-400/30")
                 )}
                 style={{
@@ -611,7 +624,7 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
                     <motion.div
                       className={cn(
                         "relative rounded-xl overflow-hidden transition-all duration-300",
-                        isDarkMode ? floatingCardDark : floatingCard,
+                        getDynamicFloatingClass(isDarkMode),
                         "group-hover:shadow-xl"
                       )}
                       whileHover={{

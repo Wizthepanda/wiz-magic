@@ -79,6 +79,59 @@ export default {
 					glow: 'hsl(var(--xp-glow))',
 					complete: 'hsl(var(--xp-complete))'
 				},
+				// Dark Mode Color System
+				dark: {
+					bg: {
+						primary: '#0B0F19',
+						secondary: '#1A1F2E',
+						tertiary: '#242938',
+						elevated: '#2D3648'
+					},
+					indigo: {
+						50: '#E8EAFF',
+						100: '#D1D5FF',
+						200: '#A4ABFF',
+						300: '#7681FF',
+						400: '#4857FF',
+						500: '#1A2DFF',
+						600: '#1524CC',
+						700: '#101B99',
+						800: '#0A1266',
+						900: '#050933'
+					},
+					navy: {
+						50: '#F1F3F9',
+						100: '#E3E7F3',
+						200: '#C7CFE7',
+						300: '#ABB7DB',
+						400: '#8F9FCF',
+						500: '#7387C3',
+						600: '#5C6C9C',
+						700: '#455175',
+						800: '#2E364E',
+						900: '#171B27'
+					},
+					surface: {
+						100: 'rgba(255, 255, 255, 0.05)',
+						200: 'rgba(255, 255, 255, 0.08)',
+						300: 'rgba(255, 255, 255, 0.12)',
+						400: 'rgba(255, 255, 255, 0.16)',
+						500: 'rgba(255, 255, 255, 0.20)'
+					},
+					text: {
+						primary: '#FFFFFF',
+						secondary: '#B8C2E0',
+						muted: '#8B9BB8',
+						disabled: '#6B7A96'
+					},
+					accent: {
+						purple: '#8B5CF6',
+						blue: '#3B82F6',
+						cyan: '#06B6D4',
+						emerald: '#10B981',
+						orange: '#F59E0B'
+					}
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',

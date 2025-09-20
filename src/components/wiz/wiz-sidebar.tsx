@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useSafeNavigate } from '@/hooks/useSafeNavigate';
+import * as Switch from '@radix-ui/react-switch';
 import {
   Compass,
   Crown,
@@ -512,7 +513,7 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.8 }}
           >
-            {/* Premium Dark Mode Toggle */}
+            {/* Premium Dark Mode Toggle with Radix UI Switch */}
             <div className={cn(isCollapsed ? "p-3" : "p-6 pb-3")}>
               <motion.div className="relative group">
                 <motion.div
@@ -521,97 +522,159 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
                     isCollapsed ? "h-14 px-3" : "h-12 px-4"
                   )}
                   style={{
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                    background: `linear-gradient(135deg,
+                      ${theme === 'dark'
+                        ? 'rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%'
+                        : 'rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%'}
+                    )`,
                     backdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)'
+                    border: `1px solid ${theme === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.1)'}`,
+                    boxShadow: theme === 'dark'
+                      ? '0 4px 16px rgba(139, 92, 246, 0.08)'
+                      : '0 4px 16px rgba(0, 0, 0, 0.05)'
                   }}
                   whileHover={{
                     scale: 1.01,
-                    boxShadow: '0 8px 32px rgba(139, 92, 246, 0.1)',
+                    boxShadow: '0 8px 32px rgba(139, 92, 246, 0.15)',
                     transition: { duration: 0.3 }
                   }}
                 >
                   <div className={cn(
-                    "flex items-center justify-center h-full relative z-10",
-                    !isCollapsed && "px-2"
+                    "flex items-center relative z-10 h-full",
+                    isCollapsed ? "justify-center" : "justify-between px-2"
                   )}>
-                    {/* Theme Toggle Pill */}
-                    <div
-                      className="relative w-full max-w-32 h-8 rounded-full overflow-hidden"
-                      style={{
-                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)'
-                      }}
-                    >
-                      {/* Sliding Background */}
-                      <motion.div
-                        className="absolute inset-y-0 w-1/2 rounded-full"
-                        style={{
-                          background: 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)',
-                          boxShadow: '0 4px 12px rgba(139, 92, 246, 0.4)'
-                        }}
-                        animate={{
-                          x: theme === 'dark' ? '100%' : '0%'
-                        }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 400,
-                          damping: 30
-                        }}
-                      />
-
-                      {/* Light Mode Button */}
-                      <motion.button
-                        onClick={() => theme !== 'light' && toggleTheme()}
-                        className="absolute left-0 w-1/2 h-full flex items-center justify-center"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <motion.div
-                          animate={{
-                            scale: theme === 'light' ? 1.1 : 0.9,
-                            color: theme === 'light' ? '#ffffff' : '#6b7280'
-                          }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <Sun size={14} strokeWidth={2} />
-                        </motion.div>
-                      </motion.button>
-
-                      {/* Dark Mode Button */}
-                      <motion.button
-                        onClick={() => theme !== 'dark' && toggleTheme()}
-                        className="absolute right-0 w-1/2 h-full flex items-center justify-center"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <motion.div
-                          animate={{
-                            scale: theme === 'dark' ? 1.1 : 0.9,
-                            color: theme === 'dark' ? '#ffffff' : '#6b7280'
-                          }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <Moon size={14} strokeWidth={2} />
-                        </motion.div>
-                      </motion.button>
-                    </div>
-
-                    {/* Theme Label (when expanded) */}
+                    {/* Theme Icons */}
                     <AnimatePresence>
                       {!isCollapsed && (
-                        <motion.span
-                          className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-xs font-medium text-gray-500"
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
+                        <motion.div
+                          className="flex items-center space-x-2"
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -10 }}
                           transition={{ duration: 0.2 }}
                         >
-                          {theme === 'light' ? '☀️ Light' : '🌙 Dark'}
-                        </motion.span>
+                          <motion.div
+                            animate={{
+                              scale: theme === 'light' ? 1 : 0.8,
+                              opacity: theme === 'light' ? 1 : 0.6
+                            }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            <Sun className={cn(
+                              "w-4 h-4 transition-colors duration-300",
+                              theme === 'light'
+                                ? "text-amber-500"
+                                : theme === 'dark'
+                                  ? "text-dark-text-muted"
+                                  : "text-gray-500"
+                            )} />
+                          </motion.div>
+                        </motion.div>
                       )}
                     </AnimatePresence>
+
+                    {/* Radix UI Switch */}
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Switch.Root
+                        checked={theme === 'dark'}
+                        onCheckedChange={toggleTheme}
+                        className={cn(
+                          "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-300 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2",
+                          theme === 'dark'
+                            ? "bg-gradient-to-r from-violet-600 to-blue-600 shadow-lg shadow-violet-500/25"
+                            : "bg-gradient-to-r from-gray-200 to-gray-300 shadow-md"
+                        )}
+                        style={{
+                          background: theme === 'dark'
+                            ? 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)'
+                            : 'linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%)',
+                          boxShadow: theme === 'dark'
+                            ? '0 4px 14px rgba(139, 92, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                            : '0 2px 8px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8)'
+                        }}
+                      >
+                        <Switch.Thumb
+                          className={cn(
+                            "pointer-events-none relative inline-block h-5 w-5 transform rounded-full shadow-lg ring-0 transition-all duration-300 ease-in-out",
+                            theme === 'dark' ? "translate-x-5" : "translate-x-0.5"
+                          )}
+                          style={{
+                            background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+                            boxShadow: theme === 'dark'
+                              ? '0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)'
+                              : '0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.8)'
+                          }}
+                        >
+                          <motion.div
+                            className="absolute inset-0 flex items-center justify-center"
+                            animate={{
+                              rotate: theme === 'dark' ? 0 : 180
+                            }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            {theme === 'dark' ? (
+                              <Moon className="w-3 h-3 text-violet-600" />
+                            ) : (
+                              <Sun className="w-3 h-3 text-amber-500" />
+                            )}
+                          </motion.div>
+                        </Switch.Thumb>
+                      </Switch.Root>
+                    </motion.div>
+
+                    {/* Theme Icons */}
+                    <AnimatePresence>
+                      {!isCollapsed && (
+                        <motion.div
+                          className="flex items-center space-x-2"
+                          initial={{ opacity: 0, x: 10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 10 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <motion.div
+                            animate={{
+                              scale: theme === 'dark' ? 1 : 0.8,
+                              opacity: theme === 'dark' ? 1 : 0.6
+                            }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            <Moon className={cn(
+                              "w-4 h-4 transition-colors duration-300",
+                              theme === 'dark'
+                                ? "text-blue-400"
+                                : theme === 'light'
+                                  ? "text-gray-500"
+                                  : "text-dark-text-muted"
+                            )} />
+                          </motion.div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Theme Label for collapsed state */}
+                    {isCollapsed && (
+                      <motion.div
+                        className="absolute inset-0 flex items-center justify-center"
+                        animate={{
+                          scale: [1, 1.05, 1]
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                      >
+                        {theme === 'dark' ? (
+                          <Moon className="w-5 h-5 text-blue-400" />
+                        ) : (
+                          <Sun className="w-5 h-5 text-amber-500" />
+                        )}
+                      </motion.div>
+                    )}
                   </div>
                 </motion.div>
 
@@ -621,9 +684,11 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
                     <motion.div
                       className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-2 text-sm rounded-xl pointer-events-none whitespace-nowrap z-50 opacity-0 group-hover:opacity-100"
                       style={{
-                        background: 'linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(50, 50, 50, 0.9) 100%)',
+                        background: theme === 'dark'
+                          ? 'linear-gradient(135deg, rgba(22, 28, 39, 0.95) 0%, rgba(31, 41, 55, 0.9) 100%)'
+                          : 'linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(50, 50, 50, 0.9) 100%)',
                         backdropFilter: 'blur(20px)',
-                        border: '1px solid rgba(139, 92, 246, 0.3)',
+                        border: `1px solid ${theme === 'dark' ? 'rgba(139, 92, 246, 0.3)' : 'rgba(139, 92, 246, 0.3)'}`,
                         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
                       }}
                       initial={{ opacity: 0, x: -10, scale: 0.9 }}
@@ -632,8 +697,11 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
                       transition={{ duration: 0.2 }}
                     >
                       <div className="flex items-center space-x-2">
-                        <span className="text-violet-400 font-medium">
-                          {theme === 'light' ? '☀️ Light Mode' : '🌙 Dark Mode'}
+                        <span className={cn(
+                          "font-medium",
+                          theme === 'dark' ? "text-blue-400" : "text-violet-400"
+                        )}>
+                          {theme === 'light' ? '☀️ Switch to Dark' : '🌙 Switch to Light'}
                         </span>
                       </div>
                     </motion.div>
