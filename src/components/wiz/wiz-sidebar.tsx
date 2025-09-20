@@ -18,7 +18,8 @@ import {
   ChevronRight,
   Settings,
   Sparkles,
-  Minimize2
+  Minimize2,
+  Crown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -57,7 +58,9 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
     { id: 'community', label: 'Community', icon: Users },
     { id: 'create', label: 'Create', icon: Plus },
     { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
+    { id: 'profile', label: 'Profile', icon: User },
     { id: 'claim', label: 'Rewards', icon: Gift, route: '/claim' },
+    { id: 'premiere', label: 'WIZ Premiere', icon: Crown },
   ];
 
   const handleNavigation = (item: any) => {
