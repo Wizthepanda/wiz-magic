@@ -19,7 +19,8 @@ import {
   Settings,
   Sparkles,
   Minimize2,
-  Crown
+  Crown,
+  BookOpen
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -309,6 +310,7 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
           </motion.div>
         </div>
 
+
         {/* Navigation Section */}
         <nav className="relative z-10 flex-1 px-6 py-8 overflow-y-auto">
           <div className="space-y-3">
@@ -317,6 +319,8 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
               const Icon = item.icon;
               const itemStyles = getItemStyles(isActive);
 
+
+              // Regular navigation items
               return (
                 <Tooltip.Provider key={item.id} delayDuration={400}>
                   <Tooltip.Root>
