@@ -376,11 +376,6 @@ const YouTubeConnectFlow = ({
 
               {/* Connect Content */}
               <div className="space-y-4">
-                <h2 className={`font-bold ${
-                  isMobile ? 'text-2xl' : 'text-3xl'
-                } text-gray-900 dark:text-gray-100`}>
-                  Connect your YouTube channel to start creating on WIZ.
-                </h2>
 
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button
@@ -412,11 +407,14 @@ const YouTubeConnectFlow = ({
                   </Button>
                 </motion.div>
 
-                <p className={`text-gray-600 dark:text-gray-300 leading-relaxed ${
-                  isMobile ? 'text-base' : 'text-lg'
-                }`}>
-                  We'll securely connect to your YouTube channel using Google's authentication. Your credentials are never stored by WIZUP.
-                </p>
+                <div className="text-center space-y-2">
+                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed" style={{ fontSize: '16px', lineHeight: '1.6' }}>
+                    We'll securely connect to your YouTube channel using Google's authentication.
+                  </p>
+                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed" style={{ fontSize: '16px', lineHeight: '1.6' }}>
+                    Your credentials are never stored by WIZUP.
+                  </p>
+                </div>
               </div>
             </motion.div>
           )}
@@ -1974,9 +1972,9 @@ export const CreationHub = ({
                     <div className="flex-1 h-px bg-gradient-to-l from-transparent to-gray-300 dark:to-gray-600"></div>
                   </div>
 
-                  {/* Heading */}
+                  {/* Main Title */}
                   <h3 className={`font-semibold text-gray-800 dark:text-gray-100 ${isMobile ? 'text-lg' : 'text-xl'}`}>
-                    👉 Connect your channel, select videos, and share them with the WIZ community.
+                    Connect your YouTube channel to start creating on WIZ
                   </h3>
                 </div>
 
