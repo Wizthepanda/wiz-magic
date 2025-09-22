@@ -64,7 +64,7 @@ interface CourseData {
     }[];
   };
   pricing: {
-    xpCost: number;
+    zapsCost: number;
     usdPrice: number;
     originalPrice: number;
     discount: number;
@@ -153,7 +153,7 @@ const courses: CourseData[] = [
       ]
     },
     pricing: {
-      xpCost: 120,
+      zapsCost: 120,
       usdPrice: 89,
       originalPrice: 299,
       discount: 70
@@ -238,7 +238,7 @@ const courses: CourseData[] = [
       ]
     },
     pricing: {
-      xpCost: 299,
+      zapsCost: 299,
       usdPrice: 149,
       originalPrice: 499,
       discount: 70
@@ -307,7 +307,7 @@ const courses: CourseData[] = [
       ]
     },
     pricing: {
-      xpCost: 200,
+      zapsCost: 200,
       usdPrice: 149,
       originalPrice: 299,
       discount: 50
@@ -381,7 +381,7 @@ const courses: CourseData[] = [
       ]
     },
     pricing: {
-      xpCost: 180,
+      zapsCost: 180,
       usdPrice: 97,
       originalPrice: 297,
       discount: 67
@@ -443,8 +443,8 @@ const sortOptions = [
   { value: 'price', label: 'Price: Low to High', icon: Filter }
 ];
 
-// Premium XP Balance Component
-const XPBalanceBadge: React.FC<{ userXP: number }> = ({ userXP }) => (
+// Premium ZAPs Balance Component
+const ZAPsBalanceBadge: React.FC<{ userZAPs: number }> = ({ userZAPs }) => (
   <motion.div
     className="fixed top-6 right-6 z-40"
     initial={{ scale: 0, opacity: 0 }}
@@ -462,12 +462,12 @@ const XPBalanceBadge: React.FC<{ userXP: number }> = ({ userXP }) => (
       </div>
       <div className="text-sm font-semibold text-gray-800">
         <motion.span
-          key={userXP}
+          key={userZAPs}
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
-          {userXP.toLocaleString()} XP
+          {userZAPs.toLocaleString()} ZAPs
         </motion.span>
       </div>
     </div>
@@ -482,6 +482,8 @@ const MediaCarousel: React.FC<{
 }> = ({ media, className, autoPlay = false }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [loadingIndex, setLoadingIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (!autoPlay || isHovered) return;
@@ -492,6 +494,11 @@ const MediaCarousel: React.FC<{
 
     return () => clearInterval(interval);
   }, [autoPlay, isHovered, media.length]);
+
+  useEffect(() => {
+    setImageLoaded(false);
+    setLoadingIndex(currentIndex);
+  }, [currentIndex]);
 
   if (media.length === 0) return null;
 
@@ -510,10 +517,32 @@ const MediaCarousel: React.FC<{
           transition={{ duration: 0.5 }}
           className="relative w-full h-full"
         >
-          <div
-            className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-105"
-            style={{ backgroundImage: `url(${media[currentIndex].thumbnail})` }}
-          />
+          <div className="absolute inset-0">
+            {/* Loading placeholder */}
+            {!imageLoaded && loadingIndex === currentIndex && (
+              <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
+                <Loader className="w-8 h-8 text-gray-400 animate-spin" />
+              </div>
+            )}
+            <div
+              className={cn(
+                "absolute inset-0 bg-cover bg-center transition-all duration-700 hover:scale-105",
+                imageLoaded ? "opacity-100" : "opacity-0"
+              )}
+              style={{ backgroundImage: `url(${media[currentIndex].thumbnail})` }}
+              onLoad={() => {
+                setImageLoaded(true);
+                setLoadingIndex(null);
+              }}
+            />
+            {/* Preload next image */}
+            <img
+              src={media[(currentIndex + 1) % media.length]?.thumbnail}
+              className="hidden"
+              alt=""
+              loading="lazy"
+            />
+          </div>
 
           {/* Media Type Indicator */}
           {media[currentIndex].type === 'video' && (
@@ -625,12 +654,12 @@ const FilterPills: React.FC<{
 // Enhanced Course Card Component with Media Carousel
 const CourseCard: React.FC<{
   course: CourseData;
-  userXP: number;
+  userZAPs: number;
   onCourseSelect: (course: CourseData) => void;
   onClaimCourse: (course: CourseData) => void;
   onJoinWaitlist: (course: CourseData) => void;
-}> = ({ course, userXP, onCourseSelect, onClaimCourse, onJoinWaitlist }) => {
-  const canAfford = userXP >= course.pricing.xpCost;
+}> = ({ course, userZAPs, onCourseSelect, onClaimCourse, onJoinWaitlist }) => {
+  const canAfford = userZAPs >= course.pricing.zapsCost;
 
   return (
     <motion.div
@@ -817,7 +846,7 @@ const CourseCard: React.FC<{
                   whileHover={{ scale: course.isSoldOut ? 1 : 1.05 }}
                 >
                   <span className="font-bold text-sm">
-                    {course.pricing.xpCost} XP
+                    {course.pricing.zapsCost} ZAPs
                   </span>
                 </motion.div>
                 <div className="text-right">
@@ -880,8 +909,8 @@ const CourseCard: React.FC<{
                 disabled={!canAfford}
               >
                 {canAfford
-                  ? `Claim for ${course.pricing.xpCost} XP`
-                  : 'Insufficient XP'
+                  ? `Claim for ${course.pricing.zapsCost} ZAPs`
+                  : 'Insufficient ZAPs'
                 }
               </Button>
             )}
@@ -898,10 +927,11 @@ export default function Claim() {
   const [activeCommunityFilter, setActiveCommunityFilter] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('popular');
   const [activeSection, setActiveSection] = useState('claim');
+  const [modalLoading, setModalLoading] = useState(false);
   const { user, loading } = useAuth();
   const navigate = useSafeNavigate();
   const isMobile = useIsMobile();
-  const userXP = 850; // Mock XP - replace with actual user XP
+  const userZAPs = 850; // Mock ZAPs - replace with actual user ZAPs
 
   const featuredCourses = courses.filter(course => course.isFeatured);
 
@@ -924,7 +954,7 @@ export default function Claim() {
       case 'newest':
         return new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime();
       case 'price':
-        return a.pricing.xpCost - b.pricing.xpCost;
+        return a.pricing.zapsCost - b.pricing.zapsCost;
       default: // popular
         return b.stats.enrolledCount - a.stats.enrolledCount;
     }
@@ -955,6 +985,15 @@ export default function Claim() {
     setActiveCommunityFilter(''); // Reset community filter when changing categories
   };
 
+  const handleCourseSelect = (course: CourseData) => {
+    setModalLoading(true);
+    // Small delay to show loading state, then set course
+    setTimeout(() => {
+      setSelectedCourse(course);
+      setModalLoading(false);
+    }, 100);
+  };
+
   // Redirect if not authenticated
   if (!user && !loading) {
     window.location.href = '/';
@@ -967,7 +1006,7 @@ export default function Claim() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500 mx-auto mb-4"></div>
-          <p className="text-sm text-gray-600">Loading XP Marketplace...</p>
+          <p className="text-sm text-gray-600">Loading ZAPs Marketplace...</p>
         </div>
       </div>
     );
@@ -983,8 +1022,8 @@ export default function Claim() {
         />
       )}
 
-      {/* XP Balance Badge */}
-      <XPBalanceBadge userXP={userXP} />
+      {/* ZAPs Balance Badge */}
+      <ZAPsBalanceBadge userZAPs={userZAPs} />
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 pb-safe">
@@ -998,7 +1037,7 @@ export default function Claim() {
                   onSectionChange={setActiveSection}
                 />
               </div>
-              <h1 className="text-lg font-semibold text-gray-900">XP Marketplace</h1>
+              <h1 className="text-lg font-semibold text-gray-900">ZAPs Marketplace</h1>
               <div className="w-10" /> {/* Spacer */}
             </div>
           </header>
@@ -1064,7 +1103,7 @@ export default function Claim() {
                           onClick={() => handleClaimCourse(featuredCourses[0])}
                           className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-2xl"
                         >
-                          Claim for {featuredCourses[0].pricing.xpCost} XP
+                          Claim for {featuredCourses[0].pricing.zapsCost} ZAPs
                         </Button>
                       </motion.div>
 
@@ -1162,8 +1201,8 @@ export default function Claim() {
                 <CourseCard
                   key={course.id}
                   course={course}
-                  userXP={userXP}
-                  onCourseSelect={setSelectedCourse}
+                  userZAPs={userZAPs}
+                  onCourseSelect={handleCourseSelect}
                   onClaimCourse={handleClaimCourse}
                   onJoinWaitlist={handleJoinWaitlist}
                 />
@@ -1174,23 +1213,42 @@ export default function Claim() {
       </main>
 
       {/* Enhanced Course Detail Modal */}
-      <Dialog open={!!selectedCourse} onOpenChange={() => setSelectedCourse(null)}>
+      <Dialog open={!!selectedCourse || modalLoading} onOpenChange={() => {
+        setSelectedCourse(null);
+        setModalLoading(false);
+      }}>
         <DialogContent
           className="max-w-6xl max-h-[95vh] overflow-hidden p-0 bg-transparent border-0 shadow-none"
           style={{ background: 'transparent' }}
         >
-          <AnimatePresence>
-            {selectedCourse && (
+          <AnimatePresence mode="wait">
+            {modalLoading && (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex items-center justify-center h-96 rounded-3xl bg-white/90 backdrop-blur-xl"
+              >
+                <div className="text-center">
+                  <Loader className="w-8 h-8 text-violet-500 animate-spin mx-auto mb-4" />
+                  <p className="text-gray-600">Loading course details...</p>
+                </div>
+              </motion.div>
+            )}
+            {selectedCourse && !modalLoading && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
                 className="relative rounded-3xl overflow-hidden shadow-2xl"
                 style={{
                   background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%)',
-                  backdropFilter: 'blur(30px)',
+                  backdropFilter: 'blur(20px)',
                   border: '1px solid rgba(255, 255, 255, 0.6)',
+                  willChange: 'transform, opacity',
+                  contain: 'layout style paint',
                 }}
               >
                 {/* Close Button */}
@@ -1203,11 +1261,13 @@ export default function Claim() {
 
                 {/* Hero Media Carousel */}
                 <div className="relative h-80">
-                  <MediaCarousel
-                    media={selectedCourse.media.carousel}
-                    className="w-full h-full"
-                    autoPlay={false}
-                  />
+                  {selectedCourse && (
+                    <MediaCarousel
+                      media={selectedCourse.media.carousel}
+                      className="w-full h-full"
+                      autoPlay={false}
+                    />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
 
                   {/* Course Info Overlay */}
@@ -1255,7 +1315,7 @@ export default function Claim() {
                 </div>
 
                 {/* Content Section */}
-                <div className="p-8 space-y-6 max-h-[50vh] overflow-y-auto">
+                <div className="p-8 space-y-6 max-h-[50vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
                   {/* Creator Info */}
                   <div className="flex items-center space-x-4">
                     <Avatar className="w-16 h-16">
@@ -1324,7 +1384,7 @@ export default function Claim() {
                             whileHover={{ scale: selectedCourse.isSoldOut ? 1 : 1.05 }}
                           >
                             <span className="font-bold text-lg">
-                              {selectedCourse.pricing.xpCost} XP
+                              {selectedCourse.pricing.zapsCost} ZAPs
                             </span>
                           </motion.div>
                           <div className="text-right">
@@ -1378,12 +1438,12 @@ export default function Claim() {
                       ) : (
                         <Button
                           onClick={() => handleClaimCourse(selectedCourse)}
-                          disabled={userXP < selectedCourse.pricing.xpCost}
+                          disabled={userZAPs < selectedCourse.pricing.zapsCost}
                           className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {userXP >= selectedCourse.pricing.xpCost
-                            ? `Claim for ${selectedCourse.pricing.xpCost} XP`
-                            : 'Insufficient XP'
+                          {userZAPs >= selectedCourse.pricing.zapsCost
+                            ? `Claim for ${selectedCourse.pricing.zapsCost} ZAPs`
+                            : 'Insufficient ZAPs'
                           }
                         </Button>
                       )}

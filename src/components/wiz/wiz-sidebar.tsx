@@ -55,11 +55,15 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
   const navigation = [
     { id: 'discover', label: 'Discover', icon: Compass },
     { id: 'community', label: 'Community', icon: Users },
-    { id: 'create', label: 'Create', icon: Plus },
+    { id: 'claim', label: 'ZAP Rewards', icon: Gift, route: '/claim' },
     { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'claim', label: 'Rewards', icon: Gift, route: '/claim' },
     { id: 'premiere', label: 'WIZ Premiere', icon: Crown },
+    { id: 'profile', label: 'Profile', icon: User },
+  ];
+
+  // Separate Create section
+  const createNavigation = [
+    { id: 'create', label: 'Create', icon: Plus },
   ];
 
   const handleNavigation = (item: any) => {
@@ -439,48 +443,49 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
               );
             })}
           </div>
+
         </nav>
 
         {/* Bottom Section */}
         <div className="relative z-10 flex-shrink-0 px-6 py-6 border-t border-gray-200/20 dark:border-gray-700/20 space-y-4">
-          {/* Variant Toggle */}
-          <motion.button
-            onClick={() => setSidebarVariant(sidebarVariant === 'glassmorphic' ? 'minimal' : 'glassmorphic')}
-            className={cn(
-              "w-full flex items-center transition-all duration-300 rounded-2xl group",
-              isExpanded ? "px-4 py-3" : "px-3 py-3 justify-center",
-              sidebarVariant === 'glassmorphic'
-                ? theme === 'dark'
-                  ? "text-gray-300 hover:text-white hover:bg-white/10"
-                  : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
-                : theme === 'dark'
-                ? "text-gray-400 hover:text-gray-200 hover:bg-gray-800"
-                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-            )}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            {sidebarVariant === 'glassmorphic' ? (
-              <Sparkles className={cn("w-5 h-5", isExpanded ? "mr-3" : "mx-auto")} strokeWidth={1.5} />
-            ) : (
-              <Minimize2 className={cn("w-5 h-5", isExpanded ? "mr-3" : "mx-auto")} strokeWidth={1.5} />
-            )}
+          {/* Create Button */}
+          {createNavigation.map((item, index) => {
+            const isActive = activeSection === item.id;
+            const Icon = item.icon;
 
-            <AnimatePresence>
-              {isExpanded && (
-                <motion.span
-                  className="font-medium text-sm"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {sidebarVariant === 'glassmorphic' ? 'Glassmorphic' : 'Minimal'}
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </motion.button>
+            return (
+              <motion.button
+                key={item.id}
+                onClick={() => handleNavigation(item)}
+                className={cn(
+                  "w-full flex items-center transition-all duration-300 rounded-2xl group",
+                  isExpanded ? "px-4 py-3" : "px-3 py-3 justify-center",
+                  "text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200",
+                  sidebarVariant === 'glassmorphic'
+                    ? "hover:bg-white/10 dark:hover:bg-white/5"
+                    : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                )}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Icon className={cn("w-5 h-5", isExpanded ? "mr-3" : "mx-auto")} strokeWidth={1.5} />
 
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.span
+                      className="font-medium text-sm"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {item.label}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+            );
+          })}
 
           {/* Logout Button */}
           <motion.button

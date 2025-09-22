@@ -61,7 +61,7 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
   const renderActiveSection = () => {
     switch (activeSection) {
       case 'discover':
-        return <ApplePremiumDashboard />;
+        return <ApplePremiumDashboard onSectionChange={setActiveSection} />;
       case 'create':
         return <WizCreatePage />;
       case 'community':
@@ -80,7 +80,7 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
           </div>
         );
       default:
-        return <ApplePremiumDashboard />;
+        return <ApplePremiumDashboard onSectionChange={setActiveSection} />;
     }
   };
 

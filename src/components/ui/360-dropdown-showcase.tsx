@@ -7,7 +7,7 @@ import {
 import { NotificationsDropdown } from './notifications-dropdown';
 import { EnhancedProfileDropdown } from './enhanced-profile-dropdown';
 import { XPRewardsDropdown } from './xp-rewards-dropdown';
-import { LeaderboardDropdown } from './leaderboard-dropdown';
+import { LeaderboardDropdownV2 } from './leaderboard-dropdown-v2';
 import { XPShopDropdown } from './xp-shop-dropdown';
 import { LuxuryCircularIcon } from './luxury-circular-icon';
 import { FullLeaderboardPage } from './full-leaderboard-page';
@@ -150,7 +150,7 @@ export const Showcase360: React.FC<Showcase360Props> = ({ className }) => {
                       />
 
                       {/* Leaderboard Dropdown */}
-                      <LeaderboardDropdown
+                      <LeaderboardDropdownV2
                         onViewFullLeaderboard={() => setCurrentView('leaderboard')}
                       />
 

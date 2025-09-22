@@ -11,7 +11,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
 import { PremiumWatchExperience } from './PremiumWatchExperience';
 import { LuxuryCircularIcon } from '@/components/ui/luxury-circular-icon';
-import { LeaderboardDropdown } from '@/components/ui/leaderboard-dropdown';
+import { LeaderboardDropdownV2 } from '@/components/ui/leaderboard-dropdown-v2';
 import { ZAPRewardsDropdown } from '@/components/ui/zap-rewards-dropdown';
 import { NotificationsDropdown } from '@/components/ui/notifications-dropdown';
 import { XPRewardsDropdown } from '@/components/ui/xp-rewards-dropdown';
@@ -44,9 +44,10 @@ const getDynamicFloatingClass = (isDark: boolean) =>
 
 interface ApplePremiumDashboardProps {
   className?: string;
+  onSectionChange?: (section: string) => void;
 }
 
-export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps) => {
+export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremiumDashboardProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const [userLevel, setUserLevel] = useState(7);
@@ -389,8 +390,8 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
               />
 
               {/* Leaderboard Dropdown */}
-              <LeaderboardDropdown
-                onViewFullLeaderboard={() => setShowLeaderboardDrawer(true)}
+              <LeaderboardDropdownV2
+                onViewFullLeaderboard={() => onSectionChange?.('leaderboard')}
               />
 
               {/* ZAP Rewards Dropdown */}

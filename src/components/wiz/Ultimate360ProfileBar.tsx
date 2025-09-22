@@ -11,7 +11,7 @@ import { initProgressUI } from '@/lib/wiz-progress-ui';
 import { NotificationsDropdown } from '@/components/ui/notifications-dropdown';
 import { EnhancedProfileDropdown } from '@/components/ui/enhanced-profile-dropdown';
 import { XPRewardsDropdown } from '@/components/ui/xp-rewards-dropdown';
-import { LeaderboardDropdown } from '@/components/ui/leaderboard-dropdown';
+import { LeaderboardDropdownV2 } from '@/components/ui/leaderboard-dropdown-v2';
 import { ZAPRewardsDropdown } from '@/components/ui/zap-rewards-dropdown';
 import { LuxuryCircularIcon } from '@/components/ui/luxury-circular-icon';
 
@@ -190,8 +190,8 @@ export const Ultimate360ProfileBar: React.FC<Ultimate360ProfileBarProps> = ({
           onViewAll={() => console.log('View all notifications')}
         />
 
-        {/* Leaderboard Dropdown */}
-        <LeaderboardDropdown
+        {/* Leaderboard Dropdown V2 */}
+        <LeaderboardDropdownV2
           onViewFullLeaderboard={onNavigateToLeaderboard}
         />
 
