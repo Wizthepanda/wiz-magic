@@ -1,336 +1,438 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, Gem, Sparkles, Crown, Gift, ExternalLink, Clock } from 'lucide-react';
+import {
+  ShoppingBag,
+  Gem,
+  Sparkles,
+  Crown,
+  Gift,
+  ExternalLink,
+  Clock,
+  Diamond,
+  Zap,
+  BookOpen,
+  Users,
+  Monitor
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LuxuryCircularIcon } from './luxury-circular-icon';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './dropdown-menu';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useSafeNavigate } from '@/hooks/useSafeNavigate';
 
-interface ShopItem {
+interface MarketplaceItem {
   id: string;
   name: string;
   description: string;
-  xpCost: number;
+  cost: number;
   icon: React.ReactNode;
-  rarity: 'common' | 'rare' | 'epic' | 'legendary';
-  isLimited?: boolean;
-  timeLeft?: string; // e.g., "2h 30m"
-  image?: string;
-  inStock: boolean;
+  status: 'available' | 'limited' | 'sold-out';
+  timeRemaining?: string;
+  gradient: string;
+  category: 'all' | 'communities' | 'coaching' | 'digital-products';
+  subtitle?: string;
 }
 
 interface XPShopDropdownProps {
-  userXP: number;
-  featuredItems?: ShopItem[];
-  onPurchaseItem?: (itemId: string) => void;
-  onVisitShop?: () => void;
+  currentXP?: number;
+  onRewardClick?: (rewardId: string) => void;
+  onViewAllRewards?: () => void;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export const XPShopDropdown: React.FC<XPShopDropdownProps> = ({
-  userXP,
-  featuredItems = [],
-  onPurchaseItem,
-  onVisitShop
+  currentXP = 850,
+  onRewardClick,
+  onViewAllRewards,
+  isOpen,
+  onOpenChange
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [purchasedItems, setPurchasedItems] = useState<Set<string>>(new Set());
+  const { theme } = useTheme();
+  const navigate = useSafeNavigate();
+  const [internalOpen, setInternalOpen] = useState(false);
+  const [hoveredReward, setHoveredReward] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'all' | 'communities' | 'coaching' | 'digital-products'>('all');
 
-  // Mock featured items if none provided
-  const mockFeaturedItems: ShopItem[] = [
+  // Use controlled or uncontrolled state
+  const dropdownOpen = isOpen !== undefined ? isOpen : internalOpen;
+  const setDropdownOpen = onOpenChange || setInternalOpen;
+
+  // Premium marketplace items
+  const marketplaceItems: MarketplaceItem[] = [
     {
-      id: '1',
-      name: 'Golden Crown',
-      description: 'Exclusive profile badge',
-      xpCost: 500,
-      icon: <Crown className="w-4 h-4 text-yellow-500" />,
-      rarity: 'legendary',
-      isLimited: true,
-      timeLeft: '2h 30m',
-      inStock: true
+      id: 'wiz-communities-premium',
+      name: 'WIZ Communities',
+      subtitle: 'Premium Access',
+      description: 'Connect with exclusive mastermind groups and industry leaders',
+      cost: 1200,
+      icon: <Users className="w-5 h-5" />,
+      status: 'available',
+      gradient: 'from-blue-400 via-purple-500 to-pink-500',
+      category: 'communities'
     },
     {
-      id: '2',
-      name: 'XP Booster',
-      description: '2x XP for 24 hours',
-      xpCost: 200,
-      icon: <Sparkles className="w-4 h-4 text-purple-500" />,
-      rarity: 'epic',
-      inStock: true
+      id: 'ai-coaching-sessions',
+      name: 'AI Coaching Sessions',
+      subtitle: '1-on-1 Personalized',
+      description: 'Advanced AI-powered coaching with industry experts',
+      cost: 800,
+      icon: <BookOpen className="w-5 h-5" />,
+      status: 'limited',
+      timeRemaining: '12h',
+      gradient: 'from-emerald-400 via-teal-500 to-cyan-500',
+      category: 'coaching'
     },
     {
-      id: '3',
-      name: 'Premium Avatar',
-      description: 'Animated profile avatar',
-      xpCost: 300,
-      icon: <Gift className="w-4 h-4 text-blue-500" />,
-      rarity: 'rare',
-      inStock: true
+      id: 'digital-course-bundle',
+      name: 'Digital Course Bundle',
+      subtitle: 'Complete Collection',
+      description: 'Access to premium course library and exclusive content',
+      cost: 500,
+      icon: <Monitor className="w-5 h-5" />,
+      status: 'available',
+      gradient: 'from-orange-400 via-red-500 to-pink-500',
+      category: 'digital-products'
     },
     {
-      id: '4',
-      name: 'Gem Bundle',
-      description: '100 bonus gems',
-      xpCost: 150,
-      icon: <Gem className="w-4 h-4 text-green-500" />,
-      rarity: 'common',
-      inStock: false
+      id: 'xp-multiplier-boost',
+      name: 'XP Multiplier Boost',
+      subtitle: '3x XP for 48h',
+      description: 'Triple your XP gains for the next 48 hours',
+      cost: 300,
+      icon: <Zap className="w-5 h-5" />,
+      status: 'available',
+      gradient: 'from-yellow-400 via-orange-500 to-red-500',
+      category: 'all'
+    },
+    {
+      id: 'premium-mentorship',
+      name: 'Premium Mentorship',
+      subtitle: 'Elite Program',
+      description: 'Monthly 1-on-1 sessions with top industry mentors',
+      cost: 2000,
+      icon: <Crown className="w-5 h-5" />,
+      status: 'sold-out',
+      gradient: 'from-purple-400 via-pink-500 to-red-500',
+      category: 'coaching'
+    },
+    {
+      id: 'crypto-masterclass',
+      name: 'Crypto Masterclass',
+      subtitle: 'Advanced Trading',
+      description: 'Learn advanced cryptocurrency trading strategies',
+      cost: 600,
+      icon: <Diamond className="w-5 h-5" />,
+      status: 'available',
+      gradient: 'from-indigo-400 via-blue-500 to-purple-500',
+      category: 'digital-products'
     }
   ];
 
-  const displayItems = featuredItems.length > 0 ? featuredItems : mockFeaturedItems;
+  const tabs = [
+    { id: 'all' as const, label: 'All', icon: Gift },
+    { id: 'communities' as const, label: 'Communities', icon: Users },
+    { id: 'coaching' as const, label: 'Coaching', icon: BookOpen },
+    { id: 'digital-products' as const, label: 'Digital Products', icon: Monitor }
+  ];
 
-  const getRarityStyles = (rarity: ShopItem['rarity'], isLimited?: boolean) => {
-    const baseStyles = {
-      common: {
-        border: 'border-gray-200',
-        bg: 'bg-white',
-        glow: '',
-        text: 'text-gray-700'
-      },
-      rare: {
-        border: 'border-blue-300',
-        bg: 'bg-gradient-to-br from-blue-50 to-white',
-        glow: 'shadow-blue-500/20',
-        text: 'text-blue-700'
-      },
-      epic: {
-        border: 'border-purple-300',
-        bg: 'bg-gradient-to-br from-purple-50 to-white',
-        glow: 'shadow-purple-500/20',
-        text: 'text-purple-700'
-      },
-      legendary: {
-        border: 'border-yellow-400',
-        bg: 'bg-gradient-to-br from-yellow-50 to-orange-50',
-        glow: 'shadow-yellow-500/30',
-        text: 'text-yellow-700'
-      }
-    };
+  const filteredItems = activeTab === 'all'
+    ? marketplaceItems
+    : marketplaceItems.filter(item => item.category === activeTab);
 
-    const styles = baseStyles[rarity];
-
-    if (isLimited) {
-      return {
-        ...styles,
-        border: 'border-gradient-to-r from-pink-400 to-purple-500',
-        glow: `${styles.glow} shadow-lg animate-pulse`
-      };
-    }
-
-    return styles;
+  const handleRewardClick = (reward: MarketplaceItem) => {
+    if (reward.status === 'sold-out') return;
+    onRewardClick?.(reward.id);
   };
 
-  const canAfford = (cost: number) => userXP >= cost;
-
-  const handlePurchase = (item: ShopItem) => {
-    if (canAfford(item.xpCost) && item.inStock) {
-      setPurchasedItems(prev => new Set([...prev, item.id]));
-      onPurchaseItem?.(item.id);
-    }
+  const handleViewAllRewards = () => {
+    navigate('/claim');
+    onViewAllRewards?.();
+    setDropdownOpen(false);
   };
 
   return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+    <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
       <DropdownMenuTrigger asChild>
         <div>
           <LuxuryCircularIcon
             icon={ShoppingBag}
-            isActive={isOpen}
+            isActive={dropdownOpen}
             variant="premium"
             size="md"
-            hasNotification={displayItems.some(item => item.isLimited)}
-            onClick={() => setIsOpen(!isOpen)}
+            hasNotification={marketplaceItems.some(item => item.status === 'limited')}
+            onClick={() => setDropdownOpen(!dropdownOpen)}
           />
         </div>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
-        variant="premium"
-        className="w-80 max-w-[90vw]"
+        className="w-96 max-w-[90vw] p-0 border-0"
         align="end"
-        sideOffset={8}
+        sideOffset={12}
+        style={{
+          background: theme === 'dark'
+            ? 'rgba(17, 24, 39, 0.95)'
+            : 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(24px) saturate(180%)',
+          border: theme === 'dark'
+            ? '1px solid rgba(255, 255, 255, 0.1)'
+            : '1px solid rgba(255, 255, 255, 0.3)',
+          borderRadius: '16px',
+          boxShadow: theme === 'dark'
+            ? '0 20px 40px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+            : '0 20px 40px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8)'
+        }}
       >
-        <div className="space-y-4">
-          {/* Header with XP Balance */}
-          <div className="px-1 py-2">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <ShoppingBag className="w-5 h-5 text-purple-600" />
-                XP Shop
-              </h3>
-              <div className="text-xs text-gray-500 font-medium">
-                Featured Items
-              </div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: -10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: -10 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          className="p-6"
+        >
+          {/* Header Section */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className={cn(
+                "text-xl font-bold",
+                theme === 'dark' ? 'text-white' : 'text-gray-900'
+              )}>
+                XP Rewards
+              </h2>
             </div>
 
-            {/* XP Balance */}
-            <motion.div
-              className="flex items-center justify-center gap-2 p-3 bg-gradient-to-r from-purple-500 via-blue-500 to-purple-600 rounded-xl text-white shadow-lg"
-              whileHover={{ scale: 1.02 }}
-              animate={{
-                boxShadow: [
-                  '0 4px 15px rgba(147, 51, 234, 0.3)',
-                  '0 8px 25px rgba(147, 51, 234, 0.4)',
-                  '0 4px 15px rgba(147, 51, 234, 0.3)'
-                ]
-              }}
-              transition={{
-                boxShadow: {
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }
-              }}
-            >
-              <Gem className="w-5 h-5" />
-              <span className="text-lg font-bold">
-                {userXP.toLocaleString()}
-              </span>
-              <span className="text-sm opacity-90">XP</span>
-            </motion.div>
+            <div className="flex items-center space-x-3">
+              {/* XP Balance Pill */}
+              <motion.div
+                className="flex items-center space-x-2 px-4 py-2 rounded-full"
+                style={{
+                  background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                  boxShadow: '0 4px 16px rgba(79, 70, 229, 0.3)'
+                }}
+                whileHover={{ scale: 1.05 }}
+                animate={{
+                  boxShadow: [
+                    '0 4px 16px rgba(79, 70, 229, 0.3)',
+                    '0 8px 24px rgba(79, 70, 229, 0.4)',
+                    '0 4px 16px rgba(79, 70, 229, 0.3)'
+                  ]
+                }}
+                transition={{
+                  boxShadow: {
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }
+                }}
+              >
+                <Gem className="w-4 h-4 text-white" />
+                <span className="text-white font-bold text-sm">
+                  {currentXP.toLocaleString()}
+                </span>
+              </motion.div>
+
+              {/* View All Link */}
+              <motion.button
+                onClick={handleViewAllRewards}
+                className={cn(
+                  "text-sm font-medium transition-colors",
+                  theme === 'dark'
+                    ? 'text-violet-400 hover:text-violet-300'
+                    : 'text-violet-600 hover:text-violet-700'
+                )}
+                whileHover={{ x: 2 }}
+              >
+                View All
+              </motion.button>
+            </div>
           </div>
 
-          {/* Featured Items Grid */}
-          <div className="px-1">
-            <div className="grid grid-cols-2 gap-3 max-h-72 overflow-y-auto">
-              <AnimatePresence>
-                {displayItems.map((item, index) => {
-                  const rarityStyles = getRarityStyles(item.rarity, item.isLimited);
-                  const isPurchased = purchasedItems.has(item.id);
-                  const affordable = canAfford(item.xpCost);
+          {/* Tab Filters */}
+          <div className="flex space-x-1 mb-6 p-1 rounded-xl" style={{
+            background: theme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'
+          }}>
+            {tabs.map((tab) => (
+              <motion.button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                  activeTab === tab.id
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : theme === 'dark'
+                      ? "text-gray-400 hover:text-gray-200"
+                      : "text-gray-600 hover:text-gray-800"
+                )}
+                whileHover={{ scale: activeTab !== tab.id ? 1.02 : 1 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <tab.icon className="w-4 h-4" />
+                <span className="hidden sm:inline">{tab.label}</span>
+              </motion.button>
+            ))}
+          </div>
 
-                  return (
+          {/* Premium Marketplace Grid */}
+          <div className="grid grid-cols-2 gap-3 mb-6 max-h-80 overflow-y-auto">
+            <AnimatePresence>
+              {filteredItems.map((item, index) => (
+                <motion.button
+                  key={item.id}
+                  onClick={() => handleRewardClick(item)}
+                  onMouseEnter={() => setHoveredReward(item.id)}
+                  onMouseLeave={() => setHoveredReward(null)}
+                  className={cn(
+                    "relative p-4 rounded-xl transition-all duration-300 group text-left",
+                    item.status === 'sold-out'
+                      ? "cursor-not-allowed"
+                      : "cursor-pointer",
+                    theme === 'dark'
+                      ? "bg-white/5 hover:bg-white/10 border border-white/10"
+                      : "bg-white/30 hover:bg-white/50 border border-white/20"
+                  )}
+                  style={{
+                    backdropFilter: 'blur(8px)'
+                  }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  whileHover={item.status !== 'sold-out' ? {
+                    scale: 1.02,
+                    y: -4,
+                    boxShadow: theme === 'dark'
+                      ? '0 12px 24px rgba(139, 92, 246, 0.2)'
+                      : '0 12px 24px rgba(139, 92, 246, 0.15)'
+                  } : {}}
+                  whileTap={item.status !== 'sold-out' ? { scale: 0.98 } : {}}
+                >
+                  {/* Glow Ring Effect */}
+                  {hoveredReward === item.id && item.status !== 'sold-out' && (
                     <motion.div
-                      key={item.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
                       className={cn(
-                        "relative p-3 rounded-lg transition-all duration-300 cursor-pointer group",
-                        rarityStyles.bg,
-                        rarityStyles.border,
-                        rarityStyles.glow,
-                        !item.inStock && "opacity-50 cursor-not-allowed",
-                        isPurchased && "opacity-60"
+                        "absolute inset-0 rounded-xl",
+                        `bg-gradient-to-r ${item.gradient}`
                       )}
-                      onClick={() => handlePurchase(item)}
-                      whileHover={item.inStock && !isPurchased ? { scale: 1.02, y: -2 } : {}}
-                      whileTap={item.inStock && !isPurchased ? { scale: 0.98 } : {}}
-                    >
-                      {/* Limited Time Indicator */}
-                      {item.isLimited && (
-                        <motion.div
-                          className="absolute -top-1 -right-1 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg"
-                          animate={{
-                            scale: [1, 1.1, 1],
-                          }}
-                          transition={{
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                          }}
-                        >
-                          LIMITED
-                        </motion.div>
-                      )}
+                      style={{
+                        filter: 'blur(12px)',
+                        opacity: 0.3
+                      }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 0.3 }}
+                      exit={{ opacity: 0 }}
+                    />
+                  )}
 
-                      {/* Item Icon */}
-                      <div className="flex items-center justify-center w-12 h-12 bg-white rounded-lg shadow-sm mb-2 mx-auto">
-                        {item.icon}
-                      </div>
+                  {/* Sold Out Overlay */}
+                  {item.status === 'sold-out' && (
+                    <div className="absolute inset-0 bg-black/60 rounded-xl flex items-center justify-center z-10">
+                      <span className="text-white font-bold text-xs uppercase tracking-wide">
+                        SOLD OUT
+                      </span>
+                    </div>
+                  )}
 
-                      {/* Item Details */}
-                      <div className="text-center">
-                        <h4 className={cn("text-sm font-semibold truncate", rarityStyles.text)}>
-                          {item.name}
-                        </h4>
-                        <p className="text-xs text-gray-600 truncate">
-                          {item.description}
-                        </p>
+                  <div className="relative z-10">
+                    {/* Item Icon */}
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center mb-3 text-white",
+                      item.status === 'sold-out'
+                        ? "bg-gray-400"
+                        : `bg-gradient-to-r ${item.gradient}`
+                    )}>
+                      {item.icon}
+                    </div>
 
-                        {/* Time Left */}
-                        {item.timeLeft && (
-                          <div className="flex items-center justify-center gap-1 mt-1">
-                            <Clock className="w-3 h-3 text-orange-500" />
-                            <span className="text-xs text-orange-600 font-medium">
-                              {item.timeLeft}
-                            </span>
-                          </div>
-                        )}
+                    {/* Item Name & Subtitle */}
+                    <h3 className={cn(
+                      "text-sm font-bold mb-1",
+                      item.status === 'sold-out'
+                        ? theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                        : theme === 'dark' ? 'text-white' : 'text-gray-900'
+                    )}>
+                      {item.name}
+                    </h3>
 
-                        {/* Purchase Button */}
-                        <motion.div
-                          className={cn(
-                            "mt-2 px-2 py-1 rounded-full text-xs font-bold flex items-center justify-center gap-1",
-                            isPurchased
-                              ? "bg-green-500 text-white"
-                              : affordable && item.inStock
-                              ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600"
-                              : "bg-gray-200 text-gray-500"
-                          )}
-                          whileHover={affordable && item.inStock && !isPurchased ? { scale: 1.05 } : {}}
-                        >
-                          {isPurchased ? (
-                            "✓ Owned"
-                          ) : !item.inStock ? (
-                            "Out of Stock"
-                          ) : (
-                            <>
-                              <Gem className="w-3 h-3" />
-                              {item.xpCost}
-                            </>
-                          )}
-                        </motion.div>
-                      </div>
+                    {item.subtitle && (
+                      <p className={cn(
+                        "text-xs font-medium mb-2",
+                        item.status === 'sold-out'
+                          ? theme === 'dark' ? 'text-gray-600' : 'text-gray-500'
+                          : theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                      )}>
+                        {item.subtitle}
+                      </p>
+                    )}
 
-                      {/* Rarity Glow Effect */}
-                      {item.rarity === 'legendary' && (
-                        <motion.div
-                          className="absolute inset-0 rounded-lg"
-                          style={{
-                            background: "linear-gradient(45deg, transparent, rgba(255, 215, 0, 0.1), transparent)",
-                            filter: "blur(1px)",
-                            zIndex: -1
-                          }}
-                          animate={{
-                            opacity: [0.3, 0.7, 0.3],
-                          }}
-                          transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                          }}
-                        />
-                      )}
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
-            </div>
+                    {/* Cost Pill */}
+                    <div className={cn(
+                      "inline-flex items-center space-x-1 px-3 py-1 rounded-lg text-xs font-bold",
+                      item.status === 'sold-out'
+                        ? "bg-gray-400/20 text-gray-500 border border-gray-400/20"
+                        : theme === 'dark'
+                          ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
+                          : "bg-violet-100 text-violet-700 border border-violet-200"
+                    )}>
+                      <Gem className="w-3 h-3" />
+                      <span>{item.cost}</span>
+                    </div>
+
+                    {/* Limited Time Indicator */}
+                    {item.status === 'limited' && item.timeRemaining && (
+                      <motion.div
+                        className="flex items-center space-x-1 mt-2 px-2 py-1 rounded-lg text-xs font-medium"
+                        style={{
+                          background: 'linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%)',
+                          color: 'white'
+                        }}
+                        animate={{
+                          boxShadow: [
+                            '0 0 0 rgba(124, 58, 237, 0.4)',
+                            '0 0 20px rgba(124, 58, 237, 0.6)',
+                            '0 0 0 rgba(124, 58, 237, 0.4)'
+                          ]
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                      >
+                        <Clock className="w-3 h-3" />
+                        <span>{item.timeRemaining} left</span>
+                      </motion.div>
+                    )}
+                  </div>
+                </motion.button>
+              ))}
+            </AnimatePresence>
           </div>
 
-          {/* Visit Shop CTA */}
-          <div className="px-1">
-            <motion.button
-              onClick={onVisitShop}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-medium rounded-lg transition-all duration-200 group shadow-lg"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+          {/* Footer CTA */}
+          <motion.button
+            onClick={handleViewAllRewards}
+            className="w-full flex items-center justify-center space-x-2 px-6 py-4 rounded-2xl text-white font-bold transition-all duration-300 group"
+            style={{
+              background: 'linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%)',
+              boxShadow: '0 8px 24px rgba(124, 58, 237, 0.3)'
+            }}
+            whileHover={{
+              scale: 1.02,
+              boxShadow: '0 12px 32px rgba(124, 58, 237, 0.4)'
+            }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <ShoppingBag className="w-5 h-5" />
+            <span>Visit Rewards Marketplace</span>
+            <motion.div
+              className="flex items-center"
+              whileHover={{ x: 4 }}
+              transition={{ duration: 0.2 }}
             >
-              <ShoppingBag className="w-4 h-4" />
-              Visit Shop
-              <ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-            </motion.button>
-          </div>
-
-          {/* Empty State */}
-          {displayItems.length === 0 && (
-            <div className="text-center py-8 px-4">
-              <ShoppingBag className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-sm text-gray-600 font-medium">No items available</p>
-              <p className="text-xs text-gray-500 mt-1">Check back later for new rewards!</p>
-            </div>
-          )}
-        </div>
+              <ExternalLink className="w-4 h-4" />
+            </motion.div>
+          </motion.button>
+        </motion.div>
       </DropdownMenuContent>
     </DropdownMenu>
   );

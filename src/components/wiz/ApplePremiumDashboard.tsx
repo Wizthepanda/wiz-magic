@@ -395,9 +395,9 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
 
               {/* XP Shop Dropdown */}
               <XPShopDropdown
-                userXP={userXP}
-                onVisitShop={() => setShowShopDrawer(true)}
-                onPurchaseItem={(id) => console.log('Purchase item:', id)}
+                currentXP={userXP}
+                onViewAllRewards={() => setShowShopDrawer(true)}
+                onRewardClick={(id) => console.log('Purchase item:', id)}
               />
             </div>
 

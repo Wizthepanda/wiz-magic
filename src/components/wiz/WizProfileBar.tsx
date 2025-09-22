@@ -2,23 +2,25 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  User, 
-  Settings, 
-  LogOut, 
-  Copy, 
-  Check, 
+import {
+  User,
+  Settings,
+  LogOut,
+  Copy,
+  Check,
   Gift,
   Youtube,
   Flame,
   Sparkles,
-  ChevronDown
+  ChevronDown,
+  ShoppingBag
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
 import { useXp } from '@/context/XpContext';
 import { initProgressUI } from '@/lib/wiz-progress-ui';
+import { XPRewardsDropdown2 } from '@/components/ui/xp-rewards-dropdown-2';
 
 interface UserXPData {
   currentXP: number;
@@ -44,11 +46,12 @@ export const WizProfileBar: React.FC = () => {
   const { user } = useAuth();
   const { totalXP, level, progressPercent, xpInCurrentLevel, xpToNextLevel, dailyXP, loading } = useXp();
   const [isOpen, setIsOpen] = useState(false);
+  const [shopDropdownOpen, setShopDropdownOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showSparkles, setShowSparkles] = useState(false);
   const [prevTotalXP, setPrevTotalXP] = useState(totalXP);
   const [prevLevel, setPrevLevel] = useState(level);
-  
+
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Initialize progress UI and listen for level up events
@@ -209,49 +212,57 @@ export const WizProfileBar: React.FC = () => {
   const levelBadgeColor = getLevelBadgeColor(xpData.level);
 
   return (
-    <div className="relative" ref={dropdownRef}>
-      {/* Sparkles Animation on Level Up */}
-      <AnimatePresence>
-        {showSparkles && (
-          <motion.div
-            className="absolute -top-2 -left-2 -right-2 -bottom-2 pointer-events-none z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            {[...Array(8)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute"
-                style={{
-                  left: `${20 + (i * 10)}%`,
-                  top: `${10 + (i % 3) * 20}%`,
-                }}
-                animate={{
-                  y: [0, -20, 0],
-                  x: [0, Math.random() * 20 - 10, 0],
-                  scale: [0, 1, 0],
-                  opacity: [0, 1, 0],
-                }}
-                transition={{
-                  duration: 2,
-                  delay: i * 0.1,
-                  repeat: 2,
-                }}
-              >
-                <Sparkles className="w-4 h-4 text-yellow-400" />
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <div className="flex items-center space-x-3">
+      {/* XP Rewards Shop Dropdown */}
+      <XPRewardsDropdown2
+        isOpen={shopDropdownOpen}
+        onOpenChange={setShopDropdownOpen}
+      />
 
-      {/* Top-Bar Minimal Version */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-white/5 transition-all duration-200 group"
-      >
+      {/* Profile Section */}
+      <div className="relative" ref={dropdownRef}>
+        {/* Sparkles Animation on Level Up */}
+        <AnimatePresence>
+          {showSparkles && (
+            <motion.div
+              className="absolute -top-2 -left-2 -right-2 -bottom-2 pointer-events-none z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              {[...Array(8)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute"
+                  style={{
+                    left: `${20 + (i * 10)}%`,
+                    top: `${10 + (i % 3) * 20}%`,
+                  }}
+                  animate={{
+                    y: [0, -20, 0],
+                    x: [0, Math.random() * 20 - 10, 0],
+                    scale: [0, 1, 0],
+                    opacity: [0, 1, 0],
+                  }}
+                  transition={{
+                    duration: 2,
+                    delay: i * 0.1,
+                    repeat: 2,
+                  }}
+                >
+                  <Sparkles className="w-4 h-4 text-yellow-400" />
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Top-Bar Minimal Version */}
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-white/5 transition-all duration-200 group"
+        >
         {/* Avatar */}
         <div className="relative">
           <img
@@ -425,6 +436,7 @@ export const WizProfileBar: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 };

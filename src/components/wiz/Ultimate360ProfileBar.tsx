@@ -204,9 +204,9 @@ export const Ultimate360ProfileBar: React.FC<Ultimate360ProfileBarProps> = ({
 
         {/* XP Shop Dropdown */}
         <XPShopDropdown
-          userXP={totalXP}
-          onVisitShop={onNavigateToShop}
-          onPurchaseItem={(id) => console.log('Purchase item:', id)}
+          currentXP={totalXP}
+          onViewAllRewards={onNavigateToShop}
+          onRewardClick={(id) => console.log('Purchase item:', id)}
         />
 
         {/* XP Rewards Dropdown */}

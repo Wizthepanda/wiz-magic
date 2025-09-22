@@ -156,8 +156,9 @@ export const Showcase360: React.FC<Showcase360Props> = ({ className }) => {
 
                       {/* XP Shop Dropdown */}
                       <XPShopDropdown
-                        userXP={mockUser.currentXP}
-                        onVisitShop={() => setCurrentView('shop')}
+                        currentXP={mockUser.currentXP}
+                        onViewAllRewards={() => setCurrentView('shop')}
+                        onRewardClick={(id) => console.log('Purchase item:', id)}
                       />
 
                       {/* XP Rewards Dropdown */}

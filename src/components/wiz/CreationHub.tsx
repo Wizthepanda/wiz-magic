@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen,
@@ -41,7 +41,10 @@ import {
   Save,
   GripVertical,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Youtube,
+  Minus,
+  Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -59,6 +62,20 @@ import CourseService from '@/lib/course-service';
 
 interface CreationHubProps {
   isMobile: boolean;
+  onYouTubeConnect?: () => void;
+  channelInfo?: any;
+  videos?: any[];
+  selectedVideos?: any[];
+  isConnecting?: boolean;
+  isLoadingVideos?: boolean;
+  isPublishing?: boolean;
+  videoContentTypes?: Record<string, 'short' | 'video'>;
+  onToggleVideoSelection?: (video: any) => void;
+  onUpdateVideoContentType?: (videoId: string, contentType: 'short' | 'video') => void;
+  onUpdateVideoCategory?: (videoId: string, category: string) => void;
+  onProceedToCategorize?: () => void;
+  onPublishToWiz?: () => void;
+  toast?: any;
 }
 
 type CreationType = 'course' | 'community' | 'coaching' | 'product' | 'tool' | null;
@@ -126,48 +143,532 @@ const categories = [
 
 const creationTypes = [
   {
-    id: 'course',
-    title: 'Course',
-    icon: BookOpen,
-    description: 'Structured learning with modules & lessons',
-    gradient: 'from-orange-500 to-red-500',
-    color: 'text-orange-600'
-  },
-  {
     id: 'community',
     title: 'Community',
     icon: Users,
-    description: 'Private group for collaboration & networking',
+    description: 'Private groups, collab spaces, networking hubs.',
     gradient: 'from-blue-500 to-indigo-500',
     color: 'text-blue-600'
+  },
+  {
+    id: 'course',
+    title: 'Courses',
+    icon: BookOpen,
+    description: 'Structured lessons, modules, and video learning.',
+    gradient: 'from-orange-500 to-red-500',
+    color: 'text-orange-600'
   },
   {
     id: 'coaching',
     title: 'Coaching',
     icon: User,
-    description: '1-on-1 sessions & group mentorship',
+    description: '1-on-1 or group mentorship sessions.',
     gradient: 'from-emerald-500 to-teal-500',
     color: 'text-emerald-600'
   },
   {
     id: 'product',
-    title: 'Digital Product',
+    title: 'Digital Products',
     icon: Package,
-    description: 'Templates, guides, downloads & resources',
+    description: 'Templates, guides, downloads, resources.',
     gradient: 'from-purple-500 to-pink-500',
     color: 'text-purple-600'
-  },
-  {
-    id: 'tool',
-    title: 'Tool',
-    icon: Settings,
-    description: 'Apps, calculators, interactive widgets',
-    gradient: 'from-gray-500 to-slate-600',
-    color: 'text-gray-600'
   }
 ];
 
-export const CreationHub = ({ isMobile }: CreationHubProps) => {
+// YouTube Connect Flow Component
+interface YouTubeConnectFlowProps {
+  isMobile: boolean;
+  onConnect?: () => void;
+  channelInfo?: any;
+  videos?: any[];
+  selectedVideos?: any[];
+  isConnecting?: boolean;
+  isLoadingVideos?: boolean;
+  isPublishing?: boolean;
+  videoContentTypes?: Record<string, 'short' | 'video'>;
+  onToggleVideoSelection?: (video: any) => void;
+  onUpdateVideoContentType?: (videoId: string, contentType: 'short' | 'video') => void;
+  onUpdateVideoCategory?: (videoId: string, category: string) => void;
+  onProceedToCategorize?: () => void;
+  onPublishToWiz?: () => void;
+  toast?: any;
+}
+
+const YouTubeConnectFlow = ({
+  isMobile,
+  onConnect,
+  channelInfo,
+  videos = [],
+  selectedVideos = [],
+  isConnecting = false,
+  isLoadingVideos = false,
+  isPublishing = false,
+  videoContentTypes = {},
+  onToggleVideoSelection,
+  onUpdateVideoContentType,
+  onUpdateVideoCategory,
+  onProceedToCategorize,
+  onPublishToWiz,
+  toast
+}: YouTubeConnectFlowProps) => {
+  // Determine current step based on state
+  const getCurrentStep = () => {
+    if (isPublishing || (selectedVideos.length > 0 && videos.length > 0)) return 3;
+    if (isLoadingVideos || videos.length > 0 || channelInfo) return 2;
+    return 1;
+  };
+
+  const [currentStep, setCurrentStep] = useState(getCurrentStep());
+
+  // Update step when props change
+  React.useEffect(() => {
+    const newStep = getCurrentStep();
+    setCurrentStep(newStep);
+  }, [channelInfo, videos, selectedVideos, isLoadingVideos, isPublishing]);
+
+  const stepTitles = [
+    { number: 1, title: 'Connect', subtitle: 'YouTube Channel' },
+    { number: 2, title: 'Select', subtitle: 'Your Videos' },
+    { number: 3, title: 'Publish', subtitle: 'To WIZ' }
+  ];
+
+  const handleConnect = async () => {
+    try {
+      if (onConnect) {
+        await onConnect();
+      }
+    } catch (error) {
+      console.error('Connection failed:', error);
+    }
+  };
+
+  return (
+    <div className="mt-8">
+      <Card className="overflow-hidden border-0 shadow-xl">
+        <CardContent
+          className={`${isMobile ? 'p-6' : 'p-12'} space-y-8`}
+          style={{
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: isMobile ? '20px' : '24px'
+          }}
+        >
+          {/* Step Progress Indicator */}
+          <motion.div
+            className={`flex justify-center items-center ${
+              isMobile ? 'mb-6 px-4' : 'space-x-8 mb-16'
+            }`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            {isMobile ? (
+              // Mobile: Horizontal scrollable stepper
+              <div className="w-full overflow-x-auto scrollbar-hide">
+                <div className="flex items-center space-x-4 min-w-max px-2 py-4">
+                  {stepTitles.map((step, index) => (
+                    <div key={step.number} className="flex items-center flex-shrink-0">
+                      <div className="flex items-center space-x-3">
+                        <motion.div
+                          className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-bold text-sm transition-all duration-300 ${
+                            currentStep >= step.number
+                              ? 'bg-gradient-to-r from-red-500 to-purple-600 text-white border-red-500'
+                              : currentStep === step.number
+                              ? 'border-red-500 text-red-500 bg-white dark:bg-gray-800'
+                              : 'border-gray-300 text-gray-400 bg-gray-50 dark:bg-gray-700'
+                          }`}
+                          animate={{
+                            scale: currentStep === step.number ? 1.1 : 1,
+                            boxShadow: currentStep === step.number ? '0 0 15px rgba(255, 0, 0, 0.4)' : '0 0 0px rgba(0,0,0,0)'
+                          }}
+                        >
+                          {currentStep > step.number ? <Check className="w-4 h-4" /> : step.number}
+                        </motion.div>
+                        <div className="text-left">
+                          <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{step.title}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">{step.subtitle}</div>
+                        </div>
+                      </div>
+                      {index < stepTitles.length - 1 && (
+                        <div className={`w-8 h-0.5 mx-3 transition-all duration-300 ${
+                          currentStep > step.number ? 'bg-red-500' : 'bg-gray-300'
+                        }`} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              // Desktop: Original horizontal layout
+              stepTitles.map((step, index) => (
+                <div key={step.number} className="flex items-center">
+                  <div className="flex flex-col items-center space-y-2">
+                    <motion.div
+                      className={`w-16 h-16 rounded-full border-2 flex items-center justify-center font-bold transition-all duration-300 ${
+                        currentStep >= step.number
+                          ? 'bg-gradient-to-r from-red-500 to-purple-600 text-white border-red-500'
+                          : currentStep === step.number
+                          ? 'border-red-500 text-red-500 bg-white dark:bg-gray-800'
+                          : 'border-gray-300 text-gray-400 bg-gray-50 dark:bg-gray-700'
+                      }`}
+                      animate={{
+                        scale: currentStep === step.number ? 1.1 : 1,
+                        boxShadow: currentStep === step.number ? '0 0 20px rgba(255, 0, 0, 0.4)' : '0 0 0px rgba(0,0,0,0)'
+                      }}
+                    >
+                      {currentStep > step.number ? <Check className="w-6 h-6" /> : step.number}
+                    </motion.div>
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">{step.title}</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">{step.subtitle}</div>
+                    </div>
+                  </div>
+                  {index < stepTitles.length - 1 && (
+                    <div className={`w-24 h-0.5 mx-4 transition-all duration-300 ${
+                      currentStep > step.number ? 'bg-red-500' : 'bg-gray-300'
+                    }`} />
+                  )}
+                </div>
+              ))
+            )}
+          </motion.div>
+
+          {/* Step Content */}
+          {currentStep === 1 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center space-y-8"
+            >
+              {/* YouTube Icon */}
+              <motion.div
+                className="relative mx-auto"
+                animate={{
+                  rotate: [0, 5, -5, 0],
+                  scale: [1, 1.05, 1]
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                <Youtube className={`mx-auto text-red-500 ${
+                  isMobile ? 'w-24 h-24' : 'w-32 h-32'
+                }`} />
+                <motion.div
+                  className="absolute -top-4 -right-4 w-8 h-8 bg-gradient-to-r from-red-500 to-purple-600 rounded-full flex items-center justify-center"
+                  animate={{
+                    scale: [1, 1.3, 1],
+                    rotate: [0, 180, 360]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <Plus className="w-4 h-4 text-white" />
+                </motion.div>
+              </motion.div>
+
+              {/* Connect Content */}
+              <div className="space-y-4">
+                <h2 className={`font-bold ${
+                  isMobile ? 'text-2xl' : 'text-3xl'
+                } text-gray-900 dark:text-gray-100`}>
+                  Connect your YouTube channel to start creating on WIZ.
+                </h2>
+
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    size="lg"
+                    className={`font-bold shadow-lg hover:shadow-xl transition-all duration-300 ${
+                      isMobile
+                        ? 'w-full h-16 px-8 text-lg'
+                        : 'h-20 px-16 text-xl'
+                    }`}
+                    style={{
+                      background: 'linear-gradient(135deg, #FF0000 0%, #8B5CF6 100%)',
+                      borderRadius: isMobile ? '16px' : '20px',
+                      boxShadow: '0 8px 32px rgba(255, 0, 0, 0.3)'
+                    }}
+                    onClick={handleConnect}
+                    disabled={isConnecting}
+                  >
+                    {isConnecting ? (
+                      <div className="flex items-center space-x-3">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                        <span>Connecting...</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-3">
+                        <Youtube className="w-6 h-6" />
+                        <span>Connect YouTube Channel</span>
+                      </div>
+                    )}
+                  </Button>
+                </motion.div>
+
+                <p className={`text-gray-600 dark:text-gray-300 leading-relaxed ${
+                  isMobile ? 'text-base' : 'text-lg'
+                }`}>
+                  We'll securely connect to your YouTube channel using Google's authentication. Your credentials are never stored by WIZUP.
+                </p>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Step 2: Select Videos */}
+          {currentStep === 2 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-8"
+            >
+              <div className="text-center">
+                <h2 className="text-3xl font-bold mb-4 dark:text-gray-100">Select Videos to Feature</h2>
+                <p className="text-gray-600 dark:text-gray-300 text-lg">
+                  Choose the videos you'd like to share with the WIZ community.
+                </p>
+                <div className="mt-4">
+                  <Badge variant="outline" className="text-sm px-4 py-2">
+                    {selectedVideos.length} video{selectedVideos.length !== 1 ? 's' : ''} selected
+                  </Badge>
+                </div>
+              </div>
+
+              {isLoadingVideos ? (
+                <div className="text-center py-16">
+                  <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-red-500 mx-auto mb-6"></div>
+                  <p className="text-gray-600 dark:text-gray-300 text-lg">Loading your videos...</p>
+                </div>
+              ) : (
+                <div className={`grid gap-6 ${
+                  isMobile
+                    ? 'grid-cols-1'
+                    : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+                }`}>
+                  {videos.map((video: any, index: number) => {
+                    const isSelected = selectedVideos.some((v: any) => v.id === video.id);
+
+                    return (
+                      <motion.div
+                        key={video.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="group"
+                      >
+                        <Card
+                          className={`cursor-pointer transition-all duration-300 border-2 overflow-hidden ${
+                            isSelected
+                              ? 'border-red-500 shadow-2xl ring-4 ring-red-500/20'
+                              : 'border-gray-200 hover:border-gray-300 shadow-lg hover:shadow-xl'
+                          }`}
+                          style={{ borderRadius: '20px' }}
+                          onClick={() => onToggleVideoSelection?.(video)}
+                        >
+                          <CardContent className="p-0">
+                            <div className="relative">
+                              <img
+                                src={video.thumbnail}
+                                alt={video.title}
+                                className={`w-full object-cover ${
+                                  isMobile ? 'h-44' : 'h-48'
+                                }`}
+                              />
+
+                              {/* Selection Overlay */}
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 ${
+                                  isSelected
+                                    ? 'bg-red-500 text-white scale-110'
+                                    : 'bg-white/90 text-gray-800 hover:scale-110'
+                                }`}>
+                                  {isSelected ? <Minus className="w-8 h-8" /> : <Plus className="w-8 h-8" />}
+                                </div>
+                              </div>
+
+                              {/* Duration */}
+                              <div className="absolute bottom-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                                {video.duration}
+                              </div>
+
+                              {/* Selection Badge */}
+                              {isSelected && (
+                                <div className="absolute top-3 right-3">
+                                  <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                                    <Check className="w-4 h-4 text-white" />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="p-4 space-y-3">
+                              <h3 className="font-semibold text-sm leading-tight line-clamp-2 dark:text-gray-100">
+                                {video.title}
+                              </h3>
+                              <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
+                                <div className="flex items-center space-x-1">
+                                  <Eye className="w-3 h-3" />
+                                  <span>{video.views} views</span>
+                                </div>
+                                <span>{video.publishedAt}</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div className="text-center">
+                <Button
+                  size="lg"
+                  className={`font-bold bg-gradient-to-r from-red-500 to-purple-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 ${
+                    isMobile
+                      ? 'w-full px-8 py-3 text-base'
+                      : 'px-12 py-3'
+                  }`}
+                  onClick={onProceedToCategorize}
+                  disabled={selectedVideos.length === 0}
+                >
+                  Continue to Categorize ({selectedVideos.length})
+                </Button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Step 3: Categorize & Publish */}
+          {currentStep === 3 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-8"
+            >
+              <div className="text-center">
+                <h2 className="text-3xl font-bold mb-4 dark:text-gray-100">Categorize & Publish</h2>
+                <p className="text-gray-600 dark:text-gray-300 text-lg">
+                  Assign categories to your videos and publish them to WIZ Discover.
+                </p>
+              </div>
+
+              <div className="space-y-6 max-w-4xl mx-auto">
+                {selectedVideos.map((video: any, index: number) => (
+                  <motion.div
+                    key={video.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Card className="p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                      <div className="flex items-center space-x-6">
+                        <img
+                          src={video.thumbnail}
+                          alt={video.title}
+                          className="w-24 h-16 object-cover rounded-lg"
+                        />
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg mb-2 dark:text-gray-100">{video.title}</h3>
+                          <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
+                            <span>{video.views} views</span>
+                            <span>{video.duration}</span>
+                            <span>{video.publishedAt}</span>
+                          </div>
+                        </div>
+                        <div className="w-48">
+                          <Select
+                            value={video.category}
+                            onValueChange={(value) => onUpdateVideoCategory?.(video.id, value)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[
+                                { value: 'gaming', label: 'Gaming' },
+                                { value: 'ai', label: 'AI' },
+                                { value: 'tech', label: 'Tech' },
+                                { value: 'music', label: 'Music' },
+                                { value: 'health', label: 'Health' },
+                                { value: 'money', label: 'Money' },
+                                { value: 'podcast', label: 'Podcasts' },
+                                { value: 'art', label: 'Art' },
+                                { value: 'fashion', label: 'Fashion' },
+                                { value: 'relationships', label: 'Relationships' },
+                                { value: 'lifestyle', label: 'Lifestyle' },
+                                { value: 'movie', label: 'Movie' },
+                              ].map(cat => (
+                                <SelectItem key={cat.value} value={cat.value}>
+                                  {cat.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+
+              <div className="text-center space-y-4">
+                <p className="text-gray-600 dark:text-gray-300">
+                  Ready to publish {selectedVideos.length} video{selectedVideos.length !== 1 ? 's' : ''} to WIZ Discover
+                </p>
+                <Button
+                  size="lg"
+                  className={`font-bold bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 ${
+                    isMobile
+                      ? 'w-full px-8 py-4 text-lg'
+                      : 'px-16 py-4 text-xl'
+                  }`}
+                  onClick={onPublishToWiz}
+                  disabled={isPublishing}
+                >
+                  {isPublishing ? (
+                    <div className="flex items-center space-x-3">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                      <span>Publishing...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-3">
+                      <Sparkles className="w-6 h-6" />
+                      <span>Publish to WIZ</span>
+                    </div>
+                  )}
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export const CreationHub = ({
+  isMobile,
+  onYouTubeConnect,
+  channelInfo,
+  videos,
+  selectedVideos,
+  isConnecting,
+  isLoadingVideos,
+  isPublishing,
+  videoContentTypes,
+  onToggleVideoSelection,
+  onUpdateVideoContentType,
+  onUpdateVideoCategory,
+  onProceedToCategorize,
+  onPublishToWiz,
+  toast
+}: CreationHubProps) => {
   const [selectedType, setSelectedType] = useState<CreationType>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [courseData, setCourseData] = useState<CourseData>({
@@ -185,7 +686,6 @@ export const CreationHub = ({ isMobile }: CreationHubProps) => {
     publishType: 'draft',
     publishDate: undefined
   });
-  const { toast } = useToast();
   const { user } = useAuth();
   const courseService = CourseService.getInstance();
 
@@ -296,43 +796,67 @@ export const CreationHub = ({ isMobile }: CreationHubProps) => {
         key={type.id}
         whileHover={{ scale: 1.03, y: -8 }}
         whileTap={{ scale: 0.98 }}
-        className="cursor-pointer"
+        className="cursor-pointer group"
         onClick={() => handleTypeSelection(type.id as CreationType)}
       >
-        <Card className="h-full overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-500">
+        <Card className="h-full overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-500 relative">
+          {/* New Tag */}
+          <div className="absolute top-4 right-4 z-20">
+            <motion.div
+              className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg"
+              animate={{
+                scale: [1, 1.1, 1],
+                rotate: [0, 2, -2, 0]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              ✨ New
+            </motion.div>
+          </div>
+
+          {/* Gradient Header Band */}
+          <div
+            className={`h-16 bg-gradient-to-r ${type.gradient} relative overflow-hidden`}
+          >
+            <motion.div
+              className="absolute inset-0 bg-white/20"
+              animate={{
+                x: ['-100%', '100%']
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                repeatDelay: 1,
+                ease: "easeInOut"
+              }}
+            />
+          </div>
+
           <CardContent
-            className="p-6 text-center space-y-4 relative"
+            className="p-8 text-center space-y-6 relative"
             style={{
               background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%)',
               backdropFilter: 'blur(20px)',
               border: '1px solid rgba(255, 255, 255, 0.3)',
-              borderRadius: '24px'
+              borderRadius: '0 0 24px 24px',
+              minHeight: '200px'
             }}
           >
-            {/* Animated Background Gradient */}
+            {/* Icon Container - Positioned to overlap header */}
             <motion.div
-              className="absolute inset-0 opacity-10 rounded-3xl"
-              style={{
-                background: `linear-gradient(135deg, var(--tw-gradient-stops))`,
-              }}
-              animate={{
-                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-              }}
-              transition={{
-                duration: 6,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-            />
-
-            {/* Icon Container */}
-            <motion.div
-              className="relative mx-auto w-20 h-20"
-              whileHover={{ rotate: 10 }}
+              className="relative mx-auto w-20 h-20 -mt-14"
+              whileHover={{ rotate: 10, scale: 1.1 }}
               transition={{ duration: 0.3 }}
             >
               <div
-                className={`w-full h-full rounded-full flex items-center justify-center shadow-lg border border-white/20 bg-gradient-to-br ${type.gradient}`}
+                className={`w-full h-full rounded-full flex items-center justify-center shadow-xl border-4 border-white bg-gradient-to-br ${type.gradient}`}
+                style={{
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)'
+                }}
               >
                 <Icon className="w-10 h-10 text-white" />
               </div>
@@ -350,36 +874,29 @@ export const CreationHub = ({ isMobile }: CreationHubProps) => {
                   ease: "easeInOut"
                 }}
               >
-                <Sparkles className="w-4 h-4 text-yellow-400" />
+                <Sparkles className="w-5 h-5 text-yellow-400 drop-shadow-lg" />
               </motion.div>
             </motion.div>
 
             {/* Content */}
-            <div className="space-y-3 relative z-10">
-              <h3 className="text-xl font-bold text-gray-800">
+            <div className="space-y-4 relative z-10">
+              <h3 className="text-xl font-bold text-gray-800 group-hover:text-gray-900 dark:text-gray-100 dark:group-hover:text-white transition-colors">
                 {type.title}
               </h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
+              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
                 {type.description}
               </p>
-
-              {/* Hover Shimmer Effect */}
-              <motion.div
-                className="absolute inset-0 rounded-3xl opacity-0 hover:opacity-100 transition-opacity duration-500"
-                style={{
-                  background: 'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%)',
-                }}
-                animate={{
-                  x: ['-100%', '100%']
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  repeatDelay: 2,
-                  ease: "easeInOut"
-                }}
-              />
             </div>
+
+            {/* Hover Glow Border */}
+            <motion.div
+              className="absolute inset-0 rounded-b-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+              style={{
+                background: 'linear-gradient(135deg, transparent 0%, rgba(168, 85, 247, 0.1) 50%, transparent 100%)',
+                border: '2px solid rgba(168, 85, 247, 0.3)',
+                borderTop: 'none'
+              }}
+            />
           </CardContent>
         </Card>
       </motion.div>
@@ -1268,7 +1785,7 @@ export const CreationHub = ({ isMobile }: CreationHubProps) => {
               <Button
                 onClick={async () => {
                   if (!user) {
-                    toast({
+                    toast?.({
                       title: "Authentication Required",
                       description: "Please log in to publish your course.",
                       variant: "destructive"
@@ -1303,7 +1820,7 @@ export const CreationHub = ({ isMobile }: CreationHubProps) => {
                     }
 
                     // Show success message with tab information
-                    toast({
+                    toast?.({
                       title: courseData.publishType === 'draft' ? "Course saved!" : "Course published!",
                       description: courseData.publishType === 'draft'
                         ? "Your course has been saved as a draft."
@@ -1324,7 +1841,7 @@ export const CreationHub = ({ isMobile }: CreationHubProps) => {
                     handleBackToSelection();
                   } catch (error) {
                     console.error('❌ Error publishing course:', error);
-                    toast({
+                    toast?.({
                       title: "Publishing Failed",
                       description: "There was an error publishing your course. Please try again.",
                       variant: "destructive"
@@ -1399,118 +1916,88 @@ export const CreationHub = ({ isMobile }: CreationHubProps) => {
               animate={{ opacity: 1 }}
               className="space-y-12"
             >
-              {/* Header Section */}
-              <div className="text-center space-y-6">
-                <motion.div
-                  animate={{
-                    rotate: [0, 5, -5, 0],
-                    scale: [1, 1.05, 1]
-                  }}
-                  transition={{
-                    duration: 4,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                >
-                  <div className={`mx-auto relative ${isMobile ? 'w-24 h-24' : 'w-32 h-32'}`}>
-                    <div
-                      className="w-full h-full rounded-full flex items-center justify-center shadow-2xl border border-white/20"
-                      style={{
-                        background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.9) 0%, rgba(99, 102, 241, 0.9) 100%)',
-                        backdropFilter: 'blur(20px)',
-                        boxShadow: '0 8px 32px rgba(147, 51, 234, 0.3)'
-                      }}
-                    >
-                      <span className={`${isMobile ? 'text-4xl' : 'text-6xl'}`}>✨</span>
-                    </div>
-                    <motion.div
-                      className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center"
-                      animate={{
-                        scale: [1, 1.3, 1],
-                        rotate: [0, 180, 360]
-                      }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                    >
-                      <Crown className="w-4 h-4 text-white" />
-                    </motion.div>
-                  </div>
-                </motion.div>
-
-                <div className="space-y-4">
-                  <h2 className={`font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent ${
-                    isMobile ? 'text-2xl' : 'text-4xl'
-                  }`}>
-                    What Do You Want to Create?
-                  </h2>
-                  <p className={`text-gray-600 leading-relaxed max-w-3xl mx-auto ${
-                    isMobile ? 'text-base' : 'text-lg'
-                  }`}>
-                    Choose from courses, communities, coaching, products, and tools. Build, share, and monetize instantly with our XP + co-pay system.
-                  </p>
-                </div>
-              </div>
-
-              {/* Creation Type Grid */}
+              {/* Creation Type Grid - Moved to top, removed header since it's now in main hero */}
               <div className={`grid gap-6 ${
                 isMobile
                   ? 'grid-cols-1 sm:grid-cols-2'
-                  : 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
+                  : 'grid-cols-2 lg:grid-cols-4'
               }`}>
                 {creationTypes.map(renderCreationTypeCard)}
               </div>
 
-              {/* Save Your Drafts Section */}
+              {/* Save Your Drafts Section - Slim Card Pill */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
-                className="mt-8"
+                className="mt-8 max-w-md mx-auto"
               >
-                <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+                <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer">
                   <CardContent
-                    className="p-6"
+                    className="px-6 py-4"
                     style={{
                       background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
                       backdropFilter: 'blur(20px)',
                       border: '1px solid rgba(255, 255, 255, 0.3)',
-                      borderRadius: '20px'
+                      borderRadius: '50px'
+                    }}
+                    onClick={() => {
+                      // TODO: Navigate to drafts view
+                      console.log('View drafts clicked');
                     }}
                   >
-                    <div className="flex items-center justify-between">
-                      {/* Left side: Icon and Text */}
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-r from-gray-100 to-gray-200 flex items-center justify-center">
-                          <Save className="w-6 h-6 text-gray-600" />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                            Save Your Drafts
-                          </h3>
-                          <p className="text-sm text-gray-600">
-                            Come back anytime to continue where you left off.
-                          </p>
-                        </div>
+                    <div className="flex items-center justify-center space-x-3">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-gray-100 to-gray-200 flex items-center justify-center group-hover:from-blue-100 group-hover:to-blue-200 transition-all duration-300">
+                        <Save className="w-4 h-4 text-gray-600 group-hover:text-blue-600 transition-colors duration-300" />
                       </div>
-
-                      {/* Right side: Button */}
-                      <Button
-                        variant="outline"
-                        className="flex items-center space-x-2 bg-white/80 hover:bg-white border-gray-200 hover:border-gray-300 text-gray-700 hover:text-gray-900 transition-all duration-300"
-                        onClick={() => {
-                          // TODO: Navigate to drafts view
-                          console.log('View drafts clicked');
-                        }}
-                      >
-                        <span>View Drafts</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </Button>
+                      <span className="text-sm font-semibold text-gray-700 group-hover:text-gray-900 dark:text-gray-200 dark:group-hover:text-white transition-colors duration-300">
+                        Save Your Drafts
+                      </span>
+                      <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-1 transition-all duration-300" />
                     </div>
                   </CardContent>
                 </Card>
+              </motion.div>
+
+              {/* YouTube Connect Section - Restored 3-Step Flow */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+                className="mt-12"
+              >
+                <div className="text-center space-y-6">
+                  {/* Or Divider */}
+                  <div className="flex items-center space-x-4">
+                    <div className="flex-1 h-px bg-gradient-to-r from-transparent to-gray-300 dark:to-gray-600"></div>
+                    <span className="text-gray-500 dark:text-gray-400 font-medium">or</span>
+                    <div className="flex-1 h-px bg-gradient-to-l from-transparent to-gray-300 dark:to-gray-600"></div>
+                  </div>
+
+                  {/* Heading */}
+                  <h3 className={`font-semibold text-gray-800 dark:text-gray-100 ${isMobile ? 'text-lg' : 'text-xl'}`}>
+                    👉 Connect your channel, select videos, and share them with the WIZ community.
+                  </h3>
+                </div>
+
+                {/* YouTube Connect Component */}
+                <YouTubeConnectFlow
+                  isMobile={isMobile}
+                  onConnect={onYouTubeConnect}
+                  channelInfo={channelInfo}
+                  videos={videos}
+                  selectedVideos={selectedVideos}
+                  isConnecting={isConnecting}
+                  isLoadingVideos={isLoadingVideos}
+                  isPublishing={isPublishing}
+                  videoContentTypes={videoContentTypes}
+                  onToggleVideoSelection={onToggleVideoSelection}
+                  onUpdateVideoContentType={onUpdateVideoContentType}
+                  onUpdateVideoCategory={onUpdateVideoCategory}
+                  onProceedToCategorize={onProceedToCategorize}
+                  onPublishToWiz={onPublishToWiz}
+                  toast={toast}
+                />
               </motion.div>
             </motion.div>
           ) : (
