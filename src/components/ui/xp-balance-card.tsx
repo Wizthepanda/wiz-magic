@@ -92,7 +92,7 @@ export const XPBalanceCard: React.FC<XPBalanceCardProps> = ({
               className="text-right"
               whileHover={{ scale: 1.05 }}
             >
-              <p className="text-2xl font-bold text-gray-900">{xpBalance.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-gray-900">{(xpBalance || 0).toLocaleString()}</p>
               <p className="text-xs text-gray-600">≈ ${usdEquivalent} value</p>
             </motion.div>
           </div>

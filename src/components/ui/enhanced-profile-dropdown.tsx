@@ -9,8 +9,6 @@ import {
   Gift,
   Sparkles,
   Crown,
-  Moon,
-  Sun,
   ChevronDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -297,18 +295,6 @@ export const EnhancedProfileDropdown: React.FC<EnhancedProfileDropdownProps> = (
               <span>Settings</span>
             </DropdownMenuItem>
 
-            <DropdownMenuItem
-              variant="premium"
-              onClick={onToggleDarkMode}
-              className="cursor-pointer"
-            >
-              {darkMode ? (
-                <Sun className="w-4 h-4 mr-3 text-yellow-600" />
-              ) : (
-                <Moon className="w-4 h-4 mr-3 text-indigo-600" />
-              )}
-              <span>{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
-            </DropdownMenuItem>
 
             <DropdownMenuItem
               variant="premium"

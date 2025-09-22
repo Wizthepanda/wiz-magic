@@ -133,7 +133,7 @@ export const XPRewardsDropdown: React.FC<XPRewardsDropdownProps> = ({
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.3 }}
                 >
-                  {Math.floor(totalXP).toLocaleString()}
+                  {Math.floor(totalXP || 0).toLocaleString()}
                 </motion.span>
                 <span className="text-sm opacity-90">XP</span>
               </motion.div>

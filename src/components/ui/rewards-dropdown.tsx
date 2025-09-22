@@ -183,7 +183,7 @@ export const RewardsDropdown: React.FC<RewardsDropdownProps> = ({
               >
                 <Gem className="w-4 h-4 text-white" />
                 <span className="text-white font-bold text-sm">
-                  {currentXP.toLocaleString()}
+                  {(currentXP || 0).toLocaleString()}
                 </span>
               </motion.div>
 

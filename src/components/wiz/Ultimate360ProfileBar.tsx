@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Trophy, ShoppingBag, Sparkles, Sun, Moon } from 'lucide-react';
+import { Bell, Trophy, ShoppingBag, Sparkles } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,7 +12,7 @@ import { NotificationsDropdown } from '@/components/ui/notifications-dropdown';
 import { EnhancedProfileDropdown } from '@/components/ui/enhanced-profile-dropdown';
 import { XPRewardsDropdown } from '@/components/ui/xp-rewards-dropdown';
 import { LeaderboardDropdown } from '@/components/ui/leaderboard-dropdown';
-import { XPShopDropdown } from '@/components/ui/xp-shop-dropdown';
+import { ZAPRewardsDropdown } from '@/components/ui/zap-rewards-dropdown';
 import { LuxuryCircularIcon } from '@/components/ui/luxury-circular-icon';
 
 interface Ultimate360ProfileBarProps {
@@ -29,9 +29,9 @@ export const Ultimate360ProfileBar: React.FC<Ultimate360ProfileBarProps> = ({
   onToggleDarkMode
 }) => {
   const { user } = useAuth();
-  const { totalXP, level, progressPercent, xpInCurrentLevel, xpToNextLevel, dailyXP, loading } = useXp();
+  const { totalXP: totalZAPS, level, progressPercent, xpInCurrentLevel: zapsInCurrentLevel, xpToNextLevel: zapsToNextLevel, dailyXP: dailyZAPS, loading } = useXp();
   const [showSparkles, setShowSparkles] = useState(false);
-  const [prevTotalXP, setPrevTotalXP] = useState(totalXP);
+  const [prevTotalZAPS, setPrevTotalZAPS] = useState(totalZAPS);
   const [prevLevel, setPrevLevel] = useState(level);
 
   // Initialize progress UI and listen for level up events
@@ -62,8 +62,8 @@ export const Ultimate360ProfileBar: React.FC<Ultimate360ProfileBarProps> = ({
 
   // Watch for XP changes and trigger animations
   useEffect(() => {
-    if (totalXP > 0 && prevTotalXP > 0 && totalXP > prevTotalXP) {
-      console.log(`🎯 XP increased from ${prevTotalXP} to ${totalXP}! Triggering animation...`);
+    if (totalZAPS > 0 && prevTotalZAPS > 0 && totalZAPS > prevTotalZAPS) {
+      console.log(`🎯 ZAPs increased from ${prevTotalZAPS} to ${totalZAPS}! Triggering animation...`);
 
       setShowSparkles(true);
       setTimeout(() => setShowSparkles(false), 2000);
@@ -74,9 +74,9 @@ export const Ultimate360ProfileBar: React.FC<Ultimate360ProfileBarProps> = ({
       }
     }
 
-    setPrevTotalXP(totalXP);
+    setPrevTotalZAPS(totalZAPS);
     setPrevLevel(level);
-  }, [totalXP, level, prevTotalXP, prevLevel]);
+  }, [totalZAPS, level, prevTotalZAPS, prevLevel]);
 
   // Generate referral code
   const generateReferralCode = (uid: string): string => {
@@ -123,9 +123,9 @@ export const Ultimate360ProfileBar: React.FC<Ultimate360ProfileBarProps> = ({
     email: user.email || '',
     avatar: user.photoURL || '',
     level: level,
-    currentXP: totalXP,
-    xpForCurrentLevel: totalXP - xpInCurrentLevel,
-    xpForNextLevel: totalXP - xpInCurrentLevel + xpToNextLevel,
+    currentZAPS: totalZAPS,
+    zapsForCurrentLevel: totalZAPS - zapsInCurrentLevel,
+    zapsForNextLevel: totalZAPS - zapsInCurrentLevel + zapsToNextLevel,
     progressPercent: progressPercent
   };
 
@@ -182,13 +182,6 @@ export const Ultimate360ProfileBar: React.FC<Ultimate360ProfileBarProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        {/* Theme Toggle */}
-        <LuxuryCircularIcon
-          icon={darkMode ? Sun : Moon}
-          variant="premium"
-          size="md"
-          onClick={onToggleDarkMode}
-        />
 
         {/* Notifications Dropdown */}
         <NotificationsDropdown
@@ -202,17 +195,17 @@ export const Ultimate360ProfileBar: React.FC<Ultimate360ProfileBarProps> = ({
           onViewFullLeaderboard={onNavigateToLeaderboard}
         />
 
-        {/* XP Shop Dropdown */}
-        <XPShopDropdown
-          currentXP={totalXP}
+        {/* ZAP Rewards Dropdown */}
+        <ZAPRewardsDropdown
+          currentZAPS={totalZAPS}
           onViewAllRewards={onNavigateToShop}
           onRewardClick={(id) => console.log('Purchase item:', id)}
         />
 
         {/* XP Rewards Dropdown */}
         <XPRewardsDropdown
-          totalXP={totalXP}
-          dailyXP={dailyXP}
+          totalZAPS={totalZAPS}
+          dailyZAPS={dailyZAPS}
           onClaimReward={(id) => console.log('Claim reward:', id)}
           onGoToXPStore={onNavigateToShop}
         />

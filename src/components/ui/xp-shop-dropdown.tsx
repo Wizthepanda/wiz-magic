@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingBag,
-  Gem,
   Sparkles,
   Crown,
   Gift,
@@ -12,7 +11,11 @@ import {
   Zap,
   BookOpen,
   Users,
-  Monitor
+  Monitor,
+  Star,
+  UserCheck,
+  Play,
+  Award
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LuxuryCircularIcon } from './luxury-circular-icon';
@@ -29,20 +32,25 @@ interface MarketplaceItem {
   status: 'available' | 'limited' | 'sold-out';
   timeRemaining?: string;
   gradient: string;
-  category: 'all' | 'communities' | 'coaching' | 'digital-products';
+  category: 'all' | 'communities' | 'courses' | 'coaching' | 'digital-products';
   subtitle?: string;
+  banner?: string;
+  creator?: string;
+  rating?: number;
+  memberCount?: number;
+  isVideo?: boolean;
 }
 
-interface XPShopDropdownProps {
-  currentXP?: number;
+interface ZAPRewardsDropdownProps {
+  currentZAPS?: number;
   onRewardClick?: (rewardId: string) => void;
   onViewAllRewards?: () => void;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
 
-export const XPShopDropdown: React.FC<XPShopDropdownProps> = ({
-  currentXP = 850,
+export const ZAPRewardsDropdown: React.FC<ZAPRewardsDropdownProps> = ({
+  currentZAPS = 850,
   onRewardClick,
   onViewAllRewards,
   isOpen,
@@ -52,7 +60,7 @@ export const XPShopDropdown: React.FC<XPShopDropdownProps> = ({
   const navigate = useSafeNavigate();
   const [internalOpen, setInternalOpen] = useState(false);
   const [hoveredReward, setHoveredReward] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'all' | 'communities' | 'coaching' | 'digital-products'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'communities' | 'courses' | 'coaching' | 'digital-products'>('all');
 
   // Use controlled or uncontrolled state
   const dropdownOpen = isOpen !== undefined ? isOpen : internalOpen;
@@ -228,7 +236,7 @@ export const XPShopDropdown: React.FC<XPShopDropdownProps> = ({
               >
                 <Gem className="w-4 h-4 text-white" />
                 <span className="text-white font-bold text-sm">
-                  {currentXP.toLocaleString()}
+                  {(currentXP || 0).toLocaleString()}
                 </span>
               </motion.div>
 

@@ -103,7 +103,7 @@ export const ClaimProfileCard: React.FC = () => {
                   <Zap className="w-4 h-4 text-yellow-500" />
                 </motion.div>
                 <span className="text-sm font-medium text-gray-700">
-                  {xp.toLocaleString()} XP
+                  {(xp || 0).toLocaleString()} XP
                 </span>
               </div>
               <span className="text-xs text-gray-500">
@@ -170,7 +170,7 @@ export const ClaimProfileCard: React.FC = () => {
                 }}
                 whileHover={{ scale: 1.05 }}
               >
-                💎 {xp.toLocaleString()} XP
+                💎 {(xp || 0).toLocaleString()} XP
               </motion.div>
             </div>
           </motion.div>

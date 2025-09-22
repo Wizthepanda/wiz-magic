@@ -303,7 +303,7 @@ export const FullXPShopPage: React.FC<FullXPShopPageProps> = ({
                 <Gem className="w-8 h-8" />
                 <div>
                   <p className="text-lg font-medium opacity-90">Your Balance</p>
-                  <p className="text-3xl font-bold">{userXP.toLocaleString()} XP</p>
+                  <p className="text-3xl font-bold">{(userXP || 0).toLocaleString()} XP</p>
                 </div>
               </div>
             </div>
@@ -453,7 +453,7 @@ export const FullXPShopPage: React.FC<FullXPShopPageProps> = ({
                                 <span>{Math.floor(item.xpCost * (1 - item.discount / 100))}</span>
                               </>
                             )
-                            : item.xpCost.toLocaleString()
+                            : (item.xpCost || 0).toLocaleString()
                           }
                         </>
                       )}

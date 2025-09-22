@@ -193,7 +193,7 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
                     />
                   </div>
                   <p className="text-xs text-gray-400 mt-2">
-                    {userXP.toLocaleString()} / {nextLevelXP.toLocaleString()} XP · {Math.round(progressPercent)}% complete
+                    {(userXP || 0).toLocaleString()} / {(nextLevelXP || 0).toLocaleString()} XP · {Math.round(progressPercent || 0)}% complete
                   </p>
                 </div>
                 {/* Mini XP counter pill */}

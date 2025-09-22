@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import { PremiumWatchExperience } from './PremiumWatchExperience';
 import { LuxuryCircularIcon } from '@/components/ui/luxury-circular-icon';
 import { LeaderboardDropdown } from '@/components/ui/leaderboard-dropdown';
-import { XPShopDropdown } from '@/components/ui/xp-shop-dropdown';
+import { ZAPRewardsDropdown } from '@/components/ui/zap-rewards-dropdown';
 import { NotificationsDropdown } from '@/components/ui/notifications-dropdown';
 import { XPRewardsDropdown } from '@/components/ui/xp-rewards-dropdown';
 import { EnhancedProfileDropdown } from '@/components/ui/enhanced-profile-dropdown';
@@ -50,8 +50,8 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const [userLevel, setUserLevel] = useState(7);
-  const [userXP, setUserXP] = useState(2450);
-  const [nextLevelXP] = useState(3000);
+  const [userZAPS, setUserZAPS] = useState(2450);
+  const [nextLevelZAPS] = useState(3000);
   const [dailyStreak, setDailyStreak] = useState(12);
   const [showLeaderboardDrawer, setShowLeaderboardDrawer] = useState(false);
   const [showQuestsDrawer, setShowQuestsDrawer] = useState(false);
@@ -77,7 +77,7 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
   const xpRingRef = useRef<HTMLDivElement>(null);
 
   const userName = user?.displayName || 'Champion';
-  const progressPercent = (userXP / nextLevelXP) * 100;
+  const progressPercent = (userZAPS / nextLevelZAPS) * 100;
 
   // Sample video data
   const sampleVideos = [
@@ -393,9 +393,9 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
                 onViewFullLeaderboard={() => setShowLeaderboardDrawer(true)}
               />
 
-              {/* XP Shop Dropdown */}
-              <XPShopDropdown
-                currentXP={userXP}
+              {/* ZAP Rewards Dropdown */}
+              <ZAPRewardsDropdown
+                currentZAPS={userZAPS}
                 onViewAllRewards={() => setShowShopDrawer(true)}
                 onRewardClick={(id) => console.log('Purchase item:', id)}
               />
@@ -492,7 +492,7 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
                   "backdrop-blur-lg pointer-events-none group-hover:pointer-events-auto opacity-0 group-hover:opacity-100"
                 )}
               >
-                {userXP}/{nextLevelXP} XP
+                {userZAPS}/{nextLevelZAPS} ZAPs
                 <div className={cn(
                   "absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 rotate-45",
                   isDarkMode ? "bg-slate-800" : "bg-white"
@@ -825,7 +825,7 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
                     { rank: 1, name: "CryptoKing", xp: 15420, avatar: "🥇" },
                     { rank: 2, name: "AIExpert", xp: 12890, avatar: "🥈" },
                     { rank: 3, name: "CodeMaster", xp: 11240, avatar: "🥉" },
-                    { rank: 4, name: userName, xp: userXP, avatar: "👤", isUser: true },
+                    { rank: 4, name: userName, xp: userZAPS, avatar: "👤", isUser: true },
                     { rank: 5, name: "TechGuru", xp: 9850, avatar: "🎯" }
                   ].map((player, index) => (
                     <motion.div
@@ -1053,7 +1053,7 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
                       className={cn(
                         "p-4 rounded-2xl border transition-all duration-300 hover:scale-[1.02]",
                         item.available
-                          ? userXP >= item.price
+                          ? userZAPS >= item.price
                             ? isDarkMode
                               ? "bg-green-500/20 border-green-500/30 hover:bg-green-500/30"
                               : "bg-green-50 border-green-200 hover:bg-green-100"
@@ -1082,7 +1082,7 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
                           </div>
                         </div>
                         {item.available ? (
-                          userXP >= item.price ? (
+                          userZAPS >= item.price ? (
                             <motion.button
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
@@ -1095,7 +1095,7 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
                               "px-3 py-1 rounded-full text-xs font-medium",
                               isDarkMode ? "bg-slate-700 text-slate-400" : "bg-gray-200 text-gray-600"
                             )}>
-                              Need {item.price - userXP} XP
+                              Need {item.price - userZAPS} ZAPs
                             </div>
                           )
                         ) : (
@@ -1133,8 +1133,8 @@ export const ApplePremiumDashboard = ({ className }: ApplePremiumDashboardProps)
         isOpen={showXpProfileDropdown}
         onClose={() => setShowXpProfileDropdown(false)}
         triggerRef={xpRingRef}
-        userXP={userXP}
-        nextLevelXP={nextLevelXP}
+        userZAPS={userZAPS}
+        nextLevelZAPS={nextLevelZAPS}
         userLevel={userLevel}
         streakDays={dailyStreak}
         userName={userName}

@@ -12,8 +12,6 @@ import {
   LogOut,
   Menu,
   X,
-  Sun,
-  Moon,
   ChevronLeft,
   ChevronRight,
   Settings,
@@ -483,49 +481,6 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
             </AnimatePresence>
           </motion.button>
 
-          {/* Theme Toggle */}
-          <motion.button
-            onClick={toggleTheme}
-            className={cn(
-              "w-full flex items-center transition-all duration-300 rounded-2xl group",
-              isExpanded ? "px-4 py-3" : "px-3 py-3 justify-center",
-              sidebarVariant === 'glassmorphic'
-                ? theme === 'dark'
-                  ? "text-gray-300 hover:text-white hover:bg-white/10"
-                  : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
-                : theme === 'dark'
-                ? "text-gray-400 hover:text-gray-200 hover:bg-gray-800"
-                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-            )}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <motion.div
-              className={cn("w-5 h-5", isExpanded ? "mr-3" : "mx-auto")}
-              whileHover={{ rotate: 180 }}
-              transition={{ duration: 0.3 }}
-            >
-              {theme === 'dark' ? (
-                <Moon className="w-5 h-5" strokeWidth={1.5} />
-              ) : (
-                <Sun className="w-5 h-5" strokeWidth={1.5} />
-              )}
-            </motion.div>
-
-            <AnimatePresence>
-              {isExpanded && (
-                <motion.span
-                  className="font-medium text-sm"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </motion.button>
 
           {/* Logout Button */}
           <motion.button
