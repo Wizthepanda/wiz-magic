@@ -46,6 +46,7 @@ import {
   Minus,
   Eye
 } from 'lucide-react';
+import CreateCommunityPage from './CreateCommunityPage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -2009,6 +2010,8 @@ export const CreationHub = ({
               >
                 {selectedType === 'course' ? (
                   renderCourseCreation()
+                ) : selectedType === 'community' ? (
+                  <CreateCommunityPage onBack={handleBackToSelection} />
                 ) : (
                   renderGenericCreation(creationTypes.find(t => t.id === selectedType)?.title || 'Item')
                 )}
