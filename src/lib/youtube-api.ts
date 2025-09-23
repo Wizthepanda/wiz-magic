@@ -95,6 +95,13 @@ class YouTubeAPIService {
    */
   private async loadGoogleIdentityServices(): Promise<void> {
     return new Promise((resolve, reject) => {
+      // Skip loading on wizxp.com to prevent CORS issues
+      if (typeof window !== 'undefined' && window.location.hostname === 'wizxp.com') {
+        console.log('🚫 Skipping Google Identity Services on wizxp.com domain to prevent CORS');
+        resolve();
+        return;
+      }
+
       // Check if already loaded
       if (window.google?.accounts?.oauth2) {
         resolve();
