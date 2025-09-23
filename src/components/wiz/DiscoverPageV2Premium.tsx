@@ -21,6 +21,17 @@ const DiscoverPageV2Premium: React.FC<DiscoverPageV2PremiumProps> = ({
   onRewardsClick,
   className
 }) => {
+  // Error boundary fallback
+  if (!userZAPS && userZAPS !== 0) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
   const [activeCategory, setActiveCategory] = useState('all');
   const [trendingIndex, setTrendingIndex] = useState(0);
   const [heroIndex, setHeroIndex] = useState(0);
@@ -154,9 +165,9 @@ const DiscoverPageV2Premium: React.FC<DiscoverPageV2PremiumProps> = ({
   // Featured creator
   const featuredCreator = tutorials.find(tutorial => tutorial.featured);
 
-  // Hero carousel content - Featured creators and trending
+  // Hero carousel content - Featured creators and trending (with safety checks)
   const heroContent = [
-    { type: 'featured', data: featuredCreator },
+    ...(featuredCreator ? [{ type: 'featured', data: featuredCreator }] : []),
     ...trendingTutorials.map(tutorial => ({ type: 'trending', data: tutorial }))
   ].filter(item => item.data);
 
@@ -307,11 +318,7 @@ const DiscoverPageV2Premium: React.FC<DiscoverPageV2PremiumProps> = ({
                       )}
                     >
                       {isActive && (
-                        <motion.div
-                          layoutId="activeCategory"
-                          className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-600"
-                          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-600" />
                       )}
                       <span className="relative z-10 tracking-tight">{category.label}</span>
                     </motion.button>
