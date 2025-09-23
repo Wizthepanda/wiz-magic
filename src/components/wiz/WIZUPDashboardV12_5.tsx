@@ -820,12 +820,7 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className }) 
   });
 
   return (
-    <div
-      className={cn("min-h-screen relative", className)}
-      style={{
-        background: 'linear-gradient(135deg, #FDFDFE 0%, #F5F7FF 25%, #FAF6FF 100%)'
-      }}
-    >
+    <div className={cn("relative", className)}>
       {/* Ambient glow accents */}
       <div
         className="absolute top-0 left-0 w-96 h-96 rounded-full opacity-10 pointer-events-none"
@@ -843,7 +838,7 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className }) 
       />
 
       {/* Seamless filter bubbles - no container background */}
-      <div className="sticky top-0 z-30 pt-8 pb-6">
+      <div className="sticky top-0 z-30 pt-6 pb-8">
         <div className="max-w-7xl mx-auto px-6">
           <div
             ref={filterScrollRef}
@@ -867,7 +862,7 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className }) 
       </div>
 
       {/* Premium video grid - desktop 3-column, responsive */}
-      <div className="max-w-7xl mx-auto px-6 pb-16">
+      <div className="max-w-7xl mx-auto px-6 pt-4 pb-12">
         <div
           className={cn(
             "grid gap-8",

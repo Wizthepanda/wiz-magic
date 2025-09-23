@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, ExternalLink, Zap, Eye, DollarSign, TrendingUp } from 'lucide-react';
+import { Trophy, ExternalLink, Zap, Eye, DollarSign, TrendingUp, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LuxuryCircularIcon } from './luxury-circular-icon';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './dropdown-menu';
@@ -166,9 +166,10 @@ export const LeaderboardDropdownV2: React.FC<LeaderboardDropdownV2Props> = ({
           <LuxuryCircularIcon
             icon={Trophy}
             isActive={dropdownOpen}
-            variant="premium"
+            variant="aurora"
             size="md"
             hasNotification={true}
+            progressPercent={75}
             onClick={() => setDropdownOpen(!dropdownOpen)}
           />
         </div>

@@ -189,9 +189,9 @@ export const LuxuryCircularIcon: React.FC<LuxuryCircularIconProps> = ({
 
           <defs>
             <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#3B82F6" />
-              <stop offset="50%" stopColor="#8B5CF6" />
-              <stop offset="100%" stopColor="#F59E0B" />
+              <stop offset="0%" stopColor="#F59E0B" />
+              <stop offset="50%" stopColor="#FBBF24" />
+              <stop offset="100%" stopColor="#FCD34D" />
             </linearGradient>
           </defs>
         </svg>
@@ -232,9 +232,9 @@ export const LuxuryCircularIcon: React.FC<LuxuryCircularIconProps> = ({
         <svg width="0" height="0" className="absolute">
           <defs>
             <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#3B82F6" />
-              <stop offset="50%" stopColor="#8B5CF6" />
-              <stop offset="100%" stopColor="#F59E0B" />
+              <stop offset="0%" stopColor="#F59E0B" />
+              <stop offset="50%" stopColor="#FBBF24" />
+              <stop offset="100%" stopColor="#FCD34D" />
             </linearGradient>
           </defs>
         </svg>
