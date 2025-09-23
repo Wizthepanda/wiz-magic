@@ -43,8 +43,7 @@ import {
   ChevronDown,
   ChevronUp,
   Youtube,
-  Minus,
-  Eye
+  Minus
 } from 'lucide-react';
 import CreateCommunityPage from './CreateCommunityPage';
 import { Button } from '@/components/ui/button';

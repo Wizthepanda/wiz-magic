@@ -17,6 +17,12 @@ import { NotificationsDropdown } from '@/components/ui/notifications-dropdown';
 import { XPRewardsDropdown } from '@/components/ui/xp-rewards-dropdown';
 import { EnhancedProfileDropdown } from '@/components/ui/enhanced-profile-dropdown';
 import { XPProfileDropdown } from '@/components/ui/xp-profile-dropdown';
+import CommunityVideoHubV6 from './CommunityVideoHubV6';
+import PremiumDashboardV8 from './PremiumDashboardV8';
+import PremiumDashboardV9 from './PremiumDashboardV9';
+import PremiumDashboardV10 from './PremiumDashboardV10';
+import PremiumDashboardV11 from './PremiumDashboardV11';
+import WIZUPDashboardV12_5 from './WIZUPDashboardV12_5';
 
 // Ultra-Premium Design System with Enhanced Dark Mode
 const premiumCard = "bg-white/95 dark:bg-dark-bg-secondary/95 backdrop-blur-sm border border-gray-200/40 dark:border-dark-surface-300 rounded-xl shadow-sm dark:shadow-xl dark:shadow-dark-accent-purple/10";
@@ -59,13 +65,11 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
   const [showShopDrawer, setShowShopDrawer] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
-  const [activeFilter, setActiveFilter] = useState('All');
   const [xpMilestones, setXpMilestones] = useState({ 25: false, 50: false, 75: false, 100: false });
   const [pendingXP, setPendingXP] = useState(0);
   const [videoProgress, setVideoProgress] = useState(0);
   const [showRewardCeremony, setShowRewardCeremony] = useState(false);
   const [earnedVideoXP, setEarnedVideoXP] = useState(0);
-  const [filteredVideos, setFilteredVideos] = useState<any[]>([]);
   const [showXpProfileDropdown, setShowXpProfileDropdown] = useState(false);
 
   const isMobile = useIsMobile();
@@ -80,75 +84,6 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
   const userName = user?.displayName || 'Champion';
   const progressPercent = (userZAPS / nextLevelZAPS) * 100;
 
-  // Sample video data
-  const sampleVideos = [
-    {
-      id: 1,
-      title: "AI Revolution: The Future is Here",
-      creator: "TechGuru",
-      thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-      videoId: "dQw4w9WgXcQ",
-      xpReward: 85,
-      duration: "8:45",
-      views: "2.1M",
-      description: "Explore the cutting-edge developments in artificial intelligence and machine learning."
-    },
-    {
-      id: 2,
-      title: "Crypto Trading Mastery",
-      creator: "CryptoExpert",
-      thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-      videoId: "dQw4w9WgXcQ",
-      xpReward: 120,
-      duration: "12:30",
-      views: "1.5M",
-      description: "Master the art of cryptocurrency trading with proven strategies."
-    },
-    {
-      id: 3,
-      title: "Design Systems Deep Dive",
-      creator: "DesignPro",
-      thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-      videoId: "dQw4w9WgXcQ",
-      xpReward: 95,
-      duration: "15:20",
-      views: "890K",
-      description: "Learn how to build scalable and maintainable design systems."
-    },
-    {
-      id: 4,
-      title: "Web Development Trends 2025",
-      creator: "CodeMaster",
-      thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-      videoId: "dQw4w9WgXcQ",
-      xpReward: 110,
-      duration: "18:10",
-      views: "1.8M",
-      description: "Stay ahead with the latest web development trends and technologies."
-    },
-    {
-      id: 5,
-      title: "Productivity Hacks for Developers",
-      creator: "DevLifestyle",
-      thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-      videoId: "dQw4w9WgXcQ",
-      xpReward: 75,
-      duration: "11:45",
-      views: "650K",
-      description: "Boost your productivity with these essential developer tips and tricks."
-    },
-    {
-      id: 6,
-      title: "Machine Learning Fundamentals",
-      creator: "MLGuru",
-      thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-      videoId: "dQw4w9WgXcQ",
-      xpReward: 130,
-      duration: "22:15",
-      views: "2.3M",
-      description: "Master the fundamentals of machine learning and data science."
-    }
-  ];
 
   const handleWatchVideo = (video: any) => {
     setSelectedVideo(video);
@@ -192,42 +127,6 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
     setEarnedVideoXP(0);
   };
 
-  // Initialize filtered videos
-  useEffect(() => {
-    setFilteredVideos(sampleVideos);
-  }, []);
-
-  // Search functionality
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      // Filter by active category when no search query
-      if (activeFilter === 'All') {
-        setFilteredVideos(sampleVideos);
-      } else {
-        // Filter by category (you can enhance this logic)
-        setFilteredVideos(sampleVideos);
-      }
-    } else {
-      // Filter videos based on search query
-      const filtered = sampleVideos.filter(video =>
-        video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        video.creator.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        video.description?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setFilteredVideos(filtered);
-    }
-  }, [searchQuery, activeFilter]);
-
-  // Premium filter categories
-  const filterCategories = [
-    { id: 'All', label: 'All', gradient: 'from-slate-500 to-slate-600' },
-    { id: 'Trending', label: 'Trending', gradient: 'from-orange-500 to-red-600' },
-    { id: 'Tech', label: 'Tech', gradient: 'from-blue-500 to-indigo-600' },
-    { id: 'Design', label: 'Design', gradient: 'from-violet-500 to-purple-600' },
-    { id: 'Finance', label: 'Finance', gradient: 'from-emerald-500 to-green-600' },
-    { id: 'Health', label: 'Health', gradient: 'from-pink-500 to-rose-600' },
-    { id: 'AI', label: 'AI', gradient: 'from-cyan-500 to-blue-600' }
-  ];
 
   // Enhanced XP handling
   const handleXPMilestone = (milestone: number) => {
@@ -515,256 +414,10 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
               isMobile ? "px-4" : "px-6"
             )}
           >
-            {/* Premium Discovery Hub */}
-            <div className="mb-8">
-            {/* Clean Pill Filter Toggles */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="mb-10"
-            >
-              <div className="flex gap-3 overflow-x-auto pb-2">
-                {filterCategories.map((filter, index) => (
-                  <motion.div
-                    key={filter.id}
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                    className="relative"
-                  >
-                    {/* Subtle Aura for Active State */}
-                    {activeFilter === filter.id && (
-                      <motion.div
-                        className="absolute -inset-1 rounded-full"
-                        style={{
-                          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%)',
-                          filter: 'blur(8px)'
-                        }}
-                        animate={{
-                          opacity: [0.6, 1, 0.6],
-                          scale: [1, 1.05, 1]
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "easeInOut"
-                        }}
-                      />
-                    )}
-
-                    <motion.button
-                      whileHover={{
-                        y: -2,
-                        scale: 1.02,
-                        transition: { duration: 0.3, ease: "easeOut" }
-                      }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => setActiveFilter(filter.id)}
-                      className={cn(
-                        "relative px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap",
-                        activeFilter === filter.id
-                          ? "text-white shadow-md"
-                          : isDarkMode
-                            ? "bg-slate-800/40 border border-slate-600/30 text-slate-300 hover:text-white hover:bg-slate-700/60"
-                            : "bg-gray-100/60 border border-gray-200/50 text-slate-600 hover:text-slate-800 hover:bg-gray-200/80"
-                      )}
-                      style={activeFilter === filter.id ? {
-                        background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(139, 92, 246, 0.9) 100%)',
-                        boxShadow: '0 4px 20px rgba(99, 102, 241, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1)',
-                        border: 'none'
-                      } : {}}
-                    >
-                    {/* Subtle gradient underline for active state */}
-                    {activeFilter === filter.id && (
-                      <motion.div
-                        className="absolute bottom-0 left-1/2 transform -translate-x-1/2 h-0.5 rounded-full"
-                        style={{
-                          width: '60%',
-                          background: `linear-gradient(90deg, ${filter.gradient.replace('from-', '').replace('to-', '').split(' ').join(', ')})`
-                        }}
-                        layoutId="activeFilter"
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                      />
-                    )}
-
-                    <span className="relative z-10 font-medium"
-                      style={{
-                        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
-                      }}>
-                      {filter.label}
-                    </span>
-                    </motion.button>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-
-              {/* Premium Hero Video Grid */}
-              <div className={cn(
-                "grid",
-                isMobile ? "grid-cols-1 gap-6" : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8"
-              )}>
-                {/* Clean Material You Video Cards */}
-                {filteredVideos.map((video, index) => (
-                  <motion.div
-                    key={video.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      delay: 0.4 + index * 0.08,
-                      type: "spring",
-                      damping: 25,
-                      stiffness: 120
-                    }}
-                    whileHover={luxuryHover}
-                    onClick={() => handleWatchVideo(video)}
-                    className="group cursor-pointer"
-                  >
-                    {/* Premium Floating Card */}
-                    <motion.div
-                      className={cn(
-                        "relative rounded-xl overflow-hidden transition-all duration-300",
-                        getDynamicFloatingClass(isDarkMode),
-                        "group-hover:shadow-xl"
-                      )}
-                      whileHover={{
-                        y: -2,
-                        transition: { duration: 0.3, ease: "easeOut" }
-                      }}
-                    >
-                    {/* Clean Thumbnail Area */}
-                    <div className="relative aspect-video overflow-hidden rounded-t-xl">
-                      <img
-                        src={video.thumbnail}
-                        alt={video.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                      />
-
-                      {/* Subtle Gradient Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80 group-hover:opacity-60 transition-opacity duration-300" />
-
-                      {/* Minimal Play Button */}
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                        <motion.div
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="w-16 h-16 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg"
-                        >
-                          <div className="w-0 h-0 border-l-[10px] border-l-slate-800 border-y-[7px] border-y-transparent ml-1" />
-                        </motion.div>
-                      </div>
-
-                      {/* Duration Badge */}
-                      <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur-sm rounded-lg px-2.5 py-1">
-                        <span className="text-white text-xs font-medium">{video.duration}</span>
-                      </div>
-
-                      {/* Minimal XP Badge */}
-                      <motion.div
-                        whileHover={{
-                          scale: 1.05,
-                          transition: { duration: 0.2 }
-                        }}
-                        className="absolute top-3 right-3"
-                      >
-                        <div
-                          className="px-3 py-1.5 rounded-full text-white text-xs font-bold shadow-lg backdrop-blur-sm"
-                          style={{
-                            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.95) 0%, rgba(139, 92, 246, 0.95) 100%)',
-                            boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2)',
-                            fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-                            fontWeight: '700',
-                            letterSpacing: '0.025em'
-                          }}
-                        >
-                          <span>+{video.xpReward} XP</span>
-                        </div>
-                      </motion.div>
-                    </div>
-
-                    {/* Clean Card Content */}
-                    <div className={cn(
-                      "space-y-3",
-                      isMobile ? "p-4" : "p-5"
-                    )}>
-                      <h3 className={cn(
-                        "font-semibold text-lg line-clamp-2 leading-tight transition-colors duration-300",
-                        isDarkMode ? "text-white group-hover:text-slate-100" : "text-slate-900 group-hover:text-slate-700"
-                      )}
-                        style={{
-                          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
-                        }}>
-                        {video.title}
-                      </h3>
-                      <p className={cn(
-                        "text-sm line-clamp-2 leading-relaxed",
-                        isDarkMode ? "text-slate-400" : "text-slate-600"
-                      )}
-                        style={{
-                          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
-                        }}>
-                        {video.description}
-                      </p>
-
-                      <div className="flex items-center justify-between pt-2">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-400 to-slate-600 flex items-center justify-center text-white text-sm font-medium">
-                            {video.creator[0]}
-                          </div>
-                          <div>
-                            <span className={cn(
-                              "text-sm font-medium",
-                              isDarkMode ? "text-slate-200" : "text-slate-700"
-                            )}
-                              style={{
-                                fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
-                              }}>
-                              {video.creator}
-                            </span>
-                            <p className={cn(
-                              "text-xs",
-                              isDarkMode ? "text-slate-500" : "text-slate-500"
-                            )}>
-                              {video.views} views
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Minimal XP Action Badge */}
-                        <motion.div
-                          whileHover={{
-                            scale: 1.05,
-                            transition: { duration: 0.2 }
-                          }}
-                          whileTap={{ scale: 0.95 }}
-                          className="cursor-pointer"
-                        >
-                          <motion.div
-                            className="px-3 py-1.5 rounded-full text-white text-xs font-bold backdrop-blur-sm"
-                            style={{
-                              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.95) 0%, rgba(139, 92, 246, 0.95) 100%)',
-                              boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2)',
-                              fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-                              fontWeight: '700',
-                              letterSpacing: '0.025em'
-                            }}
-                            whileHover={{
-                              boxShadow: '0 6px 30px rgba(99, 102, 241, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.3)',
-                              scale: 1.05,
-                              y: -1
-                            }}
-                          >
-                            <span>+{video.xpReward} XP</span>
-                          </motion.div>
-                        </motion.div>
-                      </div>
-                    </div>
-                    </motion.div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
+            {/* WIZUP Dashboard V12.5 - Premium Final Version */}
+            <WIZUPDashboardV12_5
+              className="w-full"
+            />
           </motion.div>
         </div>
       </main>
