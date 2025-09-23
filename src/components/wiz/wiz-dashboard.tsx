@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { WizSidebar } from './wiz-sidebar';
 import { WizMobileMenu } from './WizMobileMenu';
 import { WizUserProfile } from './wiz-user-profile';
-import { ApplePremiumDashboard } from './ApplePremiumDashboardV2';
+import { ApplePremiumDashboard } from './ApplePremiumDashboard';
 import { WizLeaderboard } from './wiz-leaderboard';
 import { WizPremierePage } from './wiz-premiere-page';
 import { WizLeaderboardPage } from './wiz-leaderboard-page';
