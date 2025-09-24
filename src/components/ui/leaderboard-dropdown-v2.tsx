@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, ExternalLink, Zap, Eye, DollarSign, TrendingUp, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { LuxuryCircularIcon } from './luxury-circular-icon';
+import { EnhancedIconTrigger } from './enhanced-icon-trigger';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './dropdown-menu';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useSafeNavigate } from '@/hooks/useSafeNavigate';
@@ -163,12 +163,11 @@ export const LeaderboardDropdownV2: React.FC<LeaderboardDropdownV2Props> = ({
     <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
       <DropdownMenuTrigger asChild>
         <div>
-          <LuxuryCircularIcon
+          <EnhancedIconTrigger
             icon={Trophy}
             isActive={dropdownOpen}
-            variant="aurora"
+            variant="glass"
             size="md"
-            hasNotification={true}
             onClick={() => setDropdownOpen(!dropdownOpen)}
           />
         </div>

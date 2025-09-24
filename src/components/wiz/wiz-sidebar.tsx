@@ -484,8 +484,8 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
             </AnimatePresence>
           </motion.button>
 
-          {/* Collapse/Expand Button */}
-          <div className="flex justify-center pt-4">
+          {/* Elegant Side Panel Toggle - Bottom Left */}
+          <div className="flex justify-start pl-4 pt-4">
             <motion.button
               onClick={() => setIsExpanded(!isExpanded)}
               className={cn(

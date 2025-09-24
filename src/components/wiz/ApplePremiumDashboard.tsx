@@ -157,16 +157,16 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
       className
     )}>
 
-      {/* Ultra-Premium Top Bar */}
+      {/* Ultra-Premium Top Bar - Unified Left Baseline */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
-        className="sticky top-0 z-50 flex items-center justify-between py-4 bg-transparent backdrop-blur-none"
+        className="sticky top-0 z-50 bg-transparent backdrop-blur-none"
       >
-
-          {/* Minimal Pill Search */}
-          <div className="flex-1 max-w-xl w-full">
+        <div className="flex items-center justify-between py-4 px-8 lg:px-10 xl:px-12">
+          {/* Search Bar - Flush Left with Content Wrapper */}
+          <div className="search-row w-full max-w-xl">
             <motion.div
               whileHover={{
                 scale: 1.01,
@@ -254,11 +254,11 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
             </motion.div>
           </div>
 
-          {/* Right: Premium Luxury Dropdowns + Profile Avatar */}
-          <div className="flex items-center gap-4 flex-shrink-0">
+          {/* Right: Profile Elements - Within Screen Bounds */}
+          <div className="flex items-center gap-3 flex-shrink-0">
 
-            {/* Premium Luxury Dropdown Icons */}
-            <div className="flex items-center gap-3">
+            {/* Clean Icon Dropdowns - No Red Circles */}
+            <div className="flex items-center gap-2">
               {/* Notifications Dropdown */}
               <NotificationsDropdown
                 onMarkAsRead={(id) => console.log('Mark notification as read:', id)}
@@ -279,13 +279,13 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
               />
             </div>
 
-            {/* Divider */}
+            {/* Divider - Subtle */}
             <div
-              className="w-px h-8"
+              className="w-px h-6 mx-2"
               style={{
                 background: isDarkMode
-                  ? 'linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.2), transparent)'
-                  : 'linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.1), transparent)'
+                  ? 'linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.15), transparent)'
+                  : 'linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.08), transparent)'
               }}
             />
 
@@ -378,10 +378,11 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
               </motion.div>
             </motion.div>
           </div>
-        </motion.header>
+        </div>
+      </motion.header>
 
-      {/* Main Dashboard Content */}
-      <main className="flex-1 transition-all duration-300 px-6 lg:px-8">
+      {/* Main Dashboard Content - Baseline Grid */}
+      <main className="flex-1 transition-all duration-300 overflow-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

@@ -429,6 +429,7 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className }) 
     };
 
     const getTextColor = () => {
+      if (isActive && category.id === 'all') return 'text-black';
       if (isActive) return 'text-white';
       return 'text-gray-700 hover:text-gray-900';
     };
@@ -892,23 +893,30 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className }) 
 
   return (
     <div className={cn("relative", className)}>
+      {/* Content Wrapper - Unified Left Baseline */}
+      <div className="content-wrapper px-8 lg:px-10 xl:px-12">
 
-      {/* V16 Premium Filter Bubbles - YouTube-style Alignment */}
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide mt-2 mb-6">
-        {FILTER_CATEGORIES.map((category) => (
-          <FilterPill
-            key={category.id}
-            category={category}
-            isActive={activeFilter === category.id}
-          />
-        ))}
-      </div>
+        {/* Filter Chips - Immediately Below Search, Same Baseline */}
+        <div className="filter-row mb-6">
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide py-2">
+            {FILTER_CATEGORIES.map((category) => (
+              <FilterPill
+                key={category.id}
+                category={category}
+                isActive={activeFilter === category.id}
+              />
+            ))}
+          </div>
+        </div>
 
-      {/* V16 Premium Video Grid - YouTube-style Layout */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredVideos.map((video, index) => (
-          <VideoCard key={video.id} video={video} index={index} />
-        ))}
+        {/* Video Grid - 3 Column Constraint, Left Baseline Aligned */}
+        <section className="video-grid-section">
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredVideos.map((video, index) => (
+              <VideoCard key={video.id} video={video} index={index} />
+            ))}
+          </div>
+        </section>
       </div>
 
       {/* Loading spinner */}

@@ -116,23 +116,7 @@ export const EnhancedIconTrigger: React.FC<EnhancedIconTriggerProps> = ({
         }}
       />
 
-      {/* Notification indicator */}
-      {hasNotification && (
-        <motion.div
-          className="absolute -top-1 -right-1 flex items-center justify-center"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 500, damping: 30 }}
-        >
-          {notificationCount && notificationCount > 0 ? (
-            <div className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-lg">
-              {notificationCount > 99 ? '99+' : notificationCount}
-            </div>
-          ) : (
-            <div className="w-3 h-3 bg-gradient-to-r from-red-500 to-pink-500 rounded-full shadow-lg animate-pulse" />
-          )}
-        </motion.div>
-      )}
+      {/* Clean Design - No Notification Circles */}
 
       {/* Subtle glow effect for active state */}
       {isActive && (

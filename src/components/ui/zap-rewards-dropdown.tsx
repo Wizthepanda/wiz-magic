@@ -18,7 +18,7 @@ import {
   Award
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { LuxuryCircularIcon } from './luxury-circular-icon';
+import { EnhancedIconTrigger } from './enhanced-icon-trigger';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './dropdown-menu';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useSafeNavigate } from '@/hooks/useSafeNavigate';
@@ -194,12 +194,11 @@ export const ZAPRewardsDropdown: React.FC<ZAPRewardsDropdownProps> = ({
     <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
       <DropdownMenuTrigger asChild>
         <div>
-          <LuxuryCircularIcon
+          <EnhancedIconTrigger
             icon={ShoppingBag}
             isActive={dropdownOpen}
-            variant="purple"
+            variant="glass"
             size="md"
-            hasNotification={marketplaceItems.some(item => item.status === 'limited')}
             onClick={() => setDropdownOpen(!dropdownOpen)}
           />
         </div>
