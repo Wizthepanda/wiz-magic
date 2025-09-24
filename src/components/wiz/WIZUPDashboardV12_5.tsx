@@ -893,10 +893,10 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className }) 
 
   return (
     <div className={cn("relative", className)}>
-      {/* Content Wrapper - Unified Left Baseline */}
-      <div className="content-wrapper px-8 lg:px-10 xl:px-12">
+      {/* Content Wrapper - Seamless Scrolling */}
+      <div className="content-wrapper px-8 lg:px-10 xl:px-12 pt-6">
 
-        {/* Filter Chips - Immediately Below Search, Same Baseline */}
+        {/* Filter Chips - Natural Scroll with Content */}
         <div className="filter-row mb-6">
           <div className="flex gap-3 overflow-x-auto scrollbar-hide py-2">
             {FILTER_CATEGORIES.map((category) => (

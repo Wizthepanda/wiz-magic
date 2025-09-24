@@ -157,12 +157,17 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
       className
     )}>
 
-      {/* Ultra-Premium Top Bar - Unified Left Baseline */}
+      {/* Ultra-Premium Top Bar - Seamless Sticky */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
-        className="sticky top-0 z-50 bg-transparent backdrop-blur-none"
+        className="sticky top-0 z-50"
+        style={{
+          backgroundColor: isDarkMode ? '#0f172a' : '#f8fafc',
+          borderBottom: 'none',
+          boxShadow: 'none'
+        }}
       >
         <div className="flex items-center justify-between py-4 px-8 lg:px-10 xl:px-12">
           {/* Search Bar - Flush Left with Content Wrapper */}
@@ -381,8 +386,8 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
         </div>
       </motion.header>
 
-      {/* Main Dashboard Content - Baseline Grid */}
-      <main className="flex-1 transition-all duration-300 overflow-auto">
+      {/* Main Dashboard Content - Scrollable */}
+      <main className="flex-1 transition-all duration-300">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
