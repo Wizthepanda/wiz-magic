@@ -49,20 +49,116 @@ interface VideoData {
   daysAgo: number;
 }
 
-// Premium filter categories for V12.5
+// V16 Premium filter categories with gradient palettes
 const FILTER_CATEGORIES = [
-  { id: 'all', label: 'All' },
-  { id: 'tech', label: 'Tech' },
-  { id: 'money', label: 'Money' },
-  { id: 'design', label: 'Design' },
-  { id: 'business', label: 'Business' },
-  { id: 'health', label: 'Health' },
-  { id: 'self-improvement', label: 'Self Improvement' },
-  { id: 'education', label: 'Education' },
-  { id: 'gaming', label: 'Gaming' },
-  { id: 'lifestyle', label: 'Lifestyle' },
-  { id: 'social', label: 'Social' },
-  { id: 'diy', label: 'DIY' }
+  {
+    id: 'all',
+    label: 'All',
+    gradient: {
+      default: 'linear-gradient(90deg, rgba(255,255,255,0.25), rgba(255,255,255,0.10))',
+      hover: 'linear-gradient(90deg, rgba(255,255,255,0.35), rgba(255,255,255,0.15))',
+      active: 'linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,255,255,0.3))'
+    }
+  },
+  {
+    id: 'tech',
+    label: 'Tech',
+    gradient: {
+      default: 'linear-gradient(90deg, rgba(0,102,255,0.15), rgba(102,204,255,0.08))',
+      hover: 'linear-gradient(90deg, rgba(0,102,255,0.25), rgba(102,204,255,0.12))',
+      active: 'linear-gradient(90deg, rgba(0,102,255,0.8), rgba(102,204,255,0.6))'
+    }
+  },
+  {
+    id: 'money',
+    label: 'Money',
+    gradient: {
+      default: 'linear-gradient(90deg, rgba(0,204,102,0.15), rgba(153,255,204,0.08))',
+      hover: 'linear-gradient(90deg, rgba(0,204,102,0.25), rgba(153,255,204,0.12))',
+      active: 'linear-gradient(90deg, rgba(0,204,102,0.8), rgba(153,255,204,0.6))'
+    }
+  },
+  {
+    id: 'design',
+    label: 'Design',
+    gradient: {
+      default: 'linear-gradient(90deg, rgba(140,82,255,0.15), rgba(82,180,255,0.08))',
+      hover: 'linear-gradient(90deg, rgba(140,82,255,0.25), rgba(82,180,255,0.12))',
+      active: 'linear-gradient(90deg, rgba(140,82,255,0.8), rgba(82,180,255,0.6))'
+    }
+  },
+  {
+    id: 'business',
+    label: 'Business',
+    gradient: {
+      default: 'linear-gradient(90deg, rgba(72,61,139,0.15), rgba(147,112,219,0.08))',
+      hover: 'linear-gradient(90deg, rgba(72,61,139,0.25), rgba(147,112,219,0.12))',
+      active: 'linear-gradient(90deg, rgba(72,61,139,0.8), rgba(147,112,219,0.6))'
+    }
+  },
+  {
+    id: 'health',
+    label: 'Health',
+    gradient: {
+      default: 'linear-gradient(90deg, rgba(46,204,113,0.15), rgba(171,235,198,0.08))',
+      hover: 'linear-gradient(90deg, rgba(46,204,113,0.25), rgba(171,235,198,0.12))',
+      active: 'linear-gradient(90deg, rgba(46,204,113,0.8), rgba(171,235,198,0.6))'
+    }
+  },
+  {
+    id: 'self-improvement',
+    label: 'Self Improvement',
+    gradient: {
+      default: 'linear-gradient(90deg, rgba(255,159,67,0.15), rgba(255,204,153,0.08))',
+      hover: 'linear-gradient(90deg, rgba(255,159,67,0.25), rgba(255,204,153,0.12))',
+      active: 'linear-gradient(90deg, rgba(255,159,67,0.8), rgba(255,204,153,0.6))'
+    }
+  },
+  {
+    id: 'education',
+    label: 'Education',
+    gradient: {
+      default: 'linear-gradient(90deg, rgba(0,128,128,0.15), rgba(102,205,170,0.08))',
+      hover: 'linear-gradient(90deg, rgba(0,128,128,0.25), rgba(102,205,170,0.12))',
+      active: 'linear-gradient(90deg, rgba(0,128,128,0.8), rgba(102,205,170,0.6))'
+    }
+  },
+  {
+    id: 'gaming',
+    label: 'Gaming',
+    gradient: {
+      default: 'linear-gradient(90deg, rgba(155,89,182,0.15), rgba(195,155,211,0.08))',
+      hover: 'linear-gradient(90deg, rgba(155,89,182,0.25), rgba(195,155,211,0.12))',
+      active: 'linear-gradient(90deg, rgba(155,89,182,0.8), rgba(195,155,211,0.6))'
+    }
+  },
+  {
+    id: 'lifestyle',
+    label: 'Lifestyle',
+    gradient: {
+      default: 'linear-gradient(90deg, rgba(255,94,98,0.15), rgba(255,195,113,0.08))',
+      hover: 'linear-gradient(90deg, rgba(255,94,98,0.25), rgba(255,195,113,0.12))',
+      active: 'linear-gradient(90deg, rgba(255,94,98,0.8), rgba(255,195,113,0.6))'
+    }
+  },
+  {
+    id: 'social',
+    label: 'Social',
+    gradient: {
+      default: 'linear-gradient(90deg, rgba(52,152,219,0.15), rgba(174,214,241,0.08))',
+      hover: 'linear-gradient(90deg, rgba(52,152,219,0.25), rgba(174,214,241,0.12))',
+      active: 'linear-gradient(90deg, rgba(52,152,219,0.8), rgba(174,214,241,0.6))'
+    }
+  },
+  {
+    id: 'diy',
+    label: 'DIY',
+    gradient: {
+      default: 'linear-gradient(90deg, rgba(127,140,141,0.15), rgba(189,195,199,0.08))',
+      hover: 'linear-gradient(90deg, rgba(127,140,141,0.25), rgba(189,195,199,0.12))',
+      active: 'linear-gradient(90deg, rgba(127,140,141,0.8), rgba(189,195,199,0.6))'
+    }
+  }
 ] as const;
 
 // Enhanced video data with creator extras
@@ -319,64 +415,69 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className }) 
     }, 100);
   }, []);
 
-  // Premium filter pill component with glassmorphism
+  // V16 Premium Glassmorphic Filter Pills with Gradient Palettes
   const FilterPill = React.memo<{
     category: typeof FILTER_CATEGORIES[number];
     isActive: boolean;
-  }>(({ category, isActive }) => (
-    <motion.button
-      onClick={() => handleFilterChange(category.id)}
-      className={cn(
-        "relative px-5 py-2.5 rounded-full font-medium text-sm transition-all duration-300 whitespace-nowrap",
-        "focus:outline-none",
-        isActive
-          ? "text-white shadow-lg"
-          : "text-slate-700 hover:text-slate-900"
-      )}
-      style={{
-        background: isActive
-          ? 'linear-gradient(135deg, rgba(124, 58, 237, 0.9), rgba(139, 92, 246, 0.95), rgba(99, 102, 241, 0.9))'
-          : 'rgba(255, 255, 255, 0.4)',
-        backdropFilter: 'blur(12px)',
-        border: isActive
-          ? '1px solid rgba(255, 255, 255, 0.3)'
-          : '1px solid rgba(255, 255, 255, 0.2)',
-        boxShadow: isActive
-          ? '0 8px 32px rgba(124, 58, 237, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-          : '0 4px 16px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-      }}
-      whileHover={{
-        scale: 1.05,
-        y: -2,
-        boxShadow: isActive
-          ? '0 12px 40px rgba(124, 58, 237, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
-          : '0 8px 24px rgba(124, 58, 237, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-      }}
-      whileTap={{ scale: 0.98 }}
-      aria-selected={isActive}
-      role="tab"
-    >
-      <span className="relative z-10">{category.label}</span>
-      {isActive && (
-        <motion.div
-          className="absolute inset-0 rounded-full"
-          style={{
-            background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.3), rgba(139, 92, 246, 0.2))',
-            filter: 'blur(8px)'
-          }}
-          animate={{
-            opacity: [0.5, 0.8, 0.5],
-            scale: [1, 1.1, 1]
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-      )}
-    </motion.button>
-  ));
+  }>(({ category, isActive }) => {
+    const [isHovered, setIsHovered] = useState(false);
+
+    const getGradient = () => {
+      if (isActive) return category.gradient.active;
+      if (isHovered) return category.gradient.hover;
+      return category.gradient.default;
+    };
+
+    const getTextColor = () => {
+      if (isActive) return 'text-white';
+      return 'text-gray-700 hover:text-gray-900';
+    };
+
+    return (
+      <motion.button
+        onClick={() => handleFilterChange(category.id)}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className={cn(
+          "relative px-4 py-2 h-10 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap overflow-hidden border-0",
+          getTextColor()
+        )}
+        style={{
+          background: getGradient(),
+          backdropFilter: 'blur(12px)',
+          border: 'none',
+          boxShadow: 'none'
+        }}
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+        whileHover={{
+          scale: 1.02,
+          y: -1,
+          transition: { duration: 0.2 }
+        }}
+        whileTap={{ scale: 0.98 }}
+        aria-selected={isActive}
+        role="tab"
+      >
+        {/* Premium shimmer effect for active state */}
+        {isActive && (
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent"
+            initial={{ x: '-100%' }}
+            animate={{ x: '100%' }}
+            transition={{
+              duration: 2.5,
+              repeat: Infinity,
+              repeatDelay: 4,
+              ease: 'easeInOut'
+            }}
+          />
+        )}
+        <span className="relative z-10 font-medium">{category.label}</span>
+      </motion.button>
+    );
+  });
 
   // Enhanced video card with premium glassmorphism
   const VideoCard = React.memo<{ video: VideoData; index: number }>(({ video, index }) => {
@@ -385,29 +486,29 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className }) 
 
     return (
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{
-          duration: 0.5,
-          delay: index * 0.08,
+          duration: 0.6,
+          delay: index * 0.1,
           ease: [0.25, 0.46, 0.45, 0.94]
         }}
         className="group cursor-pointer"
         onClick={() => handleVideoSelect(video)}
       >
         <motion.div
-          className="rounded-3xl overflow-hidden transition-all duration-400"
+          className="relative overflow-hidden rounded-2xl transition-all duration-300"
           style={{
-            background: 'rgba(255, 255, 255, 0.6)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.4)',
-            boxShadow: '0 8px 32px rgba(20, 18, 30, 0.08)'
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
           }}
           whileHover={{
-            y: -8,
-            scale: 1.02,
-            boxShadow: '0 20px 40px rgba(20, 18, 30, 0.12), 0 0 0 1px rgba(124, 58, 237, 0.1)',
-            transition: { duration: 0.3 }
+            y: -6,
+            scale: 1.01,
+            filter: 'brightness(1.02)',
+            transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }
           }}
         >
           {/* Premium thumbnail with lazy loading */}
@@ -472,7 +573,7 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className }) 
           {/* Premium card content */}
           <div className="p-5 space-y-4">
             {/* Title */}
-            <h3 className="font-bold text-slate-900 text-base leading-tight line-clamp-2">
+            <h3 className="font-bold text-gray-900 text-base leading-tight line-clamp-2 font-sans">
               {video.title}
             </h3>
 
@@ -548,11 +649,7 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className }) 
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.4 }}
-        className="fixed inset-0 z-50 flex items-center justify-center"
-        style={{
-          background: 'rgba(15, 23, 42, 0.95)',
-          backdropFilter: 'blur(24px)'
-        }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-2xl"
         onClick={() => {
           setIsWatchMode(false);
           setSelectedVideo(null);
@@ -563,13 +660,7 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className }) 
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           transition={{ duration: 0.4, type: "spring", damping: 25 }}
-          className="w-full max-w-7xl max-h-[95vh] overflow-hidden rounded-3xl mx-4"
-          style={{
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(24px)',
-            border: '1px solid rgba(255, 255, 255, 0.5)',
-            boxShadow: '0 32px 64px rgba(0, 0, 0, 0.2)'
-          }}
+          className="w-full max-w-7xl max-h-[95vh] overflow-hidden rounded-2xl mx-4 bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex h-full">
@@ -674,9 +765,9 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className }) 
                     <motion.button
                       className="p-3 text-slate-600 hover:text-slate-900 transition-colors rounded-full"
                       style={{
-                        background: 'rgba(255, 255, 255, 0.6)',
-                        backdropFilter: 'blur(8px)',
-                        border: '1px solid rgba(255, 255, 255, 0.3)'
+                        background: 'rgba(255, 255, 255, 0.20)',
+                        backdropFilter: 'blur(16px)',
+                        border: '1px solid rgba(255, 255, 255, 0.25)'
                       }}
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
@@ -687,9 +778,9 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className }) 
                     <motion.button
                       className="p-3 text-slate-600 hover:text-slate-900 transition-colors rounded-full"
                       style={{
-                        background: 'rgba(255, 255, 255, 0.6)',
-                        backdropFilter: 'blur(8px)',
-                        border: '1px solid rgba(255, 255, 255, 0.3)'
+                        background: 'rgba(255, 255, 255, 0.20)',
+                        backdropFilter: 'blur(16px)',
+                        border: '1px solid rgba(255, 255, 255, 0.25)'
                       }}
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
@@ -730,12 +821,7 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className }) 
                       {creatorExtras.map((extra) => (
                         <motion.div
                           key={extra.id}
-                          className="p-4 rounded-xl cursor-pointer text-center"
-                          style={{
-                            background: 'rgba(255, 255, 255, 0.6)',
-                            backdropFilter: 'blur(8px)',
-                            border: '1px solid rgba(255, 255, 255, 0.3)'
-                          }}
+                          className="p-4 rounded-xl cursor-pointer text-center bg-white/10 backdrop-blur-lg border border-white/20"
                           whileHover={{ scale: 1.05, y: -2 }}
                           whileTap={{ scale: 0.98 }}
                         >
@@ -751,14 +837,7 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className }) 
             </div>
 
             {/* Up Next sidebar */}
-            <div
-              className="w-96 overflow-y-auto"
-              style={{
-                borderLeft: '1px solid rgba(255, 255, 255, 0.3)',
-                background: 'rgba(255, 255, 255, 0.4)',
-                backdropFilter: 'blur(16px)'
-              }}
-            >
+            <div className="w-96 overflow-y-auto border-l border-white/10 bg-white/5 backdrop-blur-xl">
               <div className="p-6">
                 <h3 className="text-lg font-bold text-slate-900 mb-6">Up Next</h3>
                 <div className="space-y-4">
@@ -766,16 +845,8 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className }) 
                     <motion.div
                       key={video.id}
                       onClick={() => setSelectedVideo(video)}
-                      className="flex gap-4 p-3 rounded-xl cursor-pointer transition-all duration-200"
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.6)',
-                        backdropFilter: 'blur(8px)',
-                        border: '1px solid rgba(255, 255, 255, 0.3)'
-                      }}
-                      whileHover={{
-                        scale: 1.02,
-                        backgroundColor: 'rgba(255, 255, 255, 0.8)'
-                      }}
+                      className="flex gap-4 p-3 rounded-xl cursor-pointer transition-all duration-200 bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10"
+                      whileHover={{ scale: 1.01 }}
                       whileTap={{ scale: 0.98 }}
                     >
                       <div className="relative w-28 h-16 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0">
@@ -821,60 +892,23 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className }) 
 
   return (
     <div className={cn("relative", className)}>
-      {/* Ambient glow accents */}
-      <div
-        className="absolute top-0 left-0 w-96 h-96 rounded-full opacity-10 pointer-events-none"
-        style={{
-          background: 'radial-gradient(circle, #FFDDF8 0%, transparent 70%)',
-          filter: 'blur(40px)'
-        }}
-      />
-      <div
-        className="absolute bottom-0 right-0 w-96 h-96 rounded-full opacity-8 pointer-events-none"
-        style={{
-          background: 'radial-gradient(circle, #DDE8FF 0%, transparent 70%)',
-          filter: 'blur(40px)'
-        }}
-      />
 
-      {/* Seamless filter bubbles - no container background */}
-      <div className="sticky top-0 z-30 pt-6 pb-8">
-        <div className="max-w-7xl mx-auto px-6">
-          <div
-            ref={filterScrollRef}
-            className="overflow-x-auto scrollbar-hide"
-            style={{
-              scrollBehavior: 'smooth',
-              WebkitOverflowScrolling: 'touch'
-            }}
-          >
-            <div className="flex items-center gap-4 min-w-max">
-              {FILTER_CATEGORIES.map((category) => (
-                <FilterPill
-                  key={category.id}
-                  category={category}
-                  isActive={activeFilter === category.id}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
+      {/* V16 Premium Filter Bubbles - YouTube-style Alignment */}
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide mt-2 mb-6">
+        {FILTER_CATEGORIES.map((category) => (
+          <FilterPill
+            key={category.id}
+            category={category}
+            isActive={activeFilter === category.id}
+          />
+        ))}
       </div>
 
-      {/* Premium video grid - desktop 3-column, responsive */}
-      <div className="max-w-7xl mx-auto px-6 pt-4 pb-12">
-        <div
-          className={cn(
-            "grid gap-8",
-            isMobile
-              ? "grid-cols-1"
-              : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-          )}
-        >
-          {filteredVideos.map((video, index) => (
-            <VideoCard key={video.id} video={video} index={index} />
-          ))}
-        </div>
+      {/* V16 Premium Video Grid - YouTube-style Layout */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredVideos.map((video, index) => (
+          <VideoCard key={video.id} video={video} index={index} />
+        ))}
       </div>
 
       {/* Loading spinner */}

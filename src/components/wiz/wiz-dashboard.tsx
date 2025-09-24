@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { WizSidebar } from './wiz-sidebar';
 import { WizMobileMenu } from './WizMobileMenu';
 import { WizUserProfile } from './wiz-user-profile';
@@ -85,27 +86,30 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-gradient-to-br from-background to-muted/20 relative">
+    <motion.div
+      className="min-h-screen bg-gradient-to-br from-[#F9FAFC] via-[#F4F6FA] to-[#F9F9FF] relative"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+    >
       <FloatingParticles />
 
-      {/* Desktop Sidebar */}
-      {!isMobile && (
-        <WizSidebar
-          activeSection={activeSection}
-          onSectionChange={setActiveSection}
-        />
-      )}
+      <div className="flex">
+        {/* Desktop Sidebar */}
+        {!isMobile && (
+          <aside className="w-64 shrink-0 transition-all duration-300 ease-in-out">
+            <WizSidebar
+              activeSection={activeSection}
+              onSectionChange={setActiveSection}
+            />
+          </aside>
+        )}
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-
-        {/* Content Area - Mobile responsive */}
-        <div className="flex-1 overflow-auto">
-          <div className="w-full">
-            {renderActiveSection()}
-          </div>
+        {/* Main Content */}
+        <div className="flex-1">
+          {renderActiveSection()}
         </div>
-      </main>
+      </div>
       
       {/* Mobile Floating Create Button */}
       {isMobile && (
@@ -127,6 +131,6 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
       
       {/* Admin Test Panel - Available on all dashboard pages */}
       <AdminTestPanel />
-    </div>
+    </motion.div>
   );
 };

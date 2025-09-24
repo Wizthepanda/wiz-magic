@@ -25,23 +25,23 @@ import PremiumDashboardV11 from './PremiumDashboardV11';
 import WIZUPDashboardV12_5 from './WIZUPDashboardV12_5';
 
 // Ultra-Premium Design System with Enhanced Dark Mode
-const premiumCard = "bg-white/95 dark:bg-dark-bg-secondary/95 backdrop-blur-sm border border-gray-200/40 dark:border-dark-surface-300 rounded-xl shadow-sm dark:shadow-xl dark:shadow-dark-accent-purple/10";
+const premiumCard = "bg-white/20 dark:bg-dark-bg-secondary/95 backdrop-blur-md border border-white/30 dark:border-dark-surface-300 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:shadow-xl dark:shadow-dark-accent-purple/10";
 const luxuryHover = "hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-out hover:bg-white dark:hover:bg-dark-bg-elevated";
-const cleanInput = "bg-white/80 dark:bg-dark-bg-tertiary/80 backdrop-blur-sm border border-gray-200/30 dark:border-dark-surface-300 rounded-full shadow-sm";
+const cleanInput = "bg-white/15 dark:bg-dark-bg-tertiary/80 backdrop-blur-md border border-white/20 dark:border-dark-surface-300 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.04)]";
 const auroraAccent = "bg-gradient-to-r from-blue-500 via-violet-500 to-amber-400 dark:from-dark-accent-blue dark:via-dark-accent-purple dark:to-dark-accent-orange";
-const subtleGlass = "backdrop-blur-md bg-white/60 dark:bg-dark-bg-secondary/60 border border-white/40 dark:border-dark-surface-200";
+const subtleGlass = "backdrop-blur-md bg-white/10 dark:bg-dark-bg-secondary/60 border border-white/25 dark:border-dark-surface-200";
 const floatingCard = "bg-white dark:bg-dark-bg-secondary shadow-lg dark:shadow-xl dark:shadow-dark-accent-purple/10 border border-gray-100 dark:border-dark-surface-300 rounded-xl";
 
 // Dynamic card styling based on theme
 const getDynamicCardClass = (isDark: boolean) =>
   isDark
     ? "bg-dark-bg-secondary/95 backdrop-blur-sm border border-dark-surface-300 rounded-xl shadow-xl shadow-dark-accent-purple/10"
-    : "bg-white/95 backdrop-blur-sm border border-gray-200/40 rounded-xl shadow-sm";
+    : "bg-white/15 backdrop-blur-md border border-white/25 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.06)]";
 
 const getDynamicInputClass = (isDark: boolean) =>
   isDark
     ? "bg-dark-bg-tertiary/80 backdrop-blur-sm border border-dark-surface-300 rounded-full shadow-sm text-dark-text-primary placeholder:text-dark-text-muted"
-    : "bg-white/80 backdrop-blur-sm border border-gray-200/30 rounded-full shadow-sm";
+    : "bg-white/15 backdrop-blur-md border border-white/20 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.04)]";
 
 const getDynamicFloatingClass = (isDark: boolean) =>
   isDark
@@ -152,43 +152,21 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
 
   return (
     <div className={cn(
-      "min-h-screen transition-all duration-500 ease-out flex",
-      isDarkMode
-        ? "bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"
-        : "bg-gradient-to-br from-white via-gray-50/30 to-white",
+      "min-h-screen transition-all duration-500 ease-out",
+      "bg-transparent",
       className
-    )}
-      style={{
-        backgroundImage: isDarkMode
-          ? `radial-gradient(circle at 25% 25%, rgba(99, 102, 241, 0.02) 0%, transparent 50%),
-             radial-gradient(circle at 75% 75%, rgba(139, 92, 246, 0.02) 0%, transparent 50%)`
-          : `radial-gradient(circle at 25% 25%, rgba(99, 102, 241, 0.03) 0%, transparent 60%),
-             radial-gradient(circle at 75% 75%, rgba(139, 92, 246, 0.02) 0%, transparent 60%),
-             radial-gradient(circle at 50% 50%, rgba(251, 191, 36, 0.01) 0%, transparent 70%)`
-      }}
-    >
+    )}>
 
-
-      {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0">
-
-        {/* Ultra-Premium Top Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={cn(
-            "flex items-center justify-between px-8 py-5 border-b transition-all duration-300",
-            isDarkMode
-              ? "border-slate-800/50 bg-slate-900/80 backdrop-blur-xl"
-              : "border-gray-200/40 bg-white/80 backdrop-blur-xl"
-          )}
-        >
+      {/* Ultra-Premium Top Bar */}
+      <motion.header
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
+        className="sticky top-0 z-50 flex items-center justify-between py-4 bg-transparent backdrop-blur-none"
+      >
 
           {/* Minimal Pill Search */}
-          <div className={cn(
-            "flex-1 max-w-lg",
-            isMobile ? "mx-3" : "mx-6"
-          )}>
+          <div className="flex-1 max-w-xl w-full">
             <motion.div
               whileHover={{
                 scale: 1.01,
@@ -400,26 +378,21 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
               </motion.div>
             </motion.div>
           </div>
+        </motion.header>
+
+      {/* Main Dashboard Content */}
+      <main className="flex-1 transition-all duration-300 px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="w-full"
+        >
+          {/* WIZUP Dashboard V12.5 - Premium Final Version */}
+          <WIZUPDashboardV12_5
+            className="w-full"
+          />
         </motion.div>
-
-
-        {/* Content Area */}
-        <div className="flex-1 overflow-auto p-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className={cn(
-              "max-w-7xl mx-auto",
-              isMobile ? "px-4" : "px-6"
-            )}
-          >
-            {/* WIZUP Dashboard V12.5 - Premium Final Version */}
-            <WIZUPDashboardV12_5
-              className="w-full"
-            />
-          </motion.div>
-        </div>
       </main>
 
       {/* Hidden Gamification Drawers */}

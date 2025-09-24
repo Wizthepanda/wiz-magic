@@ -197,7 +197,7 @@ export const ZAPRewardsDropdown: React.FC<ZAPRewardsDropdownProps> = ({
           <LuxuryCircularIcon
             icon={ShoppingBag}
             isActive={dropdownOpen}
-            variant="premium"
+            variant="purple"
             size="md"
             hasNotification={marketplaceItems.some(item => item.status === 'limited')}
             onClick={() => setDropdownOpen(!dropdownOpen)}

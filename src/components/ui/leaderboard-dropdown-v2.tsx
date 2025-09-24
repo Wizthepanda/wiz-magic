@@ -169,7 +169,6 @@ export const LeaderboardDropdownV2: React.FC<LeaderboardDropdownV2Props> = ({
             variant="aurora"
             size="md"
             hasNotification={true}
-            progressPercent={75}
             onClick={() => setDropdownOpen(!dropdownOpen)}
           />
         </div>

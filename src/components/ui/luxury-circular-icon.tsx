@@ -10,7 +10,7 @@ interface LuxuryCircularIconProps {
   notificationCount?: number;
   progressPercent?: number; // For micro progress ring
   size?: "sm" | "md" | "lg" | "xl";
-  variant?: "default" | "premium" | "aurora";
+  variant?: "default" | "premium" | "aurora" | "purple";
   onClick?: () => void;
   className?: string;
 }
@@ -53,6 +53,37 @@ export const LuxuryCircularIcon: React.FC<LuxuryCircularIconProps> = ({
           )
         `,
         filter: "blur(1px)",
+      };
+    }
+
+    if (variant === "purple") {
+      if (isActive) {
+        return {
+          background: `
+            linear-gradient(135deg,
+            rgba(59, 130, 246, 0.3) 0%,
+            rgba(139, 92, 246, 0.4) 100%
+          )
+          `,
+        };
+      }
+      if (isHovered) {
+        return {
+          background: `
+            linear-gradient(135deg,
+            rgba(59, 130, 246, 0.2) 0%,
+            rgba(139, 92, 246, 0.25) 100%
+          )
+          `,
+        };
+      }
+      return {
+        background: `
+          linear-gradient(135deg,
+          rgba(59, 130, 246, 0.1) 0%,
+          rgba(139, 92, 246, 0.15) 100%
+        )
+        `,
       };
     }
 
@@ -212,18 +243,22 @@ export const LuxuryCircularIcon: React.FC<LuxuryCircularIconProps> = ({
             // Default state - minimal line
             !isHovered && !isActive && "text-gray-400 stroke-2",
             // Hover state - gradient fill reveal
-            isHovered && !isActive && "text-blue-500 stroke-2",
+            isHovered && !isActive && (variant === "purple" ? "text-purple-500 stroke-2" : "text-blue-500 stroke-2"),
             // Active state - full gradient
-            isActive && "text-blue-600 stroke-2"
+            isActive && (variant === "purple" ? "text-purple-600 stroke-2" : "text-blue-600 stroke-2")
           )}
           style={{
             fill: isHovered || isActive
-              ? "url(#iconGradient)"
+              ? variant === "purple" ? "url(#purpleIconGradient)" : "url(#iconGradient)"
               : "none",
             filter: isActive
-              ? "drop-shadow(0 0 8px rgba(59, 130, 246, 0.6))"
+              ? variant === "purple"
+                ? "drop-shadow(0 0 8px rgba(139, 92, 246, 0.6))"
+                : "drop-shadow(0 0 8px rgba(59, 130, 246, 0.6))"
               : isHovered
-              ? "drop-shadow(0 0 4px rgba(59, 130, 246, 0.4))"
+              ? variant === "purple"
+                ? "drop-shadow(0 0 4px rgba(139, 92, 246, 0.4))"
+                : "drop-shadow(0 0 4px rgba(59, 130, 246, 0.4))"
               : "none"
           }}
         />
@@ -235,6 +270,10 @@ export const LuxuryCircularIcon: React.FC<LuxuryCircularIconProps> = ({
               <stop offset="0%" stopColor="#F59E0B" />
               <stop offset="50%" stopColor="#FBBF24" />
               <stop offset="100%" stopColor="#FCD34D" />
+            </linearGradient>
+            <linearGradient id="purpleIconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#3B82F6" />
+              <stop offset="100%" stopColor="#8B5CF6" />
             </linearGradient>
           </defs>
         </svg>
