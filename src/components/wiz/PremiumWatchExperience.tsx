@@ -232,9 +232,13 @@ export const PremiumWatchExperience: React.FC<PremiumWatchExperienceProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0, transition: { duration: 0.4, ease: "easeOut" } }}
-        className="fixed inset-0 z-50 bg-white overflow-y-auto"
+        className="fixed inset-0 z-50 overflow-y-auto"
+        style={{
+          background: 'linear-gradient(135deg, #f9fafc 0%, #f3f6f9 40%, #eef1f5 100%)',
+          minHeight: '100vh'
+        }}
       >
-        {/* Close Button - Premium Floating */}
+        {/* Close Button - Premium Light Floating */}
         <motion.button
           onClick={onClose}
           className="fixed top-6 right-6 z-50 w-12 h-12 rounded-full flex items-center justify-center bg-white/80 backdrop-blur-xl shadow-lg border border-gray-200/50 hover:shadow-xl transition-all duration-200"
@@ -248,12 +252,7 @@ export const PremiumWatchExperience: React.FC<PremiumWatchExperienceProps> = ({
         </motion.button>
 
         {/* Main Content Container */}
-        <div className={cn(
-          "min-h-screen transition-all duration-400",
-          theme === 'dark'
-            ? "bg-gradient-to-b from-slate-900 to-slate-800/90"
-            : "bg-gradient-to-b from-white to-gray-50/20"
-        )}>
+        <div className="min-h-screen transition-all duration-400">
           <div className="max-w-8xl mx-auto px-6 lg:px-12 py-8 lg:py-12">
 
             {/* Desktop Layout */}
@@ -267,21 +266,20 @@ export const PremiumWatchExperience: React.FC<PremiumWatchExperienceProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1, duration: 0.6, ease: "easeOut" }}
                 >
-                  {/* VIDEO PLAYER - Sacred Space at Top, Centered */}
+                  {/* VIDEO PLAYER - Premium Light Floating Container */}
                   <motion.div
-                    className="relative mb-6"
+                    className="relative mb-12 flex justify-center items-center"
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.1, duration: 0.8, ease: "easeOut" }}
+                    transition={{ delay: 0.1, duration: 0.5, ease: "easeOut" }}
                   >
-                    <div
-                      className="relative aspect-video rounded-2xl overflow-hidden bg-black mx-auto"
-                      style={{
-                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05)'
-                      }}
-                    >
+                    <div className="relative aspect-video rounded-2xl mx-auto p-3 max-w-5xl w-full" style={{
+                      background: 'rgba(255, 255, 255, 0.4)',
+                      backdropFilter: 'blur(16px)',
+                      WebkitBackdropFilter: 'blur(16px)'
+                    }}>
                       <iframe
-                        className="w-full h-full"
+                        className="w-full h-full rounded-xl"
                         src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0&modestbranding=1`}
                         title={video.title}
                         frameBorder="0"
@@ -341,17 +339,9 @@ export const PremiumWatchExperience: React.FC<PremiumWatchExperienceProps> = ({
                     </div>
                   </motion.div>
 
-                  {/* CREATOR INTERACTION CONTAINER - New Premium Panel */}
+                  {/* CREATOR INTERACTION CONTAINER - Premium Light Seamless */}
                   <motion.div
-                    className={cn(
-                      "rounded-2xl p-8 mb-8 transition-all duration-400",
-                      theme === 'dark' ? "bg-slate-800/90 border border-slate-700/50" : "bg-white"
-                    )}
-                    style={{
-                      boxShadow: theme === 'dark'
-                        ? '0 8px 25px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(139, 92, 246, 0.1)'
-                        : '0 8px 25px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.02)'
-                    }}
+                    className="p-8 mb-12 transition-all duration-400"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4, duration: 0.6 }}
@@ -373,39 +363,32 @@ export const PremiumWatchExperience: React.FC<PremiumWatchExperienceProps> = ({
 
                       {/* Center - Creator Info */}
                       <div className="col-span-6">
-                        <h3 className={cn(
-                          "text-xl font-bold mb-1 transition-colors duration-400",
-                          theme === 'dark' ? "text-white" : "text-gray-900"
-                        )}>{video.creator}</h3>
-                        <p className={cn(
-                          "text-sm font-semibold mb-1 transition-colors duration-400",
-                          theme === 'dark' ? "text-cyan-300" : "text-gray-600"
-                        )}>DesignPro, AI Expert & Educator – Level 7</p>
-                        <p className={cn(
-                          "text-sm transition-colors duration-400",
-                          theme === 'dark' ? "text-slate-400" : "text-gray-400"
-                        )}>2.1M Subscribers</p>
+                        <h3 className="text-xl font-bold mb-1 text-gray-900 transition-colors duration-400">
+                          {video.creator}
+                        </h3>
+                        <p className="text-sm font-semibold mb-1 text-blue-600 transition-colors duration-400">
+                          DesignPro, AI Expert & Educator – Level 7
+                        </p>
+                        <p className="text-sm text-gray-600 transition-colors duration-400">
+                          2.1M Subscribers
+                        </p>
                       </div>
 
                       {/* Right - World-Class Premium Action Row */}
                       <div className="col-span-4 flex gap-3 justify-end items-center">
-                        {/* Subscribe - Satin Red→Orange Premium */}
+                        {/* Subscribe - Pill Button */}
                         <motion.button
                           onClick={() => setIsSubscribed(!isSubscribed)}
-                          className="w-32 h-11 rounded-2xl font-bold text-white text-sm flex items-center justify-center"
+                          className="font-semibold text-sm flex items-center justify-center"
                           style={{
-                            background: isSubscribed
-                              ? 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'
-                              : 'linear-gradient(135deg, #ef4444 0%, #f97316 100%)',
-                            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.25)',
-                            filter: 'saturate(1.1)'
+                            background: 'linear-gradient(90deg, #f3f6f9, #eef1f5)',
+                            borderRadius: '9999px',
+                            padding: '0.5rem 1.25rem',
+                            color: '#1f2937'
                           }}
                           whileHover={{
                             scale: 1.02,
-                            background: isSubscribed
-                              ? 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'
-                              : 'linear-gradient(135deg, #dc2626 0%, #ea580c 100%)',
-                            boxShadow: '0 6px 18px rgba(239, 68, 68, 0.35), 0 0 12px rgba(239, 68, 68, 0.15)'
+                            background: 'linear-gradient(90deg, #e5e7eb, #d1d5db)'
                           }}
                           whileTap={{ scale: 0.98 }}
                           transition={{ duration: 0.2 }}
@@ -413,60 +396,43 @@ export const PremiumWatchExperience: React.FC<PremiumWatchExperienceProps> = ({
                           {isSubscribed ? 'Subscribed' : 'Subscribe'}
                         </motion.button>
 
-                        {/* Tip - Amber→Gold Luxury, Same Size as Subscribe */}
+                        {/* Tip - Pill Button */}
                         <motion.button
                           onClick={() => setShowTipModal(true)}
-                          className="w-32 h-11 rounded-2xl font-bold text-white text-sm flex items-center justify-center gap-2"
+                          className="font-semibold text-sm flex items-center justify-center gap-2"
                           style={{
-                            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.25)',
-                            filter: 'saturate(1.2)'
+                            background: 'linear-gradient(90deg, #f3f6f9, #eef1f5)',
+                            borderRadius: '9999px',
+                            padding: '0.5rem 1.25rem',
+                            color: '#1f2937'
                           }}
                           whileHover={{
                             scale: 1.02,
-                            background: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)',
-                            boxShadow: '0 6px 18px rgba(245, 158, 11, 0.35)',
-                            filter: 'saturate(1.3) brightness(1.05)'
+                            background: 'linear-gradient(90deg, #e5e7eb, #d1d5db)'
                           }}
                           whileTap={{ scale: 0.98 }}
                           transition={{ duration: 0.2 }}
                         >
-                          <Bitcoin size={14} strokeWidth={1.5} />
                           <span>Tip</span>
                         </motion.button>
 
-                        {/* Share - Outlined Minimal, Slimmer Width */}
+                        {/* Share - Pill Button */}
                         <motion.button
-                          className={cn(
-                            "w-11 h-11 rounded-2xl border flex items-center justify-center transition-all duration-400",
-                            theme === 'dark' ? "bg-slate-700 border-slate-600" : "bg-white border-gray-300"
-                          )}
+                          className="font-semibold text-sm flex items-center justify-center"
                           style={{
-                            borderWidth: '1.5px'
+                            background: 'linear-gradient(90deg, #f3f6f9, #eef1f5)',
+                            borderRadius: '9999px',
+                            padding: '0.5rem 1.25rem',
+                            color: '#1f2937'
                           }}
                           whileHover={{
-                            scale: 1.03,
-                            borderColor: theme === 'dark' ? '#06b6d4' : '#9ca3af',
-                            boxShadow: theme === 'dark'
-                              ? '0 4px 12px rgba(6, 182, 212, 0.25), 0 0 8px rgba(6, 182, 212, 0.15)'
-                              : '0 4px 12px rgba(156, 163, 175, 0.15)'
+                            scale: 1.02,
+                            background: 'linear-gradient(90deg, #e5e7eb, #d1d5db)'
                           }}
-                          whileTap={{ scale: 0.97 }}
+                          whileTap={{ scale: 0.98 }}
                           transition={{ duration: 0.2 }}
                         >
-                          <motion.div
-                            whileHover={{ scale: 1.08 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <Share
-                              size={16}
-                              strokeWidth={1.5}
-                              className={cn(
-                                "transition-colors duration-400",
-                                theme === 'dark' ? "text-slate-300" : "text-gray-600"
-                              )}
-                            />
-                          </motion.div>
+                          Share
                         </motion.button>
                       </div>
                     </div>
@@ -514,7 +480,11 @@ export const PremiumWatchExperience: React.FC<PremiumWatchExperienceProps> = ({
                     className="mb-12"
                   >
                     {activeTab === 'overview' && (
-                      <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+                      <div className="rounded-3xl p-8" style={{
+                        background: 'rgba(255, 255, 255, 0.35)',
+                        backdropFilter: 'blur(12px)',
+                        WebkitBackdropFilter: 'blur(12px)'
+                      }}>
                         <h4 className="text-xl font-bold text-gray-900 mb-6">About this video</h4>
                         <p className="text-gray-700 leading-relaxed text-lg">{video.description}</p>
                       </div>
@@ -532,11 +502,10 @@ export const PremiumWatchExperience: React.FC<PremiumWatchExperienceProps> = ({
                 >
                   <div className="sticky top-8">
                     <div
-                      className="bg-white rounded-2xl max-h-[90vh] overflow-y-auto"
+                      className="max-h-[90vh] overflow-y-auto"
                       style={{
                         scrollbarWidth: 'thin',
-                        scrollbarColor: 'rgba(156, 163, 175, 0.3) transparent',
-                        boxShadow: '0 8px 25px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.02)'
+                        scrollbarColor: 'rgba(156, 163, 175, 0.3) transparent'
                       }}
                     >
                       <div className="p-6">
@@ -547,8 +516,18 @@ export const PremiumWatchExperience: React.FC<PremiumWatchExperienceProps> = ({
                             {nextXpVideos.filter(v => v.category === 'from_creator').slice(0, 3).map((videoItem, index) => (
                               <motion.div
                                 key={videoItem.id}
-                                className="group cursor-pointer rounded-xl transition-all duration-200"
-                                whileHover={{ y: -2 }}
+                                className="group cursor-pointer rounded-xl p-3 transition-all duration-200"
+                              style={{
+                                background: 'rgba(255, 255, 255, 0.35)',
+                                backdropFilter: 'blur(12px)',
+                                WebkitBackdropFilter: 'blur(12px)',
+                                borderRadius: '1rem'
+                              }}
+                                whileHover={{
+                                  y: -2,
+                                  scale: 1.05,
+                                  boxShadow: '0 8px 25px rgba(139, 92, 246, 0.15)'
+                                }}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.7 + index * 0.1 }}
@@ -568,7 +547,7 @@ export const PremiumWatchExperience: React.FC<PremiumWatchExperienceProps> = ({
                                     <h4 className="font-bold text-gray-900 text-sm line-clamp-1 mb-1">
                                       {videoItem.title}
                                     </h4>
-                                    <p className="text-xs text-gray-400 mb-2">{videoItem.duration}</p>
+                                    <p className="text-xs text-gray-500 mb-2">{videoItem.duration}</p>
                                     <Badge
                                       className="text-xs text-white px-2 py-1"
                                       style={{
@@ -593,8 +572,18 @@ export const PremiumWatchExperience: React.FC<PremiumWatchExperienceProps> = ({
                             {nextXpVideos.filter(v => v.category === 'trending').slice(0, 4).map((videoItem, index) => (
                               <motion.div
                                 key={videoItem.id}
-                                className="group cursor-pointer rounded-xl transition-all duration-200"
-                                whileHover={{ y: -2 }}
+                                className="group cursor-pointer rounded-xl p-3 transition-all duration-200"
+                              style={{
+                                background: 'rgba(255, 255, 255, 0.35)',
+                                backdropFilter: 'blur(12px)',
+                                WebkitBackdropFilter: 'blur(12px)',
+                                borderRadius: '1rem'
+                              }}
+                                whileHover={{
+                                  y: -2,
+                                  scale: 1.05,
+                                  boxShadow: '0 8px 25px rgba(139, 92, 246, 0.15)'
+                                }}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.9 + index * 0.1 }}
@@ -614,7 +603,7 @@ export const PremiumWatchExperience: React.FC<PremiumWatchExperienceProps> = ({
                                     <h4 className="font-bold text-gray-900 text-sm line-clamp-1 mb-1">
                                       {videoItem.title}
                                     </h4>
-                                    <p className="text-xs text-gray-400 mb-2">{videoItem.duration}</p>
+                                    <p className="text-xs text-gray-500 mb-2">{videoItem.duration}</p>
                                     <Badge
                                       className="text-xs text-white px-2 py-1"
                                       style={{
@@ -635,10 +624,12 @@ export const PremiumWatchExperience: React.FC<PremiumWatchExperienceProps> = ({
 
                       {/* Sticky Premium Promo Card */}
                       <motion.div
-                        className="sticky bottom-0 mx-6 mb-6 p-6 rounded-2xl text-white"
+                        className="sticky bottom-0 mx-6 mb-6 p-6 rounded-2xl"
                         style={{
-                          background: 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)',
-                          boxShadow: '0 8px 25px rgba(139, 92, 246, 0.25)'
+                          background: 'rgba(255, 255, 255, 0.35)',
+                          backdropFilter: 'blur(12px)',
+                          WebkitBackdropFilter: 'blur(12px)',
+                          borderRadius: '1rem'
                         }}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -654,8 +645,8 @@ export const PremiumWatchExperience: React.FC<PremiumWatchExperienceProps> = ({
                               <ShoppingBag className="w-6 h-6" />
                             </div>
                             <div className="flex-1">
-                              <h4 className="font-bold text-white">Unlock XP Deals</h4>
-                              <p className="text-sm text-white/80">Premium Courses 50% Off</p>
+                              <h4 className="font-bold text-gray-800">Unlock XP Deals</h4>
+                              <p className="text-sm text-gray-600">Premium Courses 50% Off</p>
                             </div>
                             <Badge
                               className="text-xs text-yellow-900 font-bold px-2 py-1"

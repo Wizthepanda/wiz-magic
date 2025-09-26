@@ -1,0 +1,147 @@
+/* Watch Modal V4 CSS Variables */
+:root {
+  --bg-1: #ffffff;
+  --bg-2: #f7f9fc;
+  --bg-3: #eef1f7;
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-blur: 18px;
+  --accent-1: #6b46ff; /* purple */
+  --accent-2: #3b82f6; /* blue */
+  --xp-gradient: linear-gradient(90deg, var(--accent-2), var(--accent-1));
+
+  /* Modal-specific variables */
+  --modal-backdrop: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
+  --video-container-bg: var(--glass-bg);
+  --video-container-blur: var(--glass-blur);
+  --action-subscribe-gradient: linear-gradient(to right, #ff6b6b, #ff9f43);
+  --action-tip-gradient: linear-gradient(to right, #f6c65b, #ef9e2e);
+  --shadow-soft: 0 20px 40px rgba(15, 23, 42, 0.06);
+  --shadow-glass: 0 8px 32px rgba(31, 38, 135, 0.12);
+
+  /* Animation easing */
+  --ease-out-cubic: cubic-bezier(0.215, 0.610, 0.355, 1.000);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Dark theme overrides */
+[data-theme="dark"] {
+  --bg-1: #0f0f0f;
+  --bg-2: #1a1a1a;
+  --bg-3: #262626;
+  --glass-bg: rgba(0, 0, 0, 0.72);
+  --modal-backdrop: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
+  --shadow-soft: 0 20px 40px rgba(0, 0, 0, 0.3);
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Modal backdrop */
+.watch-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--modal-backdrop);
+  backdrop-filter: blur(8px);
+  z-index: 50;
+}
+
+/* Video container glassmorphism */
+.watch-video-container {
+  background: var(--video-container-bg);
+  backdrop-filter: blur(var(--video-container-blur));
+  box-shadow: var(--shadow-glass);
+  border-radius: 1rem;
+  overflow: hidden;
+  position: relative;
+}
+
+/* XP Progress Bar */
+.watch-xp-bar {
+  height: 8px;
+  background: rgba(neutral, 0.6);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.watch-xp-progress {
+  height: 100%;
+  background: var(--xp-gradient);
+  border-radius: 9999px;
+  transition: width 0.8s var(--ease-out-cubic);
+}
+
+/* Action buttons */
+.watch-action-subscribe {
+  background: var(--action-subscribe-gradient);
+  color: white;
+  border: none;
+  height: 2.75rem;
+  padding: 0 1.25rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  transition: transform 0.2s var(--ease-out-cubic), box-shadow 0.2s var(--ease-out-cubic);
+}
+
+.watch-action-subscribe:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+}
+
+.watch-action-tip {
+  background: var(--action-tip-gradient);
+  color: #1f2937;
+  border: none;
+  height: 2.75rem;
+  padding: 0 1.25rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  transition: transform 0.2s var(--ease-out-cubic), box-shadow 0.2s var(--ease-out-cubic);
+}
+
+.watch-action-tip:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(239, 158, 46, 0.4);
+}
+
+.watch-action-icon {
+  height: 2.75rem;
+  width: 2.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(neutral, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  transition: transform 0.2s var(--ease-out-cubic), background 0.2s var(--ease-out-cubic);
+}
+
+.watch-action-icon:hover {
+  transform: translateY(-1px) scale(1.05);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+/* Reward toast */
+.watch-reward-toast {
+  position: absolute;
+  top: -2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* GPU acceleration classes */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.gpu-accelerated-opacity {
+  will-change: opacity, transform;
+}
+
+/* Smooth scrolling */
+.smooth-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}

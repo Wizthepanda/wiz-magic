@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Play,
@@ -20,6 +20,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useDebounce } from '@/hooks/use-debounce';
+import VideoSkeleton from '@/components/ui/video-skeleton';
+import OptimizedImage from '@/components/ui/optimized-image';
 
 interface VideoData {
   id: string;
@@ -166,25 +169,62 @@ const VideoGridPanelV3: React.FC<VideoGridPanelV3Props> = ({
   const [activeFilter, setActiveFilter] = useState('all');
   const [hoveredVideo, setHoveredVideo] = useState<string | null>(null);
   const [filteredVideos, setFilteredVideos] = useState<VideoData[]>(sampleVideos);
+  const [isLoading, setIsLoading] = useState(false);
+  const [previousVideos, setPreviousVideos] = useState<VideoData[]>(sampleVideos);
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Filter videos based on active category
-  useEffect(() => {
-    if (activeFilter === 'all') {
-      setFilteredVideos(sampleVideos);
-    } else {
-      const filtered = sampleVideos.filter(video =>
-        video.tags.some(tag =>
-          tag.toLowerCase().includes(activeFilter) ||
-          (activeFilter === 'growth' && (tag.toLowerCase().includes('productivity') || tag.toLowerCase().includes('lifestyle'))) ||
-          (activeFilter === 'money' && (tag.toLowerCase().includes('finance') || tag.toLowerCase().includes('investment'))) ||
-          (activeFilter === 'tech' && (tag.toLowerCase().includes('programming') || tag.toLowerCase().includes('react') || tag.toLowerCase().includes('javascript')))
-        )
-      );
-      setFilteredVideos(filtered);
-    }
-  }, [activeFilter]);
+  // Debounced filter change to prevent rapid switching
+  const debouncedFilterChange = useDebounce((filterId: string) => {
+    filterVideos(filterId);
+  }, 50);
+
+  // Filter function with loading state
+  const filterVideos = useCallback((filterId: string) => {
+    setIsLoading(true);
+
+    // Simulate minimal loading delay for smooth UX
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        if (filterId === 'all') {
+          setFilteredVideos(sampleVideos);
+        } else {
+          const filtered = sampleVideos.filter(video =>
+            video.tags.some(tag =>
+              tag.toLowerCase().includes(filterId) ||
+              (filterId === 'growth' && (tag.toLowerCase().includes('productivity') || tag.toLowerCase().includes('lifestyle'))) ||
+              (filterId === 'money' && (tag.toLowerCase().includes('finance') || tag.toLowerCase().includes('investment'))) ||
+              (filterId === 'tech' && (tag.toLowerCase().includes('programming') || tag.toLowerCase().includes('react') || tag.toLowerCase().includes('javascript')))
+            )
+          );
+          setFilteredVideos(filtered);
+        }
+        setIsLoading(false);
+      }, 100);
+    });
+  }, []);
+
+  // Handle filter change with transition
+  const handleFilterChange = useCallback((filterId: string) => {
+    if (filterId === activeFilter) return;
+
+    setPreviousVideos(filteredVideos);
+    setActiveFilter(filterId);
+    debouncedFilterChange(filterId);
+  }, [activeFilter, filteredVideos, debouncedFilterChange]);
+
+  // Memoized handlers for video interactions
+  const handleVideoHover = useCallback((videoId: string | null) => {
+    setHoveredVideo(videoId);
+  }, []);
+
+  const handleVideoSelect = useCallback((video: VideoData) => {
+    onVideoSelect?.(video);
+  }, [onVideoSelect]);
+
+  // Memoized filtered videos for performance
+  const memoizedVideos = useMemo(() => filteredVideos, [filteredVideos]);
+
 
   // Get progress ring color based on completion
   const getProgressColor = (progress: number) => {
@@ -193,40 +233,62 @@ const VideoGridPanelV3: React.FC<VideoGridPanelV3Props> = ({
     return 'stroke-blue-500';
   };
 
-  // Video card component
-  const VideoCard: React.FC<{ video: VideoData; index: number }> = ({ video, index }) => {
-    const isHovered = hoveredVideo === video.id;
-
+  // Memoized Video card component
+  const VideoCard = memo<{ video: VideoData; index: number; isHovered: boolean; onHover: (id: string | null) => void; onSelect: (video: VideoData) => void }>(({
+    video,
+    index,
+    isHovered,
+    onHover,
+    onSelect
+  }) => {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: index * 0.1 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{
+          duration: 0.2,
+          delay: index * 0.03,
+          ease: "easeOut"
+        }}
+        layout
         className={cn(
           "group relative rounded-xl overflow-hidden",
           "backdrop-blur-xl backdrop-saturate-150",
           isDark
             ? "bg-white/5 border border-white/10"
             : "bg-white/70 border border-black/5",
-          "hover:shadow-xl transition-all duration-300 ease-out",
+          "hover:shadow-xl transition-all duration-200 ease-out",
           "hover:-translate-y-1"
         )}
-        onMouseEnter={() => setHoveredVideo(video.id)}
-        onMouseLeave={() => setHoveredVideo(null)}
-        onClick={() => onVideoSelect?.(video)}
+        style={{
+          // GPU acceleration for smooth animations
+          transform: 'translateZ(0)',
+          willChange: isHovered ? 'transform, box-shadow' : 'auto',
+          backfaceVisibility: 'hidden',
+          perspective: '1000px'
+        }}
+        onMouseEnter={() => onHover(video.id)}
+        onMouseLeave={() => onHover(null)}
+        onClick={() => onSelect(video)}
       >
         {/* Thumbnail Container */}
         <div className="relative aspect-video overflow-hidden">
-          {/* Thumbnail Image */}
-          <motion.img
-            src={video.thumbnail}
-            alt={video.title}
-            className="w-full h-full object-cover"
+          {/* Optimized Thumbnail Image */}
+          <motion.div
+            className="w-full h-full"
             animate={{
               scale: isHovered ? 1.05 : 1,
             }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-          />
+          >
+            <OptimizedImage
+              src={video.thumbnail}
+              alt={video.title}
+              className="w-full h-full"
+              lazy={true}
+            />
+          </motion.div>
 
           {/* Gradient Overlay */}
           <div className={cn(
@@ -332,10 +394,11 @@ const VideoGridPanelV3: React.FC<VideoGridPanelV3Props> = ({
             <div className="flex items-center justify-between">
               {/* Creator Info - Left */}
               <div className="flex items-center gap-2 flex-1 min-w-0">
-                <img
+                <OptimizedImage
                   src={video.creator.avatar}
                   alt={video.creator.name}
                   className="w-6 h-6 rounded-full border-2 border-white/50"
+                  lazy={false}
                 />
                 <div className="flex items-center gap-1 min-w-0">
                   <span className="text-white text-sm font-medium truncate">
@@ -405,7 +468,16 @@ const VideoGridPanelV3: React.FC<VideoGridPanelV3Props> = ({
         </div>
       </motion.div>
     );
-  };
+  }, (prevProps, nextProps) => {
+    // Custom comparison for better performance
+    return (
+      prevProps.video.id === nextProps.video.id &&
+      prevProps.index === nextProps.index &&
+      prevProps.isHovered === nextProps.isHovered
+    );
+  });
+
+  VideoCard.displayName = 'VideoCard';
 
   return (
     <div className={cn("w-full", className)}>
@@ -419,7 +491,7 @@ const VideoGridPanelV3: React.FC<VideoGridPanelV3Props> = ({
             return (
               <motion.button
                 key={category.id}
-                onClick={() => setActiveFilter(category.id)}
+                onClick={() => handleFilterChange(category.id)}
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 rounded-xl whitespace-nowrap transition-all duration-300",
                   "backdrop-blur-xl backdrop-saturate-150 border",
@@ -454,16 +526,44 @@ const VideoGridPanelV3: React.FC<VideoGridPanelV3Props> = ({
       </div>
 
       {/* Video Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        <AnimatePresence mode="popLayout">
-          {filteredVideos.map((video, index) => (
-            <VideoCard key={video.id} video={video} index={index} />
-          ))}
+      <div
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+        style={{
+          // GPU acceleration for smooth animations
+          transform: 'translateZ(0)',
+          willChange: 'contents',
+          // Fixed minimum height to prevent layout shifts
+          minHeight: '600px'
+        }}
+      >
+        <AnimatePresence mode="wait">
+          {isLoading ? (
+            // Show skeleton loaders during transition
+            <>
+              {Array.from({ length: 8 }, (_, index) => (
+                <VideoSkeleton key={`skeleton-${index}`} index={index} />
+              ))}
+            </>
+          ) : (
+            // Show actual videos with staggered animation
+            <>
+              {memoizedVideos.map((video, index) => (
+                <VideoCard
+                  key={video.id}
+                  video={video}
+                  index={index}
+                  isHovered={hoveredVideo === video.id}
+                  onHover={handleVideoHover}
+                  onSelect={handleVideoSelect}
+                />
+              ))}
+            </>
+          )}
         </AnimatePresence>
       </div>
 
       {/* Empty State */}
-      {filteredVideos.length === 0 && (
+      {filteredVideos.length === 0 && !isLoading && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -488,4 +588,4 @@ const VideoGridPanelV3: React.FC<VideoGridPanelV3Props> = ({
   );
 };
 
-export default VideoGridPanelV3;
+export default memo(VideoGridPanelV3);

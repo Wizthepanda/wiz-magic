@@ -9,7 +9,6 @@ import { useXp } from '@/context/XpContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
-import { PremiumWatchExperience } from './PremiumWatchExperience';
 import { LuxuryCircularIcon } from '@/components/ui/luxury-circular-icon';
 import { LeaderboardDropdownV2 } from '@/components/ui/leaderboard-dropdown-v2';
 import { ZAPRewardsDropdown } from '@/components/ui/zap-rewards-dropdown';
@@ -23,6 +22,55 @@ import PremiumDashboardV9 from './PremiumDashboardV9';
 import PremiumDashboardV10 from './PremiumDashboardV10';
 import PremiumDashboardV11 from './PremiumDashboardV11';
 import WIZUPDashboardV12_5 from './WIZUPDashboardV12_5';
+import { WatchDialogV4, WatchVideoData } from './WatchDialogV4';
+
+// Sample video data for testing
+const SAMPLE_VIDEOS: WatchVideoData[] = [
+  {
+    id: '1',
+    videoId: 'dQw4w9WgXcQ',
+    title: 'Advanced React Patterns You Should Know in 2024',
+    description: 'Learn the latest React patterns and best practices that will make your code more maintainable and performant. We cover hooks, context, and performance optimization techniques.',
+    thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+    duration: '15:42',
+    views: '124K views',
+    xpReward: 150,
+    creator: {
+      id: 'creator1',
+      name: 'TechMaster Pro',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=techmaster',
+      subscribers: '2.1M subscribers',
+      isVerified: true,
+      level: 8
+    },
+    tags: ['React', 'JavaScript', 'Frontend', 'Programming'],
+    relatedVideos: []
+  },
+  {
+    id: '2',
+    videoId: 'jNQXAC9IVRw',
+    title: 'Building Wealth: 10 Investment Strategies for Beginners',
+    description: 'Discover proven investment strategies that can help you build long-term wealth. Perfect for beginners who want to start their investment journey.',
+    thumbnail: 'https://img.youtube.com/vi/jNQXAC9IVRw/maxresdefault.jpg',
+    duration: '22:15',
+    views: '89K views',
+    xpReward: 200,
+    creator: {
+      id: 'creator2',
+      name: 'WealthBuilder',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=wealth',
+      subscribers: '1.5M subscribers',
+      isVerified: true,
+      level: 6
+    },
+    tags: ['Investment', 'Finance', 'Money', 'Business'],
+    relatedVideos: []
+  }
+];
+
+// Add related videos to each video
+SAMPLE_VIDEOS[0].relatedVideos = [SAMPLE_VIDEOS[1]];
+SAMPLE_VIDEOS[1].relatedVideos = [SAMPLE_VIDEOS[0]];
 
 // Ultra-Premium Design System with Enhanced Dark Mode
 const premiumCard = "bg-white/20 dark:bg-dark-bg-secondary/95 backdrop-blur-md border border-white/30 dark:border-dark-surface-300 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:shadow-xl dark:shadow-dark-accent-purple/10";
@@ -63,7 +111,7 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
   const [showLeaderboardDrawer, setShowLeaderboardDrawer] = useState(false);
   const [showQuestsDrawer, setShowQuestsDrawer] = useState(false);
   const [showShopDrawer, setShowShopDrawer] = useState(false);
-  const [selectedVideo, setSelectedVideo] = useState<any>(null);
+  const [selectedVideo, setSelectedVideo] = useState<WatchVideoData | null>(null);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [xpMilestones, setXpMilestones] = useState({ 25: false, 50: false, 75: false, 100: false });
   const [pendingXP, setPendingXP] = useState(0);
@@ -86,30 +134,42 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
 
 
   const handleWatchVideo = (video: any) => {
-    setSelectedVideo(video);
+    // Convert any video object to WatchVideoData format
+    const watchVideoData: WatchVideoData = {
+      id: video.id || Math.random().toString(),
+      videoId: video.videoId || 'dQw4w9WgXcQ',
+      title: video.title || 'Sample Video',
+      description: video.description || 'A sample video description',
+      thumbnail: video.thumbnail || video.image || 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      duration: video.duration || '10:00',
+      views: video.views || '1K views',
+      xpReward: video.xpReward || video.xp || 100,
+      creator: {
+        id: video.creator?.id || 'creator1',
+        name: video.creator?.name || video.creator || 'Unknown Creator',
+        avatar: video.creator?.avatar || video.creatorAvatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=creator',
+        subscribers: video.creator?.subscribers || video.subscriberCount || '1K subscribers',
+        isVerified: video.creator?.isVerified || video.verified || false,
+        level: video.creator?.level || 5
+      },
+      tags: video.tags || ['Video'],
+      relatedVideos: SAMPLE_VIDEOS.slice(0, 3)
+    };
+
+    setSelectedVideo(watchVideoData);
     setShowVideoPlayer(true);
+  };
 
-    // Simulate video progress and XP earning for demo
-    setTimeout(() => {
-      setVideoProgress(25);
-      handleXPMilestone(25);
-    }, 2000);
+  const handleVideoChange = (newVideo: WatchVideoData) => {
+    setSelectedVideo(newVideo);
+  };
 
-    setTimeout(() => {
-      setVideoProgress(50);
-      handleXPMilestone(50);
-    }, 4000);
-
-    setTimeout(() => {
-      setVideoProgress(75);
-      handleXPMilestone(75);
-    }, 6000);
-
-    setTimeout(() => {
-      setVideoProgress(100);
-      handleXPMilestone(100);
-      triggerRewardCeremony();
-    }, 8000);
+  const handleWatchDialogComplete = (video: WatchVideoData) => {
+    console.log('Video completed:', video.title);
+    // Handle video completion - add XP, show ceremony, etc.
+    setEarnedVideoXP(video.xpReward);
+    setShowRewardCeremony(true);
+    addXp(video.xpReward);
   };
 
   const handleVideoComplete = (video: any) => {
@@ -397,6 +457,7 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
           {/* WIZUP Dashboard V12.5 - Premium Final Version */}
           <WIZUPDashboardV12_5
             className="w-full"
+            onVideoSelect={handleWatchVideo}
           />
         </motion.div>
       </main>
@@ -749,17 +810,6 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
         )}
       </AnimatePresence>
 
-      {/* Premium Full-Screen Watch Experience */}
-      {selectedVideo && (
-        <PremiumWatchExperience
-          video={selectedVideo}
-          isOpen={showVideoPlayer}
-          onClose={handleContinueWatching}
-          onComplete={handleVideoComplete}
-          progress={videoProgress}
-          isDarkMode={isDarkMode}
-        />
-      )}
 
       {/* XP Profile Dropdown */}
       <XPProfileDropdown
@@ -771,6 +821,19 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
         userLevel={userLevel}
         streakDays={dailyStreak}
         userName={userName}
+      />
+
+      {/* Watch Dialog V4 - Premium Watch Experience */}
+      <WatchDialogV4
+        video={selectedVideo}
+        isOpen={showVideoPlayer}
+        onClose={() => {
+          setShowVideoPlayer(false);
+          setSelectedVideo(null);
+          setVideoProgress(0);
+        }}
+        onVideoComplete={handleWatchDialogComplete}
+        onVideoChange={handleVideoChange}
       />
 
       {/* Dark Mode Toggle (Hidden but available for development) */}

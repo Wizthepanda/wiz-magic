@@ -94,21 +94,19 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
     >
       <FloatingParticles />
 
-      <div className="flex">
-        {/* Desktop Sidebar */}
+      <div className="flex h-full">
+        {/* Desktop Sidebar with Dynamic Width */}
         {!isMobile && (
-          <aside className="w-64 shrink-0 transition-all duration-300 ease-in-out">
-            <WizSidebar
-              activeSection={activeSection}
-              onSectionChange={setActiveSection}
-            />
-          </aside>
+          <WizSidebar
+            activeSection={activeSection}
+            onSectionChange={setActiveSection}
+          />
         )}
 
-        {/* Main Content */}
-        <div className="flex-1">
+        {/* Main Content - Seamless Expansion */}
+        <main className="flex-1 transition-all duration-300 ease-out">
           {renderActiveSection()}
-        </div>
+        </main>
       </div>
       
       {/* Mobile Floating Create Button */}

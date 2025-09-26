@@ -285,140 +285,240 @@ export const WatchPage: React.FC<WatchPageProps> = ({
   }, [navigate]);
 
   return (
-    <motion.div 
-      className="fixed inset-0 z-50 bg-black"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
+    <motion.div
+      className="fixed inset-0 z-50"
+      style={{
+        background: 'linear-gradient(135deg, #f9fafc 0%, #f3f6f9 40%, #eef1f5 100%)',
+        minHeight: '100vh'
+      }}
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.98 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
       onClick={(e) => {
         if (e.target === e.currentTarget) navigate('/');
       }}
     >
-      <div 
+      <div
         className="h-full w-full overflow-y-auto"
         style={{
-          background: 'linear-gradient(180deg, #0A0F1C 0%, #1A1B2E 100%)'
+          background: 'transparent'
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close Button - Top Right */}
-        <button
+        {/* Close Button - Premium Floating Style */}
+        <motion.button
           onClick={() => navigate('/')}
-          className="fixed top-4 right-4 z-50 text-white hover:text-gray-300 transition-colors"
+          className="fixed top-6 right-6 z-50 w-12 h-12 rounded-full flex items-center justify-center"
+          style={{
+            background: 'rgba(255, 255, 255, 0.9)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.2)'
+          }}
+          whileHover={{
+            scale: 1.05,
+            background: 'rgba(255, 255, 255, 0.95)',
+            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)'
+          }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2, duration: 0.3 }}
         >
-          <X className="w-6 h-6" />
-        </button>
+          <X className="w-5 h-5 text-gray-600" />
+        </motion.button>
 
-        {/* Two Column Layout */}
-        <div className={`${isMobile ? 'flex flex-col' : 'grid grid-cols-12 gap-6'} px-6 py-4 max-w-7xl mx-auto min-h-screen`}>
+        {/* Two Column Layout - Premium Fade-in Transition */}
+        <motion.div
+          className={`${isMobile ? 'flex flex-col' : 'grid grid-cols-12 gap-8'} px-8 py-8 max-w-7xl mx-auto min-h-screen`}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: 0.8,
+            ease: "easeOut",
+            staggerChildren: 0.15,
+            delayChildren: 0.1
+          }}
+        >
           
           {/* Left Column - Video & Info */}
-          <div className={`${isMobile ? 'w-full' : 'col-span-8'}`}>
+          <motion.div
+            className={`${isMobile ? 'w-full' : 'col-span-8'}`}
+            variants={{
+              hidden: { opacity: 0, y: 20 },
+              visible: { opacity: 1, y: 0 }
+            }}
+            initial="hidden"
+            animate="visible"
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          >
             
-            {/* Video Player Section */}
-            <div className="relative mb-4">
-              {/* Copy Link Button */}
-              <button 
-                className="absolute top-3 right-3 z-10 px-2 py-1 bg-black bg-opacity-60 text-white text-xs rounded flex items-center space-x-1 hover:bg-opacity-80 transition-all"
+            {/* Main Video Player - Glassmorphic Container */}
+            <motion.div
+              className="relative mb-8 mx-auto max-w-5xl"
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
+            >
+              {/* Copy Link Button - Floating Overlay */}
+              <motion.button
+                className="absolute top-6 right-6 z-20 px-4 py-2 text-sm font-medium rounded-2xl flex items-center space-x-2 transition-all"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+                }}
+                whileHover={{
+                  scale: 1.05,
+                  background: 'rgba(255, 255, 255, 1)',
+                  boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)'
+                }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
               >
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
                 </svg>
-                <span>Copy link</span>
-              </button>
+                <span className="text-gray-700 font-semibold">Copy link</span>
+              </motion.button>
 
-              <div 
-                className="relative w-full rounded-xl overflow-hidden"
+              {/* Main Video Player Container - Glassmorphic */}
+              <motion.div
+                className="relative w-full rounded-2xl overflow-hidden"
                 style={{
                   aspectRatio: '16/9',
-                  background: '#000'
+                  background: 'rgba(255, 255, 255, 0.4)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                  borderRadius: '1.25rem',
+                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.08), 0 4px 15px rgba(0, 0, 0, 0.04)'
                 }}
+                whileHover={{
+                  scale: 1.005
+                }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
               >
-                {useLocalPlayer ? (
-                  <LocalVideoPlayer
-                    url={`https://www.youtube.com/watch?v=${videoId}`}
-                    onXpEarned={handleLocalXpEarned}
-                    onProgress={handleLocalProgress}
-                    className="w-full h-full"
-                  />
-                ) : (
-                  <YouTube
-                    videoId={videoId}
-                    opts={{
-                      width: "100%",
-                      height: "100%",
-                      playerVars: { autoplay: 0 },
-                    }}
-                    onReady={onReady}
-                    className="w-full h-full"
-                  />
-                )}
-                
-                {/* Watch on YouTube overlay */}
-                <div className="absolute bottom-3 left-3">
-                  <div className="flex items-center space-x-1 px-2 py-1 bg-black bg-opacity-60 text-white text-xs rounded">
-                    <span>Watch on</span>
-                    <svg className="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                    </svg>
+                <div
+                  className="absolute inset-3 rounded-2xl overflow-hidden"
+                  style={{
+                    background: '#000',
+                    boxShadow: '0 0 0 1px rgba(0, 0, 0, 0.05)'
+                  }}
+                >
+                  {useLocalPlayer ? (
+                    <LocalVideoPlayer
+                      url={`https://www.youtube.com/watch?v=${videoId}`}
+                      onXpEarned={handleLocalXpEarned}
+                      onProgress={handleLocalProgress}
+                      className="w-full h-full rounded-2xl"
+                    />
+                  ) : (
+                    <YouTube
+                      videoId={videoId}
+                      opts={{
+                        width: "100%",
+                        height: "100%",
+                        playerVars: { autoplay: 0 },
+                      }}
+                      onReady={onReady}
+                      className="w-full h-full rounded-2xl"
+                    />
+                  )}
+
+                  {/* Watch on YouTube overlay - Floating Badge */}
+                  <div className="absolute bottom-6 left-6">
+                    <motion.div
+                      className="flex items-center space-x-2 px-4 py-2 text-sm font-semibold rounded-2xl"
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.95)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(255, 255, 255, 0.3)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+                      }}
+                      whileHover={{
+                        scale: 1.05,
+                        background: 'rgba(255, 255, 255, 1)',
+                        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)'
+                      }}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.6 }}
+                    >
+                      <span className="text-gray-700">Watch on</span>
+                      <svg className="w-5 h-5 text-red-500" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                      </svg>
+                    </motion.div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
 
-              {/* Premium Progress Bar */}
+              {/* Seamless Progress Bar */}
               {videoDuration > 0 && (
                 <motion.div
-                  className="mt-3 px-1"
-                  initial={{ opacity: 0, y: 10 }}
+                  className="mt-8 mx-auto max-w-4xl"
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
+                  transition={{ delay: 0.7, duration: 0.5 }}
                 >
-                  {/* Progress Bar Container */}
-                  <div className="relative">
-                    {/* Background Track */}
-                    <div 
-                      className="w-full h-2 rounded-full overflow-hidden"
-                      style={{ 
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        border: '1px solid rgba(255, 255, 255, 0.05)'
+                  {/* Ultra-thin Progress Track */}
+                  <div
+                    className="relative w-full h-1 rounded-full overflow-hidden mb-4"
+                    style={{
+                      background: 'rgba(139, 92, 246, 0.15)'
+                    }}
+                  >
+                    {/* Progress Fill with Glow */}
+                    <motion.div
+                      className="h-full rounded-full"
+                      style={{
+                        background: progress >= 95
+                          ? 'linear-gradient(90deg, #10B981 0%, #059669 100%)'
+                          : 'linear-gradient(90deg, #7C3AED 0%, #A855F7 100%)',
+                        boxShadow: progress >= 95
+                          ? '0 0 15px rgba(16, 185, 129, 0.4), 0 0 30px rgba(16, 185, 129, 0.2)'
+                          : '0 0 15px rgba(124, 58, 237, 0.4), 0 0 30px rgba(124, 58, 237, 0.2)'
                       }}
-                    >
-                      {/* Progress Fill */}
-                      <motion.div
-                        className="h-full rounded-full"
-                        style={{
-                          background: progress >= 95 
-                            ? 'linear-gradient(90deg, #10B981 0%, #059669 100%)' 
-                            : 'linear-gradient(90deg, #7C3AED 0%, #A855F7 100%)',
-                          boxShadow: progress >= 95 
-                            ? '0 0 10px rgba(16, 185, 129, 0.4)' 
-                            : '0 0 10px rgba(124, 58, 237, 0.4)'
-                        }}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${Math.min(progress, 100)}%` }}
-                        transition={{ duration: 0.3, ease: "easeOut" }}
-                      />
-                    </div>
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(progress, 100)}%` }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                    />
+                  </div>
 
-                    {/* Time Display */}
-                    <div className="flex justify-between items-center mt-2 text-xs">
-                      <span className="text-gray-400 font-medium">
-                        {Math.floor(currentTime / 60)}:{String(Math.floor(currentTime % 60)).padStart(2, '0')}
+                  {/* Minimal Time Display */}
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-600 font-medium">
+                      {Math.floor(currentTime / 60)}:{String(Math.floor(currentTime % 60)).padStart(2, '0')}
+                    </span>
+                    <div className="flex items-center space-x-4">
+                      <span className="text-gray-600 font-medium">
+                        {Math.floor(videoDuration / 60)}:{String(Math.floor(videoDuration % 60)).padStart(2, '0')}
                       </span>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-gray-400 font-medium">
-                          {Math.floor(videoDuration / 60)}:{String(Math.floor(videoDuration % 60)).padStart(2, '0')}
-                        </span>
-                        <div className="text-purple-400 font-semibold">
-                          {Math.floor(progress)}% complete
-                        </div>
-                      </div>
+                      <motion.div
+                        className="px-4 py-2 rounded-full text-white text-sm font-bold"
+                        style={{
+                          background: progress >= 95
+                            ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                            : 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
+                          boxShadow: progress >= 95
+                            ? '0 4px 20px rgba(16, 185, 129, 0.3)'
+                            : '0 4px 20px rgba(124, 58, 237, 0.3)'
+                        }}
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        {Math.floor(progress)}% complete
+                      </motion.div>
                     </div>
                   </div>
                 </motion.div>
               )}
-            </div>
+            </motion.div>
 
             {/* XP Reward Celebration */}
             <AnimatePresence>
@@ -517,290 +617,482 @@ export const WatchPage: React.FC<WatchPageProps> = ({
               )}
             </AnimatePresence>
 
-            {/* Title Row */}
-            <div className="flex items-start justify-between mb-3">
-              <h1 className="text-white font-bold text-lg leading-tight flex-1 mr-4">
-                Faceless Concert - Short Trailer
-              </h1>
-              <div 
-                className="px-3 py-1 rounded-full text-white text-sm font-semibold flex-shrink-0"
+            {/* Title Row - Seamless with Background */}
+            <motion.div
+              className="flex items-start justify-between mb-4 p-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8, duration: 0.4 }}
+            >
+              <div className="flex-1">
+                <h1 className="text-gray-900 font-bold text-xl leading-tight mb-2">
+                  {title}
+                </h1>
+                {/* Views & Duration */}
+                <div className="flex items-center text-gray-600 text-sm">
+                  <Eye className="w-4 h-4 mr-2" />
+                  <span>{views} • Duration varies</span>
+                </div>
+              </div>
+              <div
+                className="px-4 py-2 rounded-full text-white text-sm font-bold flex-shrink-0"
                 style={{
-                  background: 'linear-gradient(135deg, #7C3AED 0%, #3B82F6 100%)'
+                  background: 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
+                  boxShadow: '0 8px 25px rgba(124, 58, 237, 0.3)'
                 }}
               >
-                +10 XP
+                +{xpReward} XP
               </div>
-            </div>
+            </motion.div>
 
-            {/* Views & Duration */}
-            <div className="flex items-center text-gray-400 text-sm mb-4">
-              <Eye className="w-4 h-4 mr-1" />
-              <span>3.7 views • 0:05</span>
-            </div>
-
-            {/* Creator Section */}
-            <div className="flex items-center justify-between mb-6">
-              {/* Creator Info */}
-              <div className="flex items-center space-x-3">
-                <Avatar className="w-10 h-10">
+            {/* Below Video Section - Creator Info and Action Buttons */}
+            <motion.div
+              className="flex items-center justify-between mb-8 max-w-4xl mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.9, duration: 0.5 }}
+            >
+              {/* Left-aligned Creator Info */}
+              <div className="flex items-center space-x-5">
+                <Avatar className="w-14 h-14">
                   <AvatarImage src={creatorAvatar} alt={creator} />
-                  <AvatarFallback className="bg-gray-600 text-white font-semibold">
+                  <AvatarFallback
+                    className="text-white font-bold text-xl"
+                    style={{
+                      background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)'
+                    }}
+                  >
                     {creator.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
-                
+
                 <div>
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span className="text-white font-semibold text-sm">
-                      Faceless Avatars
+                  <div className="flex items-center space-x-3 mb-2">
+                    <span className="text-gray-900 font-bold text-lg">
+                      {creator}
                     </span>
-                    <div className="px-2 py-0.5 bg-purple-600 text-white text-xs font-medium rounded">
-                      Level 1
-                    </div>
+                    <motion.div
+                      className="px-3 py-1 text-white text-xs font-bold rounded-full"
+                      style={{
+                        background: 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)'
+                      }}
+                      whileHover={{ scale: 1.05 }}
+                    >
+                      ✓ Level {creatorLevel}
+                    </motion.div>
                   </div>
-                  <span className="text-gray-400 text-xs">
-                    {actualSubscriberCount ? `${actualSubscriberCount} subscribers` : 
-                     (typeof subscriberCount === 'string' && subscriberCount.includes('subscribers') ? 
-                      subscriberCount : 
+                  <span className="text-gray-600 text-base font-semibold">
+                    {actualSubscriberCount ? `${actualSubscriberCount} subscribers` :
+                     (typeof subscriberCount === 'string' && subscriberCount.includes('subscribers') ?
+                      subscriberCount :
                       `${typeof subscriberCount === 'number' ? subscriberCount.toLocaleString() : subscriberCount} subscribers`)}
                   </span>
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center space-x-2">
-                <button
+              {/* Right-aligned Premium Pill Actions */}
+              <div className="flex items-center space-x-3">
+                <motion.button
                   onClick={handleSubscribe}
                   disabled={subscriptionStatus?.isSubscribed || subscriptionLoading}
-                  className="px-4 py-2 text-white text-sm font-semibold rounded transition-colors"
+                  className="px-6 py-3 text-white text-sm font-bold transition-all"
                   style={{
-                    backgroundColor: subscriptionStatus?.isSubscribed ? '#6B7280' : '#DC2626',
+                    background: subscriptionStatus?.isSubscribed
+                      ? 'linear-gradient(90deg, #f3f6f9, #eef1f5)'
+                      : 'linear-gradient(90deg, #f3f6f9, #eef1f5)',
+                    borderRadius: '9999px',
+                    padding: '0.5rem 1.25rem',
+                    color: subscriptionStatus?.isSubscribed ? '#4b5563' : '#1f2937',
                     opacity: subscriptionLoading ? 0.7 : 1,
                     cursor: (subscriptionStatus?.isSubscribed || subscriptionLoading) ? 'not-allowed' : 'pointer'
                   }}
-                >
-                  {subscriptionLoading ? 'Loading...' : (subscriptionStatus?.isSubscribed ? 'Subscribed' : 'Subscribe')}
-                </button>
-                
-                <button
-                  onClick={handleFollow}
-                  className="px-4 py-2 border border-gray-500 hover:border-white text-white text-sm font-semibold rounded transition-colors"
-                >
-                  Follow
-                </button>
-                
-                <button
-                  onClick={handleTip}
-                  className="px-4 py-2 text-white text-sm font-semibold rounded transition-colors"
-                  style={{
-                    background: 'linear-gradient(135deg, #F59E0B 0%, #EF4444 100%)'
+                  whileHover={{
+                    scale: subscriptionStatus?.isSubscribed ? 1 : 1.02,
+                    background: 'linear-gradient(90deg, #e5e7eb, #d1d5db)'
                   }}
+                  whileTap={{ scale: subscriptionStatus?.isSubscribed ? 1 : 0.98 }}
                 >
-                  Tip Crypto
-                </button>
-              </div>
-            </div>
+                  {subscriptionLoading ? 'Loading...' : (subscriptionStatus?.isSubscribed ? '✓ Subscribed' : 'Subscribe')}
+                </motion.button>
 
-            {/* Tab Navigation */}
-            <div className="relative mb-6">
-              <div className="flex space-x-6 border-b border-gray-700">
+                <motion.button
+                  onClick={handleTip}
+                  className="text-gray-700 text-sm font-bold transition-all"
+                  style={{
+                    background: 'linear-gradient(90deg, #f3f6f9, #eef1f5)',
+                    borderRadius: '9999px',
+                    padding: '0.5rem 1.25rem'
+                  }}
+                  whileHover={{
+                    scale: 1.02,
+                    background: 'linear-gradient(90deg, #e5e7eb, #d1d5db)'
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Tip
+                </motion.button>
+
+                <motion.button
+                  className="text-gray-700 text-sm font-bold transition-all"
+                  style={{
+                    background: 'linear-gradient(90deg, #f3f6f9, #eef1f5)',
+                    borderRadius: '9999px',
+                    padding: '0.5rem 1.25rem'
+                  }}
+                  whileHover={{
+                    scale: 1.02,
+                    background: 'linear-gradient(90deg, #e5e7eb, #d1d5db)'
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Share
+                </motion.button>
+
+              </div>
+            </motion.div>
+
+            {/* Seamless Tab Navigation */}
+            <motion.div
+              className="relative mb-10 max-w-4xl mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.0, duration: 0.5 }}
+            >
+              <div className="flex justify-center space-x-2">
                 {[
-                  { id: 'videos', label: 'Videos' },
-                  { id: 'shorts', label: 'Shorts' },
-                  { id: 'courses', label: 'Courses' },
-                  { id: 'community', label: 'Community' }
-                ].map((tab) => (
-                  <button
+                  { id: 'videos', label: 'Videos', icon: '🎬' },
+                  { id: 'shorts', label: 'Shorts', icon: '⚡' },
+                  { id: 'courses', label: 'Courses', icon: '📚' },
+                  { id: 'community', label: 'Community', icon: '👥' }
+                ].map((tab, index) => (
+                  <motion.button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`relative px-4 py-3 text-sm font-medium transition-colors ${
-                      activeTab === tab.id 
-                        ? 'text-white' 
-                        : 'text-gray-400 hover:text-gray-300'
+                    className={`relative px-8 py-4 text-sm font-bold rounded-full transition-all ${
+                      activeTab === tab.id
+                        ? 'text-white'
+                        : 'text-gray-700 hover:text-gray-900'
                     }`}
+                    style={{
+                      background: activeTab === tab.id
+                        ? 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)'
+                        : 'rgba(255, 255, 255, 0.4)',
+                      backdropFilter: 'blur(10px)',
+                      WebkitBackdropFilter: 'blur(10px)',
+                      border: activeTab === tab.id ? 'none' : '1px solid rgba(139, 92, 246, 0.2)',
+                      boxShadow: activeTab === tab.id
+                        ? '0 8px 25px rgba(139, 92, 246, 0.3)'
+                        : '0 4px 12px rgba(0, 0, 0, 0.05)'
+                    }}
+                    whileHover={{
+                      scale: 1.05,
+                      background: activeTab === tab.id
+                        ? 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)'
+                        : 'rgba(255, 255, 255, 0.6)',
+                      boxShadow: activeTab === tab.id
+                        ? '0 12px 35px rgba(139, 92, 246, 0.4)'
+                        : '0 6px 20px rgba(139, 92, 246, 0.2)'
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.1 + index * 0.1 }}
                   >
+                    <span className="mr-2">{tab.icon}</span>
                     {tab.label}
-                    {activeTab === tab.id && (
-                      <motion.div
-                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600 rounded-full"
-                        layoutId="activeTab"
-                        transition={{ duration: 0.2 }}
-                      />
-                    )}
-                  </button>
+                  </motion.button>
                 ))}
               </div>
-            </div>
+            </motion.div>
 
-            {/* Tab Content */}
-            <div className="min-h-[200px]">
+            {/* Seamless Tab Content */}
+            <motion.div
+              className="min-h-[200px] max-w-4xl mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.4, duration: 0.5 }}
+            >
               {activeTab === 'videos' && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-center py-12"
+                  className="text-center py-16"
                 >
-                  <div className="w-16 h-16 mx-auto mb-4 bg-purple-600 rounded-full flex items-center justify-center">
-                    <Play className="w-8 h-8 text-white" fill="currentColor" />
+                  <div
+                    className="w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center"
+                    style={{
+                      background: 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100())'
+                    }}
+                  >
+                    <Play className="w-10 h-10 text-white" fill="currentColor" />
                   </div>
-                  <p className="text-white font-semibold mb-2">Creator's videos will appear here</p>
-                  <p className="text-gray-400 text-sm">Stay tuned for amazing content!</p>
+                  <p className="text-gray-900 font-bold text-lg mb-3">Creator's videos will appear here</p>
+                  <p className="text-gray-600 text-base">Stay tuned for amazing content!</p>
                 </motion.div>
               )}
-              
+
               {activeTab === 'shorts' && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-center py-12"
+                  className="text-center py-16"
                 >
-                  <div className="w-16 h-16 mx-auto mb-4 bg-purple-600 rounded-full flex items-center justify-center">
-                    <Star className="w-8 h-8 text-white" />
+                  <div
+                    className="w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center"
+                    style={{
+                      background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+                    }}
+                  >
+                    <Star className="w-10 h-10 text-white" />
                   </div>
-                  <p className="text-white font-semibold mb-2">Creator's shorts will appear here</p>
-                  <p className="text-gray-400 text-sm">Quick, engaging content!</p>
+                  <p className="text-gray-900 font-bold text-lg mb-3">Creator's shorts will appear here</p>
+                  <p className="text-gray-600 text-base">Quick, engaging content!</p>
                 </motion.div>
               )}
-              
+
               {activeTab === 'courses' && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-center py-12"
+                  className="text-center py-16"
                 >
-                  <div className="w-16 h-16 mx-auto mb-4 bg-purple-600 rounded-full flex items-center justify-center">
-                    <BadgeIcon className="w-8 h-8 text-white" />
+                  <div
+                    className="w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center"
+                    style={{
+                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                    }}
+                  >
+                    <BadgeIcon className="w-10 h-10 text-white" />
                   </div>
-                  <p className="text-white font-semibold mb-2">Creator's courses will appear here</p>
-                  <p className="text-gray-400 text-sm">Learn from the best!</p>
+                  <p className="text-gray-900 font-bold text-lg mb-3">Creator's courses will appear here</p>
+                  <p className="text-gray-600 text-base">Learn from the best!</p>
                 </motion.div>
               )}
-              
+
               {activeTab === 'community' && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-center py-12"
+                  className="text-center py-16"
                 >
-                  <div className="w-16 h-16 mx-auto mb-4 bg-purple-600 rounded-full flex items-center justify-center">
-                    <Users className="w-8 h-8 text-white" />
+                  <div
+                    className="w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center"
+                    style={{
+                      background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100())'
+                    }}
+                  >
+                    <Users className="w-10 h-10 text-white" />
                   </div>
-                  <p className="text-white font-semibold mb-2">Creator's community posts will appear here</p>
-                  <p className="text-gray-400 text-sm">Join the conversation!</p>
+                  <p className="text-gray-900 font-bold text-lg mb-3">Creator's community posts will appear here</p>
+                  <p className="text-gray-600 text-base">Join the conversation!</p>
                 </motion.div>
               )}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
-          {/* Right Column - Related Videos */}
+          {/* Right Panel - Seamless Dashboard Extension */}
           {!isMobile && (
-            <div className="col-span-4">
-              <div className="sticky top-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-white font-semibold">Related Videos</h3>
-                  <ChevronRight className="w-5 h-5 text-gray-400" />
-                </div>
+            <motion.div
+              className="col-span-4"
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4, duration: 0.8, ease: "easeOut" }}
+            >
+              <div className="sticky top-8">
+                {/* No Container - Direct Dashboard Integration */}
+                <div className="space-y-6">
+                  {/* Section Header */}
+                  <motion.div
+                    className="flex items-center justify-between mb-6"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    <h3 className="text-gray-800 font-bold text-xl">Up Next</h3>
+                    <motion.div whileHover={{ x: 3 }}>
+                      <ChevronRight className="w-5 h-5 text-gray-600" />
+                    </motion.div>
+                  </motion.div>
 
-                <div className="space-y-3">
-                  {relatedVideos.map((video) => (
-                    <div
-                      key={video.id}
-                      className="p-3 rounded-lg cursor-pointer transition-colors hover:bg-gray-800/50"
-                      style={{ background: 'rgba(26, 27, 46, 0.6)' }}
-                    >
-                      <div className="flex space-x-3">
-                        <div className="relative flex-shrink-0">
-                          <img
-                            src={video.thumbnail}
-                            alt={video.title}
-                            className="w-24 h-16 object-cover rounded-lg"
-                          />
-                          <div className="absolute inset-0 bg-black bg-opacity-30 rounded-lg flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                            <Play className="w-4 h-4 text-white" />
-                          </div>
-                        </div>
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between mb-1">
-                            <h4 className="text-white text-sm font-medium line-clamp-2 flex-1">
-                              {video.title}
-                            </h4>
-                            <div 
-                              className="px-2 py-1 rounded-full text-white text-xs font-semibold ml-2"
+                  {/* Related Videos - Floating Cards */}
+                  <div className="space-y-4">
+                    {relatedVideos.map((video, index) => (
+                      <motion.div
+                        key={video.id}
+                        className="group cursor-pointer transition-all duration-300"
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.4)',
+                          backdropFilter: 'blur(20px)',
+                          WebkitBackdropFilter: 'blur(20px)',
+                          border: '1px solid rgba(255, 255, 255, 0.6)',
+                          borderRadius: '24px',
+                          padding: '20px',
+                          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.02)'
+                        }}
+                        whileHover={{
+                          scale: 1.02,
+                          background: 'rgba(255, 255, 255, 0.6)',
+                          boxShadow: '0 12px 48px rgba(0, 0, 0, 0.08), 0 6px 24px rgba(0, 0, 0, 0.04)',
+                          borderColor: 'rgba(139, 92, 246, 0.3)'
+                        }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.6 + index * 0.1, duration: 0.5 }}
+                      >
+                        <div className="flex space-x-5">
+                          {/* Thumbnail with Hover Effect */}
+                          <div className="relative flex-shrink-0">
+                            <motion.img
+                              src={video.thumbnail}
+                              alt={video.title}
+                              className="w-32 h-20 object-cover rounded-2xl"
                               style={{
-                                background: 'linear-gradient(135deg, #7C3AED 0%, #3B82F6 100%)'
+                                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)'
                               }}
+                              whileHover={{ scale: 1.05 }}
+                              transition={{ duration: 0.2 }}
+                            />
+                            <motion.div
+                              className="absolute inset-0 bg-black bg-opacity-30 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                              whileHover={{ scale: 1.05 }}
                             >
-                              +{video.xp} XP
-                            </div>
+                              <motion.div
+                                whileHover={{ scale: 1.2 }}
+                                className="w-8 h-8 bg-white bg-opacity-90 rounded-full flex items-center justify-center"
+                              >
+                                <Play className="w-4 h-4 text-gray-800" fill="currentColor" />
+                              </motion.div>
+                            </motion.div>
                           </div>
-                          
-                          <div className="flex items-center space-x-2 mb-1">
-                            <Avatar className="w-4 h-4">
-                              <AvatarImage src={video.avatar} alt={video.creator} />
-                              <AvatarFallback className="text-xs bg-gray-600">
-                                {video.creator.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-gray-400 text-xs">
-                              {video.creator}
+
+                          {/* Video Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between mb-3">
+                              <h4 className="text-gray-900 text-sm font-bold line-clamp-2 flex-1 leading-snug">
+                                {video.title}
+                              </h4>
+                              <motion.div
+                                className="px-3 py-1 rounded-full text-white text-xs font-bold ml-3 flex-shrink-0"
+                                style={{
+                                  background: 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
+                                  boxShadow: '0 4px 16px rgba(124, 58, 237, 0.25)'
+                                }}
+                                whileHover={{ scale: 1.05 }}
+                              >
+                                ⚡ +{video.xp} XP
+                              </motion.div>
+                            </div>
+
+                            {/* Creator Info */}
+                            <div className="flex items-center space-x-3 mb-2">
+                              <Avatar className="w-6 h-6">
+                                <AvatarImage src={video.avatar} alt={video.creator} />
+                                <AvatarFallback
+                                  className="text-xs text-white font-bold"
+                                  style={{
+                                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100())'
+                                  }}
+                                >
+                                  {video.creator.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-gray-700 text-sm font-semibold">
+                                {video.creator}
+                              </span>
+                            </div>
+
+                            <span className="text-gray-500 text-sm font-medium">
+                              {video.views} • 5 days ago
                             </span>
                           </div>
-                          
-                          <span className="text-gray-400 text-xs">
-                            {video.views}
-                          </span>
                         </div>
-                      </div>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Premium CTA at Bottom */}
+                  <motion.div
+                    className="mt-8 p-6 rounded-2xl cursor-pointer"
+                    style={{
+                      background: 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)',
+                      boxShadow: '0 8px 32px rgba(139, 92, 246, 0.3)'
+                    }}
+                    whileHover={{
+                      scale: 1.02,
+                      boxShadow: '0 12px 48px rgba(139, 92, 246, 0.4)'
+                    }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.2 }}
+                  >
+                    <div className="text-center text-white">
+                      <h4 className="font-bold text-lg mb-2">🚀 Unlock Premium</h4>
+                      <p className="text-sm opacity-90">Get unlimited XP access to exclusive content</p>
                     </div>
-                  ))}
+                  </motion.div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
 
-          {/* Mobile Related Videos */}
+          {/* Mobile Related Videos - Premium Cards */}
           {isMobile && (
-            <div className="mt-8">
-              <h3 className="text-white font-semibold mb-4">Related Videos</h3>
-              <div className="space-y-3">
-                {relatedVideos.map((video) => (
-                  <div
+            <motion.div
+              className="mt-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.2, duration: 0.4 }}
+            >
+              <h3 className="text-gray-900 font-bold text-lg mb-6">Related Videos</h3>
+              <div className="space-y-4">
+                {relatedVideos.map((video, index) => (
+                  <motion.div
                     key={video.id}
-                    className="p-3 rounded-lg"
-                    style={{ background: 'rgba(26, 27, 46, 0.6)' }}
+                    className="p-4 rounded-2xl"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.8)',
+                      backdropFilter: 'blur(20px)',
+                      WebkitBackdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(255, 255, 255, 0.3)',
+                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)'
+                    }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.3 + index * 0.1 }}
+                    whileHover={{ scale: 1.02 }}
                   >
-                    <div className="flex space-x-3">
+                    <div className="flex space-x-4">
                       <img
                         src={video.thumbnail}
                         alt={video.title}
-                        className="w-20 h-14 object-cover rounded-lg flex-shrink-0"
+                        className="w-24 h-16 object-cover rounded-xl flex-shrink-0"
                       />
                       <div className="flex-1">
-                        <div className="flex items-start justify-between mb-1">
-                          <h4 className="text-white text-sm font-medium line-clamp-2 flex-1">
+                        <div className="flex items-start justify-between mb-2">
+                          <h4 className="text-gray-900 text-sm font-semibold line-clamp-2 flex-1">
                             {video.title}
                           </h4>
-                          <div 
-                            className="px-2 py-1 rounded-full text-white text-xs font-semibold ml-2"
+                          <div
+                            className="px-3 py-1 rounded-full text-white text-xs font-bold ml-2"
                             style={{
-                              background: 'linear-gradient(135deg, #7C3AED 0%, #3B82F6 100%)'
+                              background: 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
+                              boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)'
                             }}
                           >
                             +{video.xp} XP
                           </div>
                         </div>
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-gray-600 font-medium">
                           {video.creator} • {video.views}
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
 
         {/* Tip Modal */}
         {channelId && (

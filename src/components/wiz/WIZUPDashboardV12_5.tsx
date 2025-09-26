@@ -26,7 +26,12 @@ interface VideoData {
   thumbnail: string;
   thumbnailBlurred?: string;
   videoUrl: string;
-  creator: {
+  videoId: string;
+  creator: string;
+  creatorAvatar?: string;
+  subscriberCount?: string;
+  isVerified?: boolean;
+  creatorDetails?: {
     id: string;
     name: string;
     avatar: string;
@@ -43,6 +48,7 @@ interface VideoData {
   views: string;
   likes: string;
   description: string;
+  xpReward: number;
   zapsReward: number;
   category: string;
   publishedAt: string;
@@ -167,9 +173,14 @@ const SAMPLE_VIDEOS: VideoData[] = [
     id: '1',
     title: 'Building a $10M SaaS Empire: The Complete Blueprint',
     thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
-    thumbnailBlurred: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8BVbEsr5u9Zn0jjkjjcXEDtJ2UZAA8RA7xj7jnOa5pVqoOGGKlT7xo+4eGG',
+    thumbnailBlurred: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
     videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-    creator: {
+    videoId: 'dQw4w9WgXcQ',
+    creator: 'Alex Hormozi',
+    creatorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=alex',
+    subscriberCount: '2.1M subscribers',
+    isVerified: true,
+    creatorDetails: {
       id: 'alex-hormozi',
       name: 'Alex Hormozi',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=alex',
@@ -183,9 +194,10 @@ const SAMPLE_VIDEOS: VideoData[] = [
       products: false
     },
     duration: '28:45',
-    views: '487K',
+    views: '487K views',
     likes: '42K',
     description: 'Learn the exact playbook I used to build multiple 8-figure companies from scratch. This comprehensive guide covers everything from initial product development to scaling systems.',
+    xpReward: 1250,
     zapsReward: 1250,
     category: 'business',
     publishedAt: '2024-01-15',
@@ -194,9 +206,15 @@ const SAMPLE_VIDEOS: VideoData[] = [
   {
     id: '2',
     title: 'React Performance: From Slow to Lightning Fast',
-    thumbnail: 'https://i.ytimg.com/vi/sample2/maxresdefault.jpg',
-    videoUrl: 'https://www.youtube.com/embed/sample2',
-    creator: {
+    thumbnail: 'https://i.ytimg.com/vi/M7lc1UVf-VE/maxresdefault.jpg',
+    thumbnailBlurred: 'https://i.ytimg.com/vi/M7lc1UVf-VE/hqdefault.jpg',
+    videoUrl: 'https://www.youtube.com/embed/M7lc1UVf-VE',
+    videoId: 'M7lc1UVf-VE',
+    creator: 'Kent C. Dodds',
+    creatorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=kent',
+    subscriberCount: '890K subscribers',
+    isVerified: true,
+    creatorDetails: {
       id: 'kent-dodds',
       name: 'Kent C. Dodds',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=kent',
@@ -210,9 +228,10 @@ const SAMPLE_VIDEOS: VideoData[] = [
       products: true
     },
     duration: '45:12',
-    views: '234K',
+    views: '234K views',
     likes: '18K',
     description: 'Master advanced React optimization techniques for production applications.',
+    xpReward: 980,
     zapsReward: 980,
     category: 'tech',
     publishedAt: '2024-01-14',
@@ -221,9 +240,15 @@ const SAMPLE_VIDEOS: VideoData[] = [
   {
     id: '3',
     title: 'AI Design Systems: The Future of UI/UX',
-    thumbnail: 'https://i.ytimg.com/vi/sample3/maxresdefault.jpg',
-    videoUrl: 'https://www.youtube.com/embed/sample3',
-    creator: {
+    thumbnail: 'https://i.ytimg.com/vi/9bZkp7q19f0/maxresdefault.jpg',
+    thumbnailBlurred: 'https://i.ytimg.com/vi/9bZkp7q19f0/hqdefault.jpg',
+    videoUrl: 'https://www.youtube.com/embed/9bZkp7q19f0',
+    videoId: '9bZkp7q19f0',
+    creator: 'Sarah Chen',
+    creatorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=sarah',
+    subscriberCount: '756K subscribers',
+    isVerified: true,
+    creatorDetails: {
       id: 'sarah-chen',
       name: 'Sarah Chen',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=sarah',
@@ -237,9 +262,10 @@ const SAMPLE_VIDEOS: VideoData[] = [
       products: false
     },
     duration: '32:18',
-    views: '178K',
+    views: '178K views',
     likes: '15K',
     description: 'How AI is revolutionizing design workflows and creating smarter interfaces.',
+    xpReward: 1150,
     zapsReward: 1150,
     category: 'design',
     publishedAt: '2024-01-13',
@@ -248,9 +274,15 @@ const SAMPLE_VIDEOS: VideoData[] = [
   {
     id: '4',
     title: 'Mastering Sleep: Science-Based Optimization',
-    thumbnail: 'https://i.ytimg.com/vi/sample4/maxresdefault.jpg',
-    videoUrl: 'https://www.youtube.com/embed/sample4',
-    creator: {
+    thumbnail: 'https://i.ytimg.com/vi/nm1TxQj9IsQ/maxresdefault.jpg',
+    thumbnailBlurred: 'https://i.ytimg.com/vi/nm1TxQj9IsQ/hqdefault.jpg',
+    videoUrl: 'https://www.youtube.com/embed/nm1TxQj9IsQ',
+    videoId: 'nm1TxQj9IsQ',
+    creator: 'Dr. Andrew Huberman',
+    creatorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=andrew',
+    subscriberCount: '3.2M subscribers',
+    isVerified: true,
+    creatorDetails: {
       id: 'andrew-huberman',
       name: 'Dr. Andrew Huberman',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=andrew',
@@ -264,9 +296,10 @@ const SAMPLE_VIDEOS: VideoData[] = [
       products: true
     },
     duration: '52:30',
-    views: '892K',
+    views: '892K views',
     likes: '67K',
     description: 'Evidence-based strategies for optimizing sleep quality and duration.',
+    xpReward: 1100,
     zapsReward: 1100,
     category: 'health',
     publishedAt: '2024-01-12',
@@ -275,9 +308,15 @@ const SAMPLE_VIDEOS: VideoData[] = [
   {
     id: '5',
     title: 'Crypto Trading Psychology: Master Your Mind',
-    thumbnail: 'https://i.ytimg.com/vi/sample5/maxresdefault.jpg',
-    videoUrl: 'https://www.youtube.com/embed/sample5',
-    creator: {
+    thumbnail: 'https://i.ytimg.com/vi/p_6WJmgMxqs/maxresdefault.jpg',
+    thumbnailBlurred: 'https://i.ytimg.com/vi/p_6WJmgMxqs/hqdefault.jpg',
+    videoUrl: 'https://www.youtube.com/embed/p_6WJmgMxqs',
+    videoId: 'p_6WJmgMxqs',
+    creator: 'Coin Bureau',
+    creatorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=crypto',
+    subscriberCount: '2.8M subscribers',
+    isVerified: true,
+    creatorDetails: {
       id: 'coin-bureau',
       name: 'Coin Bureau',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=crypto',
@@ -291,9 +330,10 @@ const SAMPLE_VIDEOS: VideoData[] = [
       products: true
     },
     duration: '38:22',
-    views: '345K',
+    views: '345K views',
     likes: '29K',
     description: 'Develop winning psychology for volatile crypto markets.',
+    xpReward: 920,
     zapsReward: 920,
     category: 'money',
     publishedAt: '2024-01-11',
@@ -302,9 +342,15 @@ const SAMPLE_VIDEOS: VideoData[] = [
   {
     id: '6',
     title: 'Building Atomic Habits That Actually Stick',
-    thumbnail: 'https://i.ytimg.com/vi/sample6/maxresdefault.jpg',
-    videoUrl: 'https://www.youtube.com/embed/sample6',
-    creator: {
+    thumbnail: 'https://i.ytimg.com/vi/UiTOhZQbAhg/maxresdefault.jpg',
+    thumbnailBlurred: 'https://i.ytimg.com/vi/UiTOhZQbAhg/hqdefault.jpg',
+    videoUrl: 'https://www.youtube.com/embed/UiTOhZQbAhg',
+    videoId: 'UiTOhZQbAhg',
+    creator: 'James Clear',
+    creatorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=james',
+    subscriberCount: '1.5M subscribers',
+    isVerified: true,
+    creatorDetails: {
       id: 'james-clear',
       name: 'James Clear',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=james',
@@ -318,9 +364,10 @@ const SAMPLE_VIDEOS: VideoData[] = [
       products: true
     },
     duration: '41:15',
-    views: '567K',
+    views: '567K views',
     likes: '45K',
     description: 'Practical strategies for building sustainable routines.',
+    xpReward: 850,
     zapsReward: 850,
     category: 'self-improvement',
     publishedAt: '2024-01-10',
@@ -330,6 +377,7 @@ const SAMPLE_VIDEOS: VideoData[] = [
 
 interface WIZUPDashboardV12_5Props {
   className?: string;
+  onVideoSelect?: (video: VideoData) => void;
 }
 
 // Optimized debounce hook
@@ -374,7 +422,7 @@ const useIntersectionObserver = (threshold = 0.1) => {
   return [setRef, isIntersecting] as const;
 };
 
-const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className }) => {
+const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, onVideoSelect }) => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [selectedVideo, setSelectedVideo] = useState<VideoData | null>(null);
   const [isWatchMode, setIsWatchMode] = useState(false);
@@ -405,15 +453,19 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className }) 
 
   // Optimized video selection with loading state
   const handleVideoSelect = useCallback((video: VideoData) => {
-    setIsLoading(true);
-
-    // Simulate modal load time
-    setTimeout(() => {
-      setSelectedVideo(video);
-      setIsWatchMode(true);
-      setIsLoading(false);
-    }, 100);
-  }, []);
+    if (onVideoSelect) {
+      // Use parent's video selection handler (WatchDialogV4)
+      onVideoSelect(video);
+    } else {
+      // Fall back to internal modal
+      setIsLoading(true);
+      setTimeout(() => {
+        setSelectedVideo(video);
+        setIsWatchMode(true);
+        setIsLoading(false);
+      }, 100);
+    }
+  }, [onVideoSelect]);
 
   // V16 Premium Glassmorphic Filter Pills with Gradient Palettes
   const FilterPill = React.memo<{
@@ -933,10 +985,6 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className }) 
         </div>
       )}
 
-      {/* Premium watch modal */}
-      <AnimatePresence>
-        {isWatchMode && <WatchModal />}
-      </AnimatePresence>
     </div>
   );
 };

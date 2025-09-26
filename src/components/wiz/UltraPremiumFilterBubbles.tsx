@@ -1,8 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { motion, AnimatePresence, useSpring, useMotionValue, useTransform } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useDebounce } from '@/hooks/use-debounce';
+import { useSmoothTransition } from '@/hooks/use-smooth-transition';
 
 interface FilterCategory {
   id: string;
@@ -39,6 +41,7 @@ const UltraPremiumFilterBubbles: React.FC<UltraPremiumFilterBubblesProps> = ({
   const [hoveredFilter, setHoveredFilter] = useState<string | null>(null);
   const [isScrolling, setIsScrolling] = useState(false);
   const [showTooltip, setShowTooltip] = useState<string | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const tooltipTimeoutRef = useRef<NodeJS.Timeout>();
@@ -46,6 +49,28 @@ const UltraPremiumFilterBubbles: React.FC<UltraPremiumFilterBubblesProps> = ({
   const { theme } = useTheme();
   const isMobile = useIsMobile();
   const isDark = theme === 'dark';
+
+  // Smooth transition hook
+  const { isTransitioning: isSmoothTransitioning, startTransition } = useSmoothTransition({
+    duration: 200,
+    easing: (t) => 1 - (1 - t) ** 3 // ease-out-cubic
+  });
+
+  // Debounced filter change to prevent rapid toggles
+  const debouncedFilterChange = useDebounce((filterId: string) => {
+    startTransition(() => {
+      setIsTransitioning(false);
+      onFilterChange(filterId);
+    });
+  }, 100);
+
+  // Handle filter change with transition state
+  const handleFilterChange = useCallback((filterId: string) => {
+    if (filterId === activeFilter) return;
+
+    setIsTransitioning(true);
+    debouncedFilterChange(filterId);
+  }, [activeFilter, debouncedFilterChange]);
 
   // Motion values for scroll interactions
   const scrollX = useMotionValue(0);
@@ -150,7 +175,7 @@ const UltraPremiumFilterBubbles: React.FC<UltraPremiumFilterBubblesProps> = ({
         {/* Main bubble */}
         <motion.button
           ref={bubbleRef}
-          onClick={() => onFilterChange(category.id)}
+          onClick={() => handleFilterChange(category.id)}
           onMouseEnter={() => handleMouseEnter(category.id)}
           onMouseLeave={handleMouseLeave}
           className={cn(
@@ -299,37 +324,64 @@ const UltraPremiumFilterBubbles: React.FC<UltraPremiumFilterBubblesProps> = ({
             ref={scrollContainerRef}
             className={cn(
               "overflow-x-auto scrollbar-hide",
-              // Custom scroll behavior
+              // Enhanced smooth scroll behavior
               "scroll-smooth"
             )}
             style={{
               scrollSnapType: isMobile ? 'x mandatory' : 'none',
-              WebkitOverflowScrolling: 'touch'
+              WebkitOverflowScrolling: 'touch',
+              scrollBehavior: 'smooth',
+              // GPU acceleration for smooth scrolling
+              transform: 'translateZ(0)',
+              willChange: 'scroll-position'
             }}
           >
-            <div className="flex items-center gap-4 pb-2 min-w-max px-2">
-              {premiumCategories.map((category, index) => (
-                <motion.div
-                  key={category.id}
-                  style={{
-                    scrollSnapAlign: isMobile ? 'center' : 'start'
-                  }}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{
-                    duration: 0.4,
-                    delay: index * 0.05,
-                    ease: "easeOut"
-                  }}
-                >
-                  <FilterBubble
-                    category={category}
-                    isActive={activeFilter === category.id}
-                    index={index}
-                  />
-                </motion.div>
-              ))}
-            </div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                className="flex items-center gap-4 pb-2 min-w-max px-2"
+                layout
+                transition={{
+                  layout: { duration: 0.25, ease: "easeInOut" },
+                  opacity: { duration: 0.2 }
+                }}
+              >
+                {premiumCategories.map((category, index) => (
+                  <motion.div
+                    key={category.id}
+                    layout
+                    style={{
+                      scrollSnapAlign: isMobile ? 'center' : 'start'
+                    }}
+                    initial={{ opacity: 0, x: 20, scale: 0.95 }}
+                    animate={{
+                      opacity: 1,
+                      x: 0,
+                      scale: 1,
+                      transition: {
+                        duration: 0.4,
+                        delay: index * 0.05,
+                        ease: "easeOut"
+                      }
+                    }}
+                    exit={{
+                      opacity: 0,
+                      x: -20,
+                      scale: 0.95,
+                      transition: { duration: 0.2 }
+                    }}
+                    transition={{
+                      layout: { duration: 0.25, ease: "easeInOut" }
+                    }}
+                  >
+                    <FilterBubble
+                      category={category}
+                      isActive={activeFilter === category.id}
+                      index={index}
+                    />
+                  </motion.div>
+                ))}
+              </motion.div>
+            </AnimatePresence>
           </div>
 
           {/* Mobile swipe indicator */}
@@ -363,4 +415,4 @@ const UltraPremiumFilterBubbles: React.FC<UltraPremiumFilterBubblesProps> = ({
   );
 };
 
-export default UltraPremiumFilterBubbles;
+export default memo(UltraPremiumFilterBubbles);
