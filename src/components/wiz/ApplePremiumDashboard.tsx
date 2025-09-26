@@ -23,6 +23,7 @@ import PremiumDashboardV10 from './PremiumDashboardV10';
 import PremiumDashboardV11 from './PremiumDashboardV11';
 import WIZUPDashboardV12_5 from './WIZUPDashboardV12_5';
 import { WatchDialogV4, WatchVideoData } from './WatchDialogV4';
+import { WatchPopupV5 } from './WatchPopupV5';
 
 // Sample video data for testing
 const SAMPLE_VIDEOS: WatchVideoData[] = [
@@ -823,17 +824,29 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
         userName={userName}
       />
 
-      {/* Watch Dialog V4 - Premium Watch Experience */}
-      <WatchDialogV4
-        video={selectedVideo}
-        isOpen={showVideoPlayer}
+      {/* Watch Popup V5 - Premium Watch Experience */}
+      <WatchPopupV5
+        open={showVideoPlayer}
         onClose={() => {
           setShowVideoPlayer(false);
           setSelectedVideo(null);
           setVideoProgress(0);
         }}
-        onVideoComplete={handleWatchDialogComplete}
-        onVideoChange={handleVideoChange}
+        video={selectedVideo ? {
+          id: selectedVideo.id,
+          videoId: selectedVideo.videoId,
+          title: selectedVideo.title,
+          description: selectedVideo.description,
+          creator: {
+            name: selectedVideo.creator.name,
+            avatar: selectedVideo.creator.avatar,
+            subscribers: selectedVideo.creator.subscribers,
+            level: selectedVideo.creator.level
+          },
+          views: selectedVideo.views,
+          duration: selectedVideo.duration,
+          xpReward: selectedVideo.xpReward
+        } : undefined}
       />
 
       {/* Dark Mode Toggle (Hidden but available for development) */}
