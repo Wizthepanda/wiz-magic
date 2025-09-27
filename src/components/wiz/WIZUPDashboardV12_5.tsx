@@ -307,22 +307,22 @@ const SAMPLE_VIDEOS: VideoData[] = [
   },
   {
     id: '5',
-    title: 'Crypto Trading Psychology: Master Your Mind',
-    thumbnail: 'https://i.ytimg.com/vi/p_6WJmgMxqs/maxresdefault.jpg',
-    thumbnailBlurred: 'https://i.ytimg.com/vi/p_6WJmgMxqs/hqdefault.jpg',
-    videoUrl: 'https://www.youtube.com/embed/p_6WJmgMxqs',
-    videoId: 'p_6WJmgMxqs',
-    creator: 'Coin Bureau',
-    creatorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=crypto',
-    subscriberCount: '2.8M subscribers',
+    title: 'But how does bitcoin actually work?',
+    thumbnail: 'https://i.ytimg.com/vi/bBC-nXj3Ng4/maxresdefault.jpg',
+    thumbnailBlurred: 'https://i.ytimg.com/vi/bBC-nXj3Ng4/hqdefault.jpg',
+    videoUrl: 'https://www.youtube.com/embed/bBC-nXj3Ng4',
+    videoId: 'bBC-nXj3Ng4',
+    creator: '3Blue1Brown',
+    creatorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=3blue1brown',
+    subscriberCount: '5.1M subscribers',
     isVerified: true,
     creatorDetails: {
       id: 'coin-bureau',
-      name: 'Coin Bureau',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=crypto',
-      subscribers: '2.8M',
+      name: '3Blue1Brown',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=3blue1brown',
+      subscribers: '5.1M',
       verified: true,
-      bio: 'Crypto education and analysis',
+      bio: 'Math education with beautiful visualizations',
       hasExtras: true,
       community: true,
       courses: true,
@@ -332,7 +332,7 @@ const SAMPLE_VIDEOS: VideoData[] = [
     duration: '38:22',
     views: '345K views',
     likes: '29K',
-    description: 'Develop winning psychology for volatile crypto markets.',
+    description: 'A visual explanation of how Bitcoin actually works under the hood.',
     xpReward: 920,
     zapsReward: 920,
     category: 'money',
@@ -341,22 +341,22 @@ const SAMPLE_VIDEOS: VideoData[] = [
   },
   {
     id: '6',
-    title: 'Building Atomic Habits That Actually Stick',
-    thumbnail: 'https://i.ytimg.com/vi/UiTOhZQbAhg/maxresdefault.jpg',
-    thumbnailBlurred: 'https://i.ytimg.com/vi/UiTOhZQbAhg/hqdefault.jpg',
-    videoUrl: 'https://www.youtube.com/embed/UiTOhZQbAhg',
-    videoId: 'UiTOhZQbAhg',
-    creator: 'James Clear',
-    creatorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=james',
-    subscriberCount: '1.5M subscribers',
+    title: 'Atomic Habits by James Clear - Book Summary',
+    thumbnail: 'https://i.ytimg.com/vi/FAYKc3cq_vM/maxresdefault.jpg',
+    thumbnailBlurred: 'https://i.ytimg.com/vi/FAYKc3cq_vM/hqdefault.jpg',
+    videoUrl: 'https://www.youtube.com/embed/FAYKc3cq_vM',
+    videoId: 'FAYKc3cq_vM',
+    creator: 'Four Minute Books',
+    creatorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=fourminutebooks',
+    subscriberCount: '480K subscribers',
     isVerified: true,
     creatorDetails: {
-      id: 'james-clear',
-      name: 'James Clear',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=james',
-      subscribers: '1.5M',
+      id: 'four-minute-books',
+      name: 'Four Minute Books',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=fourminutebooks',
+      subscribers: '480K',
       verified: true,
-      bio: 'Author of Atomic Habits',
+      bio: 'Book summaries for busy people',
       hasExtras: false,
       community: false,
       courses: false,
@@ -366,7 +366,7 @@ const SAMPLE_VIDEOS: VideoData[] = [
     duration: '41:15',
     views: '567K views',
     likes: '45K',
-    description: 'Practical strategies for building sustainable routines.',
+    description: 'The definitive 4-step guide to building good habits based on James Clear\'s bestselling book.',
     xpReward: 850,
     zapsReward: 850,
     category: 'self-improvement',
@@ -431,14 +431,26 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
   const isMobile = useIsMobile();
   const filterScrollRef = useRef<HTMLDivElement>(null);
 
-  // Debounce filter changes for performance
-  const debouncedFilter = useDebounce(activeFilter, 200);
+  // Instant filter changes for immediate response (no debounce for ultra-smooth UX)
+  const debouncedFilter = activeFilter;
 
-  // Memoized filtered videos for performance
+  // Preloaded category videos for instant switching
+  const categoryVideos = useMemo(() => {
+    const categories = {};
+    FILTER_CATEGORIES.forEach(category => {
+      if (category.id === 'all') {
+        categories[category.id] = SAMPLE_VIDEOS;
+      } else {
+        categories[category.id] = SAMPLE_VIDEOS.filter(video => video.category === category.id);
+      }
+    });
+    return categories;
+  }, []);
+
+  // Current filtered videos with instant access
   const filteredVideos = useMemo(() => {
-    if (debouncedFilter === 'all') return SAMPLE_VIDEOS;
-    return SAMPLE_VIDEOS.filter(video => video.category === debouncedFilter);
-  }, [debouncedFilter]);
+    return categoryVideos[debouncedFilter] || SAMPLE_VIDEOS;
+  }, [categoryVideos, debouncedFilter]);
 
   // Related videos for watch mode
   const relatedVideos = useMemo(() => {
@@ -492,7 +504,7 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className={cn(
-          "relative px-4 py-2 h-10 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap overflow-hidden border-0",
+          "relative px-4 py-2 h-10 rounded-full text-sm font-medium transition-all duration-150 whitespace-nowrap overflow-hidden border-0 will-change-transform",
           getTextColor()
         )}
         style={{
@@ -505,11 +517,14 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
         whileHover={{
-          scale: 1.02,
-          y: -1,
-          transition: { duration: 0.2 }
+          scale: 1.03,
+          y: -2,
+          transition: { duration: 0.15, ease: [0.4, 0.0, 0.2, 1] }
         }}
-        whileTap={{ scale: 0.98 }}
+        whileTap={{
+          scale: 0.97,
+          transition: { duration: 0.1, ease: [0.4, 0.0, 0.2, 1] }
+        }}
         aria-selected={isActive}
         role="tab"
       >
@@ -950,7 +965,13 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
 
         {/* Filter Chips - Natural Scroll with Content */}
         <div className="filter-row mb-6">
-          <div className="flex gap-3 overflow-x-auto scrollbar-hide py-2">
+          <div
+            className="flex gap-3 overflow-x-auto scrollbar-hide py-2"
+            style={{
+              scrollBehavior: 'smooth',
+              WebkitOverflowScrolling: 'touch'
+            }}
+          >
             {FILTER_CATEGORIES.map((category) => (
               <FilterPill
                 key={category.id}
@@ -963,10 +984,29 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
 
         {/* Video Grid - 3 Column Constraint, Left Baseline Aligned */}
         <section className="video-grid-section">
-          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredVideos.map((video, index) => (
-              <VideoCard key={video.id} video={video} index={index} />
-            ))}
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 will-change-contents"
+            style={{
+              contain: 'layout style paint',
+              transform: 'translateZ(0)'
+            }}>
+            <AnimatePresence mode="sync">
+              {filteredVideos.map((video, index) => (
+                <motion.div
+                  key={video.id}
+                  layout
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{
+                    duration: 0.2,
+                    ease: [0.4, 0.0, 0.2, 1], // Material Design easing for instant feel
+                    delay: index * 0.02 // Ultra-fast stagger for immediate response
+                  }}
+                >
+                  <VideoCard video={video} index={index} />
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         </section>
       </div>

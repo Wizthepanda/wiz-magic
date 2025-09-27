@@ -95,12 +95,15 @@ class YouTubeAPIService {
    */
   private async loadGoogleIdentityServices(): Promise<void> {
     return new Promise((resolve, reject) => {
-      // Skip loading on wizxp.com to prevent CORS issues
+      // Check if we're on wizxp.com - Google Identity Services has CORS restrictions for this domain
       if (typeof window !== 'undefined' && window.location.hostname === 'wizxp.com') {
-        console.log('🚫 Skipping Google Identity Services on wizxp.com domain to prevent CORS');
+        console.log('🚫 Skipping Google Identity Services on wizxp.com domain due to Google CORS policy');
+        // Resolve immediately to prevent blocking, but YouTube features won't work
         resolve();
         return;
       }
+
+      console.log('🔄 Loading Google Identity Services for domain:', window.location.hostname);
 
       // Check if already loaded
       if (window.google?.accounts?.oauth2) {
@@ -217,14 +220,19 @@ class YouTubeAPIService {
    * Ensure Google Identity Services are loaded
    */
   private async ensureGoogleAPIsLoaded(): Promise<void> {
+    // Check if we're on wizxp.com domain where Google Identity Services is blocked
+    if (typeof window !== 'undefined' && window.location.hostname === 'wizxp.com') {
+      throw new Error('YouTube authentication not available on wizxp.com due to Google CORS restrictions. Please use wiz-magic-platform.web.app for YouTube features.');
+    }
+
     let attempts = 0;
     const maxAttempts = 100;
-    
+
     while (!window.google?.accounts?.oauth2 && attempts < maxAttempts) {
       await new Promise(resolve => setTimeout(resolve, 100));
       attempts++;
     }
-    
+
     if (!window.google?.accounts?.oauth2) {
       throw new Error('Google Identity Services failed to load. Please check your internet connection and try again.');
     }
@@ -235,10 +243,32 @@ class YouTubeAPIService {
    */
   async authenticate(): Promise<boolean> {
     try {
+      // Check if we're on wizxp.com domain where Google Identity Services is blocked
+      if (typeof window !== 'undefined' && window.location.hostname === 'wizxp.com') {
+        console.log('❌ YouTube authentication not available on wizxp.com due to Google CORS restrictions');
+        console.log('💡 Use wiz-magic-platform.web.app for YouTube features');
+        return false;
+      }
+
+      // Check if Google Identity Services is available
+      if (!window.google?.accounts?.oauth2) {
+        console.log('📱 Google Identity Services not available, attempting to load...');
+        // Try to load Google Identity Services first
+        await this.loadGoogleIdentityServices();
+      }
+
       const result = await this.initiateOAuth();
       return !!result.access_token;
     } catch (error) {
       console.error('YouTube authentication failed:', error);
+
+      // Provide user-friendly error messages
+      if (error instanceof Error) {
+        if (error.message.includes('Google Identity Services')) {
+          console.log('💡 Tip: YouTube features work best on wiz-magic-platform.web.app');
+        }
+      }
+
       return false;
     }
   }

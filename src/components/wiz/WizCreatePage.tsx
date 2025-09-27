@@ -108,10 +108,10 @@ const ContentTypeToggle = ({
 };
 
 export const WizCreatePage = () => {
-  const { user } = useAuth();
+  const { user, connectYouTube } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
-  
+
   const [currentStep, setCurrentStep] = useState(1);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isLoadingVideos, setIsLoadingVideos] = useState(false);
@@ -159,50 +159,177 @@ export const WizCreatePage = () => {
     { number: 3, title: 'Publish', subtitle: 'To WIZ' }
   ];
 
-  // Real YouTube OAuth connection
+  // Check for YouTube auth redirect and continue flow
+  useEffect(() => {
+    const checkYouTubeRedirect = async () => {
+      // Debug: Show current user state
+      console.log('🔍 WizCreatePage - Current user state:', {
+        userId: user?.uid,
+        email: user?.email,
+        youtubeConnected: user?.youtubeConnected,
+        wasConnectingFlag: localStorage.getItem('wizxp_youtube_connect')
+      });
+
+      // Check if user was connecting to YouTube (stored in localStorage during redirect)
+      const wasConnecting = localStorage.getItem('wizxp_youtube_connect');
+
+      if (wasConnecting && user?.youtubeConnected) {
+        console.log('🎉 Detected successful YouTube connection after redirect');
+
+        // Clear the flag
+        localStorage.removeItem('wizxp_youtube_connect');
+
+        // Check if we need to acquire access token
+        await acquireYouTubeAccessTokenIfNeeded();
+
+        // Show success message
+        toast({
+          title: "🎉 Connected Successfully!",
+          description: "YouTube channel connected! Loading your videos...",
+          duration: 3000,
+        });
+
+        // Continue to step 2 and load videos
+        setCurrentStep(2);
+        loadVideos();
+      } else if (user?.youtubeConnected) {
+        console.log('✅ User already has YouTube connected, proceeding to video selection');
+        setCurrentStep(2);
+        loadVideos();
+      } else {
+        console.log('❌ User not YouTube connected yet');
+      }
+    };
+
+    if (user) {
+      checkYouTubeRedirect();
+    }
+  }, [user, toast]);
+
+  // Function to acquire YouTube access token if needed
+  const acquireYouTubeAccessTokenIfNeeded = async () => {
+    if (!user?.uid) return;
+
+    try {
+      // Check if we already have a valid access token
+      const { getDoc, doc, setDoc } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      const userData = userDoc.data();
+
+      if (userData?.youtubeAccessToken) {
+        console.log('✅ YouTube access token already exists in database');
+        return;
+      }
+
+      console.log('🔍 No access token found, attempting popup authentication for token...');
+
+      if (isYouTubeAPIEnabled()) {
+        try {
+          const { signInWithPopup } = await import('firebase/auth');
+          const { auth, googleProviderWithYouTube } = await import('@/lib/firebase');
+
+          console.log('🚀 Starting popup authentication to acquire YouTube token...');
+
+          // Use popup authentication specifically to get the access token
+          const result = await signInWithPopup(auth, googleProviderWithYouTube);
+
+          if (result.credential) {
+            // Extract access token from the credential
+            const accessToken = (result.credential as any).accessToken;
+
+            if (accessToken) {
+              console.log('✅ Successfully acquired YouTube access token via popup');
+
+              // Save the token to the database
+              await setDoc(doc(db, 'users', user.uid), {
+                youtubeAccessToken: accessToken,
+                youtubeTokenAcquiredAt: new Date()
+              }, { merge: true });
+
+              // Also store in localStorage for immediate use
+              localStorage.setItem('youtube_access_token', accessToken);
+
+              console.log('💾 YouTube access token saved to database and localStorage');
+            } else {
+              console.warn('⚠️ No access token in popup credential');
+            }
+          } else {
+            console.warn('⚠️ No credential returned from popup authentication');
+          }
+        } catch (error) {
+          console.warn('⚠️ Popup authentication failed:', error);
+          // Fall back to marking the user as needing manual token acquisition
+          await setDoc(doc(db, 'users', user.uid), {
+            needsYouTubeTokenAcquisition: true,
+            lastTokenAttempt: new Date()
+          }, { merge: true });
+        }
+      } else {
+        console.log('⚠️ YouTube API disabled, skipping token acquisition');
+      }
+
+    } catch (error) {
+      console.error('❌ Error in acquireYouTubeAccessTokenIfNeeded:', error);
+    }
+  };
+
+  // Original working YouTube OAuth connection using Firebase Auth
   const handleConnectYouTube = async () => {
     setIsConnecting(true);
 
     try {
-      // Initiate OAuth flow using Google Identity Services
-      const tokenResponse = await youTubeAPI.initiateOAuth();
-      
-      // Get channel information
-      const channelInfo = await youTubeAPI.getChannelInfo();
-      
-      // Save tokens to database
-      if (user?.uid) {
-        await CreatorService.saveCreatorTokens(
-          user.uid, 
-          tokenResponse.access_token, 
-          undefined, // no refresh token with implicit flow
-          tokenResponse.expires_in
-        );
-      }
-      
-      setChannelInfo(channelInfo);
-      setIsConnecting(false);
-      
-      toast({
-        title: "🎉 Connected Successfully!",
-        description: `Connected to ${channelInfo.name}!`,
-        duration: 3000,
-      });
+      // Use the original working connectYouTube method from useAuth
+      const success = await connectYouTube();
 
-      setTimeout(() => {
-        setCurrentStep(2);
-        loadVideos();
-      }, 1500);
-      
+      if (success) {
+        // Try to get channel info after successful connection
+        try {
+          const channelInfo = await youTubeAPI.getChannelInfo();
+          setChannelInfo(channelInfo);
+
+          toast({
+            title: "🎉 Connected Successfully!",
+            description: `Connected to ${channelInfo.name}!`,
+            duration: 3000,
+          });
+
+          setTimeout(() => {
+            setCurrentStep(2);
+            loadVideos();
+          }, 1500);
+        } catch (channelError) {
+          // Connection succeeded but couldn't get channel info - that's ok
+          console.log('YouTube connected but channel info unavailable:', channelError);
+          toast({
+            title: "🎉 Connected Successfully!",
+            description: "YouTube channel connected!",
+            duration: 3000,
+          });
+
+          setTimeout(() => {
+            setCurrentStep(2);
+            loadVideos();
+          }, 1500);
+        }
+      } else {
+        toast({
+          title: "Connection Failed",
+          description: "Failed to connect to YouTube. Please try again.",
+          duration: 5000,
+        });
+      }
+
     } catch (error) {
       console.error('YouTube connection error:', error);
-      setIsConnecting(false);
-      
+
       toast({
         title: "Connection Failed",
         description: error instanceof Error ? error.message : "Failed to connect to YouTube. Please try again.",
         duration: 5000,
       });
+    } finally {
+      setIsConnecting(false);
     }
   };
 
@@ -211,6 +338,54 @@ export const WizCreatePage = () => {
     setIsLoadingVideos(true);
 
     try {
+      // Debug: Check user state and stored tokens
+      console.log('🔍 LoadVideos Debug Info:');
+      console.log('  User:', {
+        uid: user?.uid,
+        email: user?.email,
+        youtubeConnected: user?.youtubeConnected
+      });
+
+      // Try to get and set the access token
+      const accessToken = localStorage.getItem('youtube_access_token');
+      console.log('  Access token in localStorage:', accessToken ? 'present' : 'null');
+
+      if (!accessToken) {
+        // Try to get from user document
+        if (user?.uid) {
+          try {
+            console.log('  Fetching user document from Firestore...');
+            const { getDoc, doc } = await import('firebase/firestore');
+            const { db } = await import('@/lib/firebase');
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            const userData = userDoc.data();
+
+            console.log('  User document exists:', userDoc.exists());
+            console.log('  User data keys:', userData ? Object.keys(userData) : 'no data');
+            console.log('  youtubeAccessToken in DB:', userData?.youtubeAccessToken ? 'present' : 'null');
+            console.log('  youtubeConnected in DB:', userData?.youtubeConnected);
+
+            if (userData?.youtubeAccessToken) {
+              localStorage.setItem('youtube_access_token', userData.youtubeAccessToken);
+              youTubeAPI.setAccessToken(userData.youtubeAccessToken);
+              console.log('📺 Retrieved and set YouTube access token from database');
+            } else {
+              console.error('❌ No youtubeAccessToken field in user document');
+              throw new Error('No YouTube access token found in database');
+            }
+          } catch (error) {
+            console.error('Failed to get access token from database:', error);
+            throw new Error('Not authenticated with YouTube');
+          }
+        } else {
+          console.error('❌ No user UID available');
+          throw new Error('Not authenticated with YouTube');
+        }
+      } else {
+        youTubeAPI.setAccessToken(accessToken);
+        console.log('📺 Set YouTube access token from localStorage');
+      }
+
       if (!youTubeAPI.isAuthenticated()) {
         throw new Error('Not authenticated with YouTube');
       }

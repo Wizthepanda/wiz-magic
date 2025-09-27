@@ -183,7 +183,151 @@ export const useAuth = () => {
         if (result) {
           console.log('✅ Redirect auth successful:', result.user.email);
           const user = result.user;
+
+          // Check if this was a YouTube authentication and redirect back to the Create page
+          const redirectUrl = localStorage.getItem('wizxp_redirect_url');
+          const wasYouTubeConnect = localStorage.getItem('wizxp_youtube_connect');
+
+          // Store navigation info but don't navigate yet if this is YouTube auth
+          let pendingNavigation = null;
+
+          if (wasYouTubeConnect && redirectUrl && redirectUrl !== '/') {
+            console.log('🎯 Detected YouTube auth redirect, will navigate to:', redirectUrl, 'after save');
+            localStorage.removeItem('wizxp_redirect_url');
+            pendingNavigation = redirectUrl;
+          } else if (wasYouTubeConnect) {
+            console.log('🎯 YouTube auth detected, will navigate to Create page after save');
+            localStorage.removeItem('wizxp_redirect_url');
+            pendingNavigation = '/?section=create';
+          }
           
+          // Check if this was a YouTube OAuth
+          let isYouTubeAuth = false;
+          if (wasYouTubeConnect) {
+            console.log('🔍 Detected YouTube OAuth attempt, checking credential...');
+            console.log('🔍 Result credential:', result?.credential ? 'present' : 'null');
+
+            if (result?.credential && isYouTubeAPIEnabled()) {
+              try {
+                const accessToken = (result.credential as any).accessToken;
+                console.log('🔍 Access token:', accessToken ? 'present' : 'null');
+
+                if (accessToken) {
+                  console.log('📺 Detected YouTube OAuth with access token, storing and fetching channel info...');
+
+                  // Store access token for later use
+                  localStorage.setItem('youtube_access_token', accessToken);
+                  console.log('💾 Access token stored for API calls');
+
+                  // Fetch YouTube channel information to confirm connection
+                  const channelInfo = await youTubeAPI.getChannelInfo(accessToken);
+                  if (channelInfo) {
+                    console.log('✅ Successfully fetched YouTube channel:', channelInfo.name);
+                    isYouTubeAuth = true;
+
+                    // Store YouTube profile data
+                    const youtubeProfile = {
+                      channelId: channelInfo.id,
+                      channelTitle: channelInfo.name,
+                      description: channelInfo.description || '',
+                      thumbnailUrl: channelInfo.avatar || '',
+                      subscriberCount: channelInfo.subscriberCount || '0',
+                      customUrl: channelInfo.customUrl || '',
+                      bannerImageUrl: channelInfo.bannerImageUrl || '',
+                      lastSynced: new Date(),
+                    };
+
+                    // Save YouTube profile data with access token
+                    await setDoc(doc(db, 'users', user.uid), {
+                      youtubeConnected: true,
+                      youtubeProfile: youtubeProfile,
+                      youtubeAccessToken: accessToken, // Store in database too
+                      displayName: user.displayName || channelInfo.name,
+                      photoURL: user.photoURL || channelInfo.avatar,
+                    }, { merge: true });
+
+                    console.log('✅ YouTube connection, profile, and access token saved');
+                  } else {
+                    console.warn('⚠️ No channel info returned from YouTube API');
+                  }
+                } else {
+                  console.warn('⚠️ No access token in credential');
+                }
+              } catch (error) {
+                console.warn('⚠️ Failed to fetch YouTube profile data:', error);
+              }
+            }
+
+            // If we have YouTube connect flag, mark as connected regardless
+            // (The OAuth completed successfully if we got here)
+            if (wasYouTubeConnect) {
+              isYouTubeAuth = true;
+              console.log('📝 Marking YouTube as connected due to OAuth completion...');
+              console.log('🔍 isYouTubeAPIEnabled():', isYouTubeAPIEnabled());
+              console.log('🔍 VITE_USE_YOUTUBE_API env var:', import.meta.env.VITE_USE_YOUTUBE_API);
+
+              // Always save to Firestore regardless of feature flag - OAuth completed successfully
+              console.log('💾 Attempting to save YouTube connection to Firestore...');
+              console.log('🔍 User UID:', user.uid);
+              console.log('🔍 Database instance:', db ? 'available' : 'null');
+
+              try {
+                const userDocRef = doc(db, 'users', user.uid);
+                console.log('📄 Document reference created:', userDocRef.path);
+
+                await setDoc(userDocRef, {
+                  youtubeConnected: true,
+                  lastYouTubeAuth: new Date(),
+                }, { merge: true });
+
+                console.log('✅ YouTube connection marked as successful (OAuth completed)');
+
+                // Verify the save worked
+                const savedDoc = await getDoc(userDocRef);
+                const savedData = savedDoc.data();
+                console.log('🔍 Verification - youtubeConnected in DB:', savedData?.youtubeConnected);
+
+                // Now safe to navigate after successful save
+                if (pendingNavigation) {
+                  console.log('🚀 Navigating to:', pendingNavigation, 'after successful save');
+                  setTimeout(() => {
+                    const currentUrl = window.location.pathname + window.location.search;
+                    if (currentUrl !== pendingNavigation) {
+                      window.location.href = pendingNavigation;
+                    }
+                  }, 100);
+                }
+
+              } catch (error) {
+                console.error('❌ Failed to save YouTube connection status:', error);
+                console.error('❌ Error details:', error.message);
+                console.error('❌ Error code:', error.code);
+
+                // Still navigate even if save failed (OAuth completed successfully)
+                if (pendingNavigation) {
+                  console.log('🚀 Navigating to:', pendingNavigation, 'despite save error');
+                  setTimeout(() => {
+                    const currentUrl = window.location.pathname + window.location.search;
+                    if (currentUrl !== pendingNavigation) {
+                      window.location.href = pendingNavigation;
+                    }
+                  }, 100);
+                }
+              }
+            }
+          }
+
+          // If we had pending navigation but no YouTube OAuth processing, navigate now
+          if (pendingNavigation && !wasYouTubeConnect) {
+            console.log('🚀 Navigating to:', pendingNavigation, '(non-YouTube auth)');
+            setTimeout(() => {
+              const currentUrl = window.location.pathname + window.location.search;
+              if (currentUrl !== pendingNavigation) {
+                window.location.href = pendingNavigation;
+              }
+            }, 100);
+          }
+
           // Initialize user with appropriate service
           const userData = {
             email: user.email,
@@ -191,7 +335,7 @@ export const useAuth = () => {
             photoURL: user.photoURL,
             level: 1,
             totalXP: 0,
-            youtubeConnected: false,
+            youtubeConnected: isYouTubeAuth,
             createdAt: new Date(),
             lastLogin: new Date(),
             stats: {
@@ -204,7 +348,7 @@ export const useAuth = () => {
               commentCount: 0,
             }
           };
-          
+
           console.log('💾 Saving user data...', userData);
           if (isYouTubeAPIEnabled()) {
             await setDoc(doc(db, 'users', user.uid), userData, { merge: true });

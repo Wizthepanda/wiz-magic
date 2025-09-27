@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>YouTube Connection Debug</title>
+</head>
+<body>
+    <h1>YouTube Connection Debug</h1>
+    <h2>LocalStorage State:</h2>
+    <div id="localStorage-state"></div>
+
+    <h2>Clear YouTube State:</h2>
+    <button onclick="clearYouTubeState()">Clear YouTube State</button>
+
+    <script>
+        function displayLocalStorage() {
+            const div = document.getElementById('localStorage-state');
+            div.innerHTML = '';
+
+            const keys = ['wizxp_youtube_connect', 'wizxp_redirect_url'];
+            keys.forEach(key => {
+                const value = localStorage.getItem(key);
+                div.innerHTML += `<p><strong>${key}:</strong> ${value || 'null'}</p>`;
+            });
+        }
+
+        function clearYouTubeState() {
+            localStorage.removeItem('wizxp_youtube_connect');
+            localStorage.removeItem('wizxp_redirect_url');
+            alert('YouTube state cleared! Now try the authentication flow.');
+            displayLocalStorage();
+        }
+
+        displayLocalStorage();
+
+        // Check every second for changes
+        setInterval(displayLocalStorage, 1000);
+    </script>
+</body>
+</html>

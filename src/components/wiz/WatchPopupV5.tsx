@@ -2,6 +2,8 @@ import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Share2, Bookmark } from "lucide-react"
+import { useState } from "react"
+import { TipModal } from './creator/components/TipModal'
 
 interface WatchPopupProps {
   open: boolean
@@ -24,6 +26,8 @@ interface WatchPopupProps {
 }
 
 export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
+  const [showTipModal, setShowTipModal] = useState(false)
+
   // Default video data if none provided
   const defaultVideo = {
     id: "1",
@@ -105,7 +109,10 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
                 <Button className="h-11 px-5 rounded-full bg-gradient-to-r from-indigo-500 to-blue-400 text-white font-medium hover:from-indigo-600 hover:to-blue-500 transition-all">
                   Subscribe
                 </Button>
-                <Button className="h-11 px-5 rounded-full bg-gradient-to-r from-green-500 to-emerald-400 text-white font-medium hover:from-green-600 hover:to-emerald-500 transition-all">
+                <Button
+                  onClick={() => setShowTipModal(true)}
+                  className="h-11 px-5 rounded-full bg-gradient-to-r from-green-500 to-emerald-400 text-white font-medium hover:from-green-600 hover:to-emerald-500 transition-all"
+                >
                   Tip
                 </Button>
                 <Button
@@ -206,6 +213,15 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
           </div>
         </div>
       </DialogContent>
+
+      {/* Tip Modal */}
+      <TipModal
+        isOpen={showTipModal}
+        onClose={() => setShowTipModal(false)}
+        creatorId={currentVideo.creator.name.toLowerCase().replace(/\s+/g, '')}
+        creatorName={currentVideo.creator.name}
+        creatorAvatar={currentVideo.creator.avatar}
+      />
     </Dialog>
   )
 }

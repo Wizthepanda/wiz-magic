@@ -12,22 +12,49 @@ export class YouTubeService {
       logFeatureFlag('YouTube API', false, 'using fallback mode');
       throw new Error('YouTube API disabled - using fallback mode');
     }
-    
+
     const user = auth.currentUser;
     if (!user) throw new Error('User not authenticated');
-    
-    // Get the OAuth access token from the user's credential
-    const credential = await user.getIdTokenResult();
-    const accessToken = credential.claims.access_token;
-    
-    if (!accessToken) {
-      // Re-authenticate with YouTube scopes if no access token
-      await this.authenticateWithYouTube();
-      const newCredential = await user.getIdTokenResult();
-      return newCredential.claims.access_token;
+
+    // First try to get from localStorage (stored during OAuth)
+    let accessToken = localStorage.getItem('youtube_access_token');
+
+    if (accessToken) {
+      console.log('📺 Using stored YouTube access token');
+      return accessToken;
     }
-    
-    return accessToken;
+
+    // Fallback: try to get from user document in Firestore
+    try {
+      const { getDoc, doc } = await import('firebase/firestore');
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      const userData = userDoc.data();
+
+      if (userData?.youtubeAccessToken) {
+        console.log('📺 Using YouTube access token from user document');
+        // Store in localStorage for future use
+        localStorage.setItem('youtube_access_token', userData.youtubeAccessToken);
+        return userData.youtubeAccessToken;
+      }
+    } catch (error) {
+      console.warn('Failed to get access token from Firestore:', error);
+    }
+
+    // Last resort: try the old method (usually won't work)
+    try {
+      const credential = await user.getIdTokenResult();
+      const oldAccessToken = credential.claims.access_token;
+
+      if (oldAccessToken) {
+        console.log('📺 Using access token from ID token claims');
+        return oldAccessToken;
+      }
+    } catch (error) {
+      console.warn('Failed to get access token from ID token:', error);
+    }
+
+    // No access token found
+    throw new Error('Not authenticated with YouTube');
   }
 
   static async authenticateWithYouTube(): Promise<boolean> {
@@ -38,7 +65,17 @@ export class YouTubeService {
     
     try {
       console.log('Authenticating with YouTube using redirect...');
+
+      // Store the current page URL to return to after authentication
       localStorage.setItem('wizxp_youtube_connect', 'true');
+
+      // If we're already on the dashboard with create section, preserve that
+      if (window.location.search.includes('section=create')) {
+        localStorage.setItem('wizxp_redirect_url', '/?section=create');
+      } else {
+        localStorage.setItem('wizxp_redirect_url', window.location.pathname + window.location.search);
+      }
+
       await signInWithRedirect(auth, googleProviderWithYouTube);
       // Note: This function doesn't return as the page will redirect
       return true;

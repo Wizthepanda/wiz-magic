@@ -66,7 +66,7 @@ export default function WizUp() {
             title="Create. Share. Earn."
             small="For Creators"
             bullets={creatorsPoints}
-            cta={{ label: "Start Creating", href: "/create", aria: "Start Creating" }}
+            cta={{ label: "Start Creating", href: "/?section=create", aria: "Start Creating" }}
           />
         </div>
       </div>
