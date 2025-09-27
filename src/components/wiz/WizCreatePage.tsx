@@ -222,56 +222,127 @@ export const WizCreatePage = () => {
         return;
       }
 
-      console.log('🔍 No access token found, attempting popup authentication for token...');
+      console.log('🔍 No access token found, setting up re-authorization prompt...');
 
-      if (isYouTubeAPIEnabled()) {
-        try {
-          const { signInWithPopup } = await import('firebase/auth');
-          const { auth, googleProviderWithYouTube } = await import('@/lib/firebase');
+      // Since we don't have an access token, we need to prompt the user to re-authorize
+      // with a popup flow that will provide the access token
 
-          console.log('🚀 Starting popup authentication to acquire YouTube token...');
+      // Mark user as needing YouTube API access re-authorization
+      await setDoc(doc(db, 'users', user.uid), {
+        needsYouTubeTokenAcquisition: true,
+        lastTokenAttempt: new Date(),
+        tokenAcquisitionReason: 'Initial redirect auth did not provide access token'
+      }, { merge: true });
 
-          // Use popup authentication specifically to get the access token
-          const result = await signInWithPopup(auth, googleProviderWithYouTube);
-
-          if (result.credential) {
-            // Extract access token from the credential
-            const accessToken = (result.credential as any).accessToken;
-
-            if (accessToken) {
-              console.log('✅ Successfully acquired YouTube access token via popup');
-
-              // Save the token to the database
-              await setDoc(doc(db, 'users', user.uid), {
-                youtubeAccessToken: accessToken,
-                youtubeTokenAcquiredAt: new Date()
-              }, { merge: true });
-
-              // Also store in localStorage for immediate use
-              localStorage.setItem('youtube_access_token', accessToken);
-
-              console.log('💾 YouTube access token saved to database and localStorage');
-            } else {
-              console.warn('⚠️ No access token in popup credential');
-            }
-          } else {
-            console.warn('⚠️ No credential returned from popup authentication');
-          }
-        } catch (error) {
-          console.warn('⚠️ Popup authentication failed:', error);
-          // Fall back to marking the user as needing manual token acquisition
-          await setDoc(doc(db, 'users', user.uid), {
-            needsYouTubeTokenAcquisition: true,
-            lastTokenAttempt: new Date()
-          }, { merge: true });
-        }
-      } else {
-        console.log('⚠️ YouTube API disabled, skipping token acquisition');
-      }
+      console.log('📋 User marked as needing YouTube API re-authorization for token access');
+      console.log('💡 User will be prompted to complete authorization on video loading attempts');
 
     } catch (error) {
       console.error('❌ Error in acquireYouTubeAccessTokenIfNeeded:', error);
     }
+  };
+
+  // Function to handle YouTube re-authorization with popup for API access
+  const handleYouTubeReauthorization = async () => {
+    try {
+      console.log('🔄 Starting YouTube re-authorization with popup...');
+
+      const { signInWithPopup } = await import('firebase/auth');
+      const { auth, googleProviderWithYouTube } = await import('@/lib/firebase');
+      const { setDoc, doc } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
+
+      // Use popup authentication to get access token
+      const result = await signInWithPopup(auth, googleProviderWithYouTube);
+
+      if (result.credential) {
+        const accessToken = (result.credential as any).accessToken;
+
+        if (accessToken) {
+          console.log('✅ Successfully obtained YouTube access token via popup');
+
+          // Save the token to the database
+          await setDoc(doc(db, 'users', user!.uid), {
+            youtubeAccessToken: accessToken,
+            youtubeTokenAcquiredAt: new Date(),
+            needsYouTubeTokenAcquisition: false // Clear the flag
+          }, { merge: true });
+
+          // Also store in localStorage for immediate use
+          localStorage.setItem('youtube_access_token', accessToken);
+
+          console.log('💾 YouTube access token saved, retrying video load...');
+
+          // Show success message
+          toast({
+            title: "✅ Authorization Complete",
+            description: "YouTube API access granted! Loading your videos...",
+            duration: 3000,
+          });
+
+          // Retry loading videos
+          setTimeout(() => loadVideos(), 1000);
+        } else {
+          throw new Error('No access token in popup result');
+        }
+      } else {
+        throw new Error('No credential returned from popup');
+      }
+    } catch (error) {
+      console.error('❌ YouTube re-authorization failed:', error);
+
+      toast({
+        title: "Authorization Failed",
+        description: error instanceof Error ? error.message : "Failed to authorize YouTube access. Please try again.",
+        duration: 5000,
+      });
+
+      // Fall back to demo videos
+      handleUseDemoVideos();
+    }
+  };
+
+  // Function to handle fallback to demo videos
+  const handleUseDemoVideos = () => {
+    console.log('🎭 Using demo videos as fallback');
+
+    // Create some demo videos for the user to select from
+    const demoVideos: Video[] = [
+      {
+        id: 'demo1',
+        title: 'Demo Video: Getting Started with WIZ',
+        thumbnail: 'https://via.placeholder.com/320x180?text=Demo+Video+1',
+        duration: '5:30',
+        views: '1.2K views',
+        publishedAt: '2 days ago',
+        description: 'This is a demo video to showcase the platform functionality.',
+        tags: ['demo', 'tutorial', 'getting-started'],
+        channelTitle: 'WIZ Demo Channel',
+        channelThumbnail: 'https://via.placeholder.com/40x40?text=WIZ',
+        channelId: 'demo_channel'
+      },
+      {
+        id: 'demo2',
+        title: 'Demo Video: Advanced Features',
+        thumbnail: 'https://via.placeholder.com/320x180?text=Demo+Video+2',
+        duration: '8:45',
+        views: '950 views',
+        publishedAt: '1 week ago',
+        description: 'Explore advanced features of the WIZ platform.',
+        tags: ['demo', 'advanced', 'features'],
+        channelTitle: 'WIZ Demo Channel',
+        channelThumbnail: 'https://via.placeholder.com/40x40?text=WIZ',
+        channelId: 'demo_channel'
+      }
+    ];
+
+    setVideos(demoVideos);
+
+    toast({
+      title: "Using Demo Videos",
+      description: "Demo videos loaded. Connect YouTube for your actual videos.",
+      duration: 4000,
+    });
   };
 
   // Original working YouTube OAuth connection using Firebase Auth
@@ -369,6 +440,23 @@ export const WizCreatePage = () => {
               localStorage.setItem('youtube_access_token', userData.youtubeAccessToken);
               youTubeAPI.setAccessToken(userData.youtubeAccessToken);
               console.log('📺 Retrieved and set YouTube access token from database');
+            } else if (userData?.needsYouTubeTokenAcquisition) {
+              console.log('🔄 User needs YouTube token re-authorization');
+
+              // Prompt user to complete authorization with popup that provides access token
+              const shouldReauthorize = confirm(
+                'YouTube API access is required to load your videos.\n\n' +
+                'Click OK to complete the authorization process, or Cancel to use demo videos.'
+              );
+
+              if (shouldReauthorize) {
+                console.log('🚀 Starting popup re-authorization for YouTube API access...');
+                await handleYouTubeReauthorization();
+                return; // Exit this function, will be called again after reauth
+              } else {
+                console.log('👤 User chose to skip, using demo videos');
+                throw new Error('YouTube authorization skipped by user');
+              }
             } else {
               console.error('❌ No youtubeAccessToken field in user document');
               throw new Error('No YouTube access token found in database');
