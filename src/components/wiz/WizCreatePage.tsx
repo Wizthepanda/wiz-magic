@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CreatorService, CreatorVideo } from '@/lib/creator-service';
 import { youTubeAPI, YouTubeChannelInfo, YouTubeVideo } from '@/lib/youtube-api';
+import { isYouTubeAPIEnabled } from '@/lib/feature-flags';
 import { CreationHub } from './CreationHub';
 
 interface Video {
