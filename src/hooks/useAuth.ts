@@ -175,10 +175,12 @@ export const useAuth = () => {
           setTimeout(() => reject(new Error('getRedirectResult timeout')), 5000);
         });
         
+        console.log('🔍 Calling getRedirectResult...');
         const result = await Promise.race([
           getRedirectResult(auth),
           timeoutPromise
         ]) as any;
+        console.log('🔍 getRedirectResult completed:', result ? 'got result' : 'null result');
         
         if (result) {
           console.log('✅ Redirect auth successful:', result.user.email);
@@ -210,6 +212,10 @@ export const useAuth = () => {
           if (wasYouTubeConnect || wasYouTubeReauth) {
             console.log('🔍 Detected YouTube OAuth attempt, checking credential...');
             console.log('🔍 Result credential:', result?.credential ? 'present' : 'null');
+            console.log('🔍 Result user:', result?.user ? 'present' : 'null');
+            console.log('🔍 Result object keys:', result ? Object.keys(result) : 'null result');
+            console.log('🔍 wasYouTubeConnect:', wasYouTubeConnect);
+            console.log('🔍 wasYouTubeReauth:', wasYouTubeReauth);
 
             if (result?.credential && isYouTubeAPIEnabled()) {
               try {
