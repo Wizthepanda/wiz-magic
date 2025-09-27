@@ -187,6 +187,7 @@ export const useAuth = () => {
           // Check if this was a YouTube authentication and redirect back to the Create page
           const redirectUrl = localStorage.getItem('wizxp_redirect_url');
           const wasYouTubeConnect = localStorage.getItem('wizxp_youtube_connect');
+          const wasYouTubeReauth = localStorage.getItem('wizxp_youtube_reauth');
 
           // Store navigation info but don't navigate yet if this is YouTube auth
           let pendingNavigation = null;
@@ -199,11 +200,14 @@ export const useAuth = () => {
             console.log('🎯 YouTube auth detected, will navigate to Create page after save');
             localStorage.removeItem('wizxp_redirect_url');
             pendingNavigation = '/?section=create';
+          } else if (wasYouTubeReauth) {
+            console.log('🎯 YouTube re-auth detected, will stay on Create page');
+            pendingNavigation = '/?section=create';
           }
           
           // Check if this was a YouTube OAuth
           let isYouTubeAuth = false;
-          if (wasYouTubeConnect) {
+          if (wasYouTubeConnect || wasYouTubeReauth) {
             console.log('🔍 Detected YouTube OAuth attempt, checking credential...');
             console.log('🔍 Result credential:', result?.credential ? 'present' : 'null');
 
@@ -258,9 +262,9 @@ export const useAuth = () => {
               }
             }
 
-            // If we have YouTube connect flag, mark as connected regardless
+            // If we have YouTube connect or reauth flag, mark as connected regardless
             // (The OAuth completed successfully if we got here)
-            if (wasYouTubeConnect) {
+            if (wasYouTubeConnect || wasYouTubeReauth) {
               isYouTubeAuth = true;
               console.log('📝 Marking YouTube as connected due to OAuth completion...');
               console.log('🔍 isYouTubeAPIEnabled():', isYouTubeAPIEnabled());
