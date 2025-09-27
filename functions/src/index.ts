@@ -13,13 +13,16 @@ if (getApps().length === 0) {
 // Export existing XP system functions
 export { awardXP, awardShareXP, awardReferralXP, dailyReset } from './xp-system';
 
-// Export new YouTube integration functions  
-export { 
-  syncYouTubeHistory, 
-  dailyYouTubeSync, 
+// Export new YouTube integration functions
+export {
+  syncYouTubeHistory,
+  dailyYouTubeSync,
   dailyYouTubeProfileSync,
   initializeYouTubeTracking 
 } from './youtube-xp-functions';
+
+// Export YouTube token exchange function
+export { exchangeYouTubeToken } from './youtube-token-exchange';
 
 // Export new WIZ XP system functions (milder progression curve)
 export {

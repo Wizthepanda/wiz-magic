@@ -229,30 +229,49 @@ export const useAuth = () => {
               }
             }
 
-            // If no access token from credential, try getting it from Firebase user
-            if (!accessToken && isYouTubeAPIEnabled() && result?.user) {
+            // If no access token from credential, try exchanging auth code via Cloud Function
+            if (!accessToken && isYouTubeAPIEnabled()) {
               try {
-                console.log('🔍 No access token in credential, trying to get fresh token...');
+                console.log('🔍 No access token in credential, checking URL for auth code...');
+                const urlParams = new URLSearchParams(window.location.search);
+                const authCode = urlParams.get('code');
+                const scope = urlParams.get('scope');
 
-                // Try to get a fresh access token using Firebase Auth
-                const authUser = result.user as any;
-                if (authUser.accessToken) {
-                  console.log('✅ Found access token in Firebase user object');
-                  accessToken = authUser.accessToken;
-                } else if (authUser.stsTokenManager?.accessToken) {
-                  console.log('✅ Found access token in Firebase token manager');
-                  accessToken = authUser.stsTokenManager.accessToken;
-                } else {
-                  console.log('🔍 Trying to get access token via getIdToken...');
-                  const idToken = await authUser.getIdToken(true);
-                  if (idToken) {
-                    console.log('✅ Got ID token, but we need access token for YouTube API');
-                    // For now, we'll mark as connected but without API access
-                    console.log('⚠️ Will mark as connected but user will need to re-authorize for API access');
+                console.log('🔍 Auth code from URL:', authCode ? 'present' : 'null');
+                console.log('🔍 Scope from URL:', scope);
+
+                if (authCode && scope && scope.includes('youtube.readonly')) {
+                  console.log('📺 Found YouTube auth code, exchanging for access token via Cloud Function...');
+
+                  // Call our Cloud Function to exchange the auth code for access token
+                  const response = await fetch('https://us-central1-wiz-magic-platform.cloudfunctions.net/exchangeYouTubeToken', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      code: authCode,
+                      redirectUri: window.location.origin + '/__/auth/handler',
+                    }),
+                  });
+
+                  if (response.ok) {
+                    const tokenData = await response.json();
+                    accessToken = tokenData.access_token;
+                    console.log('✅ Successfully exchanged auth code for access token via Cloud Function');
+
+                    // Clear URL parameters to prevent reuse
+                    const cleanUrl = window.location.origin + window.location.pathname;
+                    window.history.replaceState({}, document.title, cleanUrl);
+                  } else {
+                    const errorData = await response.json();
+                    console.error('❌ Failed to exchange auth code via Cloud Function:', errorData);
                   }
+                } else {
+                  console.log('⚠️ No valid YouTube auth code found in URL');
                 }
               } catch (error) {
-                console.error('❌ Error getting access token from Firebase user:', error);
+                console.error('❌ Error exchanging auth code via Cloud Function:', error);
               }
             }
 
