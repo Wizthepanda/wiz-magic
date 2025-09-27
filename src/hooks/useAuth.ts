@@ -217,51 +217,83 @@ export const useAuth = () => {
             console.log('🔍 wasYouTubeConnect:', wasYouTubeConnect);
             console.log('🔍 wasYouTubeReauth:', wasYouTubeReauth);
 
+            // Try to get access token from credential first, then fallback to URL params
+            let accessToken = null;
+
             if (result?.credential && isYouTubeAPIEnabled()) {
               try {
-                const accessToken = (result.credential as any).accessToken;
-                console.log('🔍 Access token:', accessToken ? 'present' : 'null');
+                accessToken = (result.credential as any).accessToken;
+                console.log('🔍 Access token from credential:', accessToken ? 'present' : 'null');
+              } catch (error) {
+                console.log('⚠️ Error extracting access token from credential:', error);
+              }
+            }
 
-                if (accessToken) {
-                  console.log('📺 Detected YouTube OAuth with access token, storing and fetching channel info...');
+            // If no access token from credential, try getting it from Firebase user
+            if (!accessToken && isYouTubeAPIEnabled() && result?.user) {
+              try {
+                console.log('🔍 No access token in credential, trying to get fresh token...');
 
-                  // Store access token for later use
-                  localStorage.setItem('youtube_access_token', accessToken);
-                  console.log('💾 Access token stored for API calls');
-
-                  // Fetch YouTube channel information to confirm connection
-                  const channelInfo = await youTubeAPI.getChannelInfo(accessToken);
-                  if (channelInfo) {
-                    console.log('✅ Successfully fetched YouTube channel:', channelInfo.name);
-                    isYouTubeAuth = true;
-
-                    // Store YouTube profile data
-                    const youtubeProfile = {
-                      channelId: channelInfo.id,
-                      channelTitle: channelInfo.name,
-                      description: channelInfo.description || '',
-                      thumbnailUrl: channelInfo.avatar || '',
-                      subscriberCount: channelInfo.subscriberCount || '0',
-                      customUrl: channelInfo.customUrl || '',
-                      bannerImageUrl: channelInfo.bannerImageUrl || '',
-                      lastSynced: new Date(),
-                    };
-
-                    // Save YouTube profile data with access token
-                    await setDoc(doc(db, 'users', user.uid), {
-                      youtubeConnected: true,
-                      youtubeProfile: youtubeProfile,
-                      youtubeAccessToken: accessToken, // Store in database too
-                      displayName: user.displayName || channelInfo.name,
-                      photoURL: user.photoURL || channelInfo.avatar,
-                    }, { merge: true });
-
-                    console.log('✅ YouTube connection, profile, and access token saved');
-                  } else {
-                    console.warn('⚠️ No channel info returned from YouTube API');
-                  }
+                // Try to get a fresh access token using Firebase Auth
+                const authUser = result.user as any;
+                if (authUser.accessToken) {
+                  console.log('✅ Found access token in Firebase user object');
+                  accessToken = authUser.accessToken;
+                } else if (authUser.stsTokenManager?.accessToken) {
+                  console.log('✅ Found access token in Firebase token manager');
+                  accessToken = authUser.stsTokenManager.accessToken;
                 } else {
-                  console.warn('⚠️ No access token in credential');
+                  console.log('🔍 Trying to get access token via getIdToken...');
+                  const idToken = await authUser.getIdToken(true);
+                  if (idToken) {
+                    console.log('✅ Got ID token, but we need access token for YouTube API');
+                    // For now, we'll mark as connected but without API access
+                    console.log('⚠️ Will mark as connected but user will need to re-authorize for API access');
+                  }
+                }
+              } catch (error) {
+                console.error('❌ Error getting access token from Firebase user:', error);
+              }
+            }
+
+            if (accessToken) {
+              try {
+                console.log('📺 Got access token, storing and fetching channel info...');
+
+                // Store access token for later use
+                localStorage.setItem('youtube_access_token', accessToken);
+                console.log('💾 Access token stored for API calls');
+
+                // Fetch YouTube channel information to confirm connection
+                const channelInfo = await youTubeAPI.getChannelInfo(accessToken);
+                if (channelInfo) {
+                  console.log('✅ Successfully fetched YouTube channel:', channelInfo.name);
+                  isYouTubeAuth = true;
+
+                  // Store YouTube profile data
+                  const youtubeProfile = {
+                    channelId: channelInfo.id,
+                    channelTitle: channelInfo.name,
+                    description: channelInfo.description || '',
+                    thumbnailUrl: channelInfo.avatar || '',
+                    subscriberCount: channelInfo.subscriberCount || '0',
+                    customUrl: channelInfo.customUrl || '',
+                    bannerImageUrl: channelInfo.bannerImageUrl || '',
+                    lastSynced: new Date(),
+                  };
+
+                  // Save YouTube profile data with access token
+                  await setDoc(doc(db, 'users', user.uid), {
+                    youtubeConnected: true,
+                    youtubeProfile: youtubeProfile,
+                    youtubeAccessToken: accessToken, // Store in database too
+                    displayName: user.displayName || channelInfo.name,
+                    photoURL: user.photoURL || channelInfo.avatar,
+                  }, { merge: true });
+
+                  console.log('✅ YouTube connection, profile, and access token saved');
+                } else {
+                  console.warn('⚠️ No channel info returned from YouTube API');
                 }
               } catch (error) {
                 console.warn('⚠️ Failed to fetch YouTube profile data:', error);
