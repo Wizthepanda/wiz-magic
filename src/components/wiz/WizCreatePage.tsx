@@ -127,6 +127,7 @@ export const WizCreatePage = () => {
 
   // Course creation state
   const [courseStep, setCourseStep] = useState(1);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [showLessonModal, setShowLessonModal] = useState(false);
   const [newLessonData, setNewLessonData] = useState({
     title: '',
@@ -173,6 +174,7 @@ export const WizCreatePage = () => {
 
       // Check if user was connecting to YouTube (stored in localStorage during redirect)
       const wasConnecting = localStorage.getItem('wizxp_youtube_connect');
+      const wasReauthorizing = localStorage.getItem('wizxp_youtube_reauth');
 
       if (wasConnecting && user?.youtubeConnected) {
         console.log('🎉 Detected successful YouTube connection after redirect');
@@ -192,6 +194,27 @@ export const WizCreatePage = () => {
 
         // Continue to step 2 and load videos
         setCurrentStep(2);
+        loadVideos();
+      } else if (wasReauthorizing && user?.youtubeConnected) {
+        console.log('🎉 Detected successful YouTube re-authorization after redirect');
+
+        // Clear the flag
+        localStorage.removeItem('wizxp_youtube_reauth');
+
+        // Check for access token in the redirect result
+        await handlePostRedirectTokenAcquisition();
+
+        // Hide auth prompt if it was showing
+        setShowAuthPrompt(false);
+
+        // Show success message
+        toast({
+          title: "✅ Re-authorization Complete!",
+          description: "YouTube API access granted! Loading your videos...",
+          duration: 3000,
+        });
+
+        // Retry loading videos
         loadVideos();
       } else if (user?.youtubeConnected) {
         console.log('✅ User already has YouTube connected, proceeding to video selection');
@@ -243,52 +266,20 @@ export const WizCreatePage = () => {
     }
   };
 
-  // Function to handle YouTube re-authorization with popup for API access
+  // Function to handle YouTube re-authorization with redirect for API access
   const handleYouTubeReauthorization = async () => {
     try {
-      console.log('🔄 Starting YouTube re-authorization with popup...');
+      console.log('🔄 Starting YouTube re-authorization with redirect...');
 
-      const { signInWithPopup } = await import('firebase/auth');
+      const { signInWithRedirect } = await import('firebase/auth');
       const { auth, googleProviderWithYouTube } = await import('@/lib/firebase');
-      const { setDoc, doc } = await import('firebase/firestore');
-      const { db } = await import('@/lib/firebase');
 
-      // Use popup authentication to get access token
-      const result = await signInWithPopup(auth, googleProviderWithYouTube);
+      // Set a flag to indicate we're doing reauthorization for tokens
+      localStorage.setItem('wizxp_youtube_reauth', 'true');
 
-      if (result.credential) {
-        const accessToken = (result.credential as any).accessToken;
-
-        if (accessToken) {
-          console.log('✅ Successfully obtained YouTube access token via popup');
-
-          // Save the token to the database
-          await setDoc(doc(db, 'users', user!.uid), {
-            youtubeAccessToken: accessToken,
-            youtubeTokenAcquiredAt: new Date(),
-            needsYouTubeTokenAcquisition: false // Clear the flag
-          }, { merge: true });
-
-          // Also store in localStorage for immediate use
-          localStorage.setItem('youtube_access_token', accessToken);
-
-          console.log('💾 YouTube access token saved, retrying video load...');
-
-          // Show success message
-          toast({
-            title: "✅ Authorization Complete",
-            description: "YouTube API access granted! Loading your videos...",
-            duration: 3000,
-          });
-
-          // Retry loading videos
-          setTimeout(() => loadVideos(), 1000);
-        } else {
-          throw new Error('No access token in popup result');
-        }
-      } else {
-        throw new Error('No credential returned from popup');
-      }
+      // Use redirect authentication to get access token
+      await signInWithRedirect(auth, googleProviderWithYouTube);
+      // The redirect will handle the rest - user will return to the page after auth
     } catch (error) {
       console.error('❌ YouTube re-authorization failed:', error);
 
@@ -300,6 +291,47 @@ export const WizCreatePage = () => {
 
       // Fall back to demo videos
       handleUseDemoVideos();
+    }
+  };
+
+  // Function to handle token acquisition after redirect
+  const handlePostRedirectTokenAcquisition = async () => {
+    try {
+      console.log('🔍 Checking for YouTube access token after redirect...');
+
+      const { getRedirectResult } = await import('firebase/auth');
+      const { auth } = await import('@/lib/firebase');
+      const { setDoc, doc } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
+
+      // Get the redirect result which should contain the access token
+      const result = await getRedirectResult(auth);
+
+      if (result?.credential) {
+        const accessToken = (result.credential as any).accessToken;
+
+        if (accessToken) {
+          console.log('✅ Successfully obtained YouTube access token via redirect');
+
+          // Save the token to the database
+          await setDoc(doc(db, 'users', user!.uid), {
+            youtubeAccessToken: accessToken,
+            youtubeTokenAcquiredAt: new Date(),
+            needsYouTubeTokenAcquisition: false // Clear the flag
+          }, { merge: true });
+
+          // Also store in localStorage for immediate use
+          localStorage.setItem('youtube_access_token', accessToken);
+
+          console.log('💾 YouTube access token saved successfully');
+        } else {
+          console.log('⚠️ No access token found in redirect result');
+        }
+      } else {
+        console.log('⚠️ No credential found in redirect result');
+      }
+    } catch (error) {
+      console.error('❌ Error handling post-redirect token acquisition:', error);
     }
   };
 
@@ -443,21 +475,10 @@ export const WizCreatePage = () => {
               console.log('📺 Retrieved and set YouTube access token from database');
             } else if (userData?.needsYouTubeTokenAcquisition) {
               console.log('🔄 User needs YouTube token re-authorization');
-
-              // Prompt user to complete authorization with popup that provides access token
-              const shouldReauthorize = confirm(
-                'YouTube API access is required to load your videos.\n\n' +
-                'Click OK to complete the authorization process, or Cancel to use demo videos.'
-              );
-
-              if (shouldReauthorize) {
-                console.log('🚀 Starting popup re-authorization for YouTube API access...');
-                await handleYouTubeReauthorization();
-                return; // Exit this function, will be called again after reauth
-              } else {
-                console.log('👤 User chose to skip, using demo videos');
-                throw new Error('YouTube authorization skipped by user');
-              }
+              // Show UI prompt instead of automatic popup (which gets blocked)
+              setShowAuthPrompt(true);
+              setIsLoadingVideos(false);
+              return;
             } else {
               console.error('❌ No youtubeAccessToken field in user document');
               throw new Error('No YouTube access token found in database');
@@ -808,6 +829,52 @@ export const WizCreatePage = () => {
           onPublishToWiz={publishToWiz}
           toast={toast}
         />
+
+        {/* YouTube Re-authorization Prompt */}
+        {showAuthPrompt && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl">
+              <div className="text-center">
+                <div className="mb-4">
+                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    YouTube API Access Required
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    To load your YouTube videos, we need additional API permissions.
+                    This requires a quick re-authorization step.
+                  </p>
+                </div>
+
+                <div className="flex flex-col space-y-3">
+                  <button
+                    onClick={handleYouTubeReauthorization}
+                    className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-3 px-4 rounded-lg font-semibold hover:from-red-600 hover:to-red-700 transition-all duration-200 flex items-center justify-center space-x-2"
+                  >
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                    <span>Authorize YouTube Access</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setShowAuthPrompt(false);
+                      handleUseDemoVideos();
+                    }}
+                    className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-semibold hover:bg-gray-200 transition-all duration-200"
+                  >
+                    Use Demo Videos Instead
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
