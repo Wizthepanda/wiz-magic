@@ -639,8 +639,10 @@ export class CreatorService {
           contentType: video.contentType,
           creatorId: video.creatorId,
           channelId: video.channelId,
-          channelName: creatorProfile?.channelName || 'Unknown Creator',
-          channelAvatar: creatorProfile?.channelAvatar || '',
+          channelName: creatorProfile?.name || creatorProfile?.channelName || 'Unknown Creator',
+          channelAvatar: creatorProfile?.avatar || creatorProfile?.channelAvatar || '',
+          creatorName: creatorProfile?.name || creatorProfile?.channelName || 'Unknown Creator',
+          creatorAvatar: creatorProfile?.avatar || creatorProfile?.channelAvatar || '',
           isCreatorContent: true,
           publishedAt: video.publishedAt,
           addedToWiz: isMigration ? existingVideo.addedToWiz : serverTimestamp(),
@@ -650,6 +652,7 @@ export class CreatorService {
         };
 
         console.log(`📺 Preparing to save video "${video.title}" to videos collection:`, discoverVideoData);
+        console.log(`🔍 Video ID: ${video.videoId}, Category: ${discoverVideoData.category}, Creator: ${discoverVideoData.channelName}`);
         batch.push(setDoc(discoverVideoRef, discoverVideoData));
       }
 

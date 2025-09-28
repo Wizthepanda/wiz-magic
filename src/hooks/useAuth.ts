@@ -175,6 +175,13 @@ export const useAuth = () => {
           setTimeout(() => reject(new Error('getRedirectResult timeout')), 5000);
         });
         
+        // Capture URL parameters BEFORE getRedirectResult clears them
+        const urlParams = new URLSearchParams(window.location.search);
+        const authCode = urlParams.get('code');
+        const scope = urlParams.get('scope');
+        console.log('🔍 Pre-redirect URL params - Auth code:', authCode ? 'present' : 'null');
+        console.log('🔍 Pre-redirect URL params - Scope:', scope);
+
         console.log('🔍 Calling getRedirectResult...');
         const result = await Promise.race([
           getRedirectResult(auth),
@@ -214,6 +221,10 @@ export const useAuth = () => {
             console.log('🔍 Result credential:', result?.credential ? 'present' : 'null');
             console.log('🔍 Result user:', result?.user ? 'present' : 'null');
             console.log('🔍 Result object keys:', result ? Object.keys(result) : 'null result');
+            console.log('🔍 Result _tokenResponse:', result?._tokenResponse ? 'present' : 'null');
+            if (result?._tokenResponse) {
+              console.log('🔍 _tokenResponse keys:', Object.keys(result._tokenResponse));
+            }
             console.log('🔍 wasYouTubeConnect:', wasYouTubeConnect);
             console.log('🔍 wasYouTubeReauth:', wasYouTubeReauth);
 
@@ -229,18 +240,34 @@ export const useAuth = () => {
               }
             }
 
+            // Also check _tokenResponse for oauthAccessToken
+            if (!accessToken && result?._tokenResponse?.oauthAccessToken && isYouTubeAPIEnabled()) {
+              accessToken = result._tokenResponse.oauthAccessToken;
+              console.log('🔍 Access token from _tokenResponse:', accessToken ? 'present' : 'null');
+            }
+
             // If no access token from credential, try exchanging auth code via Cloud Function
             if (!accessToken && isYouTubeAPIEnabled()) {
               try {
-                console.log('🔍 No access token in credential, checking URL for auth code...');
-                const urlParams = new URLSearchParams(window.location.search);
-                const authCode = urlParams.get('code');
-                const scope = urlParams.get('scope');
+                console.log('🔍 No access token in credential, checking for auth code...');
 
-                console.log('🔍 Auth code from URL:', authCode ? 'present' : 'null');
-                console.log('🔍 Scope from URL:', scope);
+                // Try to get auth code from _tokenResponse first, then URL params
+                let authCodeToUse = null;
+                let scopeToUse = null;
 
-                if (authCode && scope && scope.includes('youtube.readonly')) {
+                if (result?._tokenResponse?.oauthAuthorizationCode) {
+                  authCodeToUse = result._tokenResponse.oauthAuthorizationCode;
+                  scopeToUse = result._tokenResponse.scope;
+                  console.log('🔍 Auth code from _tokenResponse:', authCodeToUse ? 'present' : 'null');
+                  console.log('🔍 Scope from _tokenResponse:', scopeToUse);
+                } else {
+                  authCodeToUse = authCode;
+                  scopeToUse = scope;
+                  console.log('🔍 Auth code from captured params:', authCodeToUse ? 'present' : 'null');
+                  console.log('🔍 Scope from captured params:', scopeToUse);
+                }
+
+                if (authCodeToUse && scopeToUse && scopeToUse.includes('youtube.readonly')) {
                   console.log('📺 Found YouTube auth code, exchanging for access token via Cloud Function...');
 
                   // Call our Cloud Function to exchange the auth code for access token
@@ -250,7 +277,7 @@ export const useAuth = () => {
                       'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                      code: authCode,
+                      code: authCodeToUse,
                       redirectUri: window.location.origin + '/__/auth/handler',
                     }),
                   });
@@ -308,6 +335,9 @@ export const useAuth = () => {
                     youtubeAccessToken: accessToken, // Store in database too
                     displayName: user.displayName || channelInfo.name,
                     photoURL: user.photoURL || channelInfo.avatar,
+                    needsYouTubeTokenAcquisition: false, // Clear any pending flag
+                    youtubeTokenAcquiredAt: new Date(),
+                    lastYouTubeAuth: new Date(),
                   }, { merge: true });
 
                   console.log('✅ YouTube connection, profile, and access token saved');

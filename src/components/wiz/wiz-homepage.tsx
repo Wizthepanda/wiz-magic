@@ -461,7 +461,7 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
         try {
           // First try to get featured videos if they exist
           const featuredQuery = query(
-            collection(db, 'creatorVideos'),
+            collection(db, 'videos'),
             where('isFeatured', '==', true),
             limit(4)
           );
@@ -475,7 +475,7 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
         if (!snapshot || snapshot.empty) {
           try {
             const recentQuery = query(
-              collection(db, 'creatorVideos'),
+              collection(db, 'videos'),
               where('status', '==', 'active'),
               limit(4)
             );
@@ -484,7 +484,7 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
             // console.log('⚠️ Recent query failed, trying any videos');
             // Last resort: get any videos
             const anyQuery = query(
-              collection(db, 'creatorVideos'),
+              collection(db, 'videos'),
               limit(4)
             );
             snapshot = await getDocs(anyQuery);
@@ -527,9 +527,18 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
             });
           });
 
+          console.log(`📊 Processed ${videos.length} videos from database`);
           if (videos.length > 0) {
-            // console.log(`✅ Loaded ${videos.length} real videos for homepage`);
+            console.log(`✅ Loaded ${videos.length} real videos for homepage:`, videos.map(v => ({
+              id: v.id,
+              title: v.title,
+              creator: v.creator,
+              category: v.category
+            })));
             setShowcaseItems(videos);
+            console.log('🎯 Called setShowcaseItems with videos');
+          } else {
+            console.log('⚠️ No videos to display - videos array is empty');
           }
         }
       } catch (error) {
@@ -540,6 +549,16 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
 
     loadFeaturedVideos();
   }, []);
+
+  // Debug: Track showcaseItems state changes
+  useEffect(() => {
+    console.log('🔄 showcaseItems state changed:', showcaseItems.map(item => ({
+      title: item.title,
+      creator: item.creator,
+      id: item.id || 'no-id',
+      hasVideoId: !!item.videoId
+    })));
+  }, [showcaseItems]);
 
   const scrollCarousel = (direction: 'left' | 'right') => {
     if (carouselRef.current) {
@@ -1572,7 +1591,16 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
                 scrollBehavior: 'smooth'
               }}
             >
-              {showcaseItems.map((item, index) => (
+              {showcaseItems.map((item, index) => {
+                // Debug: Log what's being rendered
+                if (index === 0) {
+                  console.log('🎨 Rendering showcaseItems:', showcaseItems.map(i => ({
+                    title: i.title,
+                    creator: i.creator,
+                    id: i.id || 'no-id'
+                  })));
+                }
+                return (
                 <motion.div
                   key={index}
                   className="group cursor-pointer flex-shrink-0 w-80 snap-start"

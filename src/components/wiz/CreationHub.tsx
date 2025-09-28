@@ -214,23 +214,29 @@ const YouTubeConnectFlow = ({
 }: YouTubeConnectFlowProps) => {
   // Determine current step based on state
   const getCurrentStep = () => {
-    if (isPublishing || (selectedVideos.length > 0 && videos.length > 0)) return 3;
     if (isLoadingVideos || videos.length > 0 || channelInfo) return 2;
     return 1;
   };
 
-  const [currentStep, setCurrentStep] = useState(getCurrentStep());
+  const [currentStep, setCurrentStep] = useState(() => {
+    // Only automatically set initial step, don't override manual progression
+    if (videos.length > 0 || channelInfo) return 2;
+    return 1;
+  });
 
-  // Update step when props change
+  // Only update step automatically for the initial load, not during user interaction
   React.useEffect(() => {
-    const newStep = getCurrentStep();
-    setCurrentStep(newStep);
-  }, [channelInfo, videos, selectedVideos, isLoadingVideos, isPublishing]);
+    // Only auto-advance to step 2 if we're still on step 1 and have loaded videos
+    if (currentStep === 1 && (videos.length > 0 || channelInfo)) {
+      setCurrentStep(2);
+    }
+  }, [channelInfo, videos, currentStep]);
 
   const stepTitles = [
     { number: 1, title: 'Connect', subtitle: 'YouTube Channel' },
     { number: 2, title: 'Select', subtitle: 'Your Videos' },
-    { number: 3, title: 'Publish', subtitle: 'To WIZ' }
+    { number: 3, title: 'Publish', subtitle: 'To WIZ' },
+    { number: 4, title: 'Success', subtitle: 'All Done!' }
   ];
 
   const handleConnect = async () => {
@@ -533,7 +539,17 @@ const YouTubeConnectFlow = ({
                       ? 'w-full px-8 py-3 text-base'
                       : 'px-12 py-3'
                   }`}
-                  onClick={onProceedToCategorize}
+                  onClick={() => {
+                    if (selectedVideos.length === 0) {
+                      toast?.({
+                        title: "No Videos Selected",
+                        description: "Please select at least one video to continue.",
+                        duration: 3000,
+                      });
+                      return;
+                    }
+                    setCurrentStep(3);
+                  }}
                   disabled={selectedVideos.length === 0}
                 >
                   Continue to Categorize ({selectedVideos.length})
@@ -589,18 +605,16 @@ const YouTubeConnectFlow = ({
                             </SelectTrigger>
                             <SelectContent>
                               {[
-                                { value: 'gaming', label: 'Gaming' },
-                                { value: 'ai', label: 'AI' },
+                                { value: 'all', label: 'All' },
                                 { value: 'tech', label: 'Tech' },
-                                { value: 'music', label: 'Music' },
-                                { value: 'health', label: 'Health' },
                                 { value: 'money', label: 'Money' },
-                                { value: 'podcast', label: 'Podcasts' },
-                                { value: 'art', label: 'Art' },
-                                { value: 'fashion', label: 'Fashion' },
-                                { value: 'relationships', label: 'Relationships' },
+                                { value: 'design', label: 'Design' },
+                                { value: 'business', label: 'Business' },
+                                { value: 'health', label: 'Health' },
+                                { value: 'self-improvement', label: 'Self Improvement' },
+                                { value: 'education', label: 'Education' },
+                                { value: 'gaming', label: 'Gaming' },
                                 { value: 'lifestyle', label: 'Lifestyle' },
-                                { value: 'movie', label: 'Movie' },
                               ].map(cat => (
                                 <SelectItem key={cat.value} value={cat.value}>
                                   {cat.label}
@@ -626,7 +640,14 @@ const YouTubeConnectFlow = ({
                       ? 'w-full px-8 py-4 text-lg'
                       : 'px-16 py-4 text-xl'
                   }`}
-                  onClick={onPublishToWiz}
+                  onClick={async () => {
+                    // Call the publish function and advance to success screen
+                    if (onPublishToWiz) {
+                      await onPublishToWiz();
+                      // Advance to step 4 (success screen) after publishing
+                      setCurrentStep(4);
+                    }
+                  }}
                   disabled={isPublishing}
                 >
                   {isPublishing ? (
@@ -640,6 +661,138 @@ const YouTubeConnectFlow = ({
                       <span>Publish to WIZ</span>
                     </div>
                   )}
+                </Button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Step 4: Success Screen */}
+          {currentStep === 4 && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center space-y-8"
+            >
+              {/* Confetti Animation */}
+              <motion.div
+                className="relative"
+                animate={{
+                  scale: [1, 1.2, 1],
+                  rotate: [0, 10, -10, 0]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                <div className="w-32 h-32 mx-auto mb-6 relative">
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center"
+                    animate={{
+                      boxShadow: [
+                        '0 0 20px rgba(34, 197, 94, 0.3)',
+                        '0 0 40px rgba(34, 197, 94, 0.6)',
+                        '0 0 20px rgba(34, 197, 94, 0.3)'
+                      ]
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  >
+                    <Trophy className="w-16 h-16 text-white" />
+                  </motion.div>
+
+                  {/* Floating Confetti */}
+                  {[...Array(8)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute w-4 h-4 bg-yellow-400 rounded-full"
+                      animate={{
+                        y: [-20, -60, -20],
+                        x: [0, (i % 2 === 0 ? 30 : -30), 0],
+                        rotate: [0, 360],
+                        opacity: [1, 0.5, 1]
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        delay: i * 0.2,
+                        ease: "easeInOut"
+                      }}
+                      style={{
+                        left: `${20 + (i * 10)}%`,
+                        top: '50%'
+                      }}
+                    />
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Success Message */}
+              <div className="space-y-6">
+                <motion.h2
+                  className="text-4xl font-bold text-green-600 dark:text-green-400"
+                  animate={{
+                    scale: [1, 1.05, 1]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  🎉 Successfully Published!
+                </motion.h2>
+                <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                  Your {selectedVideos.length} video{selectedVideos.length !== 1 ? 's have' : ' has'} been published to WIZ Discover!
+                  They will now be available for the community to explore and engage with.
+                </p>
+
+                {/* Stats */}
+                <div className="flex justify-center space-x-8 mt-8">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-purple-600">{selectedVideos.length}</div>
+                    <div className="text-sm text-gray-500">Videos Published</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600">∞</div>
+                    <div className="text-sm text-gray-500">Potential Views</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">+XP</div>
+                    <div className="text-sm text-gray-500">Creator Rewards</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300"
+                  onClick={() => {
+                    // Navigate to main page where discover content is shown
+                    window.location.href = '/';
+                  }}
+                >
+                  <ExternalLink className="w-5 h-5 mr-2" />
+                  View on Discover
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="px-8 py-3"
+                  onClick={() => {
+                    // Reset to step 1 for publishing more videos
+                    setCurrentStep(1);
+                  }}
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Publish More Videos
                 </Button>
               </div>
             </motion.div>

@@ -34,18 +34,16 @@ interface SelectedVideo extends Video {
 type ChannelInfo = YouTubeChannelInfo;
 
 const categories = [
-  { value: 'gaming', label: 'Gaming' },
-  { value: 'ai', label: 'AI' },
+  { value: 'all', label: 'All' },
   { value: 'tech', label: 'Tech' },
-  { value: 'music', label: 'Music' },
-  { value: 'health', label: 'Health' },
   { value: 'money', label: 'Money' },
-  { value: 'podcast', label: 'Podcasts' },
-  { value: 'art', label: 'Art' },
-  { value: 'fashion', label: 'Fashion' },
-  { value: 'relationships', label: 'Relationships' },
+  { value: 'design', label: 'Design' },
+  { value: 'business', label: 'Business' },
+  { value: 'health', label: 'Health' },
+  { value: 'self-improvement', label: 'Self Improvement' },
+  { value: 'education', label: 'Education' },
+  { value: 'gaming', label: 'Gaming' },
   { value: 'lifestyle', label: 'Lifestyle' },
-  { value: 'movie', label: 'Movie' },
 ];
 
 // Helper function to detect if video is a short based on duration
@@ -218,6 +216,45 @@ export const WizCreatePage = () => {
         loadVideos();
       } else if (user?.youtubeConnected) {
         console.log('✅ User already has YouTube connected, proceeding to video selection');
+
+        // Load channel info from user's YouTube profile data
+        try {
+          const { getDoc, doc } = await import('firebase/firestore');
+          const { db } = await import('@/lib/firebase');
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          const userData = userDoc.data();
+
+          if (userData?.youtubeProfile) {
+            console.log('📺 Loading channel info from stored profile:', userData.youtubeProfile);
+            const channelInfo: ChannelInfo = {
+              id: userData.youtubeProfile.channelId || userData.uid,
+              name: userData.youtubeProfile.channelTitle || userData.displayName || 'Unknown Creator',
+              description: userData.youtubeProfile.description || '',
+              avatar: userData.youtubeProfile.thumbnailUrl || userData.photoURL || '',
+              subscriberCount: userData.youtubeProfile.subscriberCount || '0',
+              customUrl: userData.youtubeProfile.customUrl || '',
+              bannerImageUrl: userData.youtubeProfile.bannerImageUrl || ''
+            };
+            setChannelInfo(channelInfo);
+            console.log('✅ Channel info loaded successfully:', channelInfo.name);
+            console.log('🔍 Channel info details:', {
+              id: channelInfo.id,
+              name: channelInfo.name,
+              avatar: channelInfo.avatar
+            });
+          } else {
+            console.log('⚠️ No YouTube profile found in user data, will fetch from API');
+            // Fallback: try to get channel info from YouTube API
+            const channelInfo = await youTubeAPI.getChannelInfo();
+            if (channelInfo) {
+              setChannelInfo(channelInfo);
+              console.log('✅ Channel info fetched from API:', channelInfo.name);
+            }
+          }
+        } catch (error) {
+          console.error('❌ Error loading channel info:', error);
+        }
+
         setCurrentStep(2);
         loadVideos();
       } else {
@@ -479,6 +516,21 @@ export const WizCreatePage = () => {
               setShowAuthPrompt(true);
               setIsLoadingVideos(false);
               return;
+            } else if (userData?.youtubeConnected) {
+              // User is marked as connected but has no access token - set flag for reauth
+              console.log('🔄 User marked as YouTube connected but missing access token - setting reauth flag');
+              const { setDoc, doc } = await import('firebase/firestore');
+              const { db } = await import('@/lib/firebase');
+
+              await setDoc(doc(db, 'users', user.uid), {
+                needsYouTubeTokenAcquisition: true,
+                lastTokenAttempt: new Date(),
+                tokenAcquisitionReason: 'Connected but missing access token'
+              }, { merge: true });
+
+              setShowAuthPrompt(true);
+              setIsLoadingVideos(false);
+              return;
             } else {
               console.error('❌ No youtubeAccessToken field in user document');
               throw new Error('No YouTube access token found in database');
@@ -514,8 +566,43 @@ export const WizCreatePage = () => {
       }));
 
       setVideos(convertedVideos);
+
+      // Load channel info if not already loaded
+      if (!channelInfo && user?.uid) {
+        try {
+          const { getDoc, doc } = await import('firebase/firestore');
+          const { db } = await import('@/lib/firebase');
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          const userData = userDoc.data();
+          if (userData?.youtubeProfile) {
+            console.log('📺 Loading channel info from stored profile:', userData.youtubeProfile);
+            const loadedChannelInfo: ChannelInfo = {
+              id: userData.youtubeProfile.channelId || user.uid,
+              name: userData.youtubeProfile.channelTitle || user.displayName || 'Unknown Creator',
+              description: userData.youtubeProfile.description || '',
+              avatar: userData.youtubeProfile.thumbnailUrl || user.photoURL || '',
+              subscriberCount: userData.youtubeProfile.subscriberCount || '0',
+              customUrl: userData.youtubeProfile.customUrl || '',
+              bannerImageUrl: userData.youtubeProfile.bannerImageUrl || ''
+            };
+            setChannelInfo(loadedChannelInfo);
+            console.log('✅ Channel info loaded successfully:', loadedChannelInfo.name);
+          } else {
+            console.log('⚠️ No YouTube profile found in user data, fetching from API...');
+            // Fallback: try to get channel info from YouTube API
+            const apiChannelInfo = await youTubeAPI.getChannelInfo();
+            if (apiChannelInfo) {
+              setChannelInfo(apiChannelInfo);
+              console.log('✅ Channel info fetched from API:', apiChannelInfo.name);
+            }
+          }
+        } catch (error) {
+          console.error('❌ Error loading channel info:', error);
+        }
+      }
+
       setIsLoadingVideos(false);
-      
+
       toast({
         title: "Videos Loaded!",
         description: `Found ${convertedVideos.length} videos from your channel.`,
@@ -539,8 +626,9 @@ export const WizCreatePage = () => {
 
   const toggleVideoSelection = (video: Video) => {
     const isSelected = selectedVideos.some(v => v.id === video.id);
-    
+
     if (isSelected) {
+      console.log('🔄 Deselecting video:', video.title);
       setSelectedVideos(prev => prev.filter(v => v.id !== video.id));
       // Remove content type when deselecting
       setVideoContentTypes(prev => {
@@ -549,25 +637,46 @@ export const WizCreatePage = () => {
         return updated;
       });
     } else {
+      // Check if we've reached the 30 video limit
+      if (selectedVideos.length >= 30) {
+        toast({
+          title: "Maximum Videos Reached",
+          description: "You can select up to 30 videos maximum. Please deselect some videos first.",
+          duration: 5000,
+        });
+        return;
+      }
+
+      console.log('✅ Selecting video:', video.title, `(${selectedVideos.length + 1}/30)`);
+
       // Auto-detect category based on title/description
       const autoCategory = detectCategory(video.title + ' ' + (video.description || ''));
       // Auto-detect content type based on duration
       const autoContentType = detectContentType(video.duration);
-      
+
       const selectedVideo: SelectedVideo = {
         ...video,
         category: autoCategory,
         contentType: autoContentType
       };
-      
+
       setSelectedVideos(prev => [...prev, selectedVideo]);
-      
+
       // Set auto-detected content type if available
       if (autoContentType) {
         setVideoContentTypes(prev => ({
           ...prev,
           [video.id]: autoContentType
         }));
+      }
+
+      // Show helpful feedback when approaching limit
+      if (selectedVideos.length + 1 === 25) {
+        toast({
+          title: "Approaching Limit",
+          description: "You can select 5 more videos (30 max).",
+          duration: 3000,
+        });
       }
     }
   };
@@ -632,8 +741,17 @@ export const WizCreatePage = () => {
   };
 
   const publishToWiz = async () => {
-    if (!user?.uid || !channelInfo) return;
+    console.log('🚀 publishToWiz function called!');
+    console.log('👤 User UID:', user?.uid);
+    console.log('📺 Channel Info:', channelInfo);
+    console.log('📊 Selected videos count:', selectedVideos.length);
 
+    if (!user?.uid || !channelInfo) {
+      console.log('❌ Missing required data - User UID:', !!user?.uid, 'Channel Info:', !!channelInfo);
+      return;
+    }
+
+    console.log('✅ All checks passed, starting publishing process...');
     setIsPublishing(true);
 
     try {
@@ -754,11 +872,15 @@ export const WizCreatePage = () => {
       });
 
     } catch (error) {
-      console.error('Error publishing videos:', error);
+      console.error('❌ Error publishing videos:', error);
+      console.error('❌ Error details:', error instanceof Error ? error.message : 'Unknown error');
+      console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast({
-        title: "Error",
-        description: "Failed to publish videos. Please try again.",
-        duration: 5000,
+        title: "❌ Publishing Failed",
+        description: `Error: ${errorMessage}. Please check console for details.`,
+        duration: 10000,
       });
     } finally {
       setIsPublishing(false);
