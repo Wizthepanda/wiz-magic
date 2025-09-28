@@ -303,7 +303,9 @@ const getCategoryShadow = (category: string) => {
 };
 
 export const WizDiscoverSection = () => {
+  console.log('🚀 WizDiscoverSection component is loading...');
   const { user } = useAuth();
+  console.log('🚀 WizDiscoverSection user state:', user?.uid || 'no user');
   const navigate = useSafeNavigate();
   const [activeCategory, setActiveCategory] = useState('all');
   const [leaderboardTab, setLeaderboardTab] = useState('creators');
@@ -316,16 +318,69 @@ export const WizDiscoverSection = () => {
   const debugFirestoreVideos = async () => {
     try {
       console.log('🔍 Manual Firestore Debug Check');
+
+      // Check videos collection
       const videosRef = collection(db, 'videos');
-      const snapshot = await getDocs(videosRef);
-      console.log('📊 Total documents in videos collection:', snapshot.docs.length);
-      snapshot.docs.forEach((doc, index) => {
-        console.log(`📺 Video ${index + 1} (${doc.id}):`, doc.data());
+      const videosSnapshot = await getDocs(videosRef);
+      console.log('📊 Total documents in videos collection:', videosSnapshot.docs.length);
+
+      // Check creatorVideos collection
+      const creatorVideosRef = collection(db, 'creatorVideos');
+      const creatorVideosSnapshot = await getDocs(creatorVideosRef);
+      console.log('📊 Total documents in creatorVideos collection:', creatorVideosSnapshot.docs.length);
+
+      // Show videos from videos collection
+      console.log('\n=== VIDEOS COLLECTION ===');
+      videosSnapshot.docs.forEach((doc, index) => {
+        const data = doc.data();
+        console.log(`📺 Video ${index + 1} (${doc.id}):`, {
+          title: data.title,
+          creatorId: data.creatorId,
+          channelName: data.channelName,
+          isCreatorContent: data.isCreatorContent,
+          addedToWiz: data.addedToWiz,
+          category: data.category
+        });
       });
-      return snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
+
+      // Show videos from creatorVideos collection
+      console.log('\n=== CREATOR VIDEOS COLLECTION ===');
+      creatorVideosSnapshot.docs.forEach((doc, index) => {
+        const data = doc.data();
+        console.log(`📺 Creator Video ${index + 1} (${doc.id}):`, {
+          title: data.title,
+          creatorId: data.creatorId,
+          channelId: data.channelId,
+          addedToWiz: data.addedToWiz,
+          categoryTags: data.categoryTags
+        });
+      });
+
+      // Filter for current user
+      if (user) {
+        console.log(`\n=== YOUR VIDEOS (${user.uid}) ===`);
+        const yourVideos = videosSnapshot.docs.filter(doc => doc.data().creatorId === user.uid);
+        const yourCreatorVideos = creatorVideosSnapshot.docs.filter(doc => doc.data().creatorId === user.uid);
+
+        console.log(`📊 Your videos in 'videos' collection: ${yourVideos.length}`);
+        console.log(`📊 Your videos in 'creatorVideos' collection: ${yourCreatorVideos.length}`);
+
+        yourVideos.forEach((doc, index) => {
+          console.log(`🎬 Your Video ${index + 1}:`, doc.data().title);
+        });
+
+        yourCreatorVideos.forEach((doc, index) => {
+          console.log(`🎬 Your Creator Video ${index + 1}:`, doc.data().title);
+        });
+      }
+
+      return {
+        videos: videosSnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() })),
+        creatorVideos: creatorVideosSnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
+      };
     } catch (error) {
       console.error('❌ Debug check failed:', error);
-      return [];
+      return { videos: [], creatorVideos: [] };
     }
   };
 
@@ -435,25 +490,55 @@ export const WizDiscoverSection = () => {
 
   // Load videos from Firestore with deduplication
   useEffect(() => {
-    const loadVideos = async () => {
-      try {
-        console.log('🔍 Discover: Loading videos with deduplication...');
-        
-        // Fetch from both collections
-        const [videosSnapshot, creatorVideosSnapshot] = await Promise.all([
-          // Fetch from videos collection
-          getDocs(query(collection(db, 'videos'), limit(15))).catch(err => {
-            console.warn('🔍 Videos collection query failed:', err);
-            return { docs: [] };
-          }),
-          // Fetch from creatorVideos collection
-          getDocs(query(collection(db, 'creatorVideos'), orderBy('addedToWiz', 'desc'), limit(15))).catch(err => {
-            console.warn('🔍 CreatorVideos collection query failed:', err);
-            return { docs: [] };
-          })
-        ]);
+    console.log('🔍 Discover: Setting up real-time video listeners...');
+    console.log('🔍 Current user:', user?.uid || 'No user');
+    console.log('🔍 Current user email:', user?.email || 'No email');
 
+    let videosUnsubscribe = null;
+    let creatorVideosUnsubscribe = null;
+
+    const setupRealtimeListeners = () => {
+      // Real-time listener for videos collection
+      videosUnsubscribe = onSnapshot(
+        query(collection(db, 'videos'), limit(15)),
+        (videosSnapshot) => {
+          console.log('🔥 Real-time update: Videos collection changed');
+
+          // Real-time listener for creatorVideos collection
+          creatorVideosUnsubscribe = onSnapshot(
+            query(collection(db, 'creatorVideos'), orderBy('addedToWiz', 'desc'), limit(15)),
+            (creatorVideosSnapshot) => {
+              console.log('🔥 Real-time update: CreatorVideos collection changed');
+              processVideoSnapshots(videosSnapshot, creatorVideosSnapshot);
+            },
+            (err) => {
+              console.warn('🔍 CreatorVideos real-time listener failed:', err);
+            }
+          );
+        },
+        (err) => {
+          console.warn('🔍 Videos real-time listener failed:', err);
+        }
+      );
+    };
+
+    const processVideoSnapshots = async (videosSnapshot, creatorVideosSnapshot) => {
+      try {
+        console.log('🔍 Discover: Processing video snapshots...');
         console.log('🔍 Discover: Fetched videos -', videosSnapshot.docs.length, 'from videos,', creatorVideosSnapshot.docs.length, 'from creatorVideos');
+
+        // Debug: Log first few videos from each collection
+        console.log('🔍 Videos collection sample:');
+        videosSnapshot.docs.slice(0, 3).forEach((doc, i) => {
+          const data = doc.data();
+          console.log(`  Video ${i+1}: "${data.title}" - Creator: ${data.creatorId} - IsCreator: ${data.isCreatorContent}`);
+        });
+
+        console.log('🔍 CreatorVideos collection sample:');
+        creatorVideosSnapshot.docs.slice(0, 3).forEach((doc, i) => {
+          const data = doc.data();
+          console.log(`  CreatorVideo ${i+1}: "${data.title}" - Creator: ${data.creatorId}`);
+        });
         
         const loadedVideos = [];
         const processedVideoIds = new Map(); // Track processed videos with timestamp for deduplication
@@ -494,26 +579,34 @@ export const WizDiscoverSection = () => {
           ...videosSnapshot.docs.map(doc => ({ doc, source: 'videos' }))
         ];
         
-        // Sort by lastUpdated date first (for fresh uploads), then addedToWiz date
+        // Sort to prioritize creator content first, then by date
         allSnapshots.sort((a, b) => {
           const dataA = a.doc.data();
           const dataB = b.doc.data();
-          
+
+          // First priority: Creator content (isCreatorContent: true)
+          if (dataA.isCreatorContent && !dataB.isCreatorContent) return -1;
+          if (!dataA.isCreatorContent && dataB.isCreatorContent) return 1;
+
+          // Second priority: Source priority (creatorVideos collection first)
+          if (a.source === 'creatorVideos' && b.source === 'videos') return -1;
+          if (a.source === 'videos' && b.source === 'creatorVideos') return 1;
+
           // Get lastUpdated dates
           const lastUpdatedA = new Date(dataA.lastUpdated?.toDate?.() || dataA.lastUpdated || 0).getTime();
           const lastUpdatedB = new Date(dataB.lastUpdated?.toDate?.() || dataB.lastUpdated || 0).getTime();
-          
+
           // Get addedToWiz dates
           const addedA = new Date(dataA.addedToWiz?.toDate?.() || dataA.addedToWiz || 0).getTime();
           const addedB = new Date(dataB.addedToWiz?.toDate?.() || dataB.addedToWiz || 0).getTime();
-          
-          // If both have recent lastUpdated times (within last hour), prioritize those
+
+          // Third priority: If both have recent lastUpdated times (within last hour), prioritize those
           const oneHourAgo = Date.now() - (60 * 60 * 1000);
           if (lastUpdatedA > oneHourAgo || lastUpdatedB > oneHourAgo) {
             return lastUpdatedB - lastUpdatedA;
           }
-          
-          // Otherwise sort by addedToWiz date
+
+          // Fourth priority: Sort by addedToWiz date (newest first)
           return addedB - addedA;
         });
         
@@ -666,7 +759,17 @@ export const WizDiscoverSection = () => {
         }
       };
 
-      loadVideos();
+    setupRealtimeListeners();
+
+    // Cleanup listeners on unmount
+    return () => {
+      if (videosUnsubscribe) {
+        videosUnsubscribe();
+      }
+      if (creatorVideosUnsubscribe) {
+        creatorVideosUnsubscribe();
+      }
+    };
   }, [user]);
 
   // Combine dynamic videos with static videos, prioritizing dynamic videos

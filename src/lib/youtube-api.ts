@@ -63,9 +63,18 @@ export interface YouTubeOAuthToken {
   scope: string;
 }
 
+export interface TokenRefreshResponse {
+  access_token: string;
+  expires_in: number;
+  token_type: string;
+  scope?: string;
+}
+
 class YouTubeAPIService {
   private config: YouTubeConfig;
   private accessToken: string | null = null;
+  private refreshToken: string | null = null;
+  private tokenExpiresAt: number | null = null;
 
   constructor() {
     this.config = {
@@ -76,9 +85,39 @@ class YouTubeAPIService {
         'https://www.googleapis.com/auth/youtube' // Required for subscriptions
       ]
     };
-    
+
+    // Initialize tokens from localStorage
+    this.initializeTokensFromStorage();
+
     // Load Google APIs
     this.loadGoogleAPIs();
+  }
+
+  /**
+   * Initialize tokens from localStorage
+   */
+  private initializeTokensFromStorage(): void {
+    try {
+      const accessToken = localStorage.getItem('youtube_access_token');
+      const refreshToken = localStorage.getItem('youtube_refresh_token');
+      const expiresAt = localStorage.getItem('youtube_token_expires_at');
+
+      if (accessToken) {
+        this.accessToken = accessToken;
+      }
+      if (refreshToken) {
+        this.refreshToken = refreshToken;
+      }
+      if (expiresAt) {
+        this.tokenExpiresAt = parseInt(expiresAt);
+      }
+
+      if (this.accessToken) {
+        console.log('🔄 Initialized YouTube API with stored tokens');
+      }
+    } catch (error) {
+      console.warn('Failed to initialize tokens from storage:', error);
+    }
   }
 
   /**
@@ -277,17 +316,15 @@ class YouTubeAPIService {
    * Get authenticated user's channel information
    */
   async getChannelInfo(): Promise<YouTubeChannelInfo> {
-    if (!this.accessToken) {
-      throw new Error('No access token available. Please authenticate first.');
-    }
+    const token = await this.ensureValidToken();
 
     try {
       // Use fetch instead of gapi.client to avoid loading issues
       const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails,brandingSettings&mine=true&key=${this.config.apiKey}`;
-      
+
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -327,17 +364,15 @@ class YouTubeAPIService {
    * Fetch recent videos from the authenticated channel
    */
   async getRecentVideos(maxResults: number = 20): Promise<YouTubeVideo[]> {
-    if (!this.accessToken) {
-      throw new Error('No access token available. Please authenticate first.');
-    }
+    const token = await this.ensureValidToken();
 
     try {
       // First get the channel's upload playlist ID using fetch
       const channelUrl = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&mine=true&key=${this.config.apiKey}`;
-      
+
       const channelResponse = await fetch(channelUrl, {
         headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -354,10 +389,10 @@ class YouTubeAPIService {
 
       // Get videos from the uploads playlist
       const videosUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadsPlaylistId}&maxResults=${maxResults}&key=${this.config.apiKey}`;
-      
+
       const videosResponse = await fetch(videosUrl, {
         headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -374,10 +409,10 @@ class YouTubeAPIService {
 
       // Get detailed video information including statistics and content details
       const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${videoIds}&key=${this.config.apiKey}`;
-      
+
       const detailsResponse = await fetch(detailsUrl, {
         headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -392,10 +427,10 @@ class YouTubeAPIService {
       
       // Fetch channel information for profile pictures
       const channelsUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${channelIds}&key=${this.config.apiKey}`;
-      
+
       const channelsResponse = await fetch(channelsUrl, {
         headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -446,8 +481,14 @@ class YouTubeAPIService {
   /**
    * Set access token (for when token is retrieved from storage or callback)
    */
-  setAccessToken(token: string): void {
+  setAccessToken(token: string, refreshToken?: string, expiresAt?: number): void {
     this.accessToken = token;
+    if (refreshToken) {
+      this.refreshToken = refreshToken;
+    }
+    if (expiresAt) {
+      this.tokenExpiresAt = expiresAt;
+    }
   }
 
   /**
@@ -455,6 +496,11 @@ class YouTubeAPIService {
    */
   clearAccessToken(): void {
     this.accessToken = null;
+    this.refreshToken = null;
+    this.tokenExpiresAt = null;
+    localStorage.removeItem('youtube_access_token');
+    localStorage.removeItem('youtube_refresh_token');
+    localStorage.removeItem('youtube_token_expires_at');
   }
 
   /**
@@ -465,20 +511,101 @@ class YouTubeAPIService {
   }
 
   /**
-   * Subscribe to a YouTube channel
+   * Check if the access token is expired
    */
-  async subscribeToChannel(channelId: string): Promise<boolean> {
+  private isTokenExpired(): boolean {
+    if (!this.tokenExpiresAt) {
+      // If we don't know when it expires, assume it might be expired
+      return true;
+    }
+    // Add 5 minute buffer to prevent edge cases
+    const buffer = 5 * 60 * 1000; // 5 minutes in milliseconds
+    return Date.now() >= (this.tokenExpiresAt - buffer);
+  }
+
+  /**
+   * Refresh the access token using the refresh token
+   */
+  private async refreshAccessToken(): Promise<string> {
+    if (!this.refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    console.log('🔄 Refreshing YouTube access token...');
+
+    try {
+      const response = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          client_id: this.config.clientId,
+          refresh_token: this.refreshToken,
+          grant_type: 'refresh_token',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Token refresh failed:', errorData);
+        throw new Error(`Token refresh failed: ${errorData.error || response.statusText}`);
+      }
+
+      const tokenData: TokenRefreshResponse = await response.json();
+
+      // Update tokens
+      this.accessToken = tokenData.access_token;
+      this.tokenExpiresAt = Date.now() + (tokenData.expires_in * 1000);
+
+      // Store in localStorage
+      localStorage.setItem('youtube_access_token', tokenData.access_token);
+      localStorage.setItem('youtube_token_expires_at', this.tokenExpiresAt.toString());
+
+      console.log('✅ YouTube access token refreshed successfully');
+      return tokenData.access_token;
+    } catch (error) {
+      console.error('❌ Error refreshing access token:', error);
+      // Clear invalid tokens
+      this.clearAccessToken();
+      throw error;
+    }
+  }
+
+  /**
+   * Ensure we have a valid access token (refresh if needed)
+   */
+  private async ensureValidToken(): Promise<string> {
     if (!this.accessToken) {
       throw new Error('No access token available. Please authenticate first.');
     }
 
+    // If token is expired or about to expire, try to refresh it
+    if (this.isTokenExpired() && this.refreshToken) {
+      try {
+        return await this.refreshAccessToken();
+      } catch (error) {
+        console.warn('Token refresh failed, will try with existing token:', error);
+        // Fall through to use existing token (might still work)
+      }
+    }
+
+    return this.accessToken;
+  }
+
+  /**
+   * Subscribe to a YouTube channel
+   */
+  async subscribeToChannel(channelId: string): Promise<boolean> {
+    const token = await this.ensureValidToken();
+
     try {
       const url = `https://www.googleapis.com/youtube/v3/subscriptions?part=snippet&key=${this.config.apiKey}`;
-      
+
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -507,16 +634,14 @@ class YouTubeAPIService {
    * Check if user is subscribed to a channel
    */
   async checkSubscription(channelId: string): Promise<boolean> {
-    if (!this.accessToken) {
-      return false;
-    }
-
     try {
+      const token = await this.ensureValidToken();
+
       const url = `https://www.googleapis.com/youtube/v3/subscriptions?part=snippet&mine=true&forChannelId=${channelId}&key=${this.config.apiKey}`;
-      
+
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 

@@ -322,55 +322,7 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
 
   // Dynamic showcase items loaded from Firebase
   const [showcaseItems, setShowcaseItems] = useState([
-    // Fallback data while loading
-    { 
-      title: 'Master AI Prompting in 2025',
-      creator: 'AIGuru42',
-      description: 'Learn how to harness the latest AI tools for unstoppable creativity.',
-      category: 'AI & Tech',
-      duration: '12:34',
-      views: '2.3M',
-      thumbnail: '🤖',
-      xpValue: '1,250 XP',
-      categoryColor: 'from-blue-400 to-cyan-500',
-      featured: true
-    },
-    { 
-      title: 'Wealth Through Web3',
-      creator: 'MoneyWizard',
-      description: 'Strategies to build generational wealth in the digital era.',
-      category: 'Finance',
-      duration: '18:45',
-      views: '3.1M',
-      thumbnail: '💎',
-      xpValue: '1,890 XP',
-      categoryColor: 'from-emerald-400 to-green-500',
-      featured: true
-    },
-    { 
-      title: 'React 19 Deep Dive',
-      creator: 'CodeMaster',
-      description: 'The hidden features and performance secrets you need to know.',
-      category: 'Programming',
-      duration: '25:12',
-      views: '1.8M',
-      thumbnail: '⚛️',
-      xpValue: '980 XP',
-      categoryColor: 'from-purple-400 to-pink-500',
-      featured: false
-    },
-    { 
-      title: 'Behind the Beat',
-      creator: 'BeatCreator',
-      description: 'From rhythm to melody, decode music production like a pro.',
-      category: 'Music',
-      duration: '15:28',
-      views: '2.7M',
-      thumbnail: '🎵',
-      xpValue: '1,560 XP',
-      categoryColor: 'from-violet-400 to-purple-500',
-      featured: true
-    }
+    // No fallback data - will be populated with real videos from database
   ]);
 
   // Helper functions for processing real video data
@@ -523,19 +475,35 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
               xpValue: `${xpReward.toLocaleString()} XP`,
               categoryColor: getCategoryColor(category),
               featured: data.isFeatured || false,
+              isCreatorContent: data.isCreatorContent || false,
               originalYouTubeUrl: data.originalYouTubeUrl || `https://www.youtube.com/watch?v=${data.videoId}`
             });
           });
 
           console.log(`📊 Processed ${videos.length} videos from database`);
           if (videos.length > 0) {
-            console.log(`✅ Loaded ${videos.length} real videos for homepage:`, videos.map(v => ({
+            // Sort to prioritize creator content first
+            const sortedVideos = videos.sort((a, b) => {
+              // First priority: creator content (isCreatorContent: true)
+              if (a.isCreatorContent && !b.isCreatorContent) return -1;
+              if (!a.isCreatorContent && b.isCreatorContent) return 1;
+
+              // Second priority: featured videos
+              if (a.featured && !b.featured) return -1;
+              if (!a.featured && b.featured) return 1;
+
+              // Third priority: newer videos first
+              return 0; // Keep original order if same priority
+            });
+
+            console.log(`✅ Loaded ${sortedVideos.length} real videos for homepage:`, sortedVideos.map(v => ({
               id: v.id,
               title: v.title,
               creator: v.creator,
-              category: v.category
+              category: v.category,
+              isCreatorContent: v.isCreatorContent || false
             })));
-            setShowcaseItems(videos);
+            setShowcaseItems(sortedVideos);
             console.log('🎯 Called setShowcaseItems with videos');
           } else {
             console.log('⚠️ No videos to display - videos array is empty');
@@ -1898,7 +1866,8 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
                   />
                 </motion.div>
                 </motion.div>
-              ))}
+                );
+              })}
             </div>
             
           </div>

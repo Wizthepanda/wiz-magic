@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search, Flame, Trophy, Target, Gift, Zap, Crown, Users, ChevronRight, X, ShoppingBag, TrendingUp, Sparkles, Bell } from 'lucide-react';
+import { collection, onSnapshot, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
@@ -120,6 +122,8 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
   const [showRewardCeremony, setShowRewardCeremony] = useState(false);
   const [earnedVideoXP, setEarnedVideoXP] = useState(0);
   const [showXpProfileDropdown, setShowXpProfileDropdown] = useState(false);
+  const [dynamicVideos, setDynamicVideos] = useState<WatchVideoData[]>([]);
+  const [videosLoading, setVideosLoading] = useState(true);
 
   const isMobile = useIsMobile();
   const { user } = useAuth();
@@ -127,12 +131,163 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
   const { theme } = useTheme();
   const isDarkMode = theme === 'dark';
 
+  // Real-time video loading from Firestore
+  useEffect(() => {
+    console.log('🚀 ApplePremiumDashboard: Setting up real-time video listeners...');
+    console.log('🚀 Current user:', user?.uid || 'no user');
+
+    if (!user) {
+      console.log('❌ No user, skipping video loading');
+      setVideosLoading(false);
+      return;
+    }
+
+    let videosUnsubscribe: (() => void) | null = null;
+    let creatorVideosUnsubscribe: (() => void) | null = null;
+
+    const setupRealtimeListeners = () => {
+      // Real-time listener for videos collection
+      videosUnsubscribe = onSnapshot(
+        query(collection(db, 'videos'), limit(15)),
+        (videosSnapshot) => {
+          console.log('🔥 ApplePremiumDashboard: Videos collection changed');
+
+          // Real-time listener for creatorVideos collection
+          creatorVideosUnsubscribe = onSnapshot(
+            query(collection(db, 'creatorVideos'), orderBy('addedToWiz', 'desc'), limit(15)),
+            (creatorVideosSnapshot) => {
+              console.log('🔥 ApplePremiumDashboard: CreatorVideos collection changed');
+              processVideoSnapshots(videosSnapshot, creatorVideosSnapshot);
+            },
+            (err) => {
+              console.warn('🔍 CreatorVideos real-time listener failed:', err);
+            }
+          );
+        },
+        (err) => {
+          console.warn('🔍 Videos real-time listener failed:', err);
+        }
+      );
+    };
+
+    const processVideoSnapshots = async (videosSnapshot: any, creatorVideosSnapshot: any) => {
+      try {
+        console.log('🔍 ApplePremiumDashboard: Processing video snapshots...');
+        console.log('🔍 Fetched videos -', videosSnapshot.docs.length, 'from videos,', creatorVideosSnapshot.docs.length, 'from creatorVideos');
+
+        const loadedVideos: WatchVideoData[] = [];
+        const processedVideoIds = new Map();
+
+        // Process videos from videos collection first (prioritize creator content)
+        videosSnapshot.docs.forEach((doc: any) => {
+          const data = doc.data();
+          if (data.isCreatorContent) {
+            console.log('🎯 Found creator video:', data.title);
+          }
+
+          const video: WatchVideoData = {
+            id: doc.id,
+            videoId: data.videoId || data.id || doc.id,
+            title: data.title || 'Untitled Video',
+            description: data.description || 'No description available',
+            thumbnail: data.thumbnail || `https://img.youtube.com/vi/${data.videoId || 'dQw4w9WgXcQ'}/maxresdefault.jpg`,
+            duration: data.duration || '0:00',
+            views: data.views || '0 views',
+            xpReward: data.xpValue || data.xpReward || 100,
+            creator: {
+              id: data.creatorId || 'unknown',
+              name: data.creator || data.channelName || 'Unknown Creator',
+              avatar: data.creatorAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.creator || 'default'}`,
+              subscribers: data.subscriberCount || '1K subscribers',
+              isVerified: data.verified || false,
+              level: 5
+            },
+            tags: data.tags || data.categoryTags || ['Video'],
+            relatedVideos: []
+          };
+
+          if (!processedVideoIds.has(video.videoId)) {
+            processedVideoIds.set(video.videoId, video);
+            loadedVideos.push(video);
+          }
+        });
+
+        // Process videos from creatorVideos collection
+        creatorVideosSnapshot.docs.forEach((doc: any) => {
+          const data = doc.data();
+          console.log('🎯 Processing creator video:', data.title);
+
+          const video: WatchVideoData = {
+            id: doc.id,
+            videoId: data.videoId || data.id || doc.id,
+            title: data.title || 'Untitled Video',
+            description: data.description || 'No description available',
+            thumbnail: data.thumbnail || `https://img.youtube.com/vi/${data.videoId || 'dQw4w9WgXcQ'}/maxresdefault.jpg`,
+            duration: data.duration || '0:00',
+            views: data.views || '0 views',
+            xpReward: data.xpValue || data.xpReward || 100,
+            creator: {
+              id: data.creatorId || 'unknown',
+              name: data.creator || data.channelName || 'Unknown Creator',
+              avatar: data.creatorAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.creator || 'default'}`,
+              subscribers: data.subscriberCount || '1K subscribers',
+              isVerified: data.verified || false,
+              level: 5
+            },
+            tags: data.tags || data.categoryTags || ['Video'],
+            relatedVideos: []
+          };
+
+          if (!processedVideoIds.has(video.videoId)) {
+            processedVideoIds.set(video.videoId, video);
+            loadedVideos.push(video);
+          }
+        });
+
+        // Sort videos to prioritize creator content
+        loadedVideos.sort((a, b) => {
+          // Check if video is from current user (your published videos)
+          const aIsUserVideo = a.creator.id === user.uid;
+          const bIsUserVideo = b.creator.id === user.uid;
+
+          if (aIsUserVideo && !bIsUserVideo) return -1;
+          if (!aIsUserVideo && bIsUserVideo) return 1;
+
+          return 0; // Keep original order for same priority
+        });
+
+        const finalVideos = loadedVideos.slice(0, 12);
+        console.log('📺 ApplePremiumDashboard: Final loaded videos:', finalVideos.length);
+
+        setDynamicVideos(finalVideos);
+        setVideosLoading(false);
+      } catch (error) {
+        console.error('❌ Error processing videos:', error);
+        setVideosLoading(false);
+      }
+    };
+
+    setupRealtimeListeners();
+
+    // Cleanup listeners on unmount
+    return () => {
+      if (videosUnsubscribe) {
+        videosUnsubscribe();
+      }
+      if (creatorVideosUnsubscribe) {
+        creatorVideosUnsubscribe();
+      }
+    };
+  }, [user]);
+
   // Refs
   const xpRingRef = useRef<HTMLDivElement>(null);
 
   const userName = user?.displayName || 'Champion';
   const progressPercent = (userZAPS / nextLevelZAPS) * 100;
 
+  // Use dynamic videos if available, otherwise fall back to sample videos
+  const displayVideos = dynamicVideos.length > 0 ? dynamicVideos : SAMPLE_VIDEOS;
 
   const handleWatchVideo = (video: any) => {
     // Convert any video object to WatchVideoData format
@@ -154,7 +309,7 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
         level: video.creator?.level || 5
       },
       tags: video.tags || ['Video'],
-      relatedVideos: SAMPLE_VIDEOS.slice(0, 3)
+      relatedVideos: displayVideos.slice(0, 3)
     };
 
     setSelectedVideo(watchVideoData);
@@ -459,6 +614,8 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
           <WIZUPDashboardV12_5
             className="w-full"
             onVideoSelect={handleWatchVideo}
+            videos={displayVideos}
+            loading={videosLoading}
           />
         </motion.div>
       </main>

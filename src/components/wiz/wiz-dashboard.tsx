@@ -5,6 +5,7 @@ import { WizSidebar } from './wiz-sidebar';
 import { WizMobileMenu } from './WizMobileMenu';
 import { WizUserProfile } from './wiz-user-profile';
 import { ApplePremiumDashboard } from './ApplePremiumDashboard';
+import { WizDiscoverSection } from './wiz-discover-section';
 import { WizLeaderboard } from './wiz-leaderboard';
 import { WizPremierePage } from './wiz-premiere-page';
 import { WizLeaderboardPage } from './wiz-leaderboard-page';

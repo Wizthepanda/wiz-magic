@@ -508,7 +508,21 @@ export const WizCreatePage = () => {
 
             if (userData?.youtubeAccessToken) {
               localStorage.setItem('youtube_access_token', userData.youtubeAccessToken);
-              youTubeAPI.setAccessToken(userData.youtubeAccessToken);
+
+              // Also try to get refresh token and expiration
+              const refreshToken = userData?.youtubeRefreshToken || localStorage.getItem('youtube_refresh_token');
+              const expiresAt = userData?.tokenExpiresAt?.toMillis?.() ||
+                               (localStorage.getItem('youtube_token_expires_at') ?
+                                parseInt(localStorage.getItem('youtube_token_expires_at')!) : undefined);
+
+              if (refreshToken) {
+                localStorage.setItem('youtube_refresh_token', refreshToken);
+              }
+              if (expiresAt) {
+                localStorage.setItem('youtube_token_expires_at', expiresAt.toString());
+              }
+
+              youTubeAPI.setAccessToken(userData.youtubeAccessToken, refreshToken, expiresAt);
               console.log('📺 Retrieved and set YouTube access token from database');
             } else if (userData?.needsYouTubeTokenAcquisition) {
               console.log('🔄 User needs YouTube token re-authorization');
@@ -544,7 +558,12 @@ export const WizCreatePage = () => {
           throw new Error('Not authenticated with YouTube');
         }
       } else {
-        youTubeAPI.setAccessToken(accessToken);
+        // Load all token data from localStorage
+        const refreshToken = localStorage.getItem('youtube_refresh_token');
+        const expiresAt = localStorage.getItem('youtube_token_expires_at') ?
+                         parseInt(localStorage.getItem('youtube_token_expires_at')!) : undefined;
+
+        youTubeAPI.setAccessToken(accessToken, refreshToken || undefined, expiresAt);
         console.log('📺 Set YouTube access token from localStorage');
       }
 

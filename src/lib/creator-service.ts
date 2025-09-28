@@ -548,17 +548,24 @@ export class CreatorService {
   static async saveCreatorTokens(userId: string, accessToken: string, refreshToken?: string, expiresIn?: number): Promise<void> {
     try {
       const creatorRef = doc(db, 'creators', userId);
+      const userRef = doc(db, 'users', userId);
+
       const tokenData: any = {
         youtubeAccessToken: accessToken,
         tokenExpiresAt: expiresIn ? new Date(Date.now() + expiresIn * 1000) : null
       };
-      
+
       if (refreshToken) {
         tokenData.youtubeRefreshToken = refreshToken;
       }
 
-      await setDoc(creatorRef, tokenData, { merge: true });
-      console.log('✅ Creator tokens saved:', userId);
+      // Save to both creator and user documents
+      await Promise.all([
+        setDoc(creatorRef, tokenData, { merge: true }),
+        setDoc(userRef, tokenData, { merge: true })
+      ]);
+
+      console.log('✅ Creator tokens saved to both documents:', userId);
     } catch (error) {
       console.error('❌ Error saving creator tokens:', error);
       throw error;
@@ -718,7 +725,15 @@ export class CreatorService {
         });
       });
 
-      return videos.sort((a, b) => b.addedToWiz.getTime() - a.addedToWiz.getTime());
+      // Sort to prioritize creator content first, then by date
+      return videos.sort((a, b) => {
+        // First priority: creator content (isCreatorContent: true)
+        if (a.isCreatorContent && !b.isCreatorContent) return -1;
+        if (!a.isCreatorContent && b.isCreatorContent) return 1;
+
+        // Second priority: within same type, sort by date (newest first)
+        return b.addedToWiz.getTime() - a.addedToWiz.getTime();
+      });
     } catch (error) {
       console.error('❌ Error getting discover videos:', error);
       return [];

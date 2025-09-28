@@ -378,6 +378,8 @@ const SAMPLE_VIDEOS: VideoData[] = [
 interface WIZUPDashboardV12_5Props {
   className?: string;
   onVideoSelect?: (video: VideoData) => void;
+  videos?: any[]; // Dynamic videos from parent
+  loading?: boolean; // Loading state
 }
 
 // Optimized debounce hook
@@ -422,7 +424,7 @@ const useIntersectionObserver = (threshold = 0.1) => {
   return [setRef, isIntersecting] as const;
 };
 
-const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, onVideoSelect }) => {
+const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, onVideoSelect, videos, loading }) => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [selectedVideo, setSelectedVideo] = useState<VideoData | null>(null);
   const [isWatchMode, setIsWatchMode] = useState(false);
@@ -430,6 +432,35 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
 
   const isMobile = useIsMobile();
   const filterScrollRef = useRef<HTMLDivElement>(null);
+
+  // Convert dynamic videos to VideoData format
+  const convertedVideos: VideoData[] = useMemo(() => {
+    if (!videos || videos.length === 0) {
+      console.log('🎯 WIZUPDashboardV12_5: Using fallback SAMPLE_VIDEOS');
+      return SAMPLE_VIDEOS;
+    }
+
+    console.log('🎯 WIZUPDashboardV12_5: Converting', videos.length, 'dynamic videos');
+    return videos.map((video, index) => ({
+      id: video.id || `video-${index}`,
+      title: video.title || 'Untitled Video',
+      thumbnail: video.thumbnail || `https://img.youtube.com/vi/${video.videoId || 'dQw4w9WgXcQ'}/maxresdefault.jpg`,
+      thumbnailBlurred: video.thumbnail || `https://img.youtube.com/vi/${video.videoId || 'dQw4w9WgXcQ'}/hqdefault.jpg`,
+      videoUrl: `https://www.youtube.com/watch?v=${video.videoId || 'dQw4w9WgXcQ'}`,
+      videoId: video.videoId || 'dQw4w9WgXcQ',
+      creator: video.creator?.name || 'Unknown Creator',
+      creatorAvatar: video.creator?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${video.creator?.name || 'default'}`,
+      duration: video.duration || '0:00',
+      views: video.views || '0 views',
+      likes: '0',
+      description: video.description || 'No description available',
+      xpReward: video.xpReward || 100,
+      zapsReward: video.xpReward || 100,
+      category: video.tags?.[0]?.toLowerCase() || 'tech',
+      publishedAt: new Date().toISOString().split('T')[0],
+      daysAgo: 1
+    }));
+  }, [videos]);
 
   // Instant filter changes for immediate response (no debounce for ultra-smooth UX)
   const debouncedFilter = activeFilter;
@@ -439,24 +470,24 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
     const categories = {};
     FILTER_CATEGORIES.forEach(category => {
       if (category.id === 'all') {
-        categories[category.id] = SAMPLE_VIDEOS;
+        categories[category.id] = convertedVideos;
       } else {
-        categories[category.id] = SAMPLE_VIDEOS.filter(video => video.category === category.id);
+        categories[category.id] = convertedVideos.filter(video => video.category === category.id);
       }
     });
     return categories;
-  }, []);
+  }, [convertedVideos]);
 
   // Current filtered videos with instant access
   const filteredVideos = useMemo(() => {
-    return categoryVideos[debouncedFilter] || SAMPLE_VIDEOS;
-  }, [categoryVideos, debouncedFilter]);
+    return categoryVideos[debouncedFilter] || convertedVideos;
+  }, [categoryVideos, debouncedFilter, convertedVideos]);
 
   // Related videos for watch mode
   const relatedVideos = useMemo(() => {
     if (!selectedVideo) return [];
-    return SAMPLE_VIDEOS.filter(v => v.id !== selectedVideo.id).slice(0, 8);
-  }, [selectedVideo]);
+    return convertedVideos.filter(v => v.id !== selectedVideo.id).slice(0, 8);
+  }, [selectedVideo, convertedVideos]);
 
   // Optimized filter change handler
   const handleFilterChange = useCallback((filterId: string) => {

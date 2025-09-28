@@ -98,6 +98,10 @@
                     if (tokenData.refresh_token) {
                         localStorage.setItem('youtube_refresh_token', tokenData.refresh_token);
                     }
+                    if (tokenData.expires_in) {
+                        const expiresAt = Date.now() + (tokenData.expires_in * 1000);
+                        localStorage.setItem('youtube_token_expires_at', expiresAt.toString());
+                    }
                     window.location.href = '/#/dashboard/create';
                 }
 
