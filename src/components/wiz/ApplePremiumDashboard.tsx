@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useXp } from '@/context/XpContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useZAPSystem } from '@/hooks/useZAPSystem';
 import { cn } from '@/lib/utils';
 import { LuxuryCircularIcon } from '@/components/ui/luxury-circular-icon';
 import { LeaderboardDropdownV2 } from '@/components/ui/leaderboard-dropdown-v2';
@@ -107,10 +108,6 @@ interface ApplePremiumDashboardProps {
 export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremiumDashboardProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
-  const [userLevel, setUserLevel] = useState(7);
-  const [userZAPS, setUserZAPS] = useState(2450);
-  const [nextLevelZAPS] = useState(3000);
-  const [dailyStreak, setDailyStreak] = useState(12);
   const [showLeaderboardDrawer, setShowLeaderboardDrawer] = useState(false);
   const [showQuestsDrawer, setShowQuestsDrawer] = useState(false);
   const [showShopDrawer, setShowShopDrawer] = useState(false);
@@ -130,6 +127,13 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
   const { addXp } = useXp();
   const { theme } = useTheme();
   const isDarkMode = theme === 'dark';
+
+  // Use ZAP System for user level and progress
+  const { zapData, zapProgress, loading: zapLoading } = useZAPSystem();
+  const userLevel = zapProgress?.level || 1;
+  const userZAPS = zapData?.totalZAPs || 0;
+  const nextLevelZAPS = zapProgress?.zapsForNextLevel || 100;
+  const dailyStreak = zapData?.currentStreak || 0;
 
   // Real-time video loading from Firestore
   useEffect(() => {
