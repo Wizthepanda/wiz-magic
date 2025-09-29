@@ -38,8 +38,18 @@ export const useZAPSystem = () => {
           setZAPData(initialData);
           setZAPProgress(calculateLevel(initialData.totalZAPs));
         } else {
+          // Calculate correct level from totalZAPs
+          const calculatedProgress = calculateLevel(data.totalZAPs);
+
+          // Sync level if there's a mismatch between stored and calculated
+          if (data.level !== calculatedProgress.level) {
+            console.warn(`⚠️ Level mismatch detected! Stored: ${data.level}, Calculated: ${calculatedProgress.level}. Syncing...`);
+            await ZAPSystem.syncUserLevel(user.uid, calculatedProgress.level);
+            data.level = calculatedProgress.level; // Update local data
+          }
+
           setZAPData(data);
-          setZAPProgress(calculateLevel(data.totalZAPs));
+          setZAPProgress(calculatedProgress);
         }
       } catch (err) {
         console.error('Error loading ZAP data:', err);

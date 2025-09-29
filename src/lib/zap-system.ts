@@ -288,6 +288,21 @@ export class ZAPSystem {
   }
 
   /**
+   * Sync user level based on totalZAPs (fixes level mismatches)
+   */
+  static async syncUserLevel(userId: string, correctLevel: number): Promise<void> {
+    try {
+      const zapRef = doc(db, 'userZAPs', userId);
+      await updateDoc(zapRef, {
+        level: correctLevel
+      });
+      console.log(`✅ Synced level for user ${userId} to Level ${correctLevel}`);
+    } catch (error) {
+      console.error('Error syncing user level:', error);
+    }
+  }
+
+  /**
    * Reset daily counters if it's a new day
    */
   static async checkAndResetDailyCounters(userId: string): Promise<ZAPData> {
