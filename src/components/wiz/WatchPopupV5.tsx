@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Share2, Bookmark, Zap } from "lucide-react"
@@ -48,6 +48,7 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
   const [zapsEarnedAmount, setZapsEarnedAmount] = useState(0)
   const [currentVideoTime, setCurrentVideoTime] = useState(0)
   const [isVideoPlaying, setIsVideoPlaying] = useState(false)
+  const [isCommunityDialogOpen, setCommunityDialogOpen] = useState(false)
 
   // Default video data if none provided
   const defaultVideo = {
@@ -68,6 +69,13 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
 
   const currentVideo = video || defaultVideo
   const { zapData, awardShareZAPs } = useZAPSystem()
+
+  // Community settings (can be extended to come from creator profile)
+  const communityBannerUrl = "/community-banner.png" // Default banner
+  const communityType = "zaps" // Options: "paid", "free", "lifetime", "waitlist", "zaps"
+  const communityPrice = "$9.99/mo"
+  const rewardZAPs = 50
+  const communityDescription = "Exclusive access to behind-the-scenes, drops & live courses. Connect with like-minded creators and unlock premium rewards."
 
   // Helper function to parse duration string to seconds
   const parseDuration = (duration: string): number => {
@@ -478,19 +486,38 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
             </div>
 
             {/* Bottom Half: Creator Community */}
-            <div className="p-4 bg-gradient-to-t from-[#f9fafc] to-transparent">
+            <div className="p-4 border-t border-neutral-200/40">
+              {/* Banner Image */}
+              <div className="w-full rounded-xl overflow-hidden mb-3">
+                <img
+                  src={communityBannerUrl || "/default-banner.png"}
+                  alt={`${currentVideo.creator.name} community banner`}
+                  className="w-full h-auto object-cover aspect-[3/1]"
+                  onError={(e) => {
+                    // Fallback to gradient if image fails to load
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement!.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                    e.currentTarget.parentElement!.style.minHeight = '80px';
+                  }}
+                />
+              </div>
+
+              {/* Community Details */}
               <h3 className="text-lg font-semibold mb-2">Join {currentVideo.creator.name}'s Community</h3>
               <p className="text-sm text-neutral-600 line-clamp-3 mb-3">
-                Exclusive access to behind-the-scenes, drops & live courses. Connect with like-minded creators and unlock premium content.
+                {communityDescription}
               </p>
+
+              {/* Join Button */}
               <Button
                 className="w-full h-11 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-medium hover:from-indigo-600 hover:to-blue-600 transition-all"
-                onClick={() => {
-                  // Handle community join logic here
-                  console.log('Joining community for:', currentVideo.creator.name);
-                }}
+                onClick={() => setCommunityDialogOpen(true)}
               >
-                Join – +50⚡ ZAPs
+                {communityType === "paid" && `Join – ${communityPrice}`}
+                {communityType === "free" && "Join Free"}
+                {communityType === "lifetime" && "Lifetime Access"}
+                {communityType === "waitlist" && "Join Waitlist"}
+                {communityType === "zaps" && `Join – +${rewardZAPs}⚡ ZAPs`}
               </Button>
             </div>
           </aside>
@@ -523,6 +550,181 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
         creatorName={currentVideo.creator.name}
         creatorAvatar={currentVideo.creator.avatar}
       />
+
+      {/* Community Join Dialog */}
+      <Dialog open={isCommunityDialogOpen} onOpenChange={setCommunityDialogOpen}>
+        <DialogContent className="max-w-md rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">
+              Join {currentVideo.creator.name}'s Community
+            </DialogTitle>
+            <DialogDescription className="text-sm text-neutral-600 mt-2">
+              {communityDescription}
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Community Banner in Dialog */}
+          <div className="w-full rounded-xl overflow-hidden my-4">
+            <img
+              src={communityBannerUrl || "/default-banner.png"}
+              alt={`${currentVideo.creator.name} community banner`}
+              className="w-full h-auto object-cover aspect-[3/1]"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.parentElement!.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                e.currentTarget.parentElement!.style.minHeight = '120px';
+              }}
+            />
+          </div>
+
+          {/* Community Type Specific Content */}
+          <div className="space-y-4">
+            {communityType === "paid" && (
+              <div className="space-y-3">
+                <div className="p-4 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-neutral-700">Membership</span>
+                    <span className="text-lg font-bold text-indigo-600">{communityPrice}</span>
+                  </div>
+                  <ul className="text-xs text-neutral-600 space-y-1">
+                    <li>✓ Exclusive content & courses</li>
+                    <li>✓ Behind-the-scenes access</li>
+                    <li>✓ Direct creator interaction</li>
+                    <li>✓ Community perks & rewards</li>
+                  </ul>
+                </div>
+                <Button
+                  className="w-full h-11 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-medium"
+                  onClick={() => {
+                    // Handle payment checkout
+                    console.log('Proceeding to payment checkout');
+                    setCommunityDialogOpen(false);
+                  }}
+                >
+                  Proceed to Payment
+                </Button>
+              </div>
+            )}
+
+            {communityType === "free" && (
+              <div className="space-y-3">
+                <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg">
+                  <p className="text-sm text-neutral-700 mb-2">Join for free and get instant access to:</p>
+                  <ul className="text-xs text-neutral-600 space-y-1">
+                    <li>✓ Community discussions</li>
+                    <li>✓ Updates & announcements</li>
+                    <li>✓ Basic resources</li>
+                  </ul>
+                </div>
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  className="w-full h-11 px-4 rounded-full border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <Button
+                  className="w-full h-11 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-medium"
+                  onClick={() => {
+                    // Handle free signup
+                    console.log('Joining free community');
+                    setCommunityDialogOpen(false);
+                  }}
+                >
+                  Join Free Community
+                </Button>
+              </div>
+            )}
+
+            {communityType === "waitlist" && (
+              <div className="space-y-3">
+                <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg">
+                  <p className="text-sm text-neutral-700 mb-2">This community is currently at capacity.</p>
+                  <p className="text-xs text-neutral-600">Join the waitlist to be notified when spots open up!</p>
+                </div>
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  className="w-full h-11 px-4 rounded-full border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <Button
+                  className="w-full h-11 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium"
+                  onClick={() => {
+                    // Handle waitlist signup
+                    console.log('Joining waitlist');
+                    setCommunityDialogOpen(false);
+                  }}
+                >
+                  Join Waitlist
+                </Button>
+              </div>
+            )}
+
+            {communityType === "lifetime" && (
+              <div className="space-y-3">
+                <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-neutral-700">Lifetime Access</span>
+                    <span className="text-lg font-bold text-purple-600">$299</span>
+                  </div>
+                  <ul className="text-xs text-neutral-600 space-y-1">
+                    <li>✓ All current & future content</li>
+                    <li>✓ Priority support & access</li>
+                    <li>✓ Exclusive lifetime perks</li>
+                    <li>✓ One-time payment, forever access</li>
+                  </ul>
+                </div>
+                <Button
+                  className="w-full h-11 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium"
+                  onClick={() => {
+                    // Handle lifetime purchase
+                    console.log('Proceeding to lifetime purchase');
+                    setCommunityDialogOpen(false);
+                  }}
+                >
+                  Get Lifetime Access
+                </Button>
+              </div>
+            )}
+
+            {communityType === "zaps" && (
+              <div className="space-y-3">
+                <div className="p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-sm font-medium text-neutral-700">Reward for Joining</span>
+                    <span className="text-2xl font-bold text-indigo-600">+{rewardZAPs}⚡</span>
+                  </div>
+                  <p className="text-xs text-neutral-600 mb-2">
+                    Earn {rewardZAPs} ZAPs instantly when you join this community!
+                  </p>
+                  <ul className="text-xs text-neutral-600 space-y-1">
+                    <li>✓ Exclusive community access</li>
+                    <li>✓ Instant ZAP reward</li>
+                    <li>✓ Behind-the-scenes content</li>
+                    <li>✓ Connect with creators</li>
+                  </ul>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
+                  <span className="text-sm text-neutral-600">Your current ZAPs:</span>
+                  <span className="text-lg font-bold text-neutral-900">{zapData.balance}⚡</span>
+                </div>
+                <Button
+                  className="w-full h-11 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-medium"
+                  onClick={() => {
+                    // Handle ZAP community join
+                    console.log('Joining with ZAP reward');
+                    // Award ZAPs to user
+                    setZapsEarnedAmount(rewardZAPs);
+                    setShowZAPsEarned(true);
+                    setTimeout(() => setShowZAPsEarned(false), 3000);
+                    setCommunityDialogOpen(false);
+                  }}
+                >
+                  Join & Earn {rewardZAPs} ZAPs ⚡
+                </Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   )
 }
