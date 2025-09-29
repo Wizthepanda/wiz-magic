@@ -189,7 +189,12 @@ export const useWatchTimeZAPs = ({
 
   // Award ZAPs for accumulated watch time
   const awardZAPsForWatchTime = async () => {
-    if (!user?.uid || watchTimeRef.current <= 0) return;
+    if (!user?.uid || watchTimeRef.current <= 0) {
+      console.log(`⚠️ Cannot award ZAPs - user: ${!!user?.uid}, watchTime: ${watchTimeRef.current}s`);
+      return;
+    }
+
+    console.log(`💰 Attempting to award ZAPs for ${watchTimeRef.current}s watch time, completion: ${(completionRate * 100).toFixed(1)}%`);
 
     try {
       const zapsAwarded = await awardWatchTimeZAPs(
@@ -199,13 +204,17 @@ export const useWatchTimeZAPs = ({
         isBoosted
       );
 
+      console.log(`✅ awardWatchTimeZAPs returned: ${zapsAwarded} ZAPs`);
+
       if (zapsAwarded > 0) {
         setTotalZAPsEarned(prev => prev + zapsAwarded);
         onZAPsAwarded?.(zapsAwarded);
         console.log(`⚡ Awarded ${zapsAwarded} ZAPs for ${watchTimeRef.current}s watch time`);
+      } else {
+        console.log(`⚠️ No ZAPs awarded (returned 0)`);
       }
     } catch (error) {
-      console.error('Error awarding ZAPs:', error);
+      console.error('❌ Error awarding ZAPs:', error);
     }
   };
 

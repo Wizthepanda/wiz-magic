@@ -391,11 +391,25 @@ export class ZAPSystem {
     completionRate: number,
     isBoosted: boolean = false
   ): Promise<number> {
+    console.log(`🎯 ZAPSystem.awardWatchTimeZAPs called:`, {
+      userId,
+      videoId,
+      watchTimeSeconds,
+      completionRate,
+      isBoosted
+    });
+
     try {
       const zapData = await this.checkAndResetDailyCounters(userId);
+      console.log(`📊 Current ZAP data:`, {
+        totalZAPs: zapData.totalZAPs,
+        dailyZAPs: zapData.dailyZAPs,
+        level: zapData.level
+      });
 
       // Check if video has already been completed for ZAPs
       const hasBeenCompleted = await this.hasVideoBeenCompleted(userId, videoId);
+      console.log(`🔍 Video ${videoId} hasBeenCompleted: ${hasBeenCompleted}`);
 
       // Check daily ZAP cap
       if (zapData.dailyZAPs >= ZAP_CONFIG.DAILY_ZAP_CAP) {
