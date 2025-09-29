@@ -707,7 +707,7 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
                 </div>
                 <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
                   <span className="text-sm text-neutral-600">Your current ZAPs:</span>
-                  <span className="text-lg font-bold text-neutral-900">{zapData.balance}⚡</span>
+                  <span className="text-lg font-bold text-neutral-900">{zapData?.balance || 0}⚡</span>
                 </div>
                 <Button
                   className="w-full h-11 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-medium"
