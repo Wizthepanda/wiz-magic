@@ -41,15 +41,24 @@ export const useZAPSystem = () => {
           // Calculate correct level from totalZAPs
           const calculatedProgress = calculateLevel(data.totalZAPs);
 
+          console.log(`📊 ZAP Data Loaded - Total ZAPs: ${data.totalZAPs}, Stored Level: ${data.level}, Calculated Level: ${calculatedProgress.level}`);
+
           // Sync level if there's a mismatch between stored and calculated
           if (data.level !== calculatedProgress.level) {
             console.warn(`⚠️ Level mismatch detected! Stored: ${data.level}, Calculated: ${calculatedProgress.level}. Syncing...`);
             await ZAPSystem.syncUserLevel(user.uid, calculatedProgress.level);
             data.level = calculatedProgress.level; // Update local data
+            console.log(`✅ Level synced to Firestore: ${calculatedProgress.level}`);
           }
 
-          setZAPData(data);
+          // Always use calculated progress for display (source of truth is totalZAPs)
+          setZAPData({
+            ...data,
+            level: calculatedProgress.level // Force use calculated level
+          });
           setZAPProgress(calculatedProgress);
+
+          console.log(`✅ ZAP State Updated - Level: ${calculatedProgress.level}, Progress: ${calculatedProgress.progressPercent}%`);
         }
       } catch (err) {
         console.error('Error loading ZAP data:', err);
