@@ -488,18 +488,19 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
             {/* Bottom Half: Creator Community */}
             <div className="p-4 border-t border-neutral-200/40">
               {/* Banner Image */}
-              <div className="w-full rounded-xl overflow-hidden mb-3">
-                <img
-                  src={communityBannerUrl || "/default-banner.png"}
-                  alt={`${currentVideo.creator.name} community banner`}
-                  className="w-full h-auto object-cover aspect-[3/1]"
-                  onError={(e) => {
-                    // Fallback to gradient if image fails to load
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.parentElement!.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                    e.currentTarget.parentElement!.style.minHeight = '80px';
-                  }}
-                />
+              <div
+                className="w-full rounded-xl overflow-hidden mb-3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 min-h-[80px] flex items-center justify-center"
+                style={{ aspectRatio: '3/1' }}
+              >
+                {communityBannerUrl && communityBannerUrl !== "/community-banner.png" ? (
+                  <img
+                    src={communityBannerUrl}
+                    alt={`${currentVideo.creator.name} community banner`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="text-white/40 text-sm font-medium">Community Banner</div>
+                )}
               </div>
 
               {/* Community Details */}
@@ -564,17 +565,19 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
           </DialogHeader>
 
           {/* Community Banner in Dialog */}
-          <div className="w-full rounded-xl overflow-hidden my-4">
-            <img
-              src={communityBannerUrl || "/default-banner.png"}
-              alt={`${currentVideo.creator.name} community banner`}
-              className="w-full h-auto object-cover aspect-[3/1]"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                e.currentTarget.parentElement!.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                e.currentTarget.parentElement!.style.minHeight = '120px';
-              }}
-            />
+          <div
+            className="w-full rounded-xl overflow-hidden my-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 min-h-[120px] flex items-center justify-center"
+            style={{ aspectRatio: '3/1' }}
+          >
+            {communityBannerUrl && communityBannerUrl !== "/community-banner.png" ? (
+              <img
+                src={communityBannerUrl}
+                alt={`${currentVideo.creator.name} community banner`}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="text-white/40 text-sm font-medium">Community Banner</div>
+            )}
           </div>
 
           {/* Community Type Specific Content */}
