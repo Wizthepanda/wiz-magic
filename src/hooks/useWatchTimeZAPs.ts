@@ -141,10 +141,10 @@ export const useWatchTimeZAPs = ({
     }
     setLastPingTime(now);
 
+    let newCompletionRate = completionRate; // Default to current completion rate
+
     // Update completion rate based on actual video time if available, otherwise fallback to watch time
     if (videoDuration > 0 && progressBarReady) {
-      let newCompletionRate: number;
-
       if (actualVideoTime !== undefined && actualVideoTime > 0) {
         // Use actual video position for accurate progress
         newCompletionRate = Math.min(actualVideoTime / videoDuration, 1);
@@ -172,18 +172,20 @@ export const useWatchTimeZAPs = ({
       if (newCompletionRate >= ZAP_CONFIG.COMPLETION_THRESHOLD && !isVideoCompleted) {
         setIsVideoCompleted(true);
         onVideoCompleted?.();
-        console.log(`🎉 Video ${videoId} completed!`);
+        console.log(`🎉 Video ${videoId} completed! Awarding final ZAPs...`);
+
+        // Award final ZAPs on completion
+        await awardZAPsForWatchTime();
+        lastZAPAwardRef.current = Math.floor(watchTimeRef.current / 10) * 10;
       }
     }
 
-    // Award ZAPs every 10 seconds of watch time (but stop if video is completed)
+    // Award ZAPs every 10 seconds of watch time (only if not yet completed)
     const zapThreshold = Math.floor(watchTimeRef.current / 10) * 10;
     if (zapThreshold > lastZAPAwardRef.current && zapThreshold > 0 && !isVideoCompleted) {
       console.log(`⚡ Awarding ZAPs for ${zapThreshold}s watch time, completion rate: ${(newCompletionRate * 100).toFixed(1)}%`);
       await awardZAPsForWatchTime();
       lastZAPAwardRef.current = zapThreshold;
-    } else if (isVideoCompleted) {
-      console.log(`🛑 Video completed - stopping ZAP awards`);
     }
   };
 
