@@ -1,19 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Flame, Share2, Settings, LogOut, Copy, Check, Link, Zap, Youtube, User, Sliders } from 'lucide-react';
+import { Flame, Share2, Settings, LogOut, Copy, Check, Link, Zap, Youtube, User, Sliders, TrendingUp, Target, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
+import { useZAPSystem } from '@/hooks/useZAPSystem';
 
 interface XPProfileDropdownProps {
   isOpen: boolean;
   onClose: () => void;
   triggerRef: React.RefObject<HTMLDivElement>;
-  userXP: number;
-  nextLevelXP: number;
-  userLevel: number;
-  streakDays: number;
-  userName: string;
+  userXP?: number; // Legacy prop, will be overridden by ZAP system
+  nextLevelXP?: number; // Legacy prop
+  userLevel?: number; // Legacy prop
+  streakDays?: number; // Legacy prop
+  userName?: string; // Legacy prop
   userEmail?: string;
-  dailyXP?: number;
+  dailyXP?: number; // Legacy prop
   isYouTubeConnected?: boolean;
 }
 
@@ -21,23 +23,44 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
   isOpen,
   onClose,
   triggerRef,
-  userXP,
-  nextLevelXP,
-  userLevel,
-  streakDays,
-  userName,
-  userEmail = "dean@wizxp.com",
-  dailyXP = 45,
+  userEmail,
   isYouTubeConnected = true
 }) => {
+  const { user } = useAuth();
+  const { zapData, zapProgress, loading } = useZAPSystem();
   const [linkCopied, setLinkCopied] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Use ZAP system data with fallbacks
+  const userData = {
+    name: user?.displayName || user?.email?.split('@')[0] || "WIZ User",
+    email: userEmail || user?.email || "",
+    avatar: user?.photoURL || "/api/placeholder/40/40",
+    level: zapProgress?.level || 1,
+    currentZAPs: zapData?.totalZAPs || 0,
+    dailyZAPs: zapData?.dailyZAPs || 0,
+    dailyVideosWatched: zapData?.dailyVideosWatched || 0,
+    currentStreak: zapData?.currentStreak || 0,
+    currentLevelZAPs: zapProgress?.currentLevelZAPs || 0,
+    nextLevelZAPs: zapProgress?.nextLevelZAPs || 100,
+    progressPercent: zapProgress?.progressPercent || 0,
+    zapsToNextLevel: zapProgress?.zapsToNextLevel || 0,
+    lifetimeStats: zapData?.lifetimeStats || {
+      totalWatchTime: 0,
+      totalShares: 0,
+      totalReferrals: 0,
+      totalVideosCompleted: 0
+    }
+  };
+
   // Calculate progress percentage
-  const progressPercent = (userXP / nextLevelXP) * 100;
+  const progressPercent = userData.progressPercent;
+  const dailyZapsCap = 360;
+  const dailyProgress = (userData.dailyZAPs / dailyZapsCap) * 100;
+  const watchGoalRemaining = Math.max(0, 3 - userData.dailyVideosWatched);
 
   // Generate invite link
-  const inviteLink = `https://wizxp.com/invite/${userName.toLowerCase()}`;
+  const inviteLink = `https://wizxp.com/invite/${userData.name.toLowerCase()}`;
 
   // Handle copy invite link
   const handleCopyLink = async () => {
@@ -90,7 +113,7 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
     if (isMobile) {
       return {
         top: rect.bottom + 12,
-        left: Math.max(16, Math.min(rect.left, window.innerWidth - 340 - 16)),
+        left: Math.max(16, Math.min(rect.left, window.innerWidth - 380 - 16)),
         right: 'auto'
       };
     }
@@ -104,6 +127,11 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
 
   const position = getDropdownPosition();
 
+  // Show loading state
+  if (loading || !user) {
+    return null;
+  }
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -116,7 +144,7 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
             duration: 0.3,
             ease: [0.25, 0.46, 0.45, 0.94] // Smooth premium easing
           }}
-          className="fixed z-50 w-[340px] max-w-[calc(100vw-32px)]"
+          className="fixed z-50 w-[380px] max-w-[calc(100vw-32px)]"
           style={{
             top: position.top,
             right: position.right,
@@ -124,302 +152,145 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
           }}
         >
           <div
-            className="overflow-hidden rounded-2xl backdrop-blur-xl border border-white/10"
+            className="overflow-hidden rounded-2xl bg-white shadow-lg"
             style={{
-              background: 'linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%)',
-              boxShadow: '0 32px 64px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 0 40px rgba(139, 92, 246, 0.1)'
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
             }}
           >
-            {/* HEADER */}
-            <div className="p-6 pb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  {/* Avatar with gradient glow border */}
-                  <div className="relative">
-                    <div
-                      className="w-12 h-12 rounded-full p-0.5"
-                      style={{
-                        background: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)',
-                        boxShadow: '0 0 20px rgba(139, 92, 246, 0.3)'
-                      }}
-                    >
-                      <div className="w-full h-full rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
-                        <span className="text-lg font-bold text-white">
-                          {userName.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Name and Email */}
-                  <div>
-                    <h3 className="text-lg font-bold text-white">
-                      {userName}
-                    </h3>
-                    <p className="text-sm text-gray-400">
-                      {userEmail}
-                    </p>
+            {/* HEADER with Purple Gradient */}
+            <div className="p-6">
+              <div className="flex items-center space-x-4">
+                {/* Avatar */}
+                <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-purple-400 to-indigo-500 p-0.5 flex-shrink-0">
+                  <img
+                    src={userData.avatar}
+                    alt={userData.name}
+                    className="w-full h-full rounded-full object-cover bg-white"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.nextElementSibling?.classList.remove('hidden');
+                    }}
+                  />
+                  <div className="hidden w-full h-full rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                    <span className="text-sm font-bold text-white">
+                      {userData.name.charAt(0).toUpperCase()}
+                    </span>
                   </div>
                 </div>
-                {/* Level Badge */}
-                <div
-                  className="px-3 py-1.5 rounded-full text-xs font-bold text-white"
-                  style={{
-                    background: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)',
-                    boxShadow: '0 0 15px rgba(139, 92, 246, 0.4)'
-                  }}
-                >
-                  Lv. {userLevel}
+                {/* Name and Email */}
+                <div className="flex-1 min-w-0">
+                  <h2 className="font-semibold text-gray-900 text-base">{userData.name}</h2>
+                  <p className="text-sm text-gray-500">{userData.email}</p>
+                </div>
+                {/* Level Badge with Purple Gradient */}
+                <div className="bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full px-3 py-1">
+                  <span className="text-sm font-medium text-white">Lv.{userData.level}</span>
                 </div>
               </div>
             </div>
 
-            {/* XP PROGRESS */}
-            <div className="px-6 pb-5">
-              <h4 className="text-sm font-medium text-gray-300 mb-3">
-                Progress to Level {userLevel + 1}
-              </h4>
+            {/* PROGRESS */}
+            <div className="px-6 pb-6">
               <div className="flex items-center justify-between mb-2">
-                <div className="flex-1 mr-4">
-                  <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden backdrop-blur-sm">
-                    <motion.div
-                      className="h-full rounded-full"
-                      style={{
-                        background: 'linear-gradient(90deg, #8b5cf6 0%, #06b6d4 100%)',
-                        boxShadow: '0 0 10px rgba(139, 92, 246, 0.5)'
-                      }}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${progressPercent}%` }}
-                      transition={{ duration: 1.2, ease: "easeOut" }}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-400 mt-2">
-                    {(userXP || 0).toLocaleString()} / {(nextLevelXP || 0).toLocaleString()} XP · {Math.round(progressPercent || 0)}% complete
-                  </p>
+                <span className="text-sm text-gray-500">Progress to Level {userData.level + 1}</span>
+                <span className="text-sm font-medium text-gray-900">{Math.round(progressPercent)}%</span>
+              </div>
+              <div className="w-full bg-gray-100 rounded-full h-3 mb-2">
+                <motion.div
+                  className="bg-gradient-to-r from-purple-500 to-indigo-500 h-3 rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progressPercent}%` }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-sm text-gray-500">
+                <span>{userData.currentLevelZAPs.toLocaleString()} ZAPs</span>
+                <span>+{userData.dailyZAPs} Today</span>
+              </div>
+            </div>
+
+            {/* STATS GRID */}
+            <div className="px-6 pb-6">
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <p className="text-2xl font-semibold text-gray-900">{userData.dailyVideosWatched}</p>
+                  <p className="text-sm text-gray-500">Videos</p>
                 </div>
-                {/* Mini XP counter pill */}
-                <div
-                  className="px-2 py-1 rounded-full text-xs font-bold text-white"
-                  style={{
-                    background: 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)',
-                    border: '1px solid rgba(139, 92, 246, 0.3)'
-                  }}
-                >
-                  {userXP}
+                <div>
+                  <p className="text-2xl font-semibold text-gray-900">{userData.currentStreak}</p>
+                  <p className="text-sm text-gray-500">Streak</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-semibold text-gray-900">{userData.dailyVideosWatched}</p>
+                  <p className="text-sm text-gray-500">Today</p>
                 </div>
               </div>
             </div>
 
-            {/* DAILY XP & STREAK */}
-            <div className="px-6 pb-5">
-              <div className="grid grid-cols-2 gap-3">
-                {/* Daily XP Box */}
-                <div
-                  className="p-3 rounded-xl border border-white/10 backdrop-blur-sm"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.05)'
-                  }}
-                >
-                  <p className="text-lg font-bold text-white">{dailyXP}</p>
-                  <p className="text-xs text-gray-400">Daily XP</p>
-                </div>
-                {/* Day Streak Box */}
-                <div
-                  className="p-3 rounded-xl border border-white/10 backdrop-blur-sm"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.05)'
-                  }}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <div
-                      className="w-4 h-4 rounded-full flex items-center justify-center"
-                      style={{
-                        background: 'linear-gradient(135deg, #f97316 0%, #ef4444 100%)'
-                      }}
-                    >
-                      <Flame className="w-2.5 h-2.5 text-white" />
-                    </div>
-                    <p className="text-lg font-bold text-white">{streakDays}</p>
-                  </div>
-                  <p className="text-xs text-gray-400">Day Streak</p>
-                </div>
-              </div>
-            </div>
-
-            {/* XP TASK REMINDER */}
-            <div className="px-6 pb-5">
-              <div className="flex items-center gap-3 p-3 rounded-xl" style={{
-                background: 'rgba(16, 185, 129, 0.1)',
-                border: '1px solid rgba(16, 185, 129, 0.2)'
-              }}>
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center"
-                  style={{
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-                  }}
-                >
-                  <Zap className="w-4 h-4 text-white" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-emerald-400">
-                    Watch 3 more videos today to max your XP!
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    +150 XP bonus if completed
-                  </p>
-                </div>
-              </div>
+            {/* DAILY GOAL */}
+            <div className="px-6 pb-6">
+              {watchGoalRemaining > 0 ? (
+                <p className="text-sm text-gray-600">
+                  Watch {watchGoalRemaining} more videos to reach your daily goal ({userData.dailyVideosWatched}/3 videos)
+                </p>
+              ) : (
+                <p className="text-sm text-green-600">
+                  ✅ Daily goal completed! {userData.dailyVideosWatched}/3 videos
+                </p>
+              )}
             </div>
 
             {/* INVITE FRIENDS */}
-            <div className="px-6 pb-5">
-              <motion.div
-                className="rounded-xl p-4 border"
-                style={{
-                  background: 'rgba(139, 92, 246, 0.1)',
-                  borderColor: 'rgba(139, 92, 246, 0.2)'
-                }}
-                whileHover={{
-                  scale: 1.02,
-                  boxShadow: '0 8px 32px rgba(139, 92, 246, 0.2)'
-                }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center"
-                      style={{
-                        background: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)'
-                      }}
-                    >
-                      <Link className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-white">
-                        Invite friends, earn +100 XP
-                      </p>
-                    </div>
-                  </div>
-                  <motion.button
-                    onClick={handleCopyLink}
-                    className={cn(
-                      "px-4 py-2 rounded-full text-xs font-bold transition-all duration-200",
-                      linkCopied
-                        ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                        : "text-white border border-transparent"
-                    )}
-                    style={{
-                      background: linkCopied
-                        ? undefined
-                        : 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)'
-                    }}
-                    whileHover={{
-                      scale: 1.05,
-                      boxShadow: linkCopied ? undefined : '0 4px 16px rgba(139, 92, 246, 0.4)'
-                    }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      {linkCopied ? (
-                        <>
-                          <Check className="w-3.5 h-3.5" />
-                          <span>Copied!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5" />
-                          <span>Copy Link</span>
-                        </>
-                      )}
-                    </div>
-                  </motion.button>
-                </div>
-              </motion.div>
-            </div>
-
-            {/* CONNECTION STATUS */}
-            <div className="px-6 pb-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Youtube className="w-6 h-6 text-red-500" />
-                  <span className="text-sm font-medium text-gray-300">YouTube</span>
-                </div>
-                <div
+            <div className="px-6 pb-6">
+              <label className="text-sm text-gray-500 block mb-2">Invite friends, earn +100 ZAPs</label>
+              <div className="flex">
+                <input
+                  className="flex-1 text-sm border border-gray-200 rounded-l-lg px-3 py-2 bg-gray-50"
+                  value={inviteLink}
+                  readOnly
+                />
+                <button
+                  onClick={handleCopyLink}
                   className={cn(
-                    "px-3 py-1.5 rounded-full text-xs font-bold",
-                    isYouTubeConnected
-                      ? "text-emerald-400 border border-emerald-500/30"
-                      : "text-red-400 border border-red-500/30"
+                    "px-4 py-2 text-sm font-medium rounded-r-lg transition-all duration-200",
+                    linkCopied
+                      ? "bg-green-500 text-white"
+                      : "bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600"
                   )}
-                  style={{
-                    background: isYouTubeConnected
-                      ? 'rgba(16, 185, 129, 0.1)'
-                      : 'rgba(239, 68, 68, 0.1)',
-                    boxShadow: isYouTubeConnected
-                      ? '0 0 10px rgba(16, 185, 129, 0.2)'
-                      : '0 0 10px rgba(239, 68, 68, 0.2)'
-                  }}
                 >
-                  {isYouTubeConnected ? 'Connected' : 'Not Connected'}
-                </div>
+                  {linkCopied ? 'Copied!' : 'Copy'}
+                </button>
               </div>
             </div>
 
-            {/* Divider */}
-            <div
-              className="mx-6 h-px"
-              style={{
-                background: 'linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.3), transparent)',
-                boxShadow: '0 0 10px rgba(139, 92, 246, 0.2)'
-              }}
-            />
+            {/* YOUTUBE STATUS */}
+            <div className="px-6 pb-6">
+              <div className="flex items-center justify-between text-base">
+                <span className="text-gray-900">YouTube</span>
+                <span className={cn(
+                  "font-medium",
+                  isYouTubeConnected ? "text-green-600" : "text-red-500"
+                )}>
+                  {isYouTubeConnected ? 'Connected' : 'Not Connected'}
+                </span>
+              </div>
+            </div>
+
+            {/* DIVIDER */}
+            <div className="mx-6 h-px bg-gray-200 mb-6" />
 
             {/* ACTIONS */}
-            <div className="p-4">
-              <motion.button
-                className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left transition-all duration-200"
-                whileHover={{
-                  backgroundColor: "rgba(255, 255, 255, 0.05)",
-                  backdropFilter: "blur(8px)",
-                  boxShadow: '0 0 20px rgba(139, 92, 246, 0.1), inset 0 0 20px rgba(255, 255, 255, 0.05)'
-                }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="w-9 h-9 rounded-full bg-slate-700/50 flex items-center justify-center backdrop-blur-sm">
-                  <User className="w-4.5 h-4.5 text-gray-300" />
-                </div>
-                <span className="text-sm font-semibold text-gray-200">Profile Settings</span>
-              </motion.button>
-
-              <motion.button
-                className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left transition-all duration-200 mt-1"
-                whileHover={{
-                  backgroundColor: "rgba(255, 255, 255, 0.05)",
-                  backdropFilter: "blur(8px)",
-                  boxShadow: '0 0 20px rgba(139, 92, 246, 0.1), inset 0 0 20px rgba(255, 255, 255, 0.05)'
-                }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="w-9 h-9 rounded-full bg-slate-700/50 flex items-center justify-center backdrop-blur-sm">
-                  <Sliders className="w-4.5 h-4.5 text-gray-300" />
-                </div>
-                <span className="text-sm font-semibold text-gray-200">Preferences</span>
-              </motion.button>
-
-              <motion.button
-                className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-left transition-all duration-200 mt-1"
-                whileHover={{
-                  backgroundColor: "rgba(239, 68, 68, 0.1)",
-                  backdropFilter: "blur(8px)",
-                  boxShadow: '0 0 20px rgba(239, 68, 68, 0.1), inset 0 0 20px rgba(255, 255, 255, 0.05)'
-                }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="w-9 h-9 rounded-full bg-red-500/20 flex items-center justify-center backdrop-blur-sm">
-                  <LogOut className="w-4.5 h-4.5 text-red-400" />
-                </div>
-                <span className="text-sm font-semibold text-red-400">Sign Out</span>
-              </motion.button>
+            <div className="px-6 pb-6 space-y-3">
+              <button className="block w-full text-left text-base text-gray-700 hover:text-purple-600 transition-colors duration-200 py-1">
+                Profile Settings
+              </button>
+              <button className="block w-full text-left text-base text-gray-700 hover:text-purple-600 transition-colors duration-200 py-1">
+                Preferences
+              </button>
+              <button className="block w-full text-left text-base text-red-500 hover:text-red-600 transition-colors duration-200 py-1">
+                Sign Out
+              </button>
             </div>
           </div>
         </motion.div>

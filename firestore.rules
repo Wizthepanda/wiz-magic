@@ -41,6 +41,23 @@ service cloud.firestore {
     match /userTrackingData/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+
+    // ZAPs system - users can read/write their own ZAP data
+    match /userZAPs/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ZAPs daily logs - users can read their own logs, system can write
+    match /zapDailyLogs/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Daily ZAPs tracking - users can read/write their own daily logs
+    match /dailyZAPs/{logId} {
+      allow read, write: if request.auth != null &&
+        logId.matches(request.auth.uid + '_.*'); // logId format: userId_date
+    }
     
     // Public read access for leaderboard and content
     match /leaderboard/{document} {

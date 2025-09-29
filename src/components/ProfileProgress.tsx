@@ -1,34 +1,48 @@
 import React from "react";
-import { useXp } from "@/context/XpContext";
+import { useZAPSystem } from "@/hooks/useZAPSystem";
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
 import { Zap } from "lucide-react";
 
 export const ProfileProgress: React.FC = () => {
-  const { xp, level, xpToNextLevel, progressPercent, totalXp } = useXp();
+  const { zapData, zapProgress, loading } = useZAPSystem();
   const { user } = useAuth();
-  
-  // Use auth user data as fallback if XP Context has no data
-  const effectiveTotalXp = totalXp > 0 ? totalXp : (user?.totalXP || 0);
-  const effectiveLevel = level > 1 ? level : (user?.level || 1);
-  const effectiveXp = totalXp > 0 ? xp : ((user?.totalXP || 0) % 1000);
-  const effectiveProgressPercent = totalXp > 0 ? progressPercent : (((user?.totalXP || 0) % 1000) / 1000) * 100;
-  
+
+  // Use ZAP system data with fallbacks
+  const effectiveTotalZAPs = zapData?.totalZAPs || 0;
+  const effectiveLevel = zapProgress?.level || 1;
+  const currentLevelZAPs = zapProgress?.currentLevelZAPs || 0;
+  const nextLevelZAPs = zapProgress?.nextLevelZAPs || 100;
+  const effectiveProgressPercent = zapProgress?.progressPercent || 0;
+
   // Debug logging to see what ProfileProgress is receiving
-  console.log('🎯 ProfileProgress render:', { 
-    xpContext_totalXp: totalXp, 
-    xpContext_xp: xp, 
-    xpContext_level: level, 
-    xpContext_progressPercent: Math.round(progressPercent), 
-    xpToNextLevel,
-    localStorage: typeof window !== 'undefined' ? localStorage.getItem('wizXp') : 'N/A',
-    authUser_totalXP: user?.totalXP || 0,
-    authUser_level: user?.level || 1,
-    effective_totalXp: effectiveTotalXp,
-    effective_level: effectiveLevel,
-    effective_xp: effectiveXp,
-    effective_progressPercent: Math.round(effectiveProgressPercent)
+  console.log('🎯 ProfileProgress render (ZAP System):', {
+    zapData_totalZAPs: zapData?.totalZAPs || 0,
+    zapData_level: zapData?.level || 1,
+    zapData_dailyZAPs: zapData?.dailyZAPs || 0,
+    zapProgress_level: zapProgress?.level || 1,
+    zapProgress_progressPercent: Math.round(zapProgress?.progressPercent || 0),
+    zapProgress_currentLevelZAPs: zapProgress?.currentLevelZAPs || 0,
+    zapProgress_nextLevelZAPs: zapProgress?.nextLevelZAPs || 100,
+    effectiveTotalZAPs,
+    effectiveLevel,
+    currentLevelZAPs,
+    nextLevelZAPs,
+    effectiveProgressPercent: Math.round(effectiveProgressPercent),
+    loading
   });
+
+  if (loading) {
+    return (
+      <div className="w-full space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="h-6 bg-gray-200 rounded animate-pulse w-24"></div>
+          <div className="h-4 bg-gray-200 rounded animate-pulse w-16"></div>
+        </div>
+        <div className="h-3 bg-gray-200 rounded-full animate-pulse"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full space-y-2">
@@ -69,18 +83,18 @@ export const ProfileProgress: React.FC = () => {
                 duration: 0.5,
                 ease: "easeInOut"
               }}
-              key={effectiveTotalXp} // Re-animate when XP changes
+              key={effectiveTotalZAPs} // Re-animate when ZAPs change
             >
               <Zap className="w-3 h-3 text-yellow-500" />
             </motion.div>
-            <motion.span 
+            <motion.span
               className="font-medium"
-              key={`${effectiveXp}-${xpToNextLevel}`}
+              key={`${currentLevelZAPs}-${nextLevelZAPs}`}
               initial={{ scale: 1 }}
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 0.3 }}
             >
-              {effectiveXp}/{xpToNextLevel} XP
+              {currentLevelZAPs}/{nextLevelZAPs} ZAPs
             </motion.span>
           </div>
         </div>

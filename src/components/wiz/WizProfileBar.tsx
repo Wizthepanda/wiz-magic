@@ -18,39 +18,39 @@ import {
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/hooks/useAuth';
-import { useXp } from '@/context/XpContext';
+import { useZAPSystem } from '@/hooks/useZAPSystem';
 import { initProgressUI } from '@/lib/wiz-progress-ui';
 import { XPRewardsDropdown2 } from '@/components/ui/xp-rewards-dropdown-2';
 
-interface UserXPData {
-  currentXP: number;
+interface UserZAPData {
+  currentZAPs: number;
   level: number;
   displayName: string;
   email: string;
   avatarUrl?: string;
-  dailyXpEarned: number;
+  dailyZAPsEarned: number;
   dailyVideosWatched: number;
   youtubeConnected?: boolean;
   referralCode?: string;
 }
 
 interface ProgressData {
-  xpForCurrentLevel: number;
-  xpForNextLevel: number;
+  zapsForCurrentLevel: number;
+  zapsForNextLevel: number;
   progressPercent: number;
-  xpInCurrentLevel: number;
-  xpNeededForNextLevel: number;
+  zapsInCurrentLevel: number;
+  zapsNeededForNextLevel: number;
 }
 
 export const WizProfileBar: React.FC = () => {
   const { user } = useAuth();
-  const { totalXP, level, progressPercent, xpInCurrentLevel, xpToNextLevel, dailyXP, loading } = useXp();
+  const { zapData, zapProgress, loading } = useZAPSystem();
   const [isOpen, setIsOpen] = useState(false);
   const [shopDropdownOpen, setShopDropdownOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showSparkles, setShowSparkles] = useState(false);
-  const [prevTotalXP, setPrevTotalXP] = useState(totalXP);
-  const [prevLevel, setPrevLevel] = useState(level);
+  const [prevTotalZAPs, setPrevTotalZAPs] = useState(zapData?.totalZAPs || 0);
+  const [prevLevel, setPrevLevel] = useState(zapProgress?.level || 1);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -82,28 +82,31 @@ export const WizProfileBar: React.FC = () => {
     };
   }, [user?.uid]);
 
-  // Watch for XP changes and trigger animations
+  // Watch for ZAP changes and trigger animations
   useEffect(() => {
-    // Check if XP increased (not on initial load)
-    if (totalXP > 0 && prevTotalXP > 0 && totalXP > prevTotalXP) {
-      console.log(`🎯 XP increased from ${prevTotalXP} to ${totalXP}! Triggering animation...`);
-      
-      // Trigger sparkles for XP gain
+    const currentTotalZAPs = zapData?.totalZAPs || 0;
+    const currentLevel = zapProgress?.level || 1;
+
+    // Check if ZAPs increased (not on initial load)
+    if (currentTotalZAPs > 0 && prevTotalZAPs > 0 && currentTotalZAPs > prevTotalZAPs) {
+      console.log(`🎯 ZAPs increased from ${prevTotalZAPs} to ${currentTotalZAPs}! Triggering animation...`);
+
+      // Trigger sparkles for ZAP gain
       setShowSparkles(true);
       setTimeout(() => setShowSparkles(false), 2000);
-      
+
       // Check if level increased
-      if (level > prevLevel) {
-        console.log(`🎉 Level up! From ${prevLevel} to ${level}`);
+      if (currentLevel > prevLevel) {
+        console.log(`🎉 Level up! From ${prevLevel} to ${currentLevel}`);
         // Dispatch level up event for other listeners
-        window.dispatchEvent(new CustomEvent('levelUp', { detail: { oldLevel: prevLevel, newLevel: level } }));
+        window.dispatchEvent(new CustomEvent('levelUp', { detail: { oldLevel: prevLevel, newLevel: currentLevel } }));
       }
     }
-    
+
     // Update previous values
-    setPrevTotalXP(totalXP);
-    setPrevLevel(level);
-  }, [totalXP, level, prevTotalXP, prevLevel]);
+    setPrevTotalZAPs(currentTotalZAPs);
+    setPrevLevel(currentLevel);
+  }, [zapData?.totalZAPs, zapProgress?.level, prevTotalZAPs, prevLevel]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -167,40 +170,40 @@ export const WizProfileBar: React.FC = () => {
     }
   };
 
-  // Create xpData object from new XP context for compatibility
-  const xpData = user ? {
-    currentXP: totalXP,
-    level: level,
-    dailyXpEarned: dailyXP,
+  // Create zapData object from ZAP system for compatibility
+  const userZAPData = user ? {
+    currentZAPs: zapData?.totalZAPs || 0,
+    level: zapProgress?.level || 1,
+    dailyZAPsEarned: zapData?.dailyZAPs || 0,
     displayName: user.displayName || 'WIZ User',
     email: user.email || '',
     avatarUrl: user.photoURL || '',
-    progressPercent: progressPercent,
-    xpForCurrentLevel: totalXP - xpInCurrentLevel, // Calculate base XP for current level
-    xpForNextLevel: totalXP - xpInCurrentLevel + xpToNextLevel, // Calculate total XP needed for next level
-    xpInCurrentLevel: xpInCurrentLevel,
-    xpNeededForNextLevel: xpToNextLevel,
-    dailyXpRemaining: Math.max(0, 360 - dailyXP)
+    progressPercent: zapProgress?.progressPercent || 0,
+    zapsForCurrentLevel: zapProgress?.zapsForCurrentLevel || 0,
+    zapsForNextLevel: zapProgress?.zapsForNextLevel || 100,
+    zapsInCurrentLevel: zapProgress?.currentLevelZAPs || 0,
+    zapsNeededForNextLevel: zapProgress?.zapsToNextLevel || 100,
+    dailyZAPsRemaining: Math.max(0, 360 - (zapData?.dailyZAPs || 0))
   } : null;
 
-  // Calculate daily progress message based on daily XP
+  // Calculate daily progress message based on daily ZAPs
   const getDailyProgressMessage = (): string => {
-    if (!xpData) return "🔥 Watch videos to earn XP today";
-    
-    const dailyProgress = (xpData.dailyXpEarned / 360) * 100;
+    if (!userZAPData) return "⚡ Watch videos to earn ZAPs today";
+
+    const dailyProgress = (userZAPData.dailyZAPsEarned / 360) * 100;
     if (dailyProgress >= 100) {
-      return "🎉 Daily XP cap reached!";
+      return "🎉 Daily ZAP cap reached!";
     }
     if (dailyProgress >= 75) {
-      return "🔥 Almost at daily cap! Keep going!";
+      return "⚡ Almost at daily cap! Keep going!";
     }
     if (dailyProgress >= 50) {
-      return "🔥 Halfway to daily cap!";
+      return "⚡ Halfway to daily cap!";
     }
-    return "🔥 Start watching to earn XP today";
+    return "⚡ Start watching to earn ZAPs today";
   };
 
-  if (loading || !xpData || !user) {
+  if (loading || !userZAPData || !user) {
     return (
       <div className="flex items-center space-x-3 animate-pulse">
         <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
@@ -209,7 +212,7 @@ export const WizProfileBar: React.FC = () => {
     );
   }
 
-  const levelBadgeColor = getLevelBadgeColor(xpData.level);
+  const levelBadgeColor = getLevelBadgeColor(userZAPData.level);
 
   return (
     <div className="flex items-center space-x-3">
@@ -266,8 +269,8 @@ export const WizProfileBar: React.FC = () => {
         {/* Avatar */}
         <div className="relative">
           <img
-            src={xpData.avatarUrl || user?.photoURL || '/default-avatar.png'}
-            alt={xpData.displayName}
+            src={userZAPData.avatarUrl || user?.photoURL || '/default-avatar.png'}
+            alt={userZAPData.displayName}
             className="w-8 h-8 rounded-full object-cover ring-2 ring-white/20"
           />
         </div>
@@ -276,7 +279,7 @@ export const WizProfileBar: React.FC = () => {
         <div className="flex flex-col items-start min-w-0">
           <div className="flex items-center space-x-2">
             <span className="text-sm font-medium text-white truncate max-w-20">
-              {xpData.displayName}
+              {userZAPData.displayName}
             </span>
             <motion.div
               id="level-badge"
@@ -284,23 +287,23 @@ export const WizProfileBar: React.FC = () => {
               animate={showSparkles ? { scale: [1, 1.1, 1] } : {}}
               transition={{ duration: 0.5, repeat: showSparkles ? 3 : 0 }}
             >
-              🏅 Lv.{xpData.level}
+              ⚡ Lv.{userZAPData.level}
             </motion.div>
           </div>
-          
+
           {/* Slim Progress Bar */}
           <div className="flex items-center space-x-2 w-full mt-1">
             <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm min-w-24">
               <motion.div
                 id="progress-bar-fill"
-                className={`h-full bg-gradient-to-r ${getProgressBarColor(xpData.level)} rounded-full shadow-sm`}
+                className={`h-full bg-gradient-to-r ${getProgressBarColor(userZAPData.level)} rounded-full shadow-sm`}
                 initial={{ width: 0 }}
-                animate={{ width: `${xpData.progressPercent}%` }}
+                animate={{ width: `${userZAPData.progressPercent}%` }}
                 transition={{ duration: 1, ease: "easeOut" }}
               />
             </div>
             <span id="level-progress" className="text-xs text-white/80 font-mono">
-              {Math.floor(xpData.xpInCurrentLevel)} / {Math.floor(xpData.xpNeededForNextLevel)}
+              {Math.floor(userZAPData.zapsInCurrentLevel)} / {Math.floor(userZAPData.zapsNeededForNextLevel)}
             </span>
           </div>
         </div>
@@ -324,64 +327,116 @@ export const WizProfileBar: React.FC = () => {
             transition={{ duration: 0.2 }}
             className="absolute top-full right-0 mt-2 w-80 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-xl z-50"
           >
-            <div className="p-6 space-y-6">
-              {/* Profile Info */}
-              <div className="flex items-center space-x-4">
-                <img
-                  src={xpData.avatarUrl || user?.photoURL || '/default-avatar.png'}
-                  alt={xpData.displayName}
-                  className="w-16 h-16 rounded-full object-cover ring-4 ring-white/20"
-                />
+            <div className="p-6 space-y-5">
+              {/* Profile Header */}
+              <div className="flex items-start space-x-4">
+                <div className="w-14 h-14 rounded-full overflow-hidden bg-gradient-to-br from-purple-400 to-indigo-500 p-0.5 flex-shrink-0">
+                  <img
+                    src={userZAPData.avatarUrl || user?.photoURL || '/default-avatar.png'}
+                    alt={userZAPData.displayName}
+                    className="w-full h-full rounded-full object-cover bg-white"
+                  />
+                </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-bold text-white truncate">
-                    {xpData.displayName}
-                  </h3>
-                  <p className="text-sm text-white/70 truncate">
-                    {xpData.email}
-                  </p>
-                  <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold text-white bg-gradient-to-r ${levelBadgeColor} mt-2`}>
-                    🏅 Level {xpData.level}
+                  <h3 className="font-bold text-white truncate text-lg">{userZAPData.displayName}</h3>
+                  <p className="text-sm text-white/70 truncate">{userZAPData.email}</p>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <div className="flex items-center space-x-1 bg-purple-600/30 rounded-full px-2.5 py-1">
+                      <span className="text-sm font-bold text-purple-200">Level {userZAPData.level}</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Full XP Progress Bar */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-white">XP Progress</span>
-                  <span className="text-sm text-white/70">
-                    {Math.round(xpData.progressPercent)}% complete
-                  </span>
+              {/* Progress to Next Level */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-white/90">Progress to Level {userZAPData.level + 1}</span>
+                  <span className="text-sm font-bold text-purple-300">{Math.round(userZAPData.progressPercent)}%</span>
                 </div>
-                <div className="h-3 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
-                  <motion.div
-                    className={`h-full bg-gradient-to-r ${getProgressBarColor(xpData.level)} rounded-full shadow-lg relative`}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${xpData.progressPercent}%` }}
-                    transition={{ duration: 1.5, ease: "easeOut" }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
-                  </motion.div>
+
+                <div className="relative">
+                  <div className="w-full bg-white/10 rounded-full h-3 backdrop-blur-sm">
+                    <motion.div
+                      className={`bg-gradient-to-r ${getProgressBarColor(userZAPData.level)} h-3 rounded-full relative overflow-hidden`}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${userZAPData.progressPercent}%` }}
+                      transition={{ duration: 0.8, ease: "easeOut" }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+                    </motion.div>
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-purple-500 to-indigo-400 rounded-full flex items-center justify-center">
+                    <div className="w-2 h-2 bg-white rounded-full" />
+                  </div>
                 </div>
-                <div className="flex justify-between text-xs text-white/60">
-                  <span id="xp-text">{Math.floor(xpData.currentXP)} XP</span>
-                  <span>{Math.floor(xpData.xpForNextLevel)} XP</span>
+
+                <div className="flex items-center justify-between text-xs text-white/70">
+                  <span className="font-medium">{userZAPData.zapsInCurrentLevel.toLocaleString()} ZAPs</span>
+                  <span className="font-medium text-purple-300">+{userZAPData.zapsNeededForNextLevel.toLocaleString()} to level up</span>
                 </div>
               </div>
 
-              {/* Daily Streak */}
-              <div className="flex items-center space-x-3 p-3 bg-white/5 rounded-lg">
-                <Flame className="w-5 h-5 text-orange-500" />
-                <span className="text-sm text-white">
-                  {getDailyProgressMessage()}
-                </span>
+              {/* ZAP Stats Grid */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-xl p-4 border border-amber-500/20">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    </div>
+                    <span className="text-xs font-medium text-amber-200/90">Total ZAPs</span>
+                  </div>
+                  <span className="text-xl font-bold text-white">{userZAPData.currentZAPs.toLocaleString()}</span>
+                </div>
+
+                <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-xl p-4 border border-green-500/20">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
+                      <Flame className="w-3.5 h-3.5 text-green-400" />
+                    </div>
+                    <span className="text-xs font-medium text-green-200/90">Daily ZAPs</span>
+                  </div>
+                  <div className="flex items-baseline space-x-1">
+                    <span className="text-xl font-bold text-white">{userZAPData.dailyZAPsEarned}</span>
+                    <span className="text-xs text-green-300">/360</span>
+                  </div>
+                  <div className="w-full bg-green-900/30 rounded-full h-1 mt-2">
+                    <div
+                      className="bg-gradient-to-r from-green-400 to-emerald-400 h-1 rounded-full transition-all duration-300"
+                      style={{ width: `${Math.min(100, (userZAPData.dailyZAPsEarned / 360) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Daily Progress Message */}
+              <div className="bg-gradient-to-r from-purple-600/20 to-indigo-600/20 rounded-xl p-4 border border-purple-500/30">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                    <Sparkles className="w-4 h-4 text-purple-300" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-purple-200 mb-1">
+                      {getDailyProgressMessage()}
+                    </p>
+                    <div className="flex items-center space-x-2">
+                      <div className="flex-1 bg-purple-900/30 rounded-full h-1.5">
+                        <div
+                          className="bg-gradient-to-r from-purple-400 to-pink-400 h-1.5 rounded-full transition-all duration-300"
+                          style={{ width: `${Math.min(100, (userZAPData.dailyZAPsEarned / 360) * 100)}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-purple-300 font-medium">{userZAPData.dailyZAPsEarned}/360</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Invite Friends */}
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
                   <Gift className="w-4 h-4 text-yellow-500" />
-                  <span className="text-sm font-medium text-white">Invite Friends (+50 XP)</span>
+                  <span className="text-sm font-medium text-white">Invite Friends (+50 ZAPs)</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="flex-1 bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-sm font-mono text-white/80">
@@ -400,35 +455,31 @@ export const WizProfileBar: React.FC = () => {
                 </div>
               </div>
 
-              {/* Daily XP Progress */}
-              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <Sparkles className="w-5 h-5 text-yellow-500" />
-                  <span className="text-sm text-white">Daily XP</span>
-                </div>
-                <span className="text-sm font-medium text-blue-400">
-                  {Math.floor(xpData.dailyXpEarned)}/360 XP
-                </span>
-              </div>
 
               {/* Divider */}
-              <div className="border-t border-white/10"></div>
+              <div className="border-t border-white/20"></div>
 
               {/* Action Buttons */}
-              <div className="space-y-2">
-                <button className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/5 rounded-lg transition-colors duration-200 text-white">
-                  <User className="w-5 h-5 text-white/60" />
-                  <span className="text-sm font-medium">Profile</span>
+              <div className="space-y-1.5">
+                <button className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/10 rounded-xl transition-all duration-200 text-white group">
+                  <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                    <User className="w-4 h-4 text-white/70" />
+                  </div>
+                  <span className="text-sm font-medium">Profile Settings</span>
                 </button>
-                <button className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/5 rounded-lg transition-colors duration-200 text-white">
-                  <Settings className="w-5 h-5 text-white/60" />
-                  <span className="text-sm font-medium">Settings</span>
+                <button className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/10 rounded-xl transition-all duration-200 text-white group">
+                  <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                    <Settings className="w-4 h-4 text-white/70" />
+                  </div>
+                  <span className="text-sm font-medium">Preferences</span>
                 </button>
                 <button
                   onClick={handleSignOut}
-                  className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-red-500/10 rounded-lg transition-colors duration-200 text-red-400 hover:text-red-300"
+                  className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-red-500/10 rounded-xl transition-all duration-200 text-red-400 group"
                 >
-                  <LogOut className="w-5 h-5" />
+                  <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center group-hover:bg-red-500/20 transition-colors">
+                    <LogOut className="w-4 h-4 text-red-400" />
+                  </div>
                   <span className="text-sm font-medium">Sign Out</span>
                 </button>
               </div>

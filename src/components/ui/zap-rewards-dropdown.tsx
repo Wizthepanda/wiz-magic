@@ -22,6 +22,7 @@ import { EnhancedIconTrigger } from './enhanced-icon-trigger';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './dropdown-menu';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useSafeNavigate } from '@/hooks/useSafeNavigate';
+import { useZAPSystem } from '@/hooks/useZAPSystem';
 
 interface MarketplaceItem {
   id: string;
@@ -42,7 +43,7 @@ interface MarketplaceItem {
 }
 
 interface ZAPRewardsDropdownProps {
-  currentZAPS?: number;
+  currentZAPS?: number; // Optional override for ZAP display
   onRewardClick?: (rewardId: string) => void;
   onViewAllRewards?: () => void;
   isOpen?: boolean;
@@ -50,7 +51,7 @@ interface ZAPRewardsDropdownProps {
 }
 
 export const ZAPRewardsDropdown: React.FC<ZAPRewardsDropdownProps> = ({
-  currentZAPS = 850,
+  currentZAPS,
   onRewardClick,
   onViewAllRewards,
   isOpen,
@@ -58,9 +59,13 @@ export const ZAPRewardsDropdown: React.FC<ZAPRewardsDropdownProps> = ({
 }) => {
   const { theme } = useTheme();
   const navigate = useSafeNavigate();
+  const { zapData, zapProgress, loading } = useZAPSystem();
   const [internalOpen, setInternalOpen] = useState(false);
   const [hoveredReward, setHoveredReward] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'communities' | 'courses' | 'coaching' | 'digital-products'>('all');
+
+  // Use real ZAP data or fallback to prop
+  const displayZAPs = currentZAPS ?? zapData?.totalZAPs ?? 0;
 
   // Use controlled or uncontrolled state
   const dropdownOpen = isOpen !== undefined ? isOpen : internalOpen;
@@ -263,7 +268,7 @@ export const ZAPRewardsDropdown: React.FC<ZAPRewardsDropdownProps> = ({
               >
                 <Zap className="w-4 h-4 text-white" fill="white" />
                 <span className="text-white font-bold text-sm">
-                  {(currentZAPS || 0).toLocaleString()}
+                  {loading ? '...' : displayZAPs.toLocaleString()}
                 </span>
               </motion.div>
             </div>

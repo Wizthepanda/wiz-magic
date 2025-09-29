@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { calculateVideoZAPs } from "@/lib/zap-system";
 
 // Enhanced video data interface for V12.5
 interface VideoData {
@@ -198,7 +199,7 @@ const SAMPLE_VIDEOS: VideoData[] = [
     likes: '42K',
     description: 'Learn the exact playbook I used to build multiple 8-figure companies from scratch. This comprehensive guide covers everything from initial product development to scaling systems.',
     xpReward: 1250,
-    zapsReward: 1250,
+    zapsReward: calculateVideoZAPs('28:45', false),
     category: 'business',
     publishedAt: '2024-01-15',
     daysAgo: 3
@@ -382,6 +383,43 @@ interface WIZUPDashboardV12_5Props {
   loading?: boolean; // Loading state
 }
 
+// Transform WatchVideoData to VideoData format
+const transformVideoData = (videos: any[]): VideoData[] => {
+  return videos.map((video: any) => ({
+    id: video.id || Math.random().toString(),
+    title: video.title || 'Untitled Video',
+    thumbnail: video.thumbnail || '',
+    videoUrl: video.videoUrl || '',
+    videoId: video.videoId || video.id,
+    creator: video.creator?.name || video.creator || 'Unknown Creator',
+    creatorAvatar: video.creator?.avatar || video.creatorAvatar,
+    subscriberCount: video.creator?.subscribers || video.subscriberCount,
+    isVerified: video.creator?.isVerified || video.isVerified,
+    creatorDetails: video.creator ? {
+      id: video.creator.id || 'unknown',
+      name: video.creator.name || video.creator,
+      avatar: video.creator.avatar || video.creatorAvatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default',
+      subscribers: video.creator.subscribers || video.subscriberCount || '1K subscribers',
+      verified: video.creator.isVerified || video.isVerified || false,
+      bio: video.creator.bio,
+      hasExtras: video.creator.hasExtras,
+      community: video.creator.community,
+      courses: video.creator.courses,
+      coaching: video.creator.coaching,
+      products: video.creator.products
+    } : undefined,
+    duration: video.duration || '0:00',
+    views: video.views || '0 views',
+    likes: video.likes || '0',
+    description: video.description || 'No description available',
+    xpReward: video.duration ? calculateVideoZAPs(video.duration, false) : (video.xpReward || 0),
+    zapsReward: video.duration ? calculateVideoZAPs(video.duration, false) : (video.zapsReward || video.xpReward || 0),
+    category: video.category || 'general',
+    publishedAt: video.publishedAt || new Date().toISOString(),
+    daysAgo: video.daysAgo || Math.floor(Math.random() * 7) + 1
+  }));
+};
+
 // Optimized debounce hook
 const useDebounce = (value: string, delay: number) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -441,25 +479,7 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
     }
 
     console.log('🎯 WIZUPDashboardV12_5: Converting', videos.length, 'dynamic videos');
-    return videos.map((video, index) => ({
-      id: video.id || `video-${index}`,
-      title: video.title || 'Untitled Video',
-      thumbnail: video.thumbnail || `https://img.youtube.com/vi/${video.videoId || 'dQw4w9WgXcQ'}/maxresdefault.jpg`,
-      thumbnailBlurred: video.thumbnail || `https://img.youtube.com/vi/${video.videoId || 'dQw4w9WgXcQ'}/hqdefault.jpg`,
-      videoUrl: `https://www.youtube.com/watch?v=${video.videoId || 'dQw4w9WgXcQ'}`,
-      videoId: video.videoId || 'dQw4w9WgXcQ',
-      creator: video.creator?.name || 'Unknown Creator',
-      creatorAvatar: video.creator?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${video.creator?.name || 'default'}`,
-      duration: video.duration || '0:00',
-      views: video.views || '0 views',
-      likes: '0',
-      description: video.description || 'No description available',
-      xpReward: video.xpReward || 100,
-      zapsReward: video.xpReward || 100,
-      category: video.tags?.[0]?.toLowerCase() || 'tech',
-      publishedAt: new Date().toISOString().split('T')[0],
-      daysAgo: 1
-    }));
+    return transformVideoData(videos);
   }, [videos]);
 
   // Instant filter changes for immediate response (no debounce for ultra-smooth UX)
@@ -679,16 +699,16 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
             {/* Creator row */}
             <div className="flex items-center gap-3">
               <img
-                src={video.creator.avatar}
-                alt={video.creator.name}
+                src={video.creatorDetails?.avatar || video.creatorAvatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
+                alt={video.creatorDetails?.name || video.creator}
                 className="w-8 h-8 rounded-full ring-2 ring-white/60"
               />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-slate-800 truncate">
-                    {video.creator.name}
+                    {video.creatorDetails?.name || video.creator}
                   </span>
-                  {video.creator.verified && (
+                  {(video.creatorDetails?.verified || video.isVerified) && (
                     <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-white text-xs font-bold">✓</span>
                     </div>
@@ -964,11 +984,11 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
                         </h4>
                         <div className="flex items-center gap-2">
                           <img
-                            src={video.creator.avatar}
-                            alt={video.creator.name}
+                            src={video.creatorDetails?.avatar || video.creatorAvatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
+                            alt={video.creatorDetails?.name || video.creator}
                             className="w-4 h-4 rounded-full"
                           />
-                          <p className="text-xs font-medium text-slate-600 truncate">{video.creator.name}</p>
+                          <p className="text-xs font-medium text-slate-600 truncate">{video.creatorDetails?.name || video.creator}</p>
                         </div>
                         <div className="flex items-center justify-between text-xs text-slate-500">
                           <span>{video.views}</span>

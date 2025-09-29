@@ -1,8 +1,9 @@
-import React, { memo } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { WatchVideoData } from '../WatchDialogV4';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useWatchTimeZAPs } from '@/hooks/useWatchTimeZAPs';
 
 interface VideoContainerProps {
   video: WatchVideoData;
@@ -15,6 +16,76 @@ export const VideoContainer = memo<VideoContainerProps>(({
   xpProgress,
   className
 }) => {
+  const [isVideoStarted, setIsVideoStarted] = useState(false);
+
+  // Helper function to parse duration string to seconds
+  const parseDuration = (duration: string): number => {
+    // Assuming duration is in format "MM:SS" or "H:MM:SS"
+    const parts = duration.split(':').map(Number);
+    if (parts.length === 2) {
+      return parts[0] * 60 + parts[1]; // MM:SS
+    } else if (parts.length === 3) {
+      return parts[0] * 3600 + parts[1] * 60 + parts[2]; // H:MM:SS
+    }
+    return 0;
+  };
+
+  // Initialize ZAP tracking for this video
+  const {
+    isTracking,
+    watchTime,
+    completionRate,
+    totalZAPsEarned,
+    isVideoCompleted,
+    hasBeenCompleted,
+    progressBarReady,
+    estimatedZAPsForCompletion,
+    startTracking,
+    stopTracking,
+    updateVideoTime
+  } = useWatchTimeZAPs({
+    videoId: video.videoId,
+    videoDuration: parseDuration(video.duration),
+    isBoosted: false, // Could be determined from video.premium or similar
+    onZAPsAwarded: (zaps) => {
+      console.log(`⚡ Awarded ${zaps} ZAPs for video ${video.videoId}`);
+    },
+    onVideoCompleted: () => {
+      console.log(`🎉 Video ${video.videoId} completed in container!`);
+    }
+  });
+
+  // Realistic progress simulation for containers
+  useEffect(() => {
+    if (!isTracking) return;
+
+    const progressInterval = setInterval(() => {
+      // Simulate realistic video progression
+      const estimatedTime = watchTime + 1;
+      updateVideoTime(estimatedTime, true);
+    }, 1000);
+
+    return () => clearInterval(progressInterval);
+  }, [isTracking, watchTime, updateVideoTime]);
+
+  // Start tracking when video becomes ready
+  useEffect(() => {
+    if (!isVideoStarted) {
+      const timer = setTimeout(() => {
+        setIsVideoStarted(true);
+        startTracking();
+      }, 2000); // Start tracking after 2 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [isVideoStarted, startTracking]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopTracking();
+    };
+  }, [stopTracking]);
   return (
     <div className={cn("w-full", className)}>
       {/* Video player container with glassmorphism */}
@@ -58,10 +129,36 @@ export const VideoContainer = memo<VideoContainerProps>(({
 
         {/* ZAPs Progress text */}
         <div className="flex items-center justify-between mt-2 text-sm text-gray-600">
-          <span>Watching progress</span>
+          <div className="flex items-center space-x-2">
+            <span>ZAP Progress</span>
+            {isTracking && !hasBeenCompleted && (
+              <span className="px-2 py-0.5 bg-green-100 text-green-600 rounded-full text-xs font-medium">
+                Earning
+              </span>
+            )}
+            {hasBeenCompleted && (
+              <span className="px-2 py-0.5 bg-amber-100 text-amber-600 rounded-full text-xs font-medium">
+                🔄 Rewatching
+              </span>
+            )}
+            {isVideoCompleted && !hasBeenCompleted && (
+              <span className="px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full text-xs font-medium">
+                🎉 Completed!
+              </span>
+            )}
+          </div>
           <span className="font-medium">
-            +{Math.floor((video.xpReward * xpProgress) / 100)} / {video.xpReward} ⚡ ZAPs
+            +{totalZAPsEarned} / {estimatedZAPsForCompletion} ⚡ ZAPs
+            {hasBeenCompleted && (
+              <span className="text-xs text-amber-600 ml-1">(10% rate)</span>
+            )}
           </span>
+        </div>
+
+        {/* Watch time and completion info */}
+        <div className="flex items-center justify-between mt-1 text-xs text-gray-500">
+          <span>Watch time: {Math.floor(watchTime)}s</span>
+          <span>Completion: {Math.floor(completionRate * 100)}%</span>
         </div>
       </motion.div>
 
