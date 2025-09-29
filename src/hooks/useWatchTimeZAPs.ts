@@ -87,6 +87,7 @@ export const useWatchTimeZAPs = ({
     }
 
     console.log(`⚡ Starting ZAP tracking for video ${videoId}`);
+    console.log(`⚡ Ping interval will be ${ZAP_CONFIG.ANTI_CHEAT_PING_INTERVAL}ms (${ZAP_CONFIG.ANTI_CHEAT_PING_INTERVAL / 1000}s)`);
     setIsTracking(true);
     setLastPingTime(Date.now());
     watchTimeRef.current = 0;
@@ -97,8 +98,11 @@ export const useWatchTimeZAPs = ({
 
     // Start heartbeat ping interval
     pingIntervalRef.current = setInterval(() => {
+      console.log(`⏰ Interval tick - calling pingWatchTime()`);
       pingWatchTime();
     }, ZAP_CONFIG.ANTI_CHEAT_PING_INTERVAL);
+
+    console.log(`✅ Interval started with ID: ${pingIntervalRef.current}`);
   };
 
   // Stop watch time tracking
@@ -125,7 +129,12 @@ export const useWatchTimeZAPs = ({
 
   // Ping watch time progress
   const pingWatchTime = async () => {
-    if (!user?.uid || !tabFocused) return;
+    console.log(`🔄 pingWatchTime called - user: ${!!user?.uid}, tabFocused: ${tabFocused}, watchTime: ${watchTimeRef.current}s`);
+
+    if (!user?.uid || !tabFocused) {
+      console.log(`⚠️ Skipping ping - user: ${!!user?.uid}, tabFocused: ${tabFocused}`);
+      return;
+    }
 
     const now = Date.now();
     const deltaSeconds = (now - lastPingTime) / 1000;
