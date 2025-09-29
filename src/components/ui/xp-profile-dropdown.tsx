@@ -152,9 +152,10 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
           }}
         >
           <div
-            className="overflow-hidden rounded-2xl bg-white shadow-lg"
+            className="overflow-hidden rounded-2xl shadow-lg"
             style={{
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+              background: 'linear-gradient(180deg, #2d3748 0%, #1a202c 100%)',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)'
             }}
           >
             {/* HEADER with Purple Gradient */}
@@ -180,8 +181,8 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
                 </div>
                 {/* Name and Email */}
                 <div className="flex-1 min-w-0">
-                  <h2 className="font-semibold text-gray-900 text-base">{userData.name}</h2>
-                  <p className="text-sm text-gray-500">{userData.email}</p>
+                  <h2 className="font-semibold text-white text-base">{userData.name}</h2>
+                  <p className="text-sm text-gray-300">{userData.email}</p>
                 </div>
                 {/* Level Badge with Purple Gradient */}
                 <div className="bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full px-3 py-1">
@@ -193,10 +194,10 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
             {/* PROGRESS */}
             <div className="px-6 pb-6">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-500">Progress to Level {userData.level + 1}</span>
-                <span className="text-sm font-medium text-gray-900">{Math.round(progressPercent)}%</span>
+                <span className="text-sm text-gray-300">Progress to Level {userData.level + 1}</span>
+                <span className="text-sm font-medium text-white">{Math.round(progressPercent)}%</span>
               </div>
-              <div className="w-full bg-gray-100 rounded-full h-3 mb-2">
+              <div className="w-full bg-gray-700/50 rounded-full h-3 mb-2">
                 <motion.div
                   className="bg-gradient-to-r from-purple-500 to-indigo-500 h-3 rounded-full"
                   initial={{ width: 0 }}
@@ -204,7 +205,7 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
                   transition={{ duration: 0.8, ease: "easeOut" }}
                 />
               </div>
-              <div className="flex items-center justify-between text-sm text-gray-500">
+              <div className="flex items-center justify-between text-sm text-gray-300">
                 <span>{userData.currentLevelZAPs.toLocaleString()} ZAPs</span>
                 <span>+{userData.dailyZAPs} Today</span>
               </div>
@@ -214,16 +215,16 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
             <div className="px-6 pb-6">
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <p className="text-2xl font-semibold text-gray-900">{userData.dailyVideosWatched}</p>
-                  <p className="text-sm text-gray-500">Videos</p>
+                  <p className="text-2xl font-semibold text-white">{userData.dailyVideosWatched}</p>
+                  <p className="text-sm text-gray-400">Videos</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-semibold text-gray-900">{userData.currentStreak}</p>
-                  <p className="text-sm text-gray-500">Streak</p>
+                  <p className="text-2xl font-semibold text-white">{userData.currentStreak}</p>
+                  <p className="text-sm text-gray-400">Streak</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-semibold text-gray-900">{userData.dailyVideosWatched}</p>
-                  <p className="text-sm text-gray-500">Today</p>
+                  <p className="text-2xl font-semibold text-white">{userData.dailyVideosWatched}</p>
+                  <p className="text-sm text-gray-400">Today</p>
                 </div>
               </div>
             </div>
@@ -231,11 +232,11 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
             {/* DAILY GOAL */}
             <div className="px-6 pb-6">
               {watchGoalRemaining > 0 ? (
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-300">
                   Watch {watchGoalRemaining} more videos to reach your daily goal ({userData.dailyVideosWatched}/3 videos)
                 </p>
               ) : (
-                <p className="text-sm text-green-600">
+                <p className="text-sm text-green-400">
                   ✅ Daily goal completed! {userData.dailyVideosWatched}/3 videos
                 </p>
               )}
@@ -243,10 +244,10 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
 
             {/* INVITE FRIENDS */}
             <div className="px-6 pb-6">
-              <label className="text-sm text-gray-500 block mb-2">Invite friends, earn +100 ZAPs</label>
+              <label className="text-sm text-gray-300 block mb-2">Invite friends, earn +100 ZAPs</label>
               <div className="flex">
                 <input
-                  className="flex-1 text-sm border border-gray-200 rounded-l-lg px-3 py-2 bg-gray-50"
+                  className="flex-1 text-sm border border-gray-600 rounded-l-lg px-3 py-2 bg-gray-700/50 text-white placeholder-gray-400"
                   value={inviteLink}
                   readOnly
                 />
@@ -267,10 +268,10 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
             {/* YOUTUBE STATUS */}
             <div className="px-6 pb-6">
               <div className="flex items-center justify-between text-base">
-                <span className="text-gray-900">YouTube</span>
+                <span className="text-white">YouTube</span>
                 <span className={cn(
                   "font-medium",
-                  isYouTubeConnected ? "text-green-600" : "text-red-500"
+                  isYouTubeConnected ? "text-green-400" : "text-red-400"
                 )}>
                   {isYouTubeConnected ? 'Connected' : 'Not Connected'}
                 </span>
@@ -278,17 +279,17 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
             </div>
 
             {/* DIVIDER */}
-            <div className="mx-6 h-px bg-gray-200 mb-6" />
+            <div className="mx-6 h-px bg-gray-700 mb-6" />
 
             {/* ACTIONS */}
             <div className="px-6 pb-6 space-y-3">
-              <button className="block w-full text-left text-base text-gray-700 hover:text-purple-600 transition-colors duration-200 py-1">
+              <button className="block w-full text-left text-base text-gray-300 hover:text-purple-400 transition-colors duration-200 py-1">
                 Profile Settings
               </button>
-              <button className="block w-full text-left text-base text-gray-700 hover:text-purple-600 transition-colors duration-200 py-1">
+              <button className="block w-full text-left text-base text-gray-300 hover:text-purple-400 transition-colors duration-200 py-1">
                 Preferences
               </button>
-              <button className="block w-full text-left text-base text-red-500 hover:text-red-600 transition-colors duration-200 py-1">
+              <button className="block w-full text-left text-base text-red-400 hover:text-red-500 transition-colors duration-200 py-1">
                 Sign Out
               </button>
             </div>
