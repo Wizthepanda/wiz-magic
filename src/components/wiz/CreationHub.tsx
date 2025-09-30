@@ -46,6 +46,7 @@ import {
   Minus
 } from 'lucide-react';
 import CreateCommunityPage from './CreateCommunityPage';
+import DraftsView from './DraftsView';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -136,8 +137,9 @@ interface CourseData {
 }
 
 const categories = [
-  'Business', 'Fitness', 'Lifestyle', 'Music', 'Gaming', 'Programming',
-  'Art', 'Education', 'Finance', 'Health & Wellness', 'Marketing', 'Design',
+  'Tech', 'Business', 'Money', 'Design', 'Health', 'Self Improvement',
+  'Education', 'Gaming', 'Lifestyle', 'Social', 'DIY', 'Entertainment',
+  'Music', 'Fitness', 'Programming', 'Art', 'Finance', 'Marketing',
   'Photography', 'Cooking', 'Language', 'Personal Development'
 ];
 
@@ -605,16 +607,17 @@ const YouTubeConnectFlow = ({
                             </SelectTrigger>
                             <SelectContent>
                               {[
-                                { value: 'all', label: 'All' },
                                 { value: 'tech', label: 'Tech' },
+                                { value: 'business', label: 'Business' },
                                 { value: 'money', label: 'Money' },
                                 { value: 'design', label: 'Design' },
-                                { value: 'business', label: 'Business' },
                                 { value: 'health', label: 'Health' },
                                 { value: 'self-improvement', label: 'Self Improvement' },
                                 { value: 'education', label: 'Education' },
                                 { value: 'gaming', label: 'Gaming' },
                                 { value: 'lifestyle', label: 'Lifestyle' },
+                                { value: 'social', label: 'Social' },
+                                { value: 'diy', label: 'DIY' },
                               ].map(cat => (
                                 <SelectItem key={cat.value} value={cat.value}>
                                   {cat.label}
@@ -822,6 +825,8 @@ export const CreationHub = ({
 }: CreationHubProps) => {
   const [selectedType, setSelectedType] = useState<CreationType>(null);
   const [currentStep, setCurrentStep] = useState(1);
+  const [showDrafts, setShowDrafts] = useState(false);
+  const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
   const [courseData, setCourseData] = useState<CourseData>({
     coverImage: '',
     title: '',
@@ -2044,6 +2049,23 @@ export const CreationHub = ({
     );
   };
 
+  // Show drafts view if requested
+  if (showDrafts) {
+    return (
+      <DraftsView
+        onBack={() => {
+          setShowDrafts(false);
+          setEditingDraftId(null);
+        }}
+        onEditDraft={(draftId) => {
+          setEditingDraftId(draftId);
+          setShowDrafts(false);
+          setSelectedType('community');
+        }}
+      />
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 40 }}
@@ -2076,7 +2098,7 @@ export const CreationHub = ({
                 {creationTypes.map(renderCreationTypeCard)}
               </div>
 
-              {/* Save Your Drafts Section - Slim Card Pill */}
+              {/* View Drafts Section - Slim Card Pill */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -2093,8 +2115,7 @@ export const CreationHub = ({
                       borderRadius: '50px'
                     }}
                     onClick={() => {
-                      // TODO: Navigate to drafts view
-                      console.log('View drafts clicked');
+                      setShowDrafts(true);
                     }}
                   >
                     <div className="flex items-center justify-center space-x-3">
@@ -2102,7 +2123,7 @@ export const CreationHub = ({
                         <Save className="w-4 h-4 text-gray-600 group-hover:text-blue-600 transition-colors duration-300" />
                       </div>
                       <span className="text-sm font-semibold text-gray-700 group-hover:text-gray-900 dark:text-gray-200 dark:group-hover:text-white transition-colors duration-300">
-                        Save Your Drafts
+                        View Drafts
                       </span>
                       <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-1 transition-all duration-300" />
                     </div>
@@ -2163,7 +2184,10 @@ export const CreationHub = ({
                 {selectedType === 'course' ? (
                   renderCourseCreation()
                 ) : selectedType === 'community' ? (
-                  <CreateCommunityPage onBack={handleBackToSelection} />
+                  <CreateCommunityPage
+                    onBack={handleBackToSelection}
+                    draftId={editingDraftId || undefined}
+                  />
                 ) : (
                   renderGenericCreation(creationTypes.find(t => t.id === selectedType)?.title || 'Item')
                 )}

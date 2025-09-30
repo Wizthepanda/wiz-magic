@@ -150,19 +150,29 @@ const CommunityPreview: React.FC<CommunityPreviewProps> = ({
                   className="absolute inset-0"
                 >
                   {currentBanner?.type === 'youtube' ? (
-                    <div className="relative w-full h-full bg-black flex items-center justify-center">
-                      <div className="absolute inset-0 bg-gradient-to-br from-red-500/20 to-purple-500/20" />
-                      <div className="text-center text-white z-10">
-                        <Video className="w-12 h-12 mx-auto mb-2 opacity-80" />
-                        <p className="text-sm font-medium">YouTube Video</p>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="absolute top-3 right-3 z-20"
-                      >
-                        <Play className="w-4 h-4" />
-                      </Button>
+                    <div className="relative w-full h-full">
+                      {currentBanner.thumbnail ? (
+                        <>
+                          <img
+                            src={currentBanner.thumbnail}
+                            alt="Video thumbnail"
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                            <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shadow-xl">
+                              <Play className="w-8 h-8 text-white ml-1" />
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="w-full h-full bg-black flex items-center justify-center">
+                          <div className="absolute inset-0 bg-gradient-to-br from-red-500/20 to-purple-500/20" />
+                          <div className="text-center text-white z-10">
+                            <Video className="w-12 h-12 mx-auto mb-2 opacity-80" />
+                            <p className="text-sm font-medium">Video</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="relative w-full h-full">

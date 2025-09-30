@@ -29,12 +29,18 @@ export const createCommunitySchema = z.object({
   })).optional(),
 
   // Monetization fields
+  pricingModel: z.enum(["usd", "zaps"]),
   zapsRequired: z.number().int().nonnegative(),
   usdCoPay: z.number().nonnegative(),
   slotsAvailable: z.number().int().nonnegative().nullable(),
   subscriptionMonthly: z.number().nonnegative().optional(),
   splitPayEnabled: z.boolean().optional(),
+  waitlistEnabled: z.boolean().optional(),
   accessWindow: z.string().optional(),
+
+  // Reward Members fields
+  offerZAPsToNewMembers: z.boolean().optional(),
+  newMemberZAPsReward: z.number().int().nonnegative().optional(),
 
   // Publishing fields
   status: z.enum(["draft", "published", "scheduled"]),
@@ -84,12 +90,16 @@ export const step2Schema = z.object({
 });
 
 export const step3Schema = z.object({
+  pricingModel: z.enum(["usd", "zaps"]),
   zapsRequired: z.number().int().nonnegative(),
   usdCoPay: z.number().nonnegative(),
   slotsAvailable: z.number().int().nonnegative().nullable(),
   subscriptionMonthly: z.number().nonnegative().optional(),
   splitPayEnabled: z.boolean().optional(),
-  accessWindow: z.string().optional()
+  waitlistEnabled: z.boolean().optional(),
+  accessWindow: z.string().optional(),
+  offerZAPsToNewMembers: z.boolean().optional(),
+  newMemberZAPsReward: z.number().int().nonnegative().optional()
 });
 
 export const step4Schema = z.object({

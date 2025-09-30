@@ -1,12 +1,15 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Share2, Bookmark, Zap } from "lucide-react"
+import { Share2, Bookmark, Zap, ChevronLeft, ChevronRight, Star, Users } from "lucide-react"
 import { useState, useEffect } from "react"
 import { TipModal } from './creator/components/TipModal'
 import { useWatchTimeZAPs } from '@/hooks/useWatchTimeZAPs'
 import { useZAPSystem } from '@/hooks/useZAPSystem'
 import { motion, AnimatePresence } from "framer-motion"
+import { db } from '@/lib/firebase'
+import { collection, query, where, limit, getDocs } from 'firebase/firestore'
+import { cn } from '@/lib/utils'
 
 // YouTube Player API type declarations
 declare global {
@@ -49,6 +52,9 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
   const [currentVideoTime, setCurrentVideoTime] = useState(0)
   const [isVideoPlaying, setIsVideoPlaying] = useState(false)
   const [isCommunityDialogOpen, setCommunityDialogOpen] = useState(false)
+  const [upNextVideos, setUpNextVideos] = useState<any[]>([])
+  const [isPendingAccess, setIsPendingAccess] = useState(false)
+  const [isInviteSent, setIsInviteSent] = useState(false)
 
   // Default video data if none provided
   const defaultVideo = {
@@ -76,6 +82,38 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
   const communityPrice = "$9.99/mo"
   const rewardZAPs = 50
   const communityDescription = "Exclusive access to behind-the-scenes, drops & live courses. Connect with like-minded creators and unlock premium rewards."
+  const communityAccess = "public" // Options: "public", "private", "invite"
+
+  // Community media carousel (images/videos)
+  const [carouselIndex, setCarouselIndex] = useState(0)
+  const communityMedia = [
+    { type: 'image' as const, url: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800' },
+    { type: 'image' as const, url: 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=800' },
+    { type: 'image' as const, url: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800' }
+  ]
+
+  // Community stats
+  const communityRating = 4.8
+  const reviewCount = 1234
+  const memberCount = 5678
+  const communityTags = ['3d', 'animation', 'trailers', 'vfx']
+
+  // Carousel navigation handlers
+  const nextSlide = () => {
+    setCarouselIndex((prev) => (prev + 1) % communityMedia.length)
+  }
+
+  const prevSlide = () => {
+    setCarouselIndex((prev) => (prev - 1 + communityMedia.length) % communityMedia.length)
+  }
+
+  // Auto-rotate carousel
+  useEffect(() => {
+    if (isCommunityDialogOpen) {
+      const interval = setInterval(nextSlide, 5000)
+      return () => clearInterval(interval)
+    }
+  }, [isCommunityDialogOpen])
 
   // Helper function to parse duration string to seconds
   const parseDuration = (duration: string): number => {
@@ -121,6 +159,81 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
   });
 
   // Remove artificial progress estimation - let ZAPs system handle its own timing
+
+  // Load featured videos for "Up Next" section
+  useEffect(() => {
+    const loadFeaturedVideos = async () => {
+      try {
+        let snapshot;
+        try {
+          // First try to get featured videos
+          const featuredQuery = query(
+            collection(db, 'videos'),
+            where('isFeatured', '==', true),
+            limit(4)
+          );
+          snapshot = await getDocs(featuredQuery);
+        } catch (featuredError) {
+          snapshot = null;
+        }
+
+        // If no featured videos, get recent active videos
+        if (!snapshot || snapshot.empty) {
+          try {
+            const recentQuery = query(
+              collection(db, 'videos'),
+              where('status', '==', 'active'),
+              limit(4)
+            );
+            snapshot = await getDocs(recentQuery);
+          } catch (recentError) {
+            // Last resort: get any videos
+            const anyQuery = query(
+              collection(db, 'videos'),
+              limit(4)
+            );
+            snapshot = await getDocs(anyQuery);
+          }
+        }
+
+        if (snapshot && !snapshot.empty) {
+          const videos: any[] = [];
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            videos.push({
+              id: doc.id,
+              videoId: data.videoId,
+              title: data.title || 'Untitled Video',
+              creator: data.channelName || data.creatorName || 'Unknown Creator',
+              views: data.views ? `${Math.floor(data.views / 1000)}K views` : '0 views',
+              duration: data.duration ? formatDuration(data.duration) : '0:00',
+              zaps: calculateZAPsReward(data.duration || 0),
+              thumbnail: data.thumbnail || `https://img.youtube.com/vi/${data.videoId}/maxresdefault.jpg`
+            });
+          });
+          setUpNextVideos(videos);
+        }
+      } catch (error) {
+        console.error('Error loading featured videos:', error);
+      }
+    };
+
+    if (open) {
+      loadFeaturedVideos();
+    }
+  }, [open]);
+
+  // Helper function to format duration
+  const formatDuration = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Helper function to calculate ZAPs reward
+  const calculateZAPsReward = (duration: number): number => {
+    return Math.floor(duration * 0.5); // 0.5 ZAPs per second
+  };
 
   // YouTube Player API integration for real progress tracking
   useEffect(() => {
@@ -416,54 +529,26 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
             <div className="flex-1 overflow-y-auto border-b border-neutral-200/40 pb-4">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-semibold text-neutral-800">Up Next</h3>
-                <span className="text-xs text-neutral-500">7 videos</span>
+                <span className="text-xs text-neutral-500">{upNextVideos.length} videos</span>
               </div>
               <div className="flex flex-col gap-3 pr-2">
-                {/* Related Video Cards */}
-                {[
-                  {
-                    id: "2",
-                    title: "Advanced React Patterns",
-                    creator: "TechMaster Pro",
-                    views: "124K views",
-                    duration: "15:42",
-                    zaps: 150,
-                    thumbnail: "/thumb1.png"
-                  },
-                  {
-                    id: "3",
-                    title: "Building Wealth: 10 Proven Steps",
-                    creator: "WealthBuilder",
-                    views: "89K views",
-                    duration: "22:15",
-                    zaps: 200,
-                    thumbnail: "/thumb2.png"
-                  },
-                  {
-                    id: "4",
-                    title: "Marketing Psychology Secrets",
-                    creator: "MarketingGuru",
-                    views: "156K views",
-                    duration: "18:30",
-                    zaps: 175,
-                    thumbnail: "/thumb3.png"
-                  },
-                  {
-                    id: "5",
-                    title: "AI and Machine Learning Basics",
-                    creator: "AI Expert",
-                    views: "78K views",
-                    duration: "12:45",
-                    zaps: 120,
-                    thumbnail: "/thumb4.png"
-                  }
-                ].map((relatedVideo) => (
+                {/* Featured Video Cards */}
+                {upNextVideos.map((relatedVideo) => (
                   <div
                     key={relatedVideo.id}
                     className="flex items-center gap-3 p-3 rounded-xl bg-white/60 backdrop-blur-sm shadow hover:shadow-md transition-all duration-200 cursor-pointer hover:bg-white/70"
                   >
                     <div className="relative w-20 h-14 bg-gradient-to-br from-gray-200 to-gray-300 rounded-md overflow-hidden flex-shrink-0">
-                      <div className="w-full h-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
+                      <img
+                        src={relatedVideo.thumbnail}
+                        alt={relatedVideo.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                      <div className="hidden w-full h-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center absolute inset-0">
                         <span className="text-xs text-neutral-500">Video</span>
                       </div>
                       <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 py-0.5 rounded text-[10px]">
@@ -485,24 +570,8 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
               </div>
             </div>
 
-            {/* Bottom Half: Creator Community */}
+            {/* Bottom Half: Creator Community (without banner) */}
             <div className="p-4 border-t border-neutral-200/40">
-              {/* Banner Image */}
-              <div
-                className="w-full rounded-xl overflow-hidden mb-3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 min-h-[80px] flex items-center justify-center"
-                style={{ aspectRatio: '3/1' }}
-              >
-                {communityBannerUrl && communityBannerUrl !== "/community-banner.png" ? (
-                  <img
-                    src={communityBannerUrl}
-                    alt={`${currentVideo.creator.name} community banner`}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="text-white/40 text-sm font-medium">Community Banner</div>
-                )}
-              </div>
-
               {/* Community Details */}
               <h3 className="text-lg font-semibold mb-2">Join {currentVideo.creator.name}'s Community</h3>
               <p className="text-sm text-neutral-600 line-clamp-3 mb-3">
@@ -552,179 +621,258 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
         creatorAvatar={currentVideo.creator.avatar}
       />
 
-      {/* Community Join Dialog */}
+      {/* Community Join Dialog - Premium Redesign */}
       <Dialog open={isCommunityDialogOpen} onOpenChange={setCommunityDialogOpen}>
-        <DialogContent className="max-w-md rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">
-              Join {currentVideo.creator.name}'s Community
-            </DialogTitle>
-            <DialogDescription className="text-sm text-neutral-600 mt-2">
-              {communityDescription}
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="max-w-2xl h-[80vh] p-0 overflow-hidden rounded-2xl shadow-2xl bg-gradient-to-br from-white via-neutral-50 to-neutral-100">
 
-          {/* Community Banner in Dialog */}
-          <div
-            className="w-full rounded-xl overflow-hidden my-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 min-h-[120px] flex items-center justify-center"
-            style={{ aspectRatio: '3/1' }}
-          >
-            {communityBannerUrl && communityBannerUrl !== "/community-banner.png" ? (
-              <img
-                src={communityBannerUrl}
-                alt={`${currentVideo.creator.name} community banner`}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="text-white/40 text-sm font-medium">Community Banner</div>
-            )}
-          </div>
+          {/* Scrollable container */}
+          <div className="flex flex-col h-full overflow-y-auto">
 
-          {/* Community Type Specific Content */}
-          <div className="space-y-4">
-            {communityType === "paid" && (
-              <div className="space-y-3">
-                <div className="p-4 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-lg">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-neutral-700">Membership</span>
-                    <span className="text-lg font-bold text-indigo-600">{communityPrice}</span>
-                  </div>
-                  <ul className="text-xs text-neutral-600 space-y-1">
-                    <li>✓ Exclusive content & courses</li>
-                    <li>✓ Behind-the-scenes access</li>
-                    <li>✓ Direct creator interaction</li>
-                    <li>✓ Community perks & rewards</li>
-                  </ul>
-                </div>
-                <Button
-                  className="w-full h-11 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-medium"
-                  onClick={() => {
-                    // Handle payment checkout
-                    console.log('Proceeding to payment checkout');
-                    setCommunityDialogOpen(false);
-                  }}
+            {/* Hero Banner Carousel */}
+            <div className="relative w-full h-[220px] overflow-hidden">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={carouselIndex}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="w-full h-full"
                 >
-                  Proceed to Payment
-                </Button>
-              </div>
-            )}
+                  {communityMedia[carouselIndex].type === 'image' ? (
+                    <img
+                      src={communityMedia[carouselIndex].url}
+                      alt={`Banner ${carouselIndex + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <video
+                      src={communityMedia[carouselIndex].url}
+                      autoPlay
+                      muted
+                      loop
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </motion.div>
+              </AnimatePresence>
 
-            {communityType === "free" && (
-              <div className="space-y-3">
-                <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg">
-                  <p className="text-sm text-neutral-700 mb-2">Join for free and get instant access to:</p>
-                  <ul className="text-xs text-neutral-600 space-y-1">
-                    <li>✓ Community discussions</li>
-                    <li>✓ Updates & announcements</li>
-                    <li>✓ Basic resources</li>
-                  </ul>
+              {/* Carousel Navigation */}
+              <button
+                onClick={prevSlide}
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center backdrop-blur-sm transition-all"
+              >
+                <ChevronLeft className="w-5 h-5 text-white" />
+              </button>
+              <button
+                onClick={nextSlide}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center backdrop-blur-sm transition-all"
+              >
+                <ChevronRight className="w-5 h-5 text-white" />
+              </button>
+
+              {/* Carousel Indicators */}
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex space-x-2">
+                {communityMedia.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCarouselIndex(index)}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      index === carouselIndex
+                        ? 'bg-white w-6'
+                        : 'bg-white/50 hover:bg-white/75'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Content Section */}
+            <div className="p-6 flex-1">
+
+              {/* Stats */}
+              <div className="flex items-center gap-6 mb-2">
+                <div className="flex items-center gap-2">
+                  <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                  <span className="font-semibold text-neutral-900">{communityRating}</span>
+                  <span className="text-sm text-neutral-500">({reviewCount.toLocaleString()} reviews)</span>
                 </div>
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="w-full h-11 px-4 rounded-full border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-indigo-500" />
+                  <span className="font-semibold text-neutral-900">{memberCount.toLocaleString()}</span>
+                  <span className="text-sm text-neutral-500">members</span>
+                </div>
+              </div>
+
+              {/* Access Type Badge */}
+              <div className="mb-4">
+                <span
+                  className={cn(
+                    "px-3 py-1 rounded-full text-xs font-medium",
+                    communityAccess === "public" && "bg-green-100 text-green-700",
+                    communityAccess === "private" && "bg-yellow-100 text-yellow-700",
+                    communityAccess === "invite" && "bg-purple-100 text-purple-700"
+                  )}
+                >
+                  {communityAccess === "public" && "🌍 Public Community"}
+                  {communityAccess === "private" && "🔒 Private Community"}
+                  {communityAccess === "invite" && "✉️ Invite-Only Community"}
+                </span>
+              </div>
+
+              {/* Title + Description */}
+              <h2 className="text-2xl font-bold text-neutral-900 mb-3">
+                Join {currentVideo.creator.name}'s Community
+              </h2>
+              <p className="text-neutral-600 text-sm leading-relaxed mb-4">
+                {communityDescription}
+              </p>
+
+              {/* Tags / Categories */}
+              <div className="flex flex-wrap gap-2 mb-6">
+                {communityTags.map((tag, i) => (
+                  <span
+                    key={i}
+                    className="px-3 py-1.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+
+              {/* CTA Button - Dynamic based on type */}
+              {communityType === "paid" && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium text-neutral-700">Membership</span>
+                      <span className="text-lg font-bold text-indigo-600">{communityPrice}</span>
+                    </div>
+                    <ul className="text-xs text-neutral-600 space-y-1">
+                      <li>✓ Exclusive content & courses</li>
+                      <li>✓ Behind-the-scenes access</li>
+                      <li>✓ Direct creator interaction</li>
+                      <li>✓ Community perks & rewards</li>
+                    </ul>
+                  </div>
+                  <Button
+                    className="w-full h-12 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-semibold text-base shadow-md hover:scale-[1.02] transition-transform"
+                    onClick={() => {
+                      console.log('Proceeding to payment checkout');
+                      setCommunityDialogOpen(false);
+                    }}
+                  >
+                    Join – {communityPrice}
+                  </Button>
+                </div>
+              )}
+
+              {communityType === "free" && (
                 <Button
-                  className="w-full h-11 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-medium"
+                  className="w-full h-12 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold text-base shadow-md hover:scale-[1.02] transition-transform"
                   onClick={() => {
-                    // Handle free signup
                     console.log('Joining free community');
                     setCommunityDialogOpen(false);
                   }}
                 >
-                  Join Free Community
+                  Join Free
                 </Button>
-              </div>
-            )}
+              )}
 
-            {communityType === "waitlist" && (
-              <div className="space-y-3">
-                <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg">
-                  <p className="text-sm text-neutral-700 mb-2">This community is currently at capacity.</p>
-                  <p className="text-xs text-neutral-600">Join the waitlist to be notified when spots open up!</p>
-                </div>
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="w-full h-11 px-4 rounded-full border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
+              {communityType === "waitlist" && (
                 <Button
-                  className="w-full h-11 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium"
+                  className="w-full h-12 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold text-base shadow-md hover:scale-[1.02] transition-transform"
                   onClick={() => {
-                    // Handle waitlist signup
                     console.log('Joining waitlist');
                     setCommunityDialogOpen(false);
                   }}
                 >
                   Join Waitlist
                 </Button>
-              </div>
-            )}
+              )}
 
-            {communityType === "lifetime" && (
-              <div className="space-y-3">
-                <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-neutral-700">Lifetime Access</span>
-                    <span className="text-lg font-bold text-purple-600">$299</span>
+              {communityType === "lifetime" && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium text-neutral-700">Lifetime Access</span>
+                      <span className="text-lg font-bold text-purple-600">$299</span>
+                    </div>
+                    <ul className="text-xs text-neutral-600 space-y-1">
+                      <li>✓ All current & future content</li>
+                      <li>✓ Priority support & access</li>
+                      <li>✓ Exclusive lifetime perks</li>
+                      <li>✓ One-time payment, forever access</li>
+                    </ul>
                   </div>
-                  <ul className="text-xs text-neutral-600 space-y-1">
-                    <li>✓ All current & future content</li>
-                    <li>✓ Priority support & access</li>
-                    <li>✓ Exclusive lifetime perks</li>
-                    <li>✓ One-time payment, forever access</li>
-                  </ul>
+                  <Button
+                    className="w-full h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold text-base shadow-md hover:scale-[1.02] transition-transform"
+                    onClick={() => {
+                      console.log('Proceeding to lifetime purchase');
+                      setCommunityDialogOpen(false);
+                    }}
+                  >
+                    Lifetime Access
+                  </Button>
                 </div>
-                <Button
-                  className="w-full h-11 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium"
-                  onClick={() => {
-                    // Handle lifetime purchase
-                    console.log('Proceeding to lifetime purchase');
-                    setCommunityDialogOpen(false);
-                  }}
-                >
-                  Get Lifetime Access
-                </Button>
-              </div>
-            )}
+              )}
 
-            {communityType === "zaps" && (
-              <div className="space-y-3">
-                <div className="p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg">
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-sm font-medium text-neutral-700">Reward for Joining</span>
-                    <span className="text-2xl font-bold text-indigo-600">+{rewardZAPs}⚡</span>
+              {communityType === "zaps" && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-sm font-medium text-neutral-700">Reward for Joining</span>
+                      <span className="text-2xl font-bold text-indigo-600">+{rewardZAPs}⚡</span>
+                    </div>
+                    <ul className="text-xs text-neutral-600 space-y-1">
+                      <li>✓ Exclusive community access</li>
+                      <li>✓ Instant {rewardZAPs} ZAPs reward</li>
+                      <li>✓ Behind-the-scenes content</li>
+                      <li>✓ Connect with like-minded creators</li>
+                    </ul>
                   </div>
-                  <p className="text-xs text-neutral-600 mb-2">
-                    Earn {rewardZAPs} ZAPs instantly when you join this community!
-                  </p>
-                  <ul className="text-xs text-neutral-600 space-y-1">
-                    <li>✓ Exclusive community access</li>
-                    <li>✓ Instant ZAP reward</li>
-                    <li>✓ Behind-the-scenes content</li>
-                    <li>✓ Connect with creators</li>
-                  </ul>
+                  <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-neutral-200">
+                    <span className="text-sm text-neutral-600">Your current ZAPs:</span>
+                    <span className="text-lg font-bold text-neutral-900">{zapData?.balance || 0}⚡</span>
+                  </div>
+                  <Button
+                    className="w-full h-12 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold text-base shadow-md hover:scale-[1.02] transition-transform disabled:opacity-70 disabled:cursor-not-allowed"
+                    disabled={isPendingAccess || isInviteSent}
+                    onClick={() => {
+                      if (communityAccess === "public") {
+                        console.log('Joining with ZAP reward');
+                        setZapsEarnedAmount(rewardZAPs);
+                        setShowZAPsEarned(true);
+                        setTimeout(() => setShowZAPsEarned(false), 3000);
+                        setCommunityDialogOpen(false);
+                      } else if (communityAccess === "private") {
+                        console.log('Requesting access to private community');
+                        setIsPendingAccess(true);
+                        setTimeout(() => {
+                          setCommunityDialogOpen(false);
+                        }, 1500);
+                      } else if (communityAccess === "invite") {
+                        console.log('Applying for invite');
+                        setIsInviteSent(true);
+                        setTimeout(() => {
+                          setCommunityDialogOpen(false);
+                        }, 1500);
+                      }
+                    }}
+                  >
+                    {isPendingAccess && "⏳ Pending Approval"}
+                    {isInviteSent && "✉️ Invite Sent"}
+                    {!isPendingAccess && !isInviteSent && (
+                      <>
+                        {communityAccess === "public" && `Join +${rewardZAPs}⚡ ZAPs`}
+                        {communityAccess === "private" && "Request Access"}
+                        {communityAccess === "invite" && "Apply for Invite"}
+                      </>
+                    )}
+                  </Button>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
-                  <span className="text-sm text-neutral-600">Your current ZAPs:</span>
-                  <span className="text-lg font-bold text-neutral-900">{zapData?.balance || 0}⚡</span>
-                </div>
-                <Button
-                  className="w-full h-11 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-medium"
-                  onClick={() => {
-                    // Handle ZAP community join
-                    console.log('Joining with ZAP reward');
-                    // Award ZAPs to user
-                    setZapsEarnedAmount(rewardZAPs);
-                    setShowZAPsEarned(true);
-                    setTimeout(() => setShowZAPsEarned(false), 3000);
-                    setCommunityDialogOpen(false);
-                  }}
-                >
-                  Join & Earn {rewardZAPs} ZAPs ⚡
-                </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>

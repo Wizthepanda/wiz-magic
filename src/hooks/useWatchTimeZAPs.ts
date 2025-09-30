@@ -35,11 +35,20 @@ export const useWatchTimeZAPs = ({
   const [totalZAPsEarned, setTotalZAPsEarned] = useState(0);
   const [isVideoCompleted, setIsVideoCompleted] = useState(false);
   const [hasBeenCompleted, setHasBeenCompleted] = useState(false);
-  const [progressBarReady, setProgressBarReady] = useState(false);
+  const [progressBarReady, setProgressBarReady] = useState(true); // Always ready - no need to wait
 
   const watchTimeRef = useRef(0);
   const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastZAPAwardRef = useRef(0);
+  const actualVideoTimeRef = useRef(0); // Track actual video time from player
+  const completionRateRef = useRef(0); // Track current completion rate for ZAP awards
+
+  // Update actual video time ref whenever prop changes
+  useEffect(() => {
+    if (actualVideoTime !== undefined && actualVideoTime > 0) {
+      actualVideoTimeRef.current = actualVideoTime;
+    }
+  }, [actualVideoTime]);
 
   // Check if video has been completed before
   useEffect(() => {
@@ -93,6 +102,8 @@ export const useWatchTimeZAPs = ({
     watchTimeRef.current = 0;
     setWatchTime(0);
     setCompletionRate(0); // Reset completion rate when starting
+    completionRateRef.current = 0; // Reset completion rate ref
+    actualVideoTimeRef.current = 0; // Reset actual video time ref
     setTotalZAPsEarned(0);
     setProgressBarReady(true); // Mark progress bar as ready to update
 
@@ -129,39 +140,69 @@ export const useWatchTimeZAPs = ({
 
   // Ping watch time progress
   const pingWatchTime = async () => {
-    console.log(`🔄 pingWatchTime called - user: ${!!user?.uid}, tabFocused: ${tabFocused}, watchTime: ${watchTimeRef.current}s`);
+    try {
+      console.log(`🔄 pingWatchTime called - user: ${!!user?.uid}, tabFocused: ${tabFocused}, watchTime: ${watchTimeRef.current}s, isCompleted: ${isVideoCompleted}`);
 
-    if (!user?.uid || !tabFocused) {
-      console.log(`⚠️ Skipping ping - user: ${!!user?.uid}, tabFocused: ${tabFocused}`);
-      return;
-    }
+      // IMPORTANT: Stop processing if video is already completed
+      if (isVideoCompleted) {
+        console.log(`🛑 Video already completed - stopping ping processing`);
+        return;
+      }
 
-    const now = Date.now();
-    const deltaSeconds = (now - lastPingTime) / 1000;
+      if (!user?.uid || !tabFocused) {
+        console.log(`⚠️ Skipping ping - user: ${!!user?.uid}, tabFocused: ${tabFocused}`);
+        return;
+      }
 
-    // Only count time if tab is focused and delta is reasonable (prevent cheating)
-    if (ZAP_CONFIG.FOCUS_REQUIRED && !tabFocused) return;
-    if (deltaSeconds > 15) return; // Ignore if more than 15 seconds (tab was probably inactive)
+      const now = Date.now();
+      const deltaSeconds = (now - lastPingTime) / 1000;
+      console.log(`⏱️ Time delta: ${deltaSeconds.toFixed(2)}s since last ping`);
 
-    // Only increment watch time if video is playing
-    if (isVideoPlaying) {
-      watchTimeRef.current += deltaSeconds;
-      setWatchTime(watchTimeRef.current);
-    }
-    setLastPingTime(now);
+      // Only count time if tab is focused and delta is reasonable (prevent cheating)
+      if (ZAP_CONFIG.FOCUS_REQUIRED && !tabFocused) {
+        console.log(`⚠️ Exiting - focus required but tab not focused`);
+        return;
+      }
 
-    let newCompletionRate = completionRate; // Default to current completion rate
+      // Cap delta at interval time (10s) + 2s grace period to prevent cheating
+      // This handles the first ping which may have longer delta due to initialization
+      const maxAllowedDelta = (ZAP_CONFIG.ANTI_CHEAT_PING_INTERVAL / 1000) + 2;
+      if (deltaSeconds > maxAllowedDelta) {
+        console.log(`⚠️ Delta too large (${deltaSeconds.toFixed(2)}s > ${maxAllowedDelta}s), capping to interval time`);
+        // Don't skip - just cap the time we credit to prevent cheating
+        const cappedDelta = ZAP_CONFIG.ANTI_CHEAT_PING_INTERVAL / 1000;
+        watchTimeRef.current += cappedDelta;
+        setWatchTime(watchTimeRef.current);
+        setLastPingTime(now);
+        console.log(`✅ Watch time updated to: ${watchTimeRef.current}s (capped delta)`);
+      } else {
+        // Only increment watch time if video is playing
+        if (isVideoPlaying) {
+          watchTimeRef.current += deltaSeconds;
+          setWatchTime(watchTimeRef.current);
+          console.log(`✅ Watch time updated to: ${watchTimeRef.current}s`);
+        } else {
+          console.log(`⏸️ Video not playing, watch time not incremented`);
+        }
+        setLastPingTime(now);
+      }
 
-    // Update completion rate based on actual video time if available, otherwise fallback to watch time
+      console.log(`📊 About to check video duration - videoDuration: ${videoDuration}, progressBarReady: ${progressBarReady}, actualVideoTime: ${actualVideoTime}`);
+
+      let newCompletionRate = completionRate; // Default to current completion rate
+
+      // Update completion rate based on actual video time if available, otherwise fallback to watch time
+      const currentActualTime = actualVideoTimeRef.current;
+      console.log(`📊 Video duration: ${videoDuration}, progressBarReady: ${progressBarReady}, actualVideoTime: ${currentActualTime}`);
     if (videoDuration > 0 && progressBarReady) {
-      if (actualVideoTime !== undefined && actualVideoTime > 0) {
+      if (currentActualTime > 0) {
         // Use actual video position for accurate progress
-        newCompletionRate = Math.min(actualVideoTime / videoDuration, 1);
-        console.log(`📺 Video progress: ${actualVideoTime.toFixed(1)}s / ${videoDuration}s (${(newCompletionRate * 100).toFixed(1)}%)`);
+        newCompletionRate = Math.min(currentActualTime / videoDuration, 1);
+        console.log(`📺 Video progress: ${currentActualTime.toFixed(1)}s / ${videoDuration}s (${(newCompletionRate * 100).toFixed(1)}%)`);
 
         // Also sync our watch time to be closer to actual video time
         // This helps maintain ZAP earning accuracy while showing correct progress
-        const expectedWatchTime = Math.min(actualVideoTime, watchTimeRef.current + deltaSeconds * 2);
+        const expectedWatchTime = Math.min(currentActualTime, watchTimeRef.current + deltaSeconds * 2);
         if (Math.abs(expectedWatchTime - watchTimeRef.current) > 5) {
           // Only adjust if there's a significant difference (>5 seconds)
           watchTimeRef.current = Math.max(watchTimeRef.current, expectedWatchTime * 0.8);
@@ -175,43 +216,75 @@ export const useWatchTimeZAPs = ({
       }
 
       setCompletionRate(newCompletionRate);
+      completionRateRef.current = newCompletionRate; // Update ref for award function
       onProgressUpdate?.(newCompletionRate);
 
       // Check for video completion (≥90% watched)
       if (newCompletionRate >= ZAP_CONFIG.COMPLETION_THRESHOLD && !isVideoCompleted) {
-        setIsVideoCompleted(true);
-        onVideoCompleted?.();
-        console.log(`🎉 Video ${videoId} completed! Awarding final ZAPs...`);
+        console.log(`🎉 Video ${videoId} completed! Stopping tracking and awarding final ZAPs...`);
 
-        // Award final ZAPs on completion
-        await awardZAPsForWatchTime();
-        lastZAPAwardRef.current = Math.floor(watchTimeRef.current / 10) * 10;
+        // FIRST: Stop tracking immediately to prevent any more pings
+        if (pingIntervalRef.current) {
+          clearInterval(pingIntervalRef.current);
+          pingIntervalRef.current = null;
+          console.log(`✅ Interval cleared`);
+        }
+
+        // THEN: Mark as completed
+        setIsVideoCompleted(true);
+        setIsTracking(false);
+
+        // Award final ZAPs on completion (only if we haven't awarded for this threshold yet)
+        const finalThreshold = Math.floor(watchTimeRef.current / 10) * 10;
+        if (finalThreshold > lastZAPAwardRef.current) {
+          await awardZAPsForWatchTime();
+          lastZAPAwardRef.current = finalThreshold;
+        }
+
+        // Notify completion
+        onVideoCompleted?.();
+
+        console.log(`🛑 ZAP tracking fully stopped - video completed`);
+        return; // Exit early - don't process anything else
       }
     }
 
-    // Award ZAPs every 10 seconds of watch time (only if not yet completed)
-    const zapThreshold = Math.floor(watchTimeRef.current / 10) * 10;
-    if (zapThreshold > lastZAPAwardRef.current && zapThreshold > 0 && !isVideoCompleted) {
-      console.log(`⚡ Awarding ZAPs for ${zapThreshold}s watch time, completion rate: ${(newCompletionRate * 100).toFixed(1)}%`);
-      await awardZAPsForWatchTime();
-      lastZAPAwardRef.current = zapThreshold;
+      // Award ZAPs every 10 seconds of watch time (only if not yet completed)
+      const zapThreshold = Math.floor(watchTimeRef.current / 10) * 10;
+      console.log(`💎 ZAP threshold check - zapThreshold: ${zapThreshold}, lastAward: ${lastZAPAwardRef.current}, isCompleted: ${isVideoCompleted}`);
+
+      if (zapThreshold > lastZAPAwardRef.current && zapThreshold > 0 && !isVideoCompleted) {
+        console.log(`⚡ Awarding ZAPs for ${zapThreshold}s watch time, completion rate: ${(newCompletionRate * 100).toFixed(1)}%`);
+        await awardZAPsForWatchTime();
+        lastZAPAwardRef.current = zapThreshold;
+      } else {
+        console.log(`⏭️ Skipping ZAP award - conditions not met`);
+      }
+    } catch (error) {
+      console.error(`❌ Error in pingWatchTime:`, error);
     }
   };
 
   // Award ZAPs for accumulated watch time
   const awardZAPsForWatchTime = async () => {
+    // Don't award if video is already completed (prevents duplicate awards)
+    if (isVideoCompleted && lastZAPAwardRef.current > 0) {
+      console.log(`🛑 Video already completed and ZAPs already awarded - skipping`);
+      return;
+    }
+
     if (!user?.uid || watchTimeRef.current <= 0) {
       console.log(`⚠️ Cannot award ZAPs - user: ${!!user?.uid}, watchTime: ${watchTimeRef.current}s`);
       return;
     }
 
-    console.log(`💰 Attempting to award ZAPs for ${watchTimeRef.current}s watch time, completion: ${(completionRate * 100).toFixed(1)}%`);
+    console.log(`💰 Attempting to award ZAPs for ${watchTimeRef.current}s watch time, completion: ${(completionRateRef.current * 100).toFixed(1)}%`);
 
     try {
       const zapsAwarded = await awardWatchTimeZAPs(
         videoId,
         watchTimeRef.current,
-        completionRate,
+        completionRateRef.current,
         isBoosted
       );
 

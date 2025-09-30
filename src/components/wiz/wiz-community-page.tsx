@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search,
@@ -42,6 +42,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
 import { useXp } from '@/context/XpContext';
 import { JoinCommunityModal } from '@/components/ui/join-community-modal';
+import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 // Enhanced course data with gamification
 const featuredHeroCommunity = {
@@ -698,6 +700,8 @@ export const WizCommunityPage = ({ onSectionChange }: WizCommunityPageProps = {}
   const [selectedDifficulty, setSelectedDifficulty] = useState('All');
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [publishedCommunities, setPublishedCommunities] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const { xpData } = useXp();
@@ -706,8 +710,74 @@ export const WizCommunityPage = ({ onSectionChange }: WizCommunityPageProps = {}
   const userLevel = xpData?.currentLevel || 1;
   const userXP = xpData?.totalXP || 250;
 
+  // Fetch published communities from Firestore
+  useEffect(() => {
+    const fetchPublishedCommunities = async () => {
+      try {
+        setLoading(true);
+
+        // Query for free communities (USD = 0 and ZAPs = 0)
+        const communitiesQuery = query(
+          collection(db, 'communities'),
+          where('status', '==', 'published'),
+          where('zapsRequired', '==', 0),
+          where('usdCoPay', '==', 0),
+          orderBy('createdAt', 'desc'),
+          limit(50)
+        );
+
+        const snapshot = await getDocs(communitiesQuery);
+        const communities: any[] = [];
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          communities.push({
+            id: doc.id,
+            title: data.title,
+            creator: data.creatorName || 'Unknown Creator',
+            role: 'Community Creator',
+            creatorAvatar: data.creatorAvatar || '/Profile Pics/FERA.jpg',
+            thumbnail: data.coverMedia?.[0]?.thumbnail || data.coverMedia?.[0]?.url || '/api/placeholder/400/225',
+            description: data.shortDescription || data.longDescription || '',
+            category: data.category || 'General',
+            difficulty: 'Beginner',
+            duration: data.accessWindow || 'Lifetime',
+            members: 0,
+            rating: 5.0,
+            reviews: 0,
+            xpRequired: 0,
+            originalPrice: 0,
+            isPaid: false,
+            isFree: true,
+            lessons: data.modules?.length || 0,
+            completionRate: 0,
+            slotsTotal: data.slotsAvailable || null,
+            slotsClaimed: 0,
+            levelRequirement: null,
+            tags: data.tags || [],
+            privacy: data.privacy || 'public',
+            // Store original community data
+            communityData: data
+          });
+        });
+
+        setPublishedCommunities(communities);
+        console.log(`✅ Loaded ${communities.length} published communities from Firestore`);
+      } catch (error) {
+        console.error('Error fetching published communities:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPublishedCommunities();
+  }, []);
+
+  // Combine real communities with mock data for display
+  const allCoursesData = [...publishedCommunities, ...allCourses];
+
   // Filter courses based on search and filters
-  const filteredCourses = allCourses.filter(course => {
+  const filteredCourses = allCoursesData.filter(course => {
     const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          course.creator.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'all' ||
@@ -719,9 +789,9 @@ export const WizCommunityPage = ({ onSectionChange }: WizCommunityPageProps = {}
   });
 
   // Get courses by category for carousels
-  const popularCourses = allCourses.filter(course => course.isPopular);
-  const freeCourses = allCourses.filter(course => course.isFree);
-  const advancedCourses = allCourses.filter(course => course.difficulty === 'Advanced');
+  const popularCourses = allCoursesData.filter(course => course.isPopular);
+  const freeCourses = allCoursesData.filter(course => course.isFree);
+  const advancedCourses = allCoursesData.filter(course => course.difficulty === 'Advanced');
 
   return (
     <div className="relative min-h-screen">

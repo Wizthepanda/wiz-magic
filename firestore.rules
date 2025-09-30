@@ -155,6 +155,18 @@ service cloud.firestore {
     match /courseProgress/{userId}/courses/{courseId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+
+    // Communities collection - for community creation and management
+    match /communities/{communityId} {
+      allow read: if true; // Public read for community discovery
+      allow create: if request.auth != null &&
+                   request.auth.uid == request.resource.data.creatorId &&
+                   validateCommunityData(request.resource.data);
+      allow update: if request.auth != null &&
+                   request.auth.uid == resource.data.creatorId &&
+                   validateCommunityData(request.resource.data);
+      allow delete: if request.auth != null && request.auth.uid == resource.data.creatorId;
+    }
   }
 }
 
@@ -202,4 +214,20 @@ function validateCourseData(courseData) {
          ('price' in courseData ? courseData.price is number && courseData.price >= 0 : true) &&
          // Validate modules structure
          ('modules' in courseData ? courseData.modules is list : true);
+}
+
+// Validation function for community data
+function validateCommunityData(communityData) {
+  // Ensure required fields are present and valid
+  return 'title' in communityData && communityData.title is string && communityData.title.size() >= 5 &&
+         'category' in communityData && communityData.category is string &&
+         'creatorId' in communityData && communityData.creatorId is string &&
+         'shortDescription' in communityData && communityData.shortDescription is string &&
+         'privacy' in communityData && communityData.privacy in ['public', 'private', 'invite'] &&
+         'status' in communityData && communityData.status in ['draft', 'published', 'scheduled'] &&
+         // Validate pricing model
+         ('pricingModel' in communityData ? communityData.pricingModel in ['usd', 'zaps'] : true) &&
+         // Validate numeric fields
+         ('zapsRequired' in communityData ? communityData.zapsRequired is number && communityData.zapsRequired >= 0 : true) &&
+         ('usdCoPay' in communityData ? communityData.usdCoPay is number && communityData.usdCoPay >= 0 : true);
 }

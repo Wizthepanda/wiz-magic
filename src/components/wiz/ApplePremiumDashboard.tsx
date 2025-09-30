@@ -150,15 +150,15 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
     let creatorVideosUnsubscribe: (() => void) | null = null;
 
     const setupRealtimeListeners = () => {
-      // Real-time listener for videos collection
+      // Real-time listener for videos collection (fetch all videos for filtering)
       videosUnsubscribe = onSnapshot(
-        query(collection(db, 'videos'), limit(15)),
+        query(collection(db, 'videos'), limit(100)),
         (videosSnapshot) => {
           console.log('🔥 ApplePremiumDashboard: Videos collection changed');
 
-          // Real-time listener for creatorVideos collection
+          // Real-time listener for creatorVideos collection (fetch all creator videos)
           creatorVideosUnsubscribe = onSnapshot(
-            query(collection(db, 'creatorVideos'), orderBy('addedToWiz', 'desc'), limit(15)),
+            query(collection(db, 'creatorVideos'), orderBy('addedToWiz', 'desc'), limit(100)),
             (creatorVideosSnapshot) => {
               console.log('🔥 ApplePremiumDashboard: CreatorVideos collection changed');
               processVideoSnapshots(videosSnapshot, creatorVideosSnapshot);

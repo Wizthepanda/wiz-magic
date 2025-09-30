@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { doc, setDoc, updateDoc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, getDoc, collection, addDoc, serverTimestamp, query, where, orderBy, getDocs, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from './useAuth';
 import type { CreateCommunityForm } from '@/lib/schemas/community';
@@ -27,6 +27,8 @@ export const useCreateCommunity = () => {
       const communityData: Omit<CommunityData, 'id'> = {
         ...data,
         creatorId: user.uid,
+        creatorName: user.displayName || 'Unknown Creator',
+        creatorAvatar: user.photoURL || '',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         status: data.status || 'draft'
@@ -207,9 +209,30 @@ export const useDraftCommunities = () => {
     queryFn: async () => {
       if (!user) return [];
 
-      // This would typically use a Firestore query with where conditions
-      // For now, return empty array as placeholder
-      return [];
+      try {
+        const draftsQuery = query(
+          collection(db, 'communities'),
+          where('creatorId', '==', user.uid),
+          where('status', '==', 'draft'),
+          orderBy('updatedAt', 'desc')
+        );
+
+        const snapshot = await getDocs(draftsQuery);
+        const drafts: CommunityData[] = [];
+
+        snapshot.forEach((doc) => {
+          drafts.push({
+            id: doc.id,
+            ...doc.data()
+          } as CommunityData);
+        });
+
+        console.log(`✅ Loaded ${drafts.length} draft communities`);
+        return drafts;
+      } catch (error) {
+        console.error('Error fetching draft communities:', error);
+        return [];
+      }
     },
     enabled: !!user
   });
@@ -217,13 +240,26 @@ export const useDraftCommunities = () => {
 
 // Save draft hook with optimistic updates
 export const useSaveDraft = () => {
+  const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, data }: { id?: string; data: Partial<CreateCommunityForm> }) => {
+      if (!user) throw new Error('User not authenticated');
+
+      // Strip out large file data from coverMedia to avoid payload size limits
+      const sanitizedCoverMedia = data.coverMedia?.map(media => ({
+        url: media.url,
+        thumbnail: media.thumbnail,
+        type: media.type,
+        videoId: media.videoId
+        // Exclude 'file' and any base64 data
+      })) || [];
+
       const draftData = {
         ...data,
+        coverMedia: sanitizedCoverMedia,
         status: 'draft',
         updatedAt: serverTimestamp()
       };
@@ -234,9 +270,32 @@ export const useSaveDraft = () => {
         await updateDoc(communityRef, draftData);
         return { id, ...draftData };
       } else {
-        // Create new draft
+        // Before creating new draft, check if one already exists with same title
+        if (data.title) {
+          const existingDraftQuery = query(
+            collection(db, 'communities'),
+            where('creatorId', '==', user.uid),
+            where('status', '==', 'draft'),
+            where('title', '==', data.title),
+            limit(1)
+          );
+          const existingDrafts = await getDocs(existingDraftQuery);
+
+          if (!existingDrafts.empty) {
+            // Update existing draft instead of creating new one
+            const existingDraftId = existingDrafts.docs[0].id;
+            const communityRef = doc(db, 'communities', existingDraftId);
+            await updateDoc(communityRef, draftData);
+            return { id: existingDraftId, ...draftData };
+          }
+        }
+
+        // Create new draft only if no existing draft found
         const docRef = await addDoc(collection(db, 'communities'), {
           ...draftData,
+          creatorId: user.uid,
+          creatorName: user.displayName || 'Unknown Creator',
+          creatorAvatar: user.photoURL || '',
           createdAt: serverTimestamp()
         });
         return { id: docRef.id, ...draftData };

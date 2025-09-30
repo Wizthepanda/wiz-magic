@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingBag,
@@ -23,6 +23,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './dropdo
 import { useTheme } from '@/contexts/ThemeContext';
 import { useSafeNavigate } from '@/hooks/useSafeNavigate';
 import { useZAPSystem } from '@/hooks/useZAPSystem';
+import { collection, query, where, getDocs, orderBy, limit, or } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface MarketplaceItem {
   id: string;
@@ -63,6 +65,7 @@ export const ZAPRewardsDropdown: React.FC<ZAPRewardsDropdownProps> = ({
   const [internalOpen, setInternalOpen] = useState(false);
   const [hoveredReward, setHoveredReward] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'communities' | 'courses' | 'coaching' | 'digital-products'>('all');
+  const [paidCommunities, setPaidCommunities] = useState<MarketplaceItem[]>([]);
 
   // Use real ZAP data or fallback to prop
   const displayZAPs = currentZAPS ?? zapData?.totalZAPs ?? 0;
@@ -71,8 +74,57 @@ export const ZAPRewardsDropdown: React.FC<ZAPRewardsDropdownProps> = ({
   const dropdownOpen = isOpen !== undefined ? isOpen : internalOpen;
   const setDropdownOpen = onOpenChange || setInternalOpen;
 
-  // Premium ZAP Rewards marketplace items
-  const marketplaceItems: MarketplaceItem[] = [
+  // Fetch paid communities from Firestore
+  useEffect(() => {
+    const fetchPaidCommunities = async () => {
+      try {
+        // Query for paid communities (ZAPs > 0 OR USD > 0)
+        const communitiesQuery = query(
+          collection(db, 'communities'),
+          where('status', '==', 'published'),
+          orderBy('createdAt', 'desc'),
+          limit(20)
+        );
+
+        const snapshot = await getDocs(communitiesQuery);
+        const communities: MarketplaceItem[] = [];
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+
+          // Only include if it requires ZAPs or USD
+          if ((data.zapsRequired && data.zapsRequired > 0) || (data.usdCoPay && data.usdCoPay > 0)) {
+            communities.push({
+              id: doc.id,
+              name: data.title,
+              subtitle: `Join ${data.slotsAvailable ? `${data.slotsAvailable} slots` : 'unlimited members'}`,
+              description: data.shortDescription || data.longDescription || '',
+              cost: data.zapsRequired || 0,
+              icon: <Users className="w-5 h-5" />,
+              status: 'available',
+              gradient: 'from-blue-400 via-purple-500 to-pink-500',
+              category: 'communities',
+              banner: data.coverMedia?.[0]?.thumbnail || data.coverMedia?.[0]?.url || '/api/placeholder/300/160',
+              creator: `@${data.creatorName || 'creator'}`,
+              rating: 5.0,
+              memberCount: 0,
+              isVideo: false
+            });
+          }
+        });
+
+        setPaidCommunities(communities);
+        console.log(`✅ Loaded ${communities.length} paid communities for ZAP Rewards`);
+      } catch (error) {
+        console.error('Error fetching paid communities:', error);
+      }
+    };
+
+    fetchPaidCommunities();
+  }, []);
+
+  // Premium ZAP Rewards marketplace items (now combined with real communities)
+  const hardcodedItems: MarketplaceItem[] = [
     {
       id: 'ai-mastery-community',
       name: 'AI Mastery Community',
@@ -179,6 +231,9 @@ export const ZAPRewardsDropdown: React.FC<ZAPRewardsDropdownProps> = ({
     { id: 'coaching' as const, label: 'Coaching', icon: Award },
     { id: 'digital-products' as const, label: 'Digital Products', icon: Monitor }
   ];
+
+  // Combine real communities with hardcoded items
+  const marketplaceItems = [...paidCommunities, ...hardcodedItems];
 
   const filteredItems = activeTab === 'all'
     ? marketplaceItems

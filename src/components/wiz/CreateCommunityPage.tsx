@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useForm, FormProvider } from 'react-hook-form';
+import { useForm, FormProvider, useFormContext, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   ArrowLeft,
@@ -19,6 +19,7 @@ import {
   Crown,
   Calendar,
   Check,
+  CheckCircle,
   Loader,
   Globe,
   Lock,
@@ -35,6 +36,8 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
@@ -46,10 +49,11 @@ import {
   accessWindowOptions,
   type CreateCommunityForm
 } from '@/lib/schemas/community';
-import { useCreateCommunity, useUpdateCommunity, usePublishCommunity, useSaveDraft } from '@/hooks/useCommunity';
+import { useCreateCommunity, useUpdateCommunity, usePublishCommunity, useSaveDraft, useCommunity } from '@/hooks/useCommunity';
 
 interface CreateCommunityPageProps {
   onBack: () => void;
+  draftId?: string;
 }
 
 const steps = [
@@ -59,9 +63,9 @@ const steps = [
   { id: 4, title: 'Publish', icon: Rocket }
 ];
 
-const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack }) => {
+const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draftId }) => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [communityId, setCommunityId] = useState<string | null>(null);
+  const [communityId, setCommunityId] = useState<string | null>(draftId || null);
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
   const [coverMedia, setCoverMedia] = useState<Array<{ type: 'image' | 'youtube'; url: string; thumbnail?: string }>>([]);
@@ -70,6 +74,9 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack }) => 
 
   const isMobile = useIsMobile();
   const { toast } = useToast();
+
+  // Load draft if draftId is provided
+  const { data: draftData, isLoading: isDraftLoading } = useCommunity(draftId || '');
 
   // Form setup with proper schema validation
   const form = useForm<CreateCommunityForm>({
@@ -87,12 +94,16 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack }) => 
       youtubeVideoIds: [],
       modules: [],
       downloads: [],
+      pricingModel: 'usd',
       zapsRequired: 0,
       usdCoPay: 0,
       slotsAvailable: null,
       subscriptionMonthly: 0,
       splitPayEnabled: false,
+      waitlistEnabled: false,
       accessWindow: 'lifetime',
+      offerZAPsToNewMembers: false,
+      newMemberZAPsReward: 0,
       status: 'draft'
     },
     mode: 'onChange'
@@ -107,16 +118,48 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack }) => 
   // Watch form data for preview
   const watchedData = form.watch();
 
-  // Auto-save draft every 30 seconds
+  // Load draft data when available
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (form.formState.isDirty) {
-        handleSaveDraft();
-      }
-    }, 30000);
+    if (draftData && draftId) {
+      // Populate form with draft data
+      form.reset({
+        title: draftData.title || '',
+        tagline: draftData.tagline || '',
+        category: draftData.category || '',
+        coverMedia: draftData.coverMedia || [],
+        shortDescription: draftData.shortDescription || '',
+        longDescription: draftData.longDescription || '',
+        tags: draftData.tags || [],
+        privacy: draftData.privacy || 'public',
+        youtubeChannelConnected: draftData.youtubeChannelConnected || false,
+        youtubeVideoIds: draftData.youtubeVideoIds || [],
+        modules: draftData.modules || [],
+        downloads: draftData.downloads || [],
+        pricingModel: draftData.pricingModel || 'usd',
+        zapsRequired: draftData.zapsRequired || 0,
+        usdCoPay: draftData.usdCoPay || 0,
+        slotsAvailable: draftData.slotsAvailable || null,
+        subscriptionMonthly: draftData.subscriptionMonthly || 0,
+        splitPayEnabled: draftData.splitPayEnabled || false,
+        waitlistEnabled: draftData.waitlistEnabled || false,
+        accessWindow: draftData.accessWindow || 'lifetime',
+        offerZAPsToNewMembers: draftData.offerZAPsToNewMembers || false,
+        newMemberZAPsReward: draftData.newMemberZAPsReward || 0,
+        status: 'draft'
+      });
 
-    return () => clearInterval(interval);
-  }, [form.formState.isDirty]);
+      // Set state for arrays
+      setTags(draftData.tags || []);
+      setCoverMedia(draftData.coverMedia || []);
+      setModules(draftData.modules || []);
+      setDownloads(draftData.downloads || []);
+
+      toast({
+        title: "Draft loaded!",
+        description: "Continue editing your community.",
+      });
+    }
+  }, [draftData, draftId]);
 
   const handleSaveDraft = async () => {
     const formData = form.getValues();
@@ -134,13 +177,26 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack }) => 
         data: draftData
       });
 
+      // Update communityId if this was a new draft
       if (!communityId && result.id) {
+        console.log('Setting communityId for future auto-saves:', result.id);
         setCommunityId(result.id);
       }
     } catch (error) {
       console.error('Auto-save failed:', error);
     }
   };
+
+  // Auto-save draft every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (form.formState.isDirty) {
+        handleSaveDraft();
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [form.formState.isDirty, communityId, tags, coverMedia, modules, downloads]);
 
   const handleAddTag = () => {
     if (newTag.trim() && !tags.includes(newTag.trim())) {
@@ -439,6 +495,89 @@ const Step1Content: React.FC<{
   onAddCoverMedia: (media: { type: 'image' | 'youtube'; url: string; thumbnail?: string }) => void;
   onRemoveCoverMedia: (index: number) => void;
 }> = ({ tags, newTag, onNewTagChange, onAddTag, onRemoveTag, coverMedia, onAddCoverMedia, onRemoveCoverMedia }) => {
+  const { register, control, formState: { errors } } = useFormContext<CreateCommunityForm>();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showVideoDialog, setShowVideoDialog] = useState(false);
+  const [videoUrl, setVideoUrl] = useState('');
+  const [videoUrlError, setVideoUrlError] = useState('');
+  const { toast } = useToast();
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        onAddCoverMedia({
+          type: 'image',
+          url: reader.result as string
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Extract YouTube video ID from various URL formats
+  const extractYouTubeId = (url: string): string | null => {
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+      /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/
+    ];
+
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match && match[1]) return match[1];
+    }
+    return null;
+  };
+
+  // Extract Vimeo video ID
+  const extractVimeoId = (url: string): string | null => {
+    const match = url.match(/vimeo\.com\/(\d+)/);
+    return match ? match[1] : null;
+  };
+
+  const handleAddVideoUrl = () => {
+    setVideoUrlError('');
+
+    if (!videoUrl.trim()) {
+      setVideoUrlError('Please enter a video URL');
+      return;
+    }
+
+    const youtubeId = extractYouTubeId(videoUrl);
+    const vimeoId = extractVimeoId(videoUrl);
+
+    if (youtubeId) {
+      // YouTube video
+      onAddCoverMedia({
+        type: 'youtube',
+        url: `https://www.youtube.com/embed/${youtubeId}`,
+        thumbnail: `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`
+      });
+      setShowVideoDialog(false);
+      setVideoUrl('');
+      toast({
+        title: "Video added!",
+        description: "YouTube video has been added to cover media.",
+      });
+    } else if (vimeoId) {
+      // Vimeo video
+      onAddCoverMedia({
+        type: 'youtube', // Using 'youtube' type for all videos
+        url: `https://player.vimeo.com/video/${vimeoId}`,
+        thumbnail: `https://vumbnail.com/${vimeoId}.jpg`
+      });
+      setShowVideoDialog(false);
+      setVideoUrl('');
+      toast({
+        title: "Video added!",
+        description: "Vimeo video has been added to cover media.",
+      });
+    } else {
+      setVideoUrlError('Please enter a valid YouTube or Vimeo URL');
+    }
+  };
 
   return (
     <Card>
@@ -453,9 +592,13 @@ const Step1Content: React.FC<{
         <div className="space-y-2">
           <Label>Community Title *</Label>
           <Input
+            {...register('title')}
             placeholder="e.g., AI Builders Community"
             className="text-lg font-semibold"
           />
+          {errors.title && (
+            <p className="text-sm text-red-500">{errors.title.message}</p>
+          )}
           <p className="text-sm text-gray-500">
             Choose a clear, memorable name (5-120 characters)
           </p>
@@ -465,6 +608,7 @@ const Step1Content: React.FC<{
         <div className="space-y-2">
           <Label>Tagline</Label>
           <Input
+            {...register('tagline')}
             placeholder="One-line description of your community"
             maxLength={140}
           />
@@ -474,42 +618,57 @@ const Step1Content: React.FC<{
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label>Category *</Label>
-            <Select>
-              <SelectTrigger>
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {communityCategories.map((category) => (
-                  <SelectItem key={category.value} value={category.value}>
-                    {category.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Controller
+              name="category"
+              control={control}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {communityCategories.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>
+                        {category.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.category && (
+              <p className="text-sm text-red-500">{errors.category.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">
             <Label>Privacy</Label>
-            <Select>
-              <SelectTrigger>
-                <SelectValue placeholder="Select privacy" />
-              </SelectTrigger>
-              <SelectContent>
-                {privacyOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    <div className="flex items-center space-x-2">
-                      {option.value === 'public' && <Globe className="w-4 h-4" />}
-                      {option.value === 'private' && <Lock className="w-4 h-4" />}
-                      {option.value === 'invite' && <Eye className="w-4 h-4" />}
-                      <div>
-                        <div className="font-medium">{option.label}</div>
-                        <div className="text-xs text-gray-500">{option.description}</div>
-                      </div>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Controller
+              name="privacy"
+              control={control}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select privacy" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {privacyOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <div className="flex items-center space-x-2">
+                          {option.value === 'public' && <Globe className="w-4 h-4" />}
+                          {option.value === 'private' && <Lock className="w-4 h-4" />}
+                          {option.value === 'invite' && <Eye className="w-4 h-4" />}
+                          <div>
+                            <div className="font-medium">{option.label}</div>
+                            <div className="text-xs text-gray-500">{option.description}</div>
+                          </div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </div>
         </div>
 
@@ -521,9 +680,24 @@ const Step1Content: React.FC<{
               <div key={index} className="relative group">
                 <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
                   {media.type === 'youtube' ? (
-                    <div className="w-full h-full bg-red-100 flex items-center justify-center">
-                      <Youtube className="w-8 h-8 text-red-500" />
-                    </div>
+                    media.thumbnail ? (
+                      <div className="relative w-full h-full">
+                        <img
+                          src={media.thumbnail}
+                          alt={`Video ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                          <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center">
+                            <Youtube className="w-8 h-8 text-white ml-1" />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-full h-full bg-red-100 flex items-center justify-center">
+                        <Youtube className="w-8 h-8 text-red-500" />
+                      </div>
+                    )
                   ) : (
                     <img
                       src={media.url}
@@ -544,24 +718,100 @@ const Step1Content: React.FC<{
             ))}
 
             {coverMedia.length < 5 && (
-              <div className="aspect-video border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-violet-400 transition-colors">
-                <div className="text-center">
-                  <Plus className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                  <p className="text-sm text-gray-500">Add media</p>
-                </div>
-              </div>
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <div className="aspect-video border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-violet-400 transition-colors">
+                      <div className="text-center">
+                        <Plus className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                        <p className="text-sm text-gray-500">Add media</p>
+                      </div>
+                    </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload Image
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setShowVideoDialog(true)}>
+                      <Youtube className="w-4 h-4 mr-2" />
+                      Add Video URL
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
             )}
           </div>
         </div>
+
+        {/* Video URL Dialog */}
+        <Dialog open={showVideoDialog} onOpenChange={setShowVideoDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Video URL</DialogTitle>
+              <DialogDescription>
+                Enter a YouTube or Vimeo video URL to add to your community's cover media.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Video URL</Label>
+                <Input
+                  value={videoUrl}
+                  onChange={(e) => {
+                    setVideoUrl(e.target.value);
+                    setVideoUrlError('');
+                  }}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddVideoUrl();
+                    }
+                  }}
+                />
+                {videoUrlError && (
+                  <p className="text-sm text-red-500">{videoUrlError}</p>
+                )}
+                <p className="text-xs text-gray-500">
+                  Supported: YouTube (watch, shorts, youtu.be) and Vimeo URLs
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => {
+                setShowVideoDialog(false);
+                setVideoUrl('');
+                setVideoUrlError('');
+              }}>
+                Cancel
+              </Button>
+              <Button onClick={handleAddVideoUrl}>
+                Add Video
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Short Description */}
         <div className="space-y-2">
           <Label>Short Description *</Label>
           <Textarea
+            {...register('shortDescription')}
             placeholder="Compelling 1-3 line description that explains what members will get..."
             rows={3}
             maxLength={300}
           />
+          {errors.shortDescription && (
+            <p className="text-sm text-red-500">{errors.shortDescription.message}</p>
+          )}
           <p className="text-sm text-gray-500">
             This appears in search results and previews (10-300 characters)
           </p>
@@ -571,6 +821,7 @@ const Step1Content: React.FC<{
         <div className="space-y-2">
           <Label>About (Optional)</Label>
           <Textarea
+            {...register('longDescription')}
             placeholder="Detailed description, community guidelines, what to expect..."
             rows={6}
           />
@@ -798,6 +1049,12 @@ const Step2Content: React.FC<{
 
 // Step 3: Monetize Component
 const Step3Content: React.FC = () => {
+  const { register, control, watch, setValue } = useFormContext<CreateCommunityForm>();
+
+  const pricingModel = watch('pricingModel');
+  const splitPayEnabled = watch('splitPayEnabled');
+  const waitlistEnabled = watch('waitlistEnabled');
+  const offerZAPsToNewMembers = watch('offerZAPsToNewMembers');
 
   return (
     <Card>
@@ -808,77 +1065,279 @@ const Step3Content: React.FC = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Pricing Model */}
+        {/* Pricing Model Section */}
         <div className="space-y-4">
-          <Label>Pricing Model</Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>ZAPs Required</Label>
-              <div className="relative">
-                <Input
-                  type="number"
-                  placeholder="0"
-                  className="pl-8"
-                />
-                <Zap className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-violet-500" />
-              </div>
-            </div>
+          <Label className="text-base font-semibold">Pricing Model</Label>
 
-            <div className="space-y-2">
-              <Label>USD Co-Pay</Label>
-              <div className="relative">
-                <Input
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  className="pl-8"
-                />
-                <DollarSign className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500" />
-              </div>
+          {/* 1. USD Pay */}
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <Controller
+                name="pricingModel"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    type="radio"
+                    checked={field.value === 'usd'}
+                    onChange={() => {
+                      field.onChange('usd');
+                      setValue('splitPayEnabled', false);
+                      setValue('zapsRequired', 0);
+                    }}
+                    className="w-4 h-4"
+                  />
+                )}
+              />
+              <Label className="text-base cursor-pointer">USD Pay</Label>
             </div>
+            {pricingModel === 'usd' && (
+              <div className="ml-6 space-y-2">
+                <Label>USD Price</Label>
+                <div className="relative">
+                  <Input
+                    {...register('usdCoPay', { valueAsNumber: true })}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    className="pl-8"
+                  />
+                  <DollarSign className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500" />
+                </div>
+                <p className="text-xs text-gray-500">
+                  Enter 0 to create a free community
+                </p>
+              </div>
+            )}
           </div>
+
+          {/* 2. ZAPs Pay */}
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <Controller
+                name="pricingModel"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    type="radio"
+                    checked={field.value === 'zaps'}
+                    onChange={() => {
+                      field.onChange('zaps');
+                      setValue('usdCoPay', 0);
+                      setValue('splitPayEnabled', false);
+                    }}
+                    className="w-4 h-4"
+                  />
+                )}
+              />
+              <Label className="text-base cursor-pointer">ZAPs Pay</Label>
+            </div>
+            {pricingModel === 'zaps' && !splitPayEnabled && (
+              <div className="ml-6 space-y-2">
+                <Label>ZAPs Required</Label>
+                <div className="relative">
+                  <Input
+                    {...register('zapsRequired', { valueAsNumber: true })}
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    className="pl-8"
+                  />
+                  <Zap className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-violet-500" />
+                </div>
+                <p className="text-xs text-gray-500">
+                  Members pay with ZAPs only
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* 3. Enable Split Payment */}
+          {pricingModel === 'zaps' && (
+            <div className="ml-6 space-y-3">
+              <div className="flex flex-row items-center justify-between rounded-lg border p-4 bg-indigo-50">
+                <div className="space-y-0.5">
+                  <Label className="text-base">
+                    Enable Split Payment
+                  </Label>
+                  <p className="text-sm text-gray-500">
+                    Require both ZAPs + USD together
+                  </p>
+                </div>
+                <Controller
+                  name="splitPayEnabled"
+                  control={control}
+                  render={({ field }) => (
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={(checked) => {
+                        field.onChange(checked);
+                        if (!checked) {
+                          setValue('usdCoPay', 0);
+                        }
+                      }}
+                    />
+                  )}
+                />
+              </div>
+
+              {/* Split Payment Fields */}
+              {splitPayEnabled && (
+                <div className="space-y-4 pl-4 border-l-2 border-indigo-300">
+                  <div className="space-y-2">
+                    <Label>ZAPs Required</Label>
+                    <div className="relative">
+                      <Input
+                        {...register('zapsRequired', { valueAsNumber: true })}
+                        type="number"
+                        min="0"
+                        placeholder="0"
+                        className="pl-8"
+                      />
+                      <Zap className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-violet-500" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>USD Co-Pay</Label>
+                    <div className="relative">
+                      <Input
+                        {...register('usdCoPay', { valueAsNumber: true })}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        className="pl-8"
+                      />
+                      <DollarSign className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500" />
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Members must pay both amounts to join
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Availability */}
-        <div className="space-y-2">
-          <Label>Member Limit</Label>
-          <Input
-            type="number"
-            placeholder="Unlimited"
-          />
-          <p className="text-sm text-gray-500">
-            Leave empty for unlimited members
-          </p>
+        <div className="border-t border-gray-200"></div>
+
+        {/* 4. Reward Members Tab */}
+        <div className="space-y-3">
+          <div className="flex flex-row items-center justify-between rounded-lg border p-4 bg-purple-50">
+            <div className="space-y-0.5">
+              <Label className="text-base">
+                Reward Members
+              </Label>
+              <p className="text-sm text-gray-500">
+                Offer ZAPs to new members for joining
+              </p>
+            </div>
+            <Controller
+              name="offerZAPsToNewMembers"
+              control={control}
+              render={({ field }) => (
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              )}
+            />
+          </div>
+
+          {/* ZAPs Reward Amount */}
+          {offerZAPsToNewMembers && (
+            <div className="ml-6 space-y-2">
+              <Label htmlFor="newMemberZAPsReward">ZAPs Reward Amount</Label>
+              <div className="relative">
+                <Input
+                  {...register('newMemberZAPsReward', { valueAsNumber: true })}
+                  type="number"
+                  min="0"
+                  id="newMemberZAPsReward"
+                  placeholder="e.g. 50"
+                  className="pl-8"
+                />
+                <Zap className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500" />
+              </div>
+              <p className="text-xs text-gray-500">
+                Each new member receives this amount when they join
+              </p>
+            </div>
+          )}
         </div>
 
-        {/* Access Window */}
-        <div className="space-y-2">
-          <Label>Access Duration</Label>
-          <Select>
-            <SelectTrigger>
-              <SelectValue placeholder="Select access duration" />
-            </SelectTrigger>
-            <SelectContent>
-              {accessWindowOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <div className="border-t border-gray-200"></div>
 
-        {/* Split Pay Toggle */}
-        <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+        {/* 5. Join Waitlist */}
+        <div className="flex flex-row items-center justify-between rounded-lg border p-4 bg-amber-50">
           <div className="space-y-0.5">
             <Label className="text-base">
-              Enable Split Payment
+              Join Waitlist
             </Label>
             <p className="text-sm text-gray-500">
-              Allow members to pay with ZAPs OR USD (not both)
+              Collect email addresses only (no payments processed)
             </p>
           </div>
-          <Switch />
+          <Controller
+            name="waitlistEnabled"
+            control={control}
+            render={({ field }) => (
+              <Switch
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+            )}
+          />
+        </div>
+
+        <div className="border-t border-gray-200"></div>
+
+        {/* Additional Pricing Options */}
+        <div className="space-y-4">
+          <Label className="text-base font-semibold">Additional Options</Label>
+
+          {/* Member Limit */}
+          <div className="space-y-2">
+            <Label>Member Limit</Label>
+            <Input
+              {...register('slotsAvailable', {
+                setValueAs: (v) => v === '' ? null : parseInt(v, 10)
+              })}
+              type="number"
+              min="0"
+              placeholder="Unlimited"
+            />
+            <p className="text-xs text-gray-500">
+              Leave empty for unlimited members
+            </p>
+          </div>
+
+          {/* Access Duration */}
+          <div className="space-y-2">
+            <Label>Access Duration</Label>
+            <Controller
+              name="accessWindow"
+              control={control}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select access duration" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {accessWindowOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            <p className="text-xs text-gray-500">
+              Time-based access control for members
+            </p>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -891,6 +1350,38 @@ const Step4Content: React.FC<{
 }> = ({ onPublish }) => {
   const [publishDate, setPublishDate] = useState<string>('');
   const [publishType, setPublishType] = useState<'now' | 'schedule'>('now');
+  const { watch } = useFormContext<CreateCommunityForm>();
+
+  const pricingModel = watch('pricingModel');
+  const usdCoPay = watch('usdCoPay');
+  const zapsRequired = watch('zapsRequired');
+  const splitPayEnabled = watch('splitPayEnabled');
+  const waitlistEnabled = watch('waitlistEnabled');
+  const offerZAPsToNewMembers = watch('offerZAPsToNewMembers');
+  const newMemberZAPsReward = watch('newMemberZAPsReward');
+
+  // Determine publish destination based on requirements:
+  // ZAPs Rewards Page → ZAPs Pay, Split Payment, or Reward Members
+  const isZAPsRewards =
+    (pricingModel === 'zaps' && !splitPayEnabled && zapsRequired > 0) || // ZAPs Pay only
+    (pricingModel === 'zaps' && splitPayEnabled && zapsRequired > 0 && usdCoPay > 0) || // Split Payment
+    (offerZAPsToNewMembers && newMemberZAPsReward > 0); // Reward Members
+
+  // Community Page → Paid (USD), Free (USD=0), or Waitlist
+  const isCommunityPage =
+    (pricingModel === 'usd') || // Paid or Free USD
+    waitlistEnabled; // Waitlist
+
+  // Determine specific community type for display
+  const communityType = (() => {
+    if (waitlistEnabled) return 'Waitlist';
+    if (pricingModel === 'usd' && usdCoPay === 0) return 'Free';
+    if (pricingModel === 'usd' && usdCoPay > 0) return 'Paid (USD)';
+    if (pricingModel === 'zaps' && splitPayEnabled) return 'Split Payment (ZAPs + USD)';
+    if (pricingModel === 'zaps') return 'ZAPs Pay';
+    if (offerZAPsToNewMembers) return 'Reward Members';
+    return 'Unknown';
+  })();
 
   return (
     <Card>
@@ -948,17 +1439,49 @@ const Step4Content: React.FC<{
           </div>
         </div>
 
-        {/* Publishing Info */}
-        <div className="bg-blue-50 rounded-lg p-4">
-          <div className="flex items-start space-x-2">
-            <Crown className="w-5 h-5 text-blue-500 mt-0.5" />
-            <div>
-              <h4 className="font-semibold text-blue-900">Publishing Destination</h4>
-              <p className="text-sm text-blue-700 mt-1">
-                Your community will appear in Community Discovery and be searchable within 5 minutes of publishing.
-              </p>
+        {/* Publishing Destinations */}
+        <div className="space-y-3">
+          <Label>Publishing Destination</Label>
+
+          {/* Community Page */}
+          {isCommunityPage && (
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+              <div className="flex items-start space-x-3">
+                <Globe className="w-5 h-5 text-blue-500 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-blue-900">Community Page</h4>
+                  <p className="text-sm text-blue-700 mt-1">
+                    Type: <strong>{communityType}</strong>
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    {waitlistEnabled && 'Collects email addresses only (no payments)'}
+                    {!waitlistEnabled && pricingModel === 'usd' && usdCoPay === 0 && 'Free community - open to everyone'}
+                    {!waitlistEnabled && pricingModel === 'usd' && usdCoPay > 0 && `Entry fee: $${usdCoPay} USD`}
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* ZAPs Rewards Page */}
+          {isZAPsRewards && (
+            <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+              <div className="flex items-start space-x-3">
+                <Zap className="w-5 h-5 text-purple-500 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-purple-900">ZAPs Rewards Page</h4>
+                  <p className="text-sm text-purple-700 mt-1">
+                    Type: <strong>{communityType}</strong>
+                  </p>
+                  <p className="text-xs text-purple-600 mt-1">
+                    {pricingModel === 'zaps' && splitPayEnabled && `Members pay: ${zapsRequired} ZAPs + $${usdCoPay} USD`}
+                    {pricingModel === 'zaps' && !splitPayEnabled && `Members pay: ${zapsRequired} ZAPs only`}
+                    {offerZAPsToNewMembers && newMemberZAPsReward > 0 && `New members receive: ${newMemberZAPsReward} ZAPs`}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Final Publish Buttons */}

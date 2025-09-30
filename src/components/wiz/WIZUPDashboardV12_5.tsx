@@ -1017,7 +1017,7 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
         {/* Filter Chips - Natural Scroll with Content */}
         <div className="filter-row mb-6">
           <div
-            className="flex gap-3 overflow-x-auto scrollbar-hide py-2"
+            className="flex flex-nowrap gap-3 overflow-x-auto scrollbar-hide py-2"
             style={{
               scrollBehavior: 'smooth',
               WebkitOverflowScrolling: 'touch'
