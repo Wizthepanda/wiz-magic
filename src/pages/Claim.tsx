@@ -42,6 +42,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSafeNavigate } from '@/hooks/useSafeNavigate';
 import { cn } from '@/lib/utils';
+import { collection, query, where, getDocs, limit as firestoreLimit } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 // Enhanced course data structure for V5.1
 interface CourseData {
@@ -111,8 +113,8 @@ interface CourseData {
   releaseDate: string;
 }
 
-// Mock V5.1 course data with media carousels and sold-out states
-const courses: CourseData[] = [
+// Placeholder empty array - will be populated from Firestore
+const HARDCODED_COURSES: CourseData[] = [
   {
     id: 'ai-mastery-v5-1',
     title: 'AI Mastery Bootcamp 2024',
@@ -928,10 +930,109 @@ export default function Claim() {
   const [sortBy, setSortBy] = useState<string>('popular');
   const [activeSection, setActiveSection] = useState('claim');
   const [modalLoading, setModalLoading] = useState(false);
+  const [courses, setCourses] = useState<CourseData[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(true);
   const { user, loading } = useAuth();
   const navigate = useSafeNavigate();
   const isMobile = useIsMobile();
   const userZAPs = 850; // Mock ZAPs - replace with actual user ZAPs
+
+  // Fetch real communities from Firestore
+  useEffect(() => {
+    const fetchCommunities = async () => {
+      try {
+        setLoadingCourses(true);
+
+        // Query for published communities
+        const communitiesQuery = query(
+          collection(db, 'communities'),
+          where('status', '==', 'published'),
+          firestoreLimit(100)
+        );
+
+        const snapshot = await getDocs(communitiesQuery);
+        const fetchedCourses: CourseData[] = [];
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+
+          // Only include if it requires ZAPs or USD (paid communities)
+          const zapsRequired = data.zapsRequired || 0;
+          const usdCoPay = data.usdCoPay || 0;
+
+          if (zapsRequired > 0 || usdCoPay > 0) {
+            fetchedCourses.push({
+              id: doc.id,
+              title: data.title || 'Untitled Community',
+              description: data.shortDescription || data.tagline || '',
+              longDescription: data.longDescription || data.shortDescription || '',
+              creator: {
+                name: data.creatorName || 'Unknown Creator',
+                avatar: data.creatorAvatar || '/api/placeholder/60/60',
+                verified: false,
+                followers: 0
+              },
+              media: {
+                carousel: data.coverMedia?.map((media: any) => ({
+                  type: media.type === 'youtube' ? 'video' : 'image',
+                  thumbnail: media.thumbnail || media.url || '/api/placeholder/800/450',
+                  youtubeId: media.videoId,
+                  duration: ''
+                })) || []
+              },
+              pricing: {
+                zapsCost: zapsRequired,
+                usdPrice: usdCoPay,
+                originalPrice: usdCoPay * 2,
+                discount: usdCoPay > 0 ? 50 : 0
+              },
+              stats: {
+                rating: 5.0,
+                ratingCount: 0,
+                enrolledCount: 0,
+                completionRate: 0,
+                difficulty: 'Beginner' as const
+              },
+              social: {
+                memberAvatars: [],
+                recentClaims: 0,
+                testimonials: []
+              },
+              content: {
+                lessons: data.modules?.length || 0,
+                duration: '',
+                modules: data.modules?.map((m: any) => ({
+                  title: m.title,
+                  lessons: m.videos?.map((v: any) => v.title) || [],
+                  duration: ''
+                })) || [],
+                features: []
+              },
+              category: 'communities' as const,
+              communityTags: data.tags || [],
+              tags: data.tags || [],
+              isFeatured: false,
+              isPopular: false,
+              isTrending: true,
+              isNew: true,
+              releaseDate: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString()
+            });
+          }
+        });
+
+        console.log(`✅ Loaded ${fetchedCourses.length} published communities for ZAP Rewards`);
+        setCourses(fetchedCourses);
+      } catch (error) {
+        console.error('Error fetching communities:', error);
+        // Fallback to empty array on error
+        setCourses([]);
+      } finally {
+        setLoadingCourses(false);
+      }
+    };
+
+    fetchCommunities();
+  }, []);
 
   const featuredCourses = courses.filter(course => course.isFeatured);
 

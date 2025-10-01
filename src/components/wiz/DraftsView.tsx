@@ -9,7 +9,8 @@ import {
   Calendar,
   Users,
   Loader,
-  Sparkles
+  Sparkles,
+  Trash
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,7 +18,10 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useDraftCommunities } from '@/hooks/useCommunity';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
+import { cleanupDuplicateDrafts } from '@/utils/cleanupDuplicates';
 
 interface DraftsViewProps {
   onBack: () => void;
@@ -26,7 +30,10 @@ interface DraftsViewProps {
 
 export const DraftsView: React.FC<DraftsViewProps> = ({ onBack, onEditDraft }) => {
   const isMobile = useIsMobile();
-  const { data: drafts, isLoading } = useDraftCommunities();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { data: drafts, isLoading, refetch } = useDraftCommunities();
+  const [isCleaningUp, setIsCleaningUp] = useState(false);
 
   const formatDate = (timestamp: any) => {
     if (!timestamp) return 'Just now';
@@ -37,6 +44,33 @@ export const DraftsView: React.FC<DraftsViewProps> = ({ onBack, onEditDraft }) =
       return formatDistanceToNow(date, { addSuffix: true });
     } catch (error) {
       return 'Recently';
+    }
+  };
+
+  const handleCleanupDuplicates = async () => {
+    if (!user?.uid) return;
+
+    setIsCleaningUp(true);
+
+    try {
+      const result = await cleanupDuplicateDrafts(user.uid);
+
+      toast({
+        title: "Cleanup complete!",
+        description: `Removed ${result.deleted} duplicate drafts. ${result.remaining} drafts remaining.`,
+      });
+
+      // Refresh drafts list
+      refetch();
+    } catch (error) {
+      console.error('Error cleaning up duplicates:', error);
+      toast({
+        title: "Cleanup failed",
+        description: "Could not clean up duplicates. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCleaningUp(false);
     }
   };
 
@@ -85,19 +119,43 @@ export const DraftsView: React.FC<DraftsViewProps> = ({ onBack, onEditDraft }) =
             Back to Create
           </Button>
 
-          <div>
-            <h1 className={cn(
-              "font-bold bg-gradient-to-r from-purple-600 via-pink-500 to-blue-500 bg-clip-text text-transparent",
-              isMobile ? "text-4xl" : "text-5xl md:text-6xl"
-            )}>
-              Your Drafts
-            </h1>
-            <p className={cn(
-              "text-gray-600 mt-4",
-              isMobile ? "text-base" : "text-lg"
-            )}>
-              Continue working on your saved communities
-            </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className={cn(
+                "font-bold bg-gradient-to-r from-purple-600 via-pink-500 to-blue-500 bg-clip-text text-transparent",
+                isMobile ? "text-4xl" : "text-5xl md:text-6xl"
+              )}>
+                Your Drafts
+              </h1>
+              <p className={cn(
+                "text-gray-600 mt-4",
+                isMobile ? "text-base" : "text-lg"
+              )}>
+                Continue working on your saved communities
+              </p>
+            </div>
+
+            {/* Cleanup button */}
+            {drafts && drafts.length > 3 && (
+              <Button
+                onClick={handleCleanupDuplicates}
+                disabled={isCleaningUp}
+                variant="outline"
+                className="flex items-center gap-2 whitespace-nowrap"
+              >
+                {isCleaningUp ? (
+                  <>
+                    <Loader className="w-4 h-4 animate-spin" />
+                    Cleaning...
+                  </>
+                ) : (
+                  <>
+                    <Trash className="w-4 h-4" />
+                    Clean Duplicates
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </motion.div>
 

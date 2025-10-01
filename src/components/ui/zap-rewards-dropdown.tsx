@@ -78,12 +78,11 @@ export const ZAPRewardsDropdown: React.FC<ZAPRewardsDropdownProps> = ({
   useEffect(() => {
     const fetchPaidCommunities = async () => {
       try {
-        // Query for paid communities (ZAPs > 0 OR USD > 0)
+        // Simple query - just get published communities
         const communitiesQuery = query(
           collection(db, 'communities'),
           where('status', '==', 'published'),
-          orderBy('createdAt', 'desc'),
-          limit(20)
+          limit(50)
         );
 
         const snapshot = await getDocs(communitiesQuery);
@@ -93,13 +92,16 @@ export const ZAPRewardsDropdown: React.FC<ZAPRewardsDropdownProps> = ({
           const data = doc.data();
 
           // Only include if it requires ZAPs or USD
-          if ((data.zapsRequired && data.zapsRequired > 0) || (data.usdCoPay && data.usdCoPay > 0)) {
+          const zapsRequired = data.zapsRequired || 0;
+          const usdCoPay = data.usdCoPay || 0;
+
+          if (zapsRequired > 0 || usdCoPay > 0) {
             communities.push({
               id: doc.id,
               name: data.title,
               subtitle: `Join ${data.slotsAvailable ? `${data.slotsAvailable} slots` : 'unlimited members'}`,
               description: data.shortDescription || data.longDescription || '',
-              cost: data.zapsRequired || 0,
+              cost: zapsRequired,
               icon: <Users className="w-5 h-5" />,
               status: 'available',
               gradient: 'from-blue-400 via-purple-500 to-pink-500',
@@ -113,6 +115,15 @@ export const ZAPRewardsDropdown: React.FC<ZAPRewardsDropdownProps> = ({
           }
         });
 
+        // Sort by creation date (newest first)
+        communities.sort((a, b) => {
+          const aData = snapshot.docs.find(d => d.id === a.id)?.data();
+          const bData = snapshot.docs.find(d => d.id === b.id)?.data();
+          const aTime = aData?.createdAt?.toMillis?.() || 0;
+          const bTime = bData?.createdAt?.toMillis?.() || 0;
+          return bTime - aTime;
+        });
+
         setPaidCommunities(communities);
         console.log(`✅ Loaded ${communities.length} paid communities for ZAP Rewards`);
       } catch (error) {
@@ -123,107 +134,6 @@ export const ZAPRewardsDropdown: React.FC<ZAPRewardsDropdownProps> = ({
     fetchPaidCommunities();
   }, []);
 
-  // Premium ZAP Rewards marketplace items (now combined with real communities)
-  const hardcodedItems: MarketplaceItem[] = [
-    {
-      id: 'ai-mastery-community',
-      name: 'AI Mastery Community',
-      subtitle: 'Join 200+ learners',
-      description: 'Connect with AI enthusiasts and industry experts',
-      cost: 1200,
-      icon: <Users className="w-5 h-5" />,
-      status: 'available',
-      gradient: 'from-blue-400 via-purple-500 to-pink-500',
-      category: 'communities',
-      banner: '/api/placeholder/300/160',
-      creator: '@aiexpert',
-      rating: 4.8,
-      memberCount: 245,
-      isVideo: false
-    },
-    {
-      id: 'personal-coaching-xyz',
-      name: 'Personal Coaching with XYZ',
-      subtitle: '1-on-1 sessions',
-      description: 'Personalized growth coaching with certified professionals',
-      cost: 800,
-      icon: <Award className="w-5 h-5" />,
-      status: 'limited',
-      timeRemaining: '8h',
-      gradient: 'from-emerald-400 via-teal-500 to-cyan-500',
-      category: 'coaching',
-      banner: '/api/placeholder/300/160',
-      creator: '@coachxyz',
-      rating: 4.9,
-      memberCount: 89,
-      isVideo: true
-    },
-    {
-      id: 'crypto-beginners-guide',
-      name: 'Crypto for Beginners',
-      subtitle: 'Digital Guide',
-      description: 'Complete guide to cryptocurrency trading and investing',
-      cost: 500,
-      icon: <BookOpen className="w-5 h-5" />,
-      status: 'available',
-      gradient: 'from-orange-400 via-red-500 to-pink-500',
-      category: 'digital-products',
-      banner: '/api/placeholder/300/160',
-      creator: '@cryptoguru',
-      rating: 4.7,
-      memberCount: 156,
-      isVideo: false
-    },
-    {
-      id: 'ai-revolution-course',
-      name: 'AI Revolution: The Future is Here',
-      subtitle: 'Premium Course',
-      description: 'Explore cutting-edge AI developments and machine learning',
-      cost: 900,
-      icon: <Monitor className="w-5 h-5" />,
-      status: 'available',
-      gradient: 'from-indigo-400 via-purple-500 to-pink-500',
-      category: 'courses',
-      banner: '/api/placeholder/300/160',
-      creator: '@techguru',
-      rating: 4.9,
-      memberCount: 312,
-      isVideo: true
-    },
-    {
-      id: 'design-systems-course',
-      name: 'Design Systems Deep Dive',
-      subtitle: 'Advanced Course',
-      description: 'Learn to build scalable and maintainable design systems',
-      cost: 750,
-      icon: <Sparkles className="w-5 h-5" />,
-      status: 'available',
-      gradient: 'from-pink-400 via-purple-500 to-indigo-500',
-      category: 'courses',
-      banner: '/api/placeholder/300/160',
-      creator: '@designpro',
-      rating: 4.8,
-      memberCount: 198,
-      isVideo: true
-    },
-    {
-      id: 'elite-mentorship',
-      name: 'Elite Mentorship Program',
-      subtitle: 'Exclusive Access',
-      description: 'Monthly sessions with industry leaders and top performers',
-      cost: 2500,
-      icon: <Crown className="w-5 h-5" />,
-      status: 'sold-out',
-      gradient: 'from-purple-400 via-pink-500 to-red-500',
-      category: 'coaching',
-      banner: '/api/placeholder/300/160',
-      creator: '@elitementor',
-      rating: 5.0,
-      memberCount: 45,
-      isVideo: false
-    }
-  ];
-
   const tabs = [
     { id: 'all' as const, label: 'All', icon: Gift },
     { id: 'communities' as const, label: 'Communities', icon: Users },
@@ -232,8 +142,8 @@ export const ZAPRewardsDropdown: React.FC<ZAPRewardsDropdownProps> = ({
     { id: 'digital-products' as const, label: 'Digital Products', icon: Monitor }
   ];
 
-  // Combine real communities with hardcoded items
-  const marketplaceItems = [...paidCommunities, ...hardcodedItems];
+  // Use only real communities from Firestore
+  const marketplaceItems = paidCommunities;
 
   const filteredItems = activeTab === 'all'
     ? marketplaceItems

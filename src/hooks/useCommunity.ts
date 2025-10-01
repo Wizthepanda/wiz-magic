@@ -238,6 +238,44 @@ export const useDraftCommunities = () => {
   });
 };
 
+// Deep clean function to remove undefined, File objects, and invalid Firestore values
+const deepClean = (obj: any): any => {
+  if (obj === null || obj === undefined) return null;
+
+  // Don't allow File objects, Blob objects, or functions
+  if (obj instanceof File || obj instanceof Blob || typeof obj === 'function') {
+    return null;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj
+      .map(item => deepClean(item))
+      .filter(item => item !== null && item !== undefined);
+  }
+
+  // Only clean plain objects, not class instances
+  if (typeof obj === 'object' && obj.constructor === Object) {
+    return Object.fromEntries(
+      Object.entries(obj)
+        .filter(([key, value]) => {
+          // Remove undefined values and 'file' keys that might contain File objects
+          if (value === undefined || key === 'file') return false;
+          // Remove any File or Blob values
+          if (value instanceof File || value instanceof Blob) return false;
+          return true;
+        })
+        .map(([key, value]) => [key, deepClean(value)])
+    );
+  }
+
+  // Return primitives and dates as-is
+  if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean' || obj instanceof Date) {
+    return obj;
+  }
+
+  return null;
+};
+
 // Save draft hook with optimistic updates
 export const useSaveDraft = () => {
   const { user } = useAuth();
@@ -257,9 +295,41 @@ export const useSaveDraft = () => {
         // Exclude 'file' and any base64 data
       })) || [];
 
-      const draftData = {
+      // Sanitize modules to remove File objects
+      const sanitizedModules = data.modules?.map(module => ({
+        id: module.id,
+        title: module.title,
+        description: module.description,
+        videos: module.videos?.map(video => ({
+          url: video.url,
+          thumbnail: video.thumbnail,
+          title: video.title,
+          description: video.description,
+          videoId: video.videoId,
+          type: video.type
+        })) || []
+      })) || [];
+
+      // Sanitize downloads to remove File objects
+      const sanitizedDownloads = data.downloads?.map(download => ({
+        id: download.id,
+        title: download.title,
+        description: download.description,
+        url: download.url,
+        type: download.type,
+        size: download.size
+      })) || [];
+
+      // Deep clean to remove all undefined values and invalid objects
+      const cleanedData = deepClean({
         ...data,
         coverMedia: sanitizedCoverMedia,
+        modules: sanitizedModules,
+        downloads: sanitizedDownloads,
+      });
+
+      const draftData = {
+        ...cleanedData,
         status: 'draft',
         updatedAt: serverTimestamp()
       };
@@ -270,27 +340,7 @@ export const useSaveDraft = () => {
         await updateDoc(communityRef, draftData);
         return { id, ...draftData };
       } else {
-        // Before creating new draft, check if one already exists with same title
-        if (data.title) {
-          const existingDraftQuery = query(
-            collection(db, 'communities'),
-            where('creatorId', '==', user.uid),
-            where('status', '==', 'draft'),
-            where('title', '==', data.title),
-            limit(1)
-          );
-          const existingDrafts = await getDocs(existingDraftQuery);
-
-          if (!existingDrafts.empty) {
-            // Update existing draft instead of creating new one
-            const existingDraftId = existingDrafts.docs[0].id;
-            const communityRef = doc(db, 'communities', existingDraftId);
-            await updateDoc(communityRef, draftData);
-            return { id: existingDraftId, ...draftData };
-          }
-        }
-
-        // Create new draft only if no existing draft found
+        // Create new draft
         const docRef = await addDoc(collection(db, 'communities'), {
           ...draftData,
           creatorId: user.uid,

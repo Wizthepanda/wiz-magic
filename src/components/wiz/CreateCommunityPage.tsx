@@ -71,6 +71,8 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
   const [coverMedia, setCoverMedia] = useState<Array<{ type: 'image' | 'youtube'; url: string; thumbnail?: string }>>([]);
   const [modules, setModules] = useState<Array<{ title: string; type: 'video' | 'article'; link?: string; duration?: string }>>([]);
   const [downloads, setDownloads] = useState<Array<{ name: string; url: string }>>([]);
+  const [draftLoaded, setDraftLoaded] = useState(false);
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const isMobile = useIsMobile();
   const { toast } = useToast();
@@ -118,9 +120,11 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
   // Watch form data for preview
   const watchedData = form.watch();
 
-  // Load draft data when available
+  // Load draft data when available - ONLY ONCE to prevent overwriting user edits
   useEffect(() => {
-    if (draftData && draftId) {
+    if (draftData && draftId && !draftLoaded) {
+      console.log('📥 Loading draft data for the first time:', draftId);
+
       // Populate form with draft data
       form.reset({
         title: draftData.title || '',
@@ -154,12 +158,15 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
       setModules(draftData.modules || []);
       setDownloads(draftData.downloads || []);
 
+      // Mark as loaded to prevent reloading
+      setDraftLoaded(true);
+
       toast({
         title: "Draft loaded!",
         description: "Continue editing your community.",
       });
     }
-  }, [draftData, draftId]);
+  }, [draftData, draftId, draftLoaded]);
 
   const handleSaveDraft = async () => {
     const formData = form.getValues();
@@ -179,24 +186,38 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
 
       // Update communityId if this was a new draft
       if (!communityId && result.id) {
-        console.log('Setting communityId for future auto-saves:', result.id);
+        console.log('💾 Setting communityId for future auto-saves:', result.id);
         setCommunityId(result.id);
       }
     } catch (error) {
-      console.error('Auto-save failed:', error);
+      console.error('❌ Auto-save failed:', error);
     }
   };
 
-  // Auto-save draft every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
+  // Debounced auto-save - saves 2 seconds after user stops typing
+  const debouncedAutoSave = () => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    autoSaveTimeoutRef.current = setTimeout(() => {
       if (form.formState.isDirty) {
+        console.log('💾 Auto-saving draft...');
         handleSaveDraft();
       }
-    }, 30000);
+    }, 2000); // 2 second delay
+  };
 
-    return () => clearInterval(interval);
-  }, [form.formState.isDirty, communityId, tags, coverMedia, modules, downloads]);
+  // Trigger debounced save when data changes
+  useEffect(() => {
+    debouncedAutoSave();
+
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [watchedData, tags, coverMedia, modules, downloads]);
 
   const handleAddTag = () => {
     if (newTag.trim() && !tags.includes(newTag.trim())) {
@@ -502,18 +523,73 @@ const Step1Content: React.FC<{
   const [videoUrlError, setVideoUrlError] = useState('');
   const { toast } = useToast();
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
       const file = files[0];
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        onAddCoverMedia({
-          type: 'image',
-          url: reader.result as string
+
+      // Validate file size (max 500KB)
+      if (file.size > 500 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please choose an image smaller than 500KB.",
+          variant: "destructive"
         });
-      };
-      reader.readAsDataURL(file);
+        return;
+      }
+
+      // Show loading state with temporary preview
+      const tempUrl = URL.createObjectURL(file);
+      onAddCoverMedia({
+        type: 'image',
+        url: tempUrl
+      });
+
+      try {
+        // Import storage dynamically to avoid import issues
+        const { storage } = await import('@/lib/firebase');
+        const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
+
+        // Generate unique filename
+        const timestamp = Date.now();
+        const filename = `community-covers/${timestamp}-${file.name}`;
+        const storageRef = ref(storage, filename);
+
+        // Upload file to Firebase Storage
+        await uploadBytes(storageRef, file);
+        const downloadUrl = await getDownloadURL(storageRef);
+
+        // Replace temp URL with real download URL
+        const mediaIndex = coverMedia.findIndex(m => m.url === tempUrl);
+        if (mediaIndex !== -1) {
+          const updatedMedia = [...coverMedia];
+          updatedMedia[mediaIndex] = { type: 'image', url: downloadUrl };
+          onAddCoverMedia({ type: 'image', url: downloadUrl });
+          // Remove the temp one
+          onRemoveCoverMedia(mediaIndex);
+        }
+
+        // Clean up temp URL
+        URL.revokeObjectURL(tempUrl);
+
+        toast({
+          title: "Image uploaded!",
+          description: "Your cover image has been uploaded successfully.",
+        });
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        // Remove temp preview on error
+        const mediaIndex = coverMedia.findIndex(m => m.url === tempUrl);
+        if (mediaIndex !== -1) {
+          onRemoveCoverMedia(mediaIndex);
+        }
+        URL.revokeObjectURL(tempUrl);
+        toast({
+          title: "Upload failed",
+          description: "Failed to upload image. Please try again.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
