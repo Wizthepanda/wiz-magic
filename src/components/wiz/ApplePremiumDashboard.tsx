@@ -395,13 +395,12 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
           borderBottom: 'none',
           boxShadow: 'none',
           width: '100%',
-          maxWidth: '100vw',
           overflowX: 'hidden'
         }}
       >
-        <div className="flex items-center justify-between py-4 px-6 lg:px-8 xl:px-10" style={{ width: '100%', maxWidth: '100%' }}>
+        <div className="flex items-center justify-between gap-2 py-4 px-4 lg:px-6" style={{ width: '100%' }}>
           {/* Search Bar - Flush Left with Content Wrapper */}
-          <div className="search-row w-full max-w-xl">
+          <div className="search-row flex-1 max-w-md lg:max-w-lg">
             <motion.div
               whileHover={{
                 scale: 1.01,

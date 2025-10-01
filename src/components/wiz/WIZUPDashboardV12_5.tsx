@@ -1032,7 +1032,7 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
   return (
     <div className={cn("relative w-full", className)} style={{ maxWidth: '100%', overflowX: 'hidden' }}>
       {/* Content Wrapper - Constrained */}
-      <div className="content-wrapper px-8 lg:px-10 xl:px-12 pt-6" style={{ width: '100%', maxWidth: '100%' }}>
+      <div className="content-wrapper px-4 lg:px-6 xl:px-8 pt-6" style={{ width: '100%', maxWidth: '100%' }}>
 
         {/* Filter Chips - Horizontal Scroll Only */}
         <div className="filter-row mb-6" style={{ width: '100%', maxWidth: '100%' }}>
