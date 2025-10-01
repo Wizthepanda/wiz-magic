@@ -92,7 +92,8 @@ const FILTER_CATEGORIES = [
       default: 'linear-gradient(90deg, rgba(140,82,255,0.15), rgba(82,180,255,0.08))',
       hover: 'linear-gradient(90deg, rgba(140,82,255,0.25), rgba(82,180,255,0.12))',
       active: 'linear-gradient(90deg, rgba(140,82,255,0.8), rgba(82,180,255,0.6))'
-    }
+    },
+    subCategories: ['Graphic Design', 'UX/UI', 'Art', 'Animation', '3D Design']
   },
   {
     id: 'business',
@@ -165,8 +166,24 @@ const FILTER_CATEGORIES = [
       hover: 'linear-gradient(90deg, rgba(127,140,141,0.25), rgba(189,195,199,0.12))',
       active: 'linear-gradient(90deg, rgba(127,140,141,0.8), rgba(189,195,199,0.6))'
     }
+  },
+  {
+    id: 'entertainment',
+    label: 'Entertainment',
+    gradient: {
+      default: 'linear-gradient(90deg, rgba(236,72,153,0.15), rgba(251,191,36,0.08))',
+      hover: 'linear-gradient(90deg, rgba(236,72,153,0.25), rgba(251,191,36,0.12))',
+      active: 'linear-gradient(90deg, rgba(236,72,153,0.8), rgba(251,191,36,0.6))'
+    },
+    subCategories: ['Anime', 'Animations', 'Music', 'Movies', 'Sports', 'Comedy', 'Podcasting']
   }
 ] as const;
+
+// Sub-category mapping for quick lookups
+const SUB_CATEGORY_MAP: Record<string, string[]> = {
+  design: ['Graphic Design', 'UX/UI', 'Art', 'Animation', '3D Design'],
+  entertainment: ['Anime', 'Animations', 'Music', 'Movies', 'Sports', 'Comedy', 'Podcasting']
+};
 
 // Enhanced video data with creator extras
 const SAMPLE_VIDEOS: VideoData[] = [
@@ -464,6 +481,7 @@ const useIntersectionObserver = (threshold = 0.1) => {
 
 const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, onVideoSelect, videos, loading }) => {
   const [activeFilter, setActiveFilter] = useState('all');
+  const [activeSubFilter, setActiveSubFilter] = useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<VideoData | null>(null);
   const [isWatchMode, setIsWatchMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -512,6 +530,8 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
   // Optimized filter change handler
   const handleFilterChange = useCallback((filterId: string) => {
     setActiveFilter(filterId);
+    setActiveSubFilter(null); // Reset sub-filter when main filter changes
+    console.log('🎯 Filter changed to:', filterId);
   }, []);
 
   // Optimized video selection with loading state
@@ -1031,6 +1051,38 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
               />
             ))}
           </div>
+
+          {/* Sub-filter bubbles - appear when main category with sub-categories is selected */}
+          {activeFilter !== 'all' && SUB_CATEGORY_MAP[activeFilter] && (
+            <motion.div
+              key={activeFilter}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="mt-3"
+            >
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide scroll-smooth">
+                {SUB_CATEGORY_MAP[activeFilter].map((subCat) => (
+                  <button
+                    key={subCat}
+                    onClick={() => {
+                      console.log('🎯 Clicked sub-category:', subCat);
+                      setActiveSubFilter(activeSubFilter === subCat ? null : subCat);
+                    }}
+                    className={cn(
+                      "px-3 py-1.5 h-7 text-xs flex-shrink-0 whitespace-nowrap transition-all duration-200 rounded-full",
+                      activeSubFilter === subCat
+                        ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md font-medium"
+                        : "bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
+                    )}
+                  >
+                    {subCat}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
         </div>
 
         {/* Video Grid - 3 Column Constraint, Left Baseline Aligned */}
