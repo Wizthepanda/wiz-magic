@@ -1030,23 +1030,15 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
   });
 
   return (
-    <div className={cn("relative w-full", className)} style={{ maxWidth: '100%', overflowX: 'hidden' }}>
-      {/* Content Wrapper - Constrained */}
-      <div className="content-wrapper px-4 lg:px-6 xl:px-8 pt-6" style={{ width: '100%', maxWidth: '100%' }}>
-
-        {/* Filter Chips - Horizontal Scroll Only */}
-        <div className="filter-row mb-6" style={{ width: '100%', maxWidth: '100%', position: 'relative' }}>
-          <div
-            className="flex flex-nowrap gap-3 overflow-x-scroll scrollbar-hide py-2"
-            style={{
-              scrollBehavior: 'smooth',
-              WebkitOverflowScrolling: 'touch',
-              msOverflowStyle: 'none',
-              scrollbarWidth: 'none',
-              overflowY: 'hidden',
-              width: '100%'
-            }}
-          >
+    <div className={cn("w-full", className)}>
+      {/* Filter Row - Scrollable */}
+      <div className="relative w-full bg-white border-b border-neutral-200">
+        <div className="flex overflow-x-auto space-x-3 px-6 py-3 scrollbar-hide"
+          style={{
+            scrollBehavior: 'smooth',
+            WebkitOverflowScrolling: 'touch'
+          }}
+        >
             {FILTER_CATEGORIES.map((category) => (
               <FilterPill
                 key={category.id}
@@ -1089,17 +1081,9 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
           )}
         </div>
 
-        {/* Video Grid - 3 Columns × 4 Rows (12 videos) */}
-        <section className="video-grid-section" style={{ width: '100%', maxWidth: '100%' }}>
-          <div
-            className="grid gap-6 will-change-contents"
-            style={{
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              contain: 'layout style paint',
-              transform: 'translateZ(0)',
-              width: '100%'
-            }}
-          >
+      {/* Video Grid - 3×4 Layout (12 videos) */}
+      <main className="p-6">
+        <div className="grid grid-cols-3 gap-6">
             <AnimatePresence mode="sync">
               {filteredVideos.map((video, index) => (
                 <motion.div
@@ -1118,9 +1102,8 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
                 </motion.div>
               ))}
             </AnimatePresence>
-          </div>
-        </section>
-      </div>
+        </div>
+      </main>
 
       {/* Loading spinner */}
       {isLoading && (

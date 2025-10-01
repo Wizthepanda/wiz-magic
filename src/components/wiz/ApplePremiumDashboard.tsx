@@ -373,14 +373,11 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
   return (
     <div
       className={cn(
-        "min-h-screen transition-all duration-500 ease-out",
+        "min-h-screen w-full overflow-hidden",
         className
       )}
       style={{
-        background: 'linear-gradient(to bottom, #f8fafd, #eef2f7)',
-        width: '100%',
-        maxWidth: '100vw',
-        overflowX: 'hidden'
+        background: 'linear-gradient(to bottom right, #ffffff, #f7f9fc, #eef1f7)'
       }}
     >
 
