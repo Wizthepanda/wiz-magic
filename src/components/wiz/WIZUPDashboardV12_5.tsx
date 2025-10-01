@@ -166,23 +166,12 @@ const FILTER_CATEGORIES = [
       hover: 'linear-gradient(90deg, rgba(127,140,141,0.25), rgba(189,195,199,0.12))',
       active: 'linear-gradient(90deg, rgba(127,140,141,0.8), rgba(189,195,199,0.6))'
     }
-  },
-  {
-    id: 'entertainment',
-    label: 'Entertainment',
-    gradient: {
-      default: 'linear-gradient(90deg, rgba(236,72,153,0.15), rgba(251,191,36,0.08))',
-      hover: 'linear-gradient(90deg, rgba(236,72,153,0.25), rgba(251,191,36,0.12))',
-      active: 'linear-gradient(90deg, rgba(236,72,153,0.8), rgba(251,191,36,0.6))'
-    },
-    subCategories: ['Anime', 'Animations', 'Music', 'Movies', 'Sports', 'Comedy', 'Podcasting']
   }
 ] as const;
 
 // Sub-category mapping for quick lookups
 const SUB_CATEGORY_MAP: Record<string, string[]> = {
-  design: ['Graphic Design', 'UX/UI', 'Art', 'Animation', '3D Design'],
-  entertainment: ['Anime', 'Animations', 'Music', 'Movies', 'Sports', 'Comedy', 'Podcasting']
+  design: ['Graphic Design', 'UX/UI', 'Art', 'Animation', '3D Design']
 };
 
 // Enhanced video data with creator extras
