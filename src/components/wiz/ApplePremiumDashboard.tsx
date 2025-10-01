@@ -371,11 +371,15 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
   };
 
   return (
-    <div className={cn(
-      "min-h-screen transition-all duration-500 ease-out",
-      "bg-transparent",
-      className
-    )}>
+    <div
+      className={cn(
+        "min-h-screen w-full overflow-hidden",
+        className
+      )}
+      style={{
+        background: 'linear-gradient(to bottom right, #ffffff, #f7f9fc, #eef1f7)'
+      }}
+    >
 
       {/* Ultra-Premium Top Bar - Seamless Sticky */}
       <motion.header
@@ -386,12 +390,14 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
         style={{
           backgroundColor: isDarkMode ? '#0f172a' : '#f8fafc',
           borderBottom: 'none',
-          boxShadow: 'none'
+          boxShadow: 'none',
+          width: '100%',
+          overflowX: 'hidden'
         }}
       >
-        <div className="flex items-center justify-between py-4 px-8 lg:px-10 xl:px-12">
+        <div className="flex items-center justify-between gap-2 py-4 px-4 lg:px-6" style={{ width: '100%' }}>
           {/* Search Bar - Flush Left with Content Wrapper */}
-          <div className="search-row w-full max-w-xl">
+          <div className="search-row flex-1 max-w-md lg:max-w-lg">
             <motion.div
               whileHover={{
                 scale: 1.01,
@@ -480,7 +486,7 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
           </div>
 
           {/* Right: Profile Elements - Within Screen Bounds */}
-          <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center gap-3" style={{ flexShrink: 0, marginLeft: 'auto' }}>
 
             {/* Clean Icon Dropdowns - No Red Circles */}
             <div className="flex items-center gap-2">

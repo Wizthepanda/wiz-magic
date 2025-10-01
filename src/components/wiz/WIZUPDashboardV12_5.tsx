@@ -1019,19 +1019,15 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
   });
 
   return (
-    <div className={cn("relative", className)}>
-      {/* Content Wrapper - Seamless Scrolling */}
-      <div className="content-wrapper px-8 lg:px-10 xl:px-12 pt-6">
-
-        {/* Filter Chips - Natural Scroll with Content */}
-        <div className="filter-row mb-6">
-          <div
-            className="flex flex-nowrap gap-3 overflow-x-auto scrollbar-hide py-2"
-            style={{
-              scrollBehavior: 'smooth',
-              WebkitOverflowScrolling: 'touch'
-            }}
-          >
+    <div className={cn("w-full", className)}>
+      {/* Filter Row - Scrollable */}
+      <div className="relative w-full bg-white border-b border-neutral-200">
+        <div className="flex overflow-x-auto space-x-3 px-6 py-3 scrollbar-hide"
+          style={{
+            scrollBehavior: 'smooth',
+            WebkitOverflowScrolling: 'touch'
+          }}
+        >
             {FILTER_CATEGORIES.map((category) => (
               <FilterPill
                 key={category.id}
@@ -1074,13 +1070,9 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
           )}
         </div>
 
-        {/* Video Grid - 3 Column Constraint, Left Baseline Aligned */}
-        <section className="video-grid-section">
-          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 will-change-contents"
-            style={{
-              contain: 'layout style paint',
-              transform: 'translateZ(0)'
-            }}>
+      {/* Video Grid - 3×4 Layout (12 videos) */}
+      <main className="p-6">
+        <div className="grid grid-cols-3 gap-6">
             <AnimatePresence mode="sync">
               {filteredVideos.map((video, index) => (
                 <motion.div
@@ -1099,9 +1091,8 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
                 </motion.div>
               ))}
             </AnimatePresence>
-          </div>
-        </section>
-      </div>
+        </div>
+      </main>
 
       {/* Loading spinner */}
       {isLoading && (

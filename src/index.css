@@ -18,6 +18,12 @@
   }
 }
 
+/* Global Layout Constraints - Prevent Horizontal Overflow */
+html, body, #root {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
 /* WIZ Watch 2 Earn Design System - Magical Pastel Theme */
 
 @layer base {
