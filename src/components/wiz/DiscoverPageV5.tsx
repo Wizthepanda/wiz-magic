@@ -22,13 +22,18 @@ interface VideoData {
 interface FilterCategory {
   id: string;
   label: string;
+  subCategories?: string[];
 }
 
 const filterCategories: FilterCategory[] = [
   { id: 'all', label: 'All' },
   { id: 'tech', label: 'Tech' },
   { id: 'money', label: 'Money' },
-  { id: 'design', label: 'Design' },
+  {
+    id: 'design',
+    label: 'Design',
+    subCategories: ['Graphic Design', 'UX/UI', 'Art', 'Animation', '3D Design']
+  },
   { id: 'business', label: 'Business' },
   { id: 'health', label: 'Health' },
   { id: 'growth', label: 'Self Improvement' },
@@ -36,11 +41,22 @@ const filterCategories: FilterCategory[] = [
   { id: 'gaming', label: 'Gaming Lifestyle' },
   { id: 'social', label: 'Social' },
   { id: 'diy', label: 'DIY' },
+  {
+    id: 'entertainment',
+    label: 'Entertainment',
+    subCategories: ['Anime', 'Animations', 'Music', 'Movies', 'Sports', 'Comedy', 'Podcasting']
+  },
 ];
+
+// Sub-category mapping
+const subCategoryMap: Record<string, string[]> = {
+  design: ['Graphic Design', 'UX/UI', 'Art', 'Animation', '3D Design'],
+  entertainment: ['Anime', 'Animations', 'Music', 'Movies', 'Sports', 'Comedy', 'Podcasting']
+};
 
 // Expanded sample data for infinite scroll demo
 const generateVideoData = (startId: number, count: number): VideoData[] => {
-  const categories = ['tech', 'money', 'design', 'business', 'health', 'growth', 'education', 'gaming', 'social', 'diy'];
+  const categories = ['tech', 'money', 'design', 'business', 'health', 'growth', 'education', 'gaming', 'social', 'diy', 'entertainment'];
   const creators = [
     { name: 'TechMaster Pro', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=techmaster' },
     { name: 'WealthBuilder', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=wealth' },
@@ -90,6 +106,7 @@ const DiscoverPageV5: React.FC<DiscoverPageV5Props> = ({
   className
 }) => {
   const [activeFilter, setActiveFilter] = useState('all');
+  const [activeSubFilter, setActiveSubFilter] = useState<string | null>(null);
   const [hoveredVideo, setHoveredVideo] = useState<string | null>(null);
   const [videos, setVideos] = useState<VideoData[]>(generateVideoData(1, 12));
   const [isLoading, setIsLoading] = useState(false);
@@ -160,6 +177,17 @@ const DiscoverPageV5: React.FC<DiscoverPageV5Props> = ({
     return () => observer.disconnect();
   }, [loadMoreVideos, isLoading]);
 
+  // Handle main filter change
+  const handleMainFilterChange = (categoryId: string) => {
+    setActiveFilter(categoryId);
+    setActiveSubFilter(null); // Reset sub-filter when changing main category
+  };
+
+  // Get active sub-categories
+  const activeSubCategories = activeFilter !== 'all' && subCategoryMap[activeFilter]
+    ? subCategoryMap[activeFilter]
+    : null;
+
   // Filter bubble component with luxury animations
   const FilterBubble: React.FC<{ category: FilterCategory; isActive: boolean }> = ({
     category,
@@ -167,7 +195,7 @@ const DiscoverPageV5: React.FC<DiscoverPageV5Props> = ({
   }) => {
     return (
       <motion.button
-        onClick={() => setActiveFilter(category.id)}
+        onClick={() => handleMainFilterChange(category.id)}
         className={cn(
           "relative px-6 py-3 rounded-full whitespace-nowrap font-semibold text-sm transition-all duration-500 ease-out overflow-hidden",
           "backdrop-blur-xl backdrop-saturate-150",
@@ -221,6 +249,45 @@ const DiscoverPageV5: React.FC<DiscoverPageV5Props> = ({
         />
 
         <span className="relative z-10">{category.label}</span>
+      </motion.button>
+    );
+  };
+
+  // Sub-filter bubble component - slightly smaller, frosted design
+  const SubFilterBubble: React.FC<{ label: string; isActive: boolean }> = ({
+    label,
+    isActive
+  }) => {
+    return (
+      <motion.button
+        onClick={() => setActiveSubFilter(isActive ? null : label)}
+        className={cn(
+          "relative px-4 py-1.5 rounded-full whitespace-nowrap font-medium text-sm transition-all duration-300 ease-out",
+          "backdrop-blur-sm backdrop-saturate-150",
+          isActive
+            ? "text-white shadow-lg ring-1 ring-indigo-300/50"
+            : isDark
+              ? "text-gray-300 hover:text-white bg-white/10 hover:bg-white/15"
+              : "text-neutral-700 bg-white/60 hover:bg-neutral-100/80"
+        )}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        style={{
+          background: isActive
+            ? 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)'
+            : undefined,
+          boxShadow: isActive
+            ? '0 4px 12px rgba(102, 126, 234, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
+            : isDark
+              ? 'inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+              : 'inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 3px rgba(0, 0, 0, 0.1)'
+        }}
+        transition={{ duration: 0.2 }}
+      >
+        <span className="relative z-10">{label}</span>
       </motion.button>
     );
   };
@@ -471,27 +538,61 @@ const DiscoverPageV5: React.FC<DiscoverPageV5Props> = ({
               ))}
             </div>
           </div>
+
+          {/* Sub-filter bubbles - appear when main category with sub-categories is selected */}
+          <AnimatePresence mode="wait">
+            {activeSubCategories && (
+              <motion.div
+                key={activeFilter}
+                initial={{ opacity: 0, height: 0, y: -10 }}
+                animate={{ opacity: 1, height: 'auto', y: 0 }}
+                exit={{ opacity: 0, height: 0, y: -10 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className="overflow-hidden"
+              >
+                <div className="overflow-x-auto scrollbar-hide pt-1 pb-4">
+                  <div className="flex items-center gap-2 min-w-max">
+                    {activeSubCategories.map((subCategory) => (
+                      <SubFilterBubble
+                        key={subCategory}
+                        label={subCategory}
+                        isActive={activeSubFilter === subCategory}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </motion.div>
 
       {/* Main content with proper padding */}
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Video grid with seamless layout */}
-        <div
-          ref={scrollContainerRef}
-          className={cn(
-            "grid gap-8",
-            isMobile
-              ? "grid-cols-1"
-              : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-          )}
+        <motion.div
+          key={`${activeFilter}-${activeSubFilter}`}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
         >
-          <AnimatePresence mode="popLayout">
-            {filteredVideos.map((video, index) => (
-              <VideoCard key={video.id} video={video} index={index} />
-            ))}
-          </AnimatePresence>
-        </div>
+          <div
+            ref={scrollContainerRef}
+            className={cn(
+              "grid gap-8",
+              isMobile
+                ? "grid-cols-1"
+                : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+            )}
+          >
+            <AnimatePresence mode="popLayout">
+              {filteredVideos.map((video, index) => (
+                <VideoCard key={video.id} video={video} index={index} />
+              ))}
+            </AnimatePresence>
+          </div>
+        </motion.div>
 
         {/* Loading indicator for infinite scroll */}
         <div ref={loadingRef} className="mt-12 mb-8">
