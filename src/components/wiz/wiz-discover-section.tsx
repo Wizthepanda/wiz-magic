@@ -326,10 +326,15 @@ export const WizDiscoverSection = () => {
   const [activeCategory, setActiveCategory] = useState('all');
   const [activeSubCategory, setActiveSubCategory] = useState<string | null>(null);
   const [leaderboardTab, setLeaderboardTab] = useState('creators');
-  const [isPremiereVideoPlaying, setIsPremiereVideoPlaying] = useState(false);
+  const [isPremiereVideoPlaring, setIsPremiereVideoPlaying] = useState(false);
   const [dynamicVideos, setDynamicVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
+
+  // Debug logging for sub-filters
+  console.log('🎯 Active Category:', activeCategory);
+  console.log('🎯 Has sub-categories?', activeCategory !== 'all' && subCategoryMap[activeCategory]);
+  console.log('🎯 Sub-categories:', subCategoryMap[activeCategory]);
 
   // Debug function - can be called from browser console
   const debugFirestoreVideos = async () => {
@@ -922,37 +927,31 @@ export const WizDiscoverSection = () => {
               </div>
 
               {/* Sub-category filters - appear when main category with sub-categories is selected */}
-              <AnimatePresence mode="wait">
-                {activeCategory !== 'all' && subCategoryMap[activeCategory] && (
-                  <motion.div
-                    key={activeCategory}
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                    className="overflow-hidden pt-2"
-                  >
-                    <div className="flex gap-2 overflow-x-auto scrollbar-hide scroll-smooth px-2 sm:px-0 pb-2">
-                      {subCategoryMap[activeCategory].map((subCat) => (
-                        <Button
-                          key={subCat}
-                          variant={activeSubCategory === subCat ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setActiveSubCategory(activeSubCategory === subCat ? null : subCat)}
-                          className={cn(
-                            "px-3 py-1.5 h-7 text-xs flex-shrink-0 whitespace-nowrap transition-all duration-200",
-                            activeSubCategory === subCat
-                              ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md"
-                              : "bg-white/80 dark:bg-gray-800/80 hover:bg-gray-100 dark:hover:bg-gray-700"
-                          )}
-                        >
-                          {subCat}
-                        </Button>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {activeCategory !== 'all' && subCategoryMap[activeCategory] && (
+                <div className="pt-3 pb-2">
+                  <div className="flex gap-2 overflow-x-auto scrollbar-hide scroll-smooth px-2 sm:px-0">
+                    {subCategoryMap[activeCategory].map((subCat) => (
+                      <Button
+                        key={subCat}
+                        variant={activeSubCategory === subCat ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          console.log('🎯 Clicked sub-category:', subCat);
+                          setActiveSubCategory(activeSubCategory === subCat ? null : subCat);
+                        }}
+                        className={cn(
+                          "px-3 py-1.5 h-7 text-xs flex-shrink-0 whitespace-nowrap transition-all duration-200",
+                          activeSubCategory === subCat
+                            ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md"
+                            : "bg-white/80 dark:bg-gray-800/80 hover:bg-gray-100 dark:hover:bg-gray-700 border-gray-300"
+                        )}
+                      >
+                        {subCat}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
