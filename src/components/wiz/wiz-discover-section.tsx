@@ -25,20 +25,36 @@ import { cn } from '@/lib/utils';
 
 const categories = [
   { id: 'all', label: 'All', color: 'bg-wiz-primary', dotColor: 'bg-blue-400' },
-  { id: 'ai', label: 'AI', color: 'bg-wiz-secondary', dotColor: 'bg-red-400' },
   { id: 'tech', label: 'Tech', color: 'bg-wiz-accent', dotColor: 'bg-orange-400' },
-  { id: 'music', label: 'Music', color: 'bg-wiz-magic', dotColor: 'bg-pink-400' },
   { id: 'money', label: 'Money', color: 'bg-emerald-500', dotColor: 'bg-green-400' },
+  {
+    id: 'design',
+    label: 'Design',
+    color: 'bg-purple-500',
+    dotColor: 'bg-purple-400',
+    subCategories: ['Graphic Design', 'UX/UI', 'Art', 'Animation', '3D Design']
+  },
+  { id: 'business', label: 'Business', color: 'bg-blue-600', dotColor: 'bg-blue-400' },
   { id: 'health', label: 'Health', color: 'bg-rose-500', dotColor: 'bg-red-400' },
-  { id: 'gaming', label: 'Gaming', color: 'bg-purple-500', dotColor: 'bg-purple-400' },
-  { id: 'movies', label: 'Movies', color: 'bg-indigo-500', dotColor: 'bg-indigo-400' },
-  { id: 'news', label: 'News', color: 'bg-cyan-500', dotColor: 'bg-cyan-400' },
-  { id: 'podcast', label: 'Podcast', color: 'bg-teal-500', dotColor: 'bg-teal-400' },
-  { id: 'art', label: 'Art', color: 'bg-violet-500', dotColor: 'bg-violet-400' },
-  { id: 'fashion', label: 'Fashion', color: 'bg-fuchsia-500', dotColor: 'bg-fuchsia-400' },
-  { id: 'relationships', label: 'Relationships', color: 'bg-pink-500', dotColor: 'bg-pink-400' },
-  { id: 'lifestyle', label: 'Lifestyle', color: 'bg-amber-500', dotColor: 'bg-amber-400' },
+  { id: 'growth', label: 'Self Improvement', color: 'bg-green-600', dotColor: 'bg-green-400' },
+  { id: 'education', label: 'Education', color: 'bg-indigo-600', dotColor: 'bg-indigo-400' },
+  { id: 'gaming', label: 'Gaming Lifestyle', color: 'bg-purple-500', dotColor: 'bg-purple-400' },
+  { id: 'social', label: 'Social', color: 'bg-pink-500', dotColor: 'bg-pink-400' },
+  { id: 'diy', label: 'DIY', color: 'bg-amber-500', dotColor: 'bg-amber-400' },
+  {
+    id: 'entertainment',
+    label: 'Entertainment',
+    color: 'bg-fuchsia-500',
+    dotColor: 'bg-fuchsia-400',
+    subCategories: ['Anime', 'Animations', 'Music', 'Movies', 'Sports', 'Comedy', 'Podcasting']
+  },
 ];
+
+// Sub-category mapping
+const subCategoryMap: Record<string, string[]> = {
+  design: ['Graphic Design', 'UX/UI', 'Art', 'Animation', '3D Design'],
+  entertainment: ['Anime', 'Animations', 'Music', 'Movies', 'Sports', 'Comedy', 'Podcasting']
+};
 
 // Exactly 8 video panels with category tags
 const videos = [
@@ -308,6 +324,7 @@ export const WizDiscoverSection = () => {
   console.log('🚀 WizDiscoverSection user state:', user?.uid || 'no user');
   const navigate = useSafeNavigate();
   const [activeCategory, setActiveCategory] = useState('all');
+  const [activeSubCategory, setActiveSubCategory] = useState<string | null>(null);
   const [leaderboardTab, setLeaderboardTab] = useState('creators');
   const [isPremiereVideoPlaying, setIsPremiereVideoPlaying] = useState(false);
   const [dynamicVideos, setDynamicVideos] = useState([]);
@@ -878,18 +895,24 @@ export const WizDiscoverSection = () => {
             <div className="sticky top-[72px] z-20 bg-background/80 backdrop-blur-lg -mx-3 px-3 py-3">
               <WizMobileFilters
                 activeFilter={activeCategory}
-                onFilterChange={setActiveCategory}
+                onFilterChange={(cat) => {
+                  setActiveCategory(cat);
+                  setActiveSubCategory(null);
+                }}
               />
             </div>
           ) : (
-            <div className="relative w-full">
-              {/* Horizontal scroll container */}
+            <div className="relative w-full space-y-2">
+              {/* Main category filters - Horizontal scroll container */}
               <div className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory px-2 sm:px-0 pb-1">
                 {categories.map((category) => (
                   <Button
                     key={category.id}
                     variant={activeCategory === category.id ? "default" : "outline"}
-                    onClick={() => setActiveCategory(category.id)}
+                    onClick={() => {
+                      setActiveCategory(category.id);
+                      setActiveSubCategory(null);
+                    }}
                     className={`${activeCategory === category.id ? category.color : ''} transition-all duration-200 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3 flex-shrink-0 snap-start`}
                   >
                     <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${category.dotColor}`} />
@@ -898,6 +921,36 @@ export const WizDiscoverSection = () => {
                 ))}
               </div>
 
+              {/* Sub-category filters - appear when main category with sub-categories is selected */}
+              {activeCategory !== 'all' && subCategoryMap[activeCategory] && (
+                <motion.div
+                  key={activeCategory}
+                  initial={{ opacity: 0, height: 0, y: -10 }}
+                  animate={{ opacity: 1, height: 'auto', y: 0 }}
+                  exit={{ opacity: 0, height: 0, y: -10 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex gap-2 overflow-x-auto scrollbar-hide scroll-smooth px-2 sm:px-0">
+                    {subCategoryMap[activeCategory].map((subCat) => (
+                      <Button
+                        key={subCat}
+                        variant={activeSubCategory === subCat ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setActiveSubCategory(activeSubCategory === subCat ? null : subCat)}
+                        className={cn(
+                          "px-3 py-1 h-6 text-xs flex-shrink-0 whitespace-nowrap transition-all duration-200",
+                          activeSubCategory === subCat
+                            ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md"
+                            : "bg-background/60 hover:bg-background/80"
+                        )}
+                      >
+                        {subCat}
+                      </Button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
             </div>
           )}
         </div>
