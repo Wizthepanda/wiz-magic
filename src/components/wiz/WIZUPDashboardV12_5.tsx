@@ -1030,17 +1030,19 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
   });
 
   return (
-    <div className={cn("relative", className)}>
-      {/* Content Wrapper - Seamless Scrolling */}
-      <div className="content-wrapper px-8 lg:px-10 xl:px-12 pt-6">
+    <div className={cn("relative w-full", className)} style={{ maxWidth: '100%', overflowX: 'hidden' }}>
+      {/* Content Wrapper - Constrained */}
+      <div className="content-wrapper px-8 lg:px-10 xl:px-12 pt-6" style={{ width: '100%', maxWidth: '100%' }}>
 
-        {/* Filter Chips - Natural Scroll with Content */}
-        <div className="filter-row mb-6">
+        {/* Filter Chips - Horizontal Scroll Only */}
+        <div className="filter-row mb-6" style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
           <div
             className="flex flex-nowrap gap-3 overflow-x-auto scrollbar-hide py-2"
             style={{
               scrollBehavior: 'smooth',
-              WebkitOverflowScrolling: 'touch'
+              WebkitOverflowScrolling: 'touch',
+              msOverflowStyle: 'none',
+              scrollbarWidth: 'none'
             }}
           >
             {FILTER_CATEGORIES.map((category) => (
@@ -1085,13 +1087,17 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
           )}
         </div>
 
-        {/* Video Grid - 3 Column Constraint, Left Baseline Aligned */}
-        <section className="video-grid-section">
-          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 will-change-contents"
+        {/* Video Grid - 3 Columns × 4 Rows (12 videos) */}
+        <section className="video-grid-section" style={{ width: '100%', maxWidth: '100%' }}>
+          <div
+            className="grid gap-6 will-change-contents"
             style={{
+              gridTemplateColumns: 'repeat(3, 1fr)',
               contain: 'layout style paint',
-              transform: 'translateZ(0)'
-            }}>
+              transform: 'translateZ(0)',
+              width: '100%'
+            }}
+          >
             <AnimatePresence mode="sync">
               {filteredVideos.map((video, index) => (
                 <motion.div

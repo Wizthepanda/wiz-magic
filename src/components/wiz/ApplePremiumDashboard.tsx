@@ -371,11 +371,18 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
   };
 
   return (
-    <div className={cn(
-      "min-h-screen transition-all duration-500 ease-out",
-      "bg-transparent",
-      className
-    )}>
+    <div
+      className={cn(
+        "min-h-screen transition-all duration-500 ease-out",
+        className
+      )}
+      style={{
+        background: 'linear-gradient(to bottom, #f8fafd, #eef2f7)',
+        width: '100%',
+        maxWidth: '100vw',
+        overflowX: 'hidden'
+      }}
+    >
 
       {/* Ultra-Premium Top Bar - Seamless Sticky */}
       <motion.header
