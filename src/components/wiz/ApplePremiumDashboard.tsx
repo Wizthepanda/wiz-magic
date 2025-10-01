@@ -393,10 +393,13 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
         style={{
           backgroundColor: isDarkMode ? '#0f172a' : '#f8fafc',
           borderBottom: 'none',
-          boxShadow: 'none'
+          boxShadow: 'none',
+          width: '100%',
+          maxWidth: '100vw',
+          overflowX: 'hidden'
         }}
       >
-        <div className="flex items-center justify-between py-4 px-8 lg:px-10 xl:px-12">
+        <div className="flex items-center justify-between py-4 px-6 lg:px-8 xl:px-10" style={{ width: '100%', maxWidth: '100%' }}>
           {/* Search Bar - Flush Left with Content Wrapper */}
           <div className="search-row w-full max-w-xl">
             <motion.div
@@ -487,7 +490,7 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
           </div>
 
           {/* Right: Profile Elements - Within Screen Bounds */}
-          <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center gap-3" style={{ flexShrink: 0, marginLeft: 'auto' }}>
 
             {/* Clean Icon Dropdowns - No Red Circles */}
             <div className="flex items-center gap-2">

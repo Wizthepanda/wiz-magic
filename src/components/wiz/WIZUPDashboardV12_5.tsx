@@ -1035,14 +1035,15 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
       <div className="content-wrapper px-8 lg:px-10 xl:px-12 pt-6" style={{ width: '100%', maxWidth: '100%' }}>
 
         {/* Filter Chips - Horizontal Scroll Only */}
-        <div className="filter-row mb-6" style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
+        <div className="filter-row mb-6" style={{ width: '100%', maxWidth: '100%' }}>
           <div
-            className="flex flex-nowrap gap-3 overflow-x-auto scrollbar-hide py-2"
+            className="flex flex-nowrap gap-3 overflow-x-auto scrollbar-hide py-2 pr-4"
             style={{
               scrollBehavior: 'smooth',
               WebkitOverflowScrolling: 'touch',
               msOverflowStyle: 'none',
-              scrollbarWidth: 'none'
+              scrollbarWidth: 'none',
+              overflowY: 'hidden'
             }}
           >
             {FILTER_CATEGORIES.map((category) => (
