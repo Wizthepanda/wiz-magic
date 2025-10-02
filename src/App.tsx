@@ -13,6 +13,7 @@ import CreatorProfile from "./pages/CreatorProfile";
 import Watch from "./pages/Watch";
 import Shorts from "./pages/Shorts";
 import Claim from "./pages/Claim";
+import ZapRewardsHub from "./pages/ZapRewardsHub";
 import NotFound from "./pages/NotFound";
 import AntiCheatTest from "./pages/AntiCheatTest";
 import { AntiCheatDashboard } from "./components/admin/AntiCheatDashboard";
@@ -51,6 +52,7 @@ const App = () => {
                 <Route path="/shorts" element={<Shorts />} />
                 <Route path="/shorts/:shortId" element={<Shorts />} />
                 <Route path="/claim" element={<Claim />} />
+                <Route path="/rewards" element={<ZapRewardsHub />} />
                 <Route path="/creator/:channelId" element={<CreatorProfile />} />
                 <Route path="/c/:handle" element={<CreatorProfile />} />
                 <Route path="/admin/anti-cheat" element={<AntiCheatDashboard />} />

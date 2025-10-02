@@ -180,7 +180,7 @@ const UltraPremiumFilterBubbles: React.FC<UltraPremiumFilterBubblesProps> = ({
           onMouseLeave={handleMouseLeave}
           className={cn(
             "relative px-8 py-4 rounded-full font-medium text-sm transition-all duration-500 ease-out overflow-hidden",
-            "backdrop-blur-xl backdrop-saturate-150 border select-none",
+            "border select-none",
             "focus:outline-none focus:ring-2 focus:ring-purple-500/20",
             isActive
               ? "text-white shadow-2xl border-transparent"
@@ -194,9 +194,7 @@ const UltraPremiumFilterBubbles: React.FC<UltraPremiumFilterBubblesProps> = ({
             fontWeight: 500,
             background: isActive
               ? 'linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)'
-              : isDark
-                ? 'rgba(255, 255, 255, 0.03)'
-                : 'rgba(255, 255, 255, 0.7)',
+              : 'transparent',
           }}
           whileHover={{
             scale: 1.02,
@@ -208,20 +206,6 @@ const UltraPremiumFilterBubbles: React.FC<UltraPremiumFilterBubblesProps> = ({
             transition: { ...springConfig, stiffness: 600 }
           }}
         >
-          {/* Glassmorphism background layer */}
-          <motion.div
-            className="absolute inset-0 rounded-full"
-            style={{
-              background: isDark
-                ? 'rgba(255, 255, 255, 0.02)'
-                : 'rgba(255, 255, 255, 0.4)',
-              backdropFilter: 'blur(20px) saturate(150%)',
-            }}
-            animate={{
-              opacity: isHovered && !isActive ? 0.8 : 0.5
-            }}
-            transition={{ duration: 0.3 }}
-          />
 
           {/* Breathing gradient animation for active state */}
           {isActive && (
@@ -306,20 +290,17 @@ const UltraPremiumFilterBubbles: React.FC<UltraPremiumFilterBubblesProps> = ({
 
   return (
     <div className={cn("w-full", className)}>
-      {/* Sticky container */}
+      {/* Sticky container - No background, blends with main grid */}
       <motion.div
         className={cn(
-          "sticky top-0 z-40 backdrop-blur-xl backdrop-saturate-150 border-b transition-all duration-300",
-          isDark
-            ? "bg-gray-900/70 border-gray-700/20"
-            : "bg-white/70 border-gray-200/20"
+          "sticky top-0 z-40 transition-all duration-300"
         )}
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
         {/* Filter bubbles container */}
-        <div className="max-w-7xl mx-auto px-6 py-6">
+        <div className="max-w-7xl mx-auto">
           <div
             ref={scrollContainerRef}
             className={cn(
@@ -338,7 +319,7 @@ const UltraPremiumFilterBubbles: React.FC<UltraPremiumFilterBubblesProps> = ({
           >
             <AnimatePresence mode="wait">
               <motion.div
-                className="flex items-center gap-4 pb-2 min-w-max px-2"
+                className="flex items-center gap-4 min-w-max px-6 py-2"
                 layout
                 transition={{
                   layout: { duration: 0.25, ease: "easeInOut" },
@@ -406,10 +387,6 @@ const UltraPremiumFilterBubbles: React.FC<UltraPremiumFilterBubblesProps> = ({
             </motion.div>
           )}
         </div>
-
-        {/* Subtle gradient overlay at edges for scroll indication */}
-        <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-current to-transparent opacity-5 pointer-events-none" />
-        <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-current to-transparent opacity-5 pointer-events-none" />
       </motion.div>
     </div>
   );

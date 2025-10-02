@@ -198,7 +198,6 @@ const DiscoverPageV5: React.FC<DiscoverPageV5Props> = ({
         onClick={() => handleMainFilterChange(category.id)}
         className={cn(
           "relative px-6 py-3 rounded-full whitespace-nowrap font-semibold text-sm transition-all duration-500 ease-out overflow-hidden",
-          "backdrop-blur-xl backdrop-saturate-150",
           isActive
             ? "text-white shadow-2xl"
             : isDark
@@ -210,9 +209,7 @@ const DiscoverPageV5: React.FC<DiscoverPageV5Props> = ({
         style={{
           background: isActive
             ? 'linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)'
-            : isDark
-              ? 'rgba(255, 255, 255, 0.05)'
-              : 'rgba(255, 255, 255, 0.8)'
+            : 'transparent'
         }}
       >
         {/* Liquid gradient shimmer effect */}
@@ -263,12 +260,11 @@ const DiscoverPageV5: React.FC<DiscoverPageV5Props> = ({
         onClick={() => setActiveSubFilter(isActive ? null : label)}
         className={cn(
           "relative px-4 py-1.5 rounded-full whitespace-nowrap font-medium text-sm transition-all duration-300 ease-out",
-          "backdrop-blur-sm backdrop-saturate-150",
           isActive
             ? "text-white shadow-lg ring-1 ring-indigo-300/50"
             : isDark
-              ? "text-gray-300 hover:text-white bg-white/10 hover:bg-white/15"
-              : "text-neutral-700 bg-white/60 hover:bg-neutral-100/80"
+              ? "text-gray-300 hover:text-white border border-gray-600/30 hover:border-gray-500/50"
+              : "text-neutral-700 border border-gray-300/30 hover:border-gray-400/50"
         )}
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -278,12 +274,7 @@ const DiscoverPageV5: React.FC<DiscoverPageV5Props> = ({
         style={{
           background: isActive
             ? 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)'
-            : undefined,
-          boxShadow: isActive
-            ? '0 4px 12px rgba(102, 126, 234, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
-            : isDark
-              ? 'inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-              : 'inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 3px rgba(0, 0, 0, 0.1)'
+            : 'transparent'
         }}
         transition={{ duration: 0.2 }}
       >
@@ -476,20 +467,16 @@ const DiscoverPageV5: React.FC<DiscoverPageV5Props> = ({
       {/* Pinned Top Meta Strip with smooth scroll */}
       <motion.div
         ref={filterBarRef}
-        className={cn(
-          "sticky top-0 z-50 backdrop-blur-xl backdrop-saturate-150 border-b transition-all duration-300",
-          isDark
-            ? "bg-gray-900/80 border-gray-700/30"
-            : "bg-white/80 border-gray-200/30"
-        )}
+        className="sticky top-0 z-50 transition-all duration-300 bg-transparent"
         style={{
           y: filterBarY,
-          opacity: filterBarOpacity
+          opacity: filterBarOpacity,
+          background: 'transparent'
         }}
       >
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-6">
           {/* Meta row */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-3 pt-4">
             <h1 className={cn(
               "text-3xl font-bold",
               isDark ? "text-white" : "text-gray-900"

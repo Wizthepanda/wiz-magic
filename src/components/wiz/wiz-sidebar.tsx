@@ -56,7 +56,7 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
     { id: 'discover', label: 'Discover', icon: Compass },
     { id: 'community', label: 'Community', icon: Users },
     { id: 'create', label: 'Create', icon: Plus },
-    { id: 'claim', label: 'ZAP Rewards', icon: Gift, route: '/claim' },
+    { id: 'rewards', label: 'ZAP Rewards', icon: Gift, route: '/rewards' },
     { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
     { id: 'premiere', label: 'WIZ Premiere', icon: Crown },
     { id: 'profile', label: 'Profile', icon: User },
@@ -71,7 +71,7 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
     if (item.route) {
       navigate(item.route);
     } else {
-      if (location.pathname === '/claim') {
+      if (location.pathname === '/claim' || location.pathname === '/rewards') {
         navigate(`/?section=${item.id}`);
       } else {
         onSectionChange(item.id);

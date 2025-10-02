@@ -290,8 +290,8 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
   const userName = user?.displayName || 'Champion';
   const progressPercent = (userZAPS / nextLevelZAPS) * 100;
 
-  // Use dynamic videos if available, otherwise fall back to sample videos
-  const displayVideos = dynamicVideos.length > 0 ? dynamicVideos : SAMPLE_VIDEOS;
+  // Only use dynamic videos - no placeholder fallback to prevent flash
+  const displayVideos = dynamicVideos;
 
   const handleWatchVideo = (video: any) => {
     // Convert any video object to WatchVideoData format

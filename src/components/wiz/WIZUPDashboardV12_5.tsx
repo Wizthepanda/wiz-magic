@@ -481,8 +481,8 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
   // Convert dynamic videos to VideoData format
   const convertedVideos: VideoData[] = useMemo(() => {
     if (!videos || videos.length === 0) {
-      console.log('🎯 WIZUPDashboardV12_5: Using fallback SAMPLE_VIDEOS');
-      return SAMPLE_VIDEOS;
+      console.log('🎯 WIZUPDashboardV12_5: No videos loaded yet, returning empty array');
+      return [];
     }
 
     console.log('🎯 WIZUPDashboardV12_5: Converting', videos.length, 'dynamic videos');
@@ -705,8 +705,17 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
               {video.title}
             </h3>
 
-            {/* Creator row */}
-            <div className="flex items-center gap-3">
+            {/* Creator row - clickable to visit profile */}
+            <div
+              className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 -mx-2 px-2 py-1.5 rounded-lg transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                const channelId = video.creatorDetails?.channelId || video.channelId || video.creatorId;
+                if (channelId) {
+                  window.location.href = `/creator/${channelId}`;
+                }
+              }}
+            >
               <img
                 src={video.creatorDetails?.avatar || video.creatorAvatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
                 alt={video.creatorDetails?.name || video.creator}
@@ -714,7 +723,7 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
               />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-slate-800 truncate">
+                  <span className="text-sm font-semibold text-slate-800 truncate hover:text-purple-600 transition-colors">
                     {video.creatorDetails?.name || video.creator}
                   </span>
                   {(video.creatorDetails?.verified || video.isVerified) && (
@@ -845,17 +854,25 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
 
               {/* Creator and actions */}
               <div className="space-y-6">
-                {/* Creator profile */}
+                {/* Creator profile - clickable to visit channel */}
                 <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-5">
+                  <div
+                    className="flex items-start gap-5 cursor-pointer hover:bg-gray-50 -mx-3 px-3 py-2 rounded-xl transition-colors group"
+                    onClick={() => {
+                      const channelId = selectedVideo.creator.channelId || selectedVideo.channelId || selectedVideo.creator.id;
+                      if (channelId) {
+                        window.location.href = `/creator/${channelId}`;
+                      }
+                    }}
+                  >
                     <img
                       src={selectedVideo.creator.avatar}
                       alt={selectedVideo.creator.name}
-                      className="w-16 h-16 rounded-full ring-4 ring-white/60"
+                      className="w-16 h-16 rounded-full ring-4 ring-white/60 group-hover:ring-purple-200 transition-all"
                     />
                     <div className="space-y-2">
                       <div className="flex items-center gap-3">
-                        <span className="text-xl font-bold text-slate-900">
+                        <span className="text-xl font-bold text-slate-900 group-hover:text-purple-600 transition-colors">
                           {selectedVideo.creator.name}
                         </span>
                         {selectedVideo.creator.verified && (
@@ -864,8 +881,8 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
                           </div>
                         )}
                       </div>
-                      <p className="text-sm font-medium text-slate-600">
-                        {selectedVideo.creator.subscribers} subscribers
+                      <p className="text-sm font-medium text-slate-600 group-hover:text-slate-700 transition-colors">
+                        {selectedVideo.creator.subscribers} subscribers • Click to view channel
                       </p>
                       {selectedVideo.creator.bio && (
                         <p className="text-sm text-slate-700 max-w-md leading-relaxed">
@@ -1094,17 +1111,18 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
         </div>
       </main>
 
-      {/* Loading spinner */}
-      {isLoading && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center">
-          <div
-            className="w-12 h-12 border-3 border-white border-t-purple-500 rounded-full animate-spin"
-            style={{
-              background: 'rgba(255, 255, 255, 0.9)',
-              backdropFilter: 'blur(12px)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
-            }}
-          />
+      {/* Loading spinner - show while videos are loading */}
+      {(loading || filteredVideos.length === 0) && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-white/50 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-3">
+            <div
+              className="w-12 h-12 border-3 border-gray-200 border-t-purple-500 rounded-full animate-spin"
+              style={{
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+              }}
+            />
+            <p className="text-sm text-gray-600 font-medium">Loading your videos...</p>
+          </div>
         </div>
       )}
 
