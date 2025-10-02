@@ -194,16 +194,53 @@ export default function ZapRewardsHub() {
         />
       )}
 
-      {/* Main Content - V7 Premium Pearl Gradient */}
+      {/* Main Content - V8 Hyper Premium Background */}
       <main className="flex-1 min-w-0 overflow-y-auto relative">
-        {/* Premium Pearl → Platinum Gradient Background */}
-        <div className="fixed inset-0 bg-gradient-to-br from-[#f8f7f4] via-[#fefefe] to-[#e8e8e8] -z-20" />
+        {/* V8 Premium Pearl → Platinum Silver Gradient */}
+        <div className="fixed inset-0 bg-gradient-to-br from-[#f5f5f7] via-[#fafafc] to-[#e5e5ea] -z-20" />
+
+        {/* Aurora Effect - Animated Pulse Lines */}
+        <motion.div
+          className="fixed inset-0 opacity-20 pointer-events-none -z-15"
+          style={{
+            background: 'radial-gradient(ellipse at top, rgba(99, 102, 241, 0.15), transparent 50%), radial-gradient(ellipse at bottom, rgba(139, 92, 246, 0.15), transparent 50%)'
+          }}
+          animate={{
+            opacity: [0.15, 0.25, 0.15],
+          }}
+          transition={{
+            duration: 4,
+            repeat: Infinity,
+            ease: 'easeInOut'
+          }}
+        />
+
+        {/* Animated Pulse Lines - Tesla Dashboard Style */}
+        <div className="fixed inset-0 opacity-[0.08] pointer-events-none -z-15 overflow-hidden">
+          {[0, 1, 2].map((i) => (
+            <motion.div
+              key={i}
+              className="absolute h-[1px] w-full bg-gradient-to-r from-transparent via-indigo-400 to-transparent"
+              style={{ top: `${30 + i * 20}%` }}
+              animate={{
+                x: ['-100%', '200%'],
+                opacity: [0, 1, 0]
+              }}
+              transition={{
+                duration: 8,
+                repeat: Infinity,
+                delay: i * 2.5,
+                ease: 'linear'
+              }}
+            />
+          ))}
+        </div>
 
         {/* Radial Glow Behind Hero */}
-        <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-gradient-radial from-indigo-100/30 via-transparent to-transparent blur-3xl -z-10 pointer-events-none" />
+        <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[900px] h-[900px] bg-gradient-radial from-indigo-100/20 via-transparent to-transparent blur-3xl -z-10 pointer-events-none" />
 
         {/* Faint Lightning Watermark */}
-        <div className="fixed inset-0 opacity-[0.015] pointer-events-none -z-10">
+        <div className="fixed inset-0 opacity-[0.012] pointer-events-none -z-10">
           <Zap className="absolute top-1/4 right-1/4 w-96 h-96 text-indigo-600" />
           <Zap className="absolute bottom-1/3 left-1/4 w-64 h-64 text-violet-600 rotate-45" />
         </div>
@@ -281,39 +318,303 @@ export default function ZapRewardsHub() {
   );
 }
 
-// Balance Widget - Apple Wallet Style with Pulse Animation
+// V8 Balance Widget - Black Amex Style with Expandable Wallet
 const BalanceWidget: React.FC<{ userZAPs: number }> = ({ userZAPs }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [displayBalance, setDisplayBalance] = useState(userZAPs);
+
+  // Odometer effect when balance changes
+  useEffect(() => {
+    if (userZAPs !== displayBalance) {
+      const increment = (userZAPs - displayBalance) / 20;
+      const timer = setInterval(() => {
+        setDisplayBalance(prev => {
+          const next = prev + increment;
+          if ((increment > 0 && next >= userZAPs) || (increment < 0 && next <= userZAPs)) {
+            clearInterval(timer);
+            return userZAPs;
+          }
+          return next;
+        });
+      }, 30);
+      return () => clearInterval(timer);
+    }
+  }, [userZAPs]);
+
+  const usdEquivalent = (userZAPs * 0.034).toFixed(2);
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -20, scale: 0.9 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-      className="fixed top-6 right-6 z-40 hidden lg:block"
-    >
-      <div className="px-6 py-4 rounded-2xl bg-white/60 backdrop-blur-3xl border border-white/40 shadow-xl shadow-gray-300/30">
-        <div className="flex items-center space-x-3">
-          <motion.div
-            className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-md"
-            animate={{
-              boxShadow: [
-                '0 4px 12px rgba(99, 102, 241, 0.3)',
-                '0 4px 20px rgba(139, 92, 246, 0.5)',
-                '0 4px 12px rgba(99, 102, 241, 0.3)'
-              ]
+    <>
+      {/* Desktop Widget */}
+      <motion.div
+        initial={{ opacity: 0, y: -20, scale: 0.9 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+        className="fixed top-6 right-6 z-40 hidden lg:block"
+      >
+        <motion.div
+          className="relative group cursor-pointer"
+          onClick={() => setIsExpanded(!isExpanded)}
+          whileHover={{ scale: 1.02, y: -2 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          {/* Glassmorphic Black Amex Card */}
+          <div className="relative overflow-hidden w-80 h-48 rounded-3xl shadow-2xl"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,240,245,0.98) 100%)',
+              backdropFilter: 'blur(40px)',
             }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
           >
-            <Zap className="w-5 h-5 text-white" fill="currentColor" />
-          </motion.div>
-          <div>
-            <p className="text-xs text-gray-500 font-medium">Your Balance</p>
-            <p className="text-2xl font-bold text-gray-900 flex items-center gap-1">
-              {userZAPs.toLocaleString()} <span className="text-lg text-indigo-600">⚡</span>
-            </p>
+            {/* Metallic Gradient Border - Silver to Gold Shimmer */}
+            <motion.div
+              className="absolute inset-0 rounded-3xl p-[2px]"
+              style={{
+                background: 'linear-gradient(135deg, #c0c0c0, #ffd700, #e5e5e5, #ffd700, #c0c0c0)',
+                backgroundSize: '300% 300%',
+              }}
+              animate={{
+                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+              }}
+              transition={{
+                duration: 5,
+                repeat: Infinity,
+                ease: 'linear'
+              }}
+            >
+              <div className="w-full h-full rounded-3xl bg-white" />
+            </motion.div>
+
+            {/* Aurora Wave Animation Background */}
+            <motion.div
+              className="absolute inset-0 opacity-30"
+              style={{
+                background: 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2), rgba(236,72,153,0.2))',
+                backgroundSize: '200% 200%',
+              }}
+              animate={{
+                backgroundPosition: ['0% 0%', '100% 100%', '0% 0%'],
+              }}
+              transition={{
+                duration: 8,
+                repeat: Infinity,
+                ease: 'easeInOut'
+              }}
+            />
+
+            {/* Card Content */}
+            <div className="relative z-10 p-6 flex flex-col justify-between h-full">
+              {/* Top Section */}
+              <div className="flex items-start justify-between">
+                {/* Zap Icon with Electric Shimmer */}
+                <motion.div
+                  className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 flex items-center justify-center shadow-lg"
+                  animate={{
+                    boxShadow: [
+                      '0 4px 20px rgba(245, 158, 11, 0.4)',
+                      '0 4px 30px rgba(245, 158, 11, 0.7)',
+                      '0 4px 20px rgba(245, 158, 11, 0.4)'
+                    ]
+                  }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                  whileHover={{
+                    rotate: [0, -10, 10, -5, 5, 0],
+                    transition: { duration: 0.5 }
+                  }}
+                >
+                  <Zap className="w-6 h-6 text-white" fill="currentColor" />
+                </motion.div>
+
+                {/* Embossed ZAP Logo */}
+                <div className="text-xs font-black tracking-wider text-gray-400"
+                  style={{
+                    textShadow: '1px 1px 2px rgba(255,255,255,0.8), -1px -1px 2px rgba(0,0,0,0.1)'
+                  }}
+                >
+                  WIZ ZAP
+                </div>
+              </div>
+
+              {/* Center: Balance */}
+              <div>
+                <p className="text-sm font-semibold text-gray-500 mb-1 tracking-wide"
+                  style={{
+                    fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont, sans-serif'
+                  }}
+                >
+                  Your Balance
+                </p>
+                <div className="flex items-baseline gap-2">
+                  <motion.p
+                    className="text-4xl font-black text-gray-900"
+                    style={{
+                      fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont, sans-serif',
+                      textShadow: '2px 2px 4px rgba(0,0,0,0.05)'
+                    }}
+                    key={Math.floor(displayBalance)}
+                  >
+                    {Math.floor(displayBalance).toLocaleString()}
+                  </motion.p>
+                  <span className="text-2xl">⚡</span>
+                </div>
+                <p className="text-xs text-gray-400 mt-1">≈ ${usdEquivalent} USD</p>
+              </div>
+
+              {/* Bottom: Hint */}
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider">Premium Member</p>
+                <motion.div
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </motion.div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    </motion.div>
+
+          {/* Glow Effect on Hover */}
+          <motion.div
+            className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"
+            style={{
+              background: 'linear-gradient(135deg, rgba(99,102,241,0.3), rgba(245,158,11,0.3))',
+              filter: 'blur(20px)',
+            }}
+          />
+        </motion.div>
+      </motion.div>
+
+      {/* Expandable Mini-Wallet Popup */}
+      <AnimatePresence>
+        {isExpanded && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50"
+              onClick={() => setIsExpanded(false)}
+            />
+
+            {/* Mini Wallet */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: -20, x: 50 }}
+              animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: -20, x: 50 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="fixed top-60 right-6 z-50 w-96 bg-white/95 backdrop-blur-3xl rounded-3xl shadow-2xl border border-gray-200 overflow-hidden"
+            >
+              {/* Close Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsExpanded(false);
+                }}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors z-10"
+              >
+                <X className="w-4 h-4 text-gray-600" />
+              </button>
+
+              {/* Header */}
+              <div className="p-6 border-b border-gray-200">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Wallet Overview</h3>
+                <p className="text-sm text-gray-500">Your ZAP activity and history</p>
+              </div>
+
+              {/* Balance History - Tiny Sparkline */}
+              <div className="p-6 bg-gradient-to-br from-indigo-50 to-violet-50">
+                <p className="text-xs text-gray-600 mb-2 font-semibold uppercase tracking-wide">7-Day Balance</p>
+                <div className="h-20 flex items-end gap-1">
+                  {[40, 55, 48, 72, 65, 80, 100].map((height, i) => (
+                    <motion.div
+                      key={i}
+                      className="flex-1 bg-gradient-to-t from-indigo-500 to-violet-500 rounded-t-lg"
+                      initial={{ height: 0 }}
+                      animate={{ height: `${height}%` }}
+                      transition={{ delay: i * 0.1, duration: 0.5 }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Recent Transactions */}
+              <div className="p-6">
+                <h4 className="text-sm font-bold text-gray-700 mb-3">Recent Activity</h4>
+                <div className="space-y-3">
+                  {[
+                    { action: 'Claimed Reward', amount: -50, time: '2h ago' },
+                    { action: 'Video Completed', amount: +25, time: '5h ago' },
+                    { action: 'Course Progress', amount: +100, time: '1d ago' },
+                  ].map((tx, i) => (
+                    <div key={i} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{tx.action}</p>
+                        <p className="text-xs text-gray-500">{tx.time}</p>
+                      </div>
+                      <span className={cn(
+                        "text-sm font-bold flex items-center gap-1",
+                        tx.amount > 0 ? "text-green-600" : "text-red-600"
+                      )}>
+                        {tx.amount > 0 ? '+' : ''}{tx.amount} <Zap className="w-3 h-3" fill="currentColor" />
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Add ZAPs Button */}
+              <div className="p-6 border-t border-gray-200">
+                <Button className="w-full h-12 bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 hover:from-indigo-500 hover:via-violet-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Add ZAPs
+                </Button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile: Sticky Top Collapsible Card */}
+      {isMobile && (
+        <motion.div
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="sticky top-0 z-30 mx-4 mt-4 mb-6"
+        >
+          <div className="relative overflow-hidden rounded-2xl shadow-xl"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,240,245,0.98) 100%)',
+              backdropFilter: 'blur(40px)',
+            }}
+          >
+            {/* Metallic Border */}
+            <div className="absolute inset-0 rounded-2xl p-[1px]"
+              style={{
+                background: 'linear-gradient(135deg, #c0c0c0, #ffd700, #c0c0c0)',
+              }}
+            >
+              <div className="w-full h-full rounded-2xl bg-white" />
+            </div>
+
+            {/* Content */}
+            <div className="relative z-10 p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-md">
+                  <Zap className="w-5 h-5 text-white" fill="currentColor" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 font-medium">Your Balance</p>
+                  <p className="text-2xl font-black text-gray-900">{userZAPs.toLocaleString()} ⚡</p>
+                </div>
+              </div>
+              <Button size="sm" className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-bold rounded-lg shadow-md">
+                Add
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </>
   );
 };
 
@@ -358,23 +659,33 @@ const PremiumHeader: React.FC = () => {
         Discover exclusive communities, earn rewards, and unlock experiences with ZAPs or ZAPs + USD co-pay — or{' '}
         <button
           onClick={() => navigate('/create')}
-          className="relative inline-flex items-center font-semibold text-indigo-600 hover:text-indigo-700 transition-colors duration-200 group"
+          className="relative inline-flex items-center font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 hover:from-indigo-500 hover:via-violet-500 hover:to-purple-500 transition-all duration-300 group"
         >
-          Create a Reward
-          <Sparkles className="w-4 h-4 ml-1" />
-          {/* Animated Underline */}
+          create a reward
+          <motion.div
+            className="ml-1.5"
+            animate={{
+              rotate: [0, 15, -15, 0],
+              scale: [1, 1.2, 1]
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <Sparkles className="w-4 h-4 text-violet-600" />
+          </motion.div>
+          {/* Premium Glow Underline */}
           <motion.span
-            className="absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-indigo-600 to-violet-600"
-            initial={{ width: 0 }}
-            animate={{ width: '100%' }}
-            transition={{ duration: 0.3 }}
+            className="absolute -bottom-1 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 rounded-full"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
           />
           <motion.span
-            className="absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-indigo-400 to-violet-400 blur-sm"
+            className="absolute -bottom-2 left-0 right-0 h-3 bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400 blur-lg opacity-60"
             animate={{
-              opacity: [0.5, 1, 0.5],
+              opacity: [0.4, 0.8, 0.4],
+              scaleY: [0.8, 1.2, 0.8]
             }}
-            transition={{ duration: 1.5, repeat: Infinity }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
           />
         </button>
       </p>
@@ -382,11 +693,13 @@ const PremiumHeader: React.FC = () => {
   );
 };
 
-// Monetization Filter Row - Glowing Pills
+// V8 Monetization Filter Row - Neon Underline Animation
 const MonetizationFilterRow: React.FC<{
   activeFilter: string;
   onFilterChange: (filter: string) => void;
 }> = ({ activeFilter, onFilterChange }) => {
+  const activeIndex = monetizationFilters.findIndex(f => f.id === activeFilter);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -394,8 +707,8 @@ const MonetizationFilterRow: React.FC<{
       transition={{ delay: 0.2, duration: 0.4 }}
       className="flex justify-center"
     >
-      <div className="inline-flex items-center gap-2 p-1.5 rounded-full bg-white/60 backdrop-blur-xl border border-gray-200 shadow-lg">
-        {monetizationFilters.map((filter) => {
+      <div className="relative inline-flex items-center gap-2 p-1.5 rounded-full bg-white/60 backdrop-blur-xl border border-gray-200 shadow-lg">
+        {monetizationFilters.map((filter, index) => {
           const isActive = activeFilter === filter.id;
 
           return (
@@ -403,7 +716,7 @@ const MonetizationFilterRow: React.FC<{
               key={filter.id}
               onClick={() => onFilterChange(filter.id)}
               className={cn(
-                "relative px-6 py-3 rounded-full font-semibold text-sm transition-all duration-300",
+                "relative px-6 py-3 rounded-full font-semibold text-sm transition-all duration-300 z-10",
                 isActive
                   ? "bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-lg"
                   : "text-gray-700 hover:text-gray-900 hover:bg-white/50"
@@ -425,6 +738,34 @@ const MonetizationFilterRow: React.FC<{
             </motion.button>
           );
         })}
+
+        {/* Sliding Neon Underline - Music Player Style */}
+        <motion.div
+          className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-indigo-500 via-violet-600 to-purple-600 rounded-full"
+          initial={false}
+          animate={{
+            x: activeIndex * 120 + 10,
+            width: 100
+          }}
+          transition={{
+            type: 'spring',
+            stiffness: 300,
+            damping: 30
+          }}
+        />
+        <motion.div
+          className="absolute bottom-0 left-0 h-2 bg-gradient-to-r from-indigo-400 via-violet-500 to-purple-500 rounded-full blur-md opacity-60"
+          initial={false}
+          animate={{
+            x: activeIndex * 120 + 10,
+            width: 100
+          }}
+          transition={{
+            type: 'spring',
+            stiffness: 300,
+            damping: 30
+          }}
+        />
       </div>
     </motion.div>
   );
@@ -575,18 +916,20 @@ const RewardCard: React.FC<{
       aria-label={`${reward.title} - ${reward.zapsCost} ZAPs`}
     >
       <motion.div
-        className="relative h-[420px] rounded-2xl overflow-hidden bg-white/50 backdrop-blur-2xl border border-white/60 shadow-xl"
+        className="relative h-[420px] rounded-3xl overflow-hidden backdrop-blur-3xl border shadow-2xl"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,248,252,0.95) 100%)',
+          borderColor: isHovered ? 'rgba(99, 102, 241, 0.3)' : 'rgba(255, 255, 255, 0.6)',
+          boxShadow: isHovered
+            ? '0 25px 60px rgba(0, 0, 0, 0.15), 0 0 40px rgba(99, 102, 241, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -1px 0 rgba(0, 0, 0, 0.05)'
+            : '0 8px 24px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 -1px 0 rgba(0, 0, 0, 0.03)',
+        }}
         whileHover={{
           scale: 1.03,
-          y: -6,
+          y: -8,
           transition: { duration: 0.3, ease: [0.25, 0.1, 0.25, 1] },
         }}
         whileTap={{ scale: 0.98 }}
-        style={{
-          boxShadow: isHovered
-            ? '0 20px 50px rgba(0, 0, 0, 0.12), 0 0 30px rgba(99, 102, 241, 0.15)'
-            : '0 8px 20px rgba(0, 0, 0, 0.06)',
-        }}
       >
         {/* Thumbnail with Lightning Flicker on Hover */}
         <div className="relative h-52 overflow-hidden bg-gray-100">
@@ -689,7 +1032,7 @@ const RewardCard: React.FC<{
                 )}
               </div>
 
-              {/* View Button on Hover */}
+              {/* View Button on Hover - with Ripple Glow */}
               <AnimatePresence>
                 {isHovered && (
                   <motion.div
@@ -697,10 +1040,24 @@ const RewardCard: React.FC<{
                     animate={{ opacity: 1, scale: 1, x: 0 }}
                     exit={{ opacity: 0, scale: 0.8, x: -10 }}
                     transition={{ duration: 0.2 }}
+                    className="relative"
                   >
+                    {/* Ripple Glow Effect */}
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-lg blur-md opacity-60"
+                      animate={{
+                        scale: [1, 1.3, 1],
+                        opacity: [0.6, 0.3, 0.6]
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: 'easeInOut'
+                      }}
+                    />
                     <Button
                       size="sm"
-                      className="h-8 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs shadow-md"
+                      className="relative h-8 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold shadow-lg"
                     >
                       <Eye className="w-3 h-3 mr-1" />
                       View
@@ -716,7 +1073,7 @@ const RewardCard: React.FC<{
   );
 };
 
-// Cinematic Watch Pop-Up Modal V7
+// V8 Cinematic Watch Pop-Up Modal - Apple Vision Pro Style with Parallax
 const CinematicRewardModal: React.FC<{
   reward: Reward;
   onClose: () => void;
@@ -724,7 +1081,16 @@ const CinematicRewardModal: React.FC<{
   userZAPs: number;
 }> = ({ reward, onClose, onClaim, userZAPs }) => {
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const canAfford = userZAPs >= reward.zapsCost;
+
+  // Track mouse for parallax effect
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
+    const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
+    setMousePosition({ x: x * 20, y: y * 20 });
+  };
 
   const typeConfig = {
     community: { icon: Users },
@@ -756,8 +1122,12 @@ const CinematicRewardModal: React.FC<{
             onClick={onClose}
           />
 
-          {/* Modal Panel */}
-          <div className="relative bg-white/80 backdrop-blur-3xl rounded-3xl shadow-2xl overflow-hidden border border-white/60">
+          {/* Modal Panel with Parallax */}
+          <div
+            className="relative bg-white/80 backdrop-blur-3xl rounded-3xl shadow-2xl overflow-hidden border border-white/60"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={() => setMousePosition({ x: 0, y: 0 })}
+          >
             {/* Close Button */}
             <button
               onClick={onClose}
@@ -768,15 +1138,24 @@ const CinematicRewardModal: React.FC<{
 
             {/* Split Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-2">
-              {/* Left: Hero Media */}
-              <div className="relative h-[500px] lg:h-[700px] bg-gradient-to-br from-gray-100 to-gray-200">
+              {/* Left: Hero Media with Parallax Depth */}
+              <div className="relative h-[500px] lg:h-[700px] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
                 <motion.img
                   src={reward.heroMedia || reward.thumbnail}
                   alt={reward.title}
                   className="w-full h-full object-cover"
                   initial={{ scale: 1.1 }}
-                  animate={{ scale: 1 }}
-                  transition={{ duration: 0.6 }}
+                  animate={{
+                    scale: 1,
+                    x: mousePosition.x,
+                    y: mousePosition.y
+                  }}
+                  transition={{
+                    duration: 0.6,
+                    type: 'spring',
+                    stiffness: 100,
+                    damping: 20
+                  }}
                 />
 
                 {/* Soft Glow Edges */}
@@ -935,27 +1314,60 @@ const CinematicRewardModal: React.FC<{
 
                   {/* Action Buttons */}
                   <div className="flex items-center gap-3">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => onClaim(reward)}
-                      disabled={!canAfford}
-                      className={cn(
-                        "flex-1 px-8 py-4 rounded-2xl font-bold text-lg shadow-xl transition-all duration-300",
-                        canAfford
-                          ? "bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 hover:from-indigo-500 hover:via-violet-500 hover:to-purple-500 text-white shadow-indigo-400"
-                          : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      )}
-                    >
-                      {canAfford ? (
+                    {/* Claim Button with Liquid Glow Animation */}
+                    <div className="relative flex-1">
+                      {/* Liquid Glow Pulse - Animated Rings */}
+                      {canAfford && (
                         <>
-                          <Zap className="w-5 h-5 inline mr-2" fill="currentColor" />
-                          Claim Reward
+                          <motion.div
+                            className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 opacity-40 blur-xl"
+                            animate={{
+                              scale: [1, 1.15, 1],
+                              opacity: [0.4, 0.6, 0.4]
+                            }}
+                            transition={{
+                              duration: 2,
+                              repeat: Infinity,
+                              ease: 'easeInOut'
+                            }}
+                          />
+                          <motion.div
+                            className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400 opacity-30 blur-2xl"
+                            animate={{
+                              scale: [1, 1.3, 1],
+                              opacity: [0.3, 0.5, 0.3]
+                            }}
+                            transition={{
+                              duration: 3,
+                              repeat: Infinity,
+                              ease: 'easeInOut',
+                              delay: 0.5
+                            }}
+                          />
                         </>
-                      ) : (
-                        'Insufficient ZAPs'
                       )}
-                    </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => onClaim(reward)}
+                        disabled={!canAfford}
+                        className={cn(
+                          "relative w-full px-8 py-4 rounded-2xl font-bold text-lg shadow-xl transition-all duration-300",
+                          canAfford
+                            ? "bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 hover:from-indigo-500 hover:via-violet-500 hover:to-purple-500 text-white shadow-indigo-400"
+                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        )}
+                      >
+                        {canAfford ? (
+                          <>
+                            <Zap className="w-5 h-5 inline mr-2" fill="currentColor" />
+                            Claim Reward
+                          </>
+                        ) : (
+                          'Insufficient ZAPs'
+                        )}
+                      </motion.button>
+                    </div>
 
                     <motion.button
                       whileHover={{ scale: 1.05 }}
