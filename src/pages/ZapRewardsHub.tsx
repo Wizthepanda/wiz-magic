@@ -322,6 +322,7 @@ export default function ZapRewardsHub() {
 const BalanceWidget: React.FC<{ userZAPs: number; isMobile?: boolean }> = ({ userZAPs, isMobile = false }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [displayBalance, setDisplayBalance] = useState(userZAPs);
+  const { zapData, zapProgress } = useZAPSystem();
 
   // Odometer effect when balance changes
   useEffect(() => {
@@ -341,7 +342,8 @@ const BalanceWidget: React.FC<{ userZAPs: number; isMobile?: boolean }> = ({ use
     }
   }, [userZAPs]);
 
-  const usdEquivalent = (userZAPs * 0.034).toFixed(2);
+  const currentLevel = zapProgress?.level || 1;
+  const profileTitle = zapProgress?.rank || 'Member';
 
   return (
     <>
@@ -424,13 +426,13 @@ const BalanceWidget: React.FC<{ userZAPs: number; isMobile?: boolean }> = ({ use
                   <Zap className="w-6 h-6 text-white" fill="currentColor" />
                 </motion.div>
 
-                {/* Embossed ZAP Logo */}
+                {/* Embossed WIZUP Logo */}
                 <div className="text-xs font-black tracking-wider text-gray-400"
                   style={{
                     textShadow: '1px 1px 2px rgba(255,255,255,0.8), -1px -1px 2px rgba(0,0,0,0.1)'
                   }}
                 >
-                  WIZ ZAP
+                  WIZUP
                 </div>
               </div>
 
@@ -456,12 +458,11 @@ const BalanceWidget: React.FC<{ userZAPs: number; isMobile?: boolean }> = ({ use
                   </motion.p>
                   <span className="text-2xl">⚡</span>
                 </div>
-                <p className="text-xs text-gray-400 mt-1">≈ ${usdEquivalent} USD</p>
               </div>
 
-              {/* Bottom: Hint */}
+              {/* Bottom: Level & Title */}
               <div className="flex items-center justify-between">
-                <p className="text-[10px] text-gray-400 uppercase tracking-wider">Premium Member</p>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider">Level {currentLevel} • {profileTitle}</p>
                 <motion.div
                   animate={{ scale: [1, 1.1, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
@@ -597,19 +598,26 @@ const BalanceWidget: React.FC<{ userZAPs: number; isMobile?: boolean }> = ({ use
             </div>
 
             {/* Content */}
-            <div className="relative z-10 p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-md">
-                  <Zap className="w-5 h-5 text-white" fill="currentColor" />
+            <div className="relative z-10 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-md">
+                    <Zap className="w-5 h-5 text-white" fill="currentColor" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 font-medium">Your Balance</p>
+                    <p className="text-2xl font-black text-gray-900">{userZAPs.toLocaleString()} ⚡</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-500 font-medium">Your Balance</p>
-                  <p className="text-2xl font-black text-gray-900">{userZAPs.toLocaleString()} ⚡</p>
-                </div>
+                <Button size="sm" className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-bold rounded-lg shadow-md">
+                  Add
+                </Button>
               </div>
-              <Button size="sm" className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-bold rounded-lg shadow-md">
-                Add
-              </Button>
+              {/* Level & Title - Mobile */}
+              <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider">Level {currentLevel} • {profileTitle}</p>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider">WIZUP</p>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -655,40 +663,43 @@ const PremiumHeader: React.FC = () => {
           }}
         />
       </h1>
-      <p className="text-lg lg:text-xl text-gray-600 max-w-4xl leading-relaxed">
-        Discover exclusive communities, earn rewards, and unlock experiences with ZAPs or ZAPs + USD co-pay — or{' '}
-        <button
-          onClick={() => navigate('/create')}
-          className="relative inline-flex items-center font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 hover:from-indigo-500 hover:via-violet-500 hover:to-purple-500 transition-all duration-300 group"
-        >
-          create a reward
-          <motion.div
-            className="ml-1.5"
-            animate={{
-              rotate: [0, 15, -15, 0],
-              scale: [1, 1.2, 1]
-            }}
-            transition={{ duration: 2, repeat: Infinity }}
+      <div className="text-lg lg:text-xl text-gray-600 max-w-4xl leading-relaxed space-y-1">
+        <p>Discover exclusive communities, earn rewards, and unlock experiences with ZAPs</p>
+        <p>
+          or ZAPs + USD co-pay — or{' '}
+          <button
+            onClick={() => navigate('/create')}
+            className="relative inline-flex items-center font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 hover:from-indigo-500 hover:via-violet-500 hover:to-purple-500 transition-all duration-300 group"
           >
-            <Sparkles className="w-4 h-4 text-violet-600" />
-          </motion.div>
-          {/* Premium Glow Underline */}
-          <motion.span
-            className="absolute -bottom-1 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 rounded-full"
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ duration: 0.4, ease: 'easeOut' }}
-          />
-          <motion.span
-            className="absolute -bottom-2 left-0 right-0 h-3 bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400 blur-lg opacity-60"
-            animate={{
-              opacity: [0.4, 0.8, 0.4],
-              scaleY: [0.8, 1.2, 0.8]
-            }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        </button>
-      </p>
+            create a reward
+            <motion.div
+              className="ml-1.5"
+              animate={{
+                rotate: [0, 15, -15, 0],
+                scale: [1, 1.2, 1]
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <Sparkles className="w-4 h-4 text-violet-600" />
+            </motion.div>
+            {/* Premium Glow Underline */}
+            <motion.span
+              className="absolute -bottom-1 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 rounded-full"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+            />
+            <motion.span
+              className="absolute -bottom-2 left-0 right-0 h-3 bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400 blur-lg opacity-60"
+              animate={{
+                opacity: [0.4, 0.8, 0.4],
+                scaleY: [0.8, 1.2, 0.8]
+              }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          </button>
+        </p>
+      </div>
     </motion.div>
   );
 };
