@@ -264,7 +264,7 @@ export default function ZapRewardsHub() {
         {/* Content Container */}
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-12 relative">
           {/* Balance Widget - Top Right */}
-          <BalanceWidget userZAPs={zapData?.totalZAPs || 0} />
+          <BalanceWidget userZAPs={zapData?.totalZAPs || 0} isMobile={isMobile} />
 
           {/* Premium Header */}
           <PremiumHeader />
@@ -319,7 +319,7 @@ export default function ZapRewardsHub() {
 }
 
 // V8 Balance Widget - Black Amex Style with Expandable Wallet
-const BalanceWidget: React.FC<{ userZAPs: number }> = ({ userZAPs }) => {
+const BalanceWidget: React.FC<{ userZAPs: number; isMobile?: boolean }> = ({ userZAPs, isMobile = false }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [displayBalance, setDisplayBalance] = useState(userZAPs);
 
