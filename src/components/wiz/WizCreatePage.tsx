@@ -15,6 +15,7 @@ import { CreatorService, CreatorVideo } from '@/lib/creator-service';
 import { youTubeAPI, YouTubeChannelInfo, YouTubeVideo } from '@/lib/youtube-api';
 import { isYouTubeAPIEnabled } from '@/lib/feature-flags';
 import { CreationHub } from './CreationHub';
+import { PublishedCreationsManager } from './PublishedCreationsManager';
 
 interface Video {
   id: string;
@@ -970,6 +971,9 @@ export const WizCreatePage = () => {
           onPublishToWiz={publishToWiz}
           toast={toast}
         />
+
+        {/* Published Creations Manager */}
+        <PublishedCreationsManager />
 
         {/* YouTube Re-authorization Prompt */}
         {showAuthPrompt && (
