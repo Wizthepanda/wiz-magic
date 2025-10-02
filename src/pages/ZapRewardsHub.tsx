@@ -668,7 +668,7 @@ const PremiumHeader: React.FC = () => {
         <p>
           or ZAPs + USD co-pay — or{' '}
           <button
-            onClick={() => navigate('/create')}
+            onClick={() => navigate('/?section=create')}
             className="relative inline-flex items-center font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 hover:from-indigo-500 hover:via-violet-500 hover:to-purple-500 transition-all duration-300 group"
           >
             create a reward
