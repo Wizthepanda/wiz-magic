@@ -1,13 +1,13 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { useCreatorStats } from '../hooks/useCreatorStats';
-import { useXp } from '@/context/XpContext';
+import { useZAPSystem } from '@/hooks/useZAPSystem';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
-import { 
-  Zap, 
-  Users, 
-  Eye, 
-  DollarSign, 
+import {
+  Zap,
+  Users,
+  Eye,
+  DollarSign,
   GraduationCap,
   Video,
   PlayCircle,
@@ -30,14 +30,14 @@ interface KpiCard {
 
 export const CreatorKpiStrip: React.FC<KpiStripProps> = ({ userId }) => {
   const isMobile = useIsMobile();
-  const { totalXP } = useXp();
+  const { zapData } = useZAPSystem();
   const { data: stats, isLoading } = useCreatorStats(userId);
 
   const kpiCards: KpiCard[] = [
     {
-      id: "xp",
-      title: "Total XP",
-      value: (totalXP || 0).toLocaleString(),
+      id: "zaps",
+      title: "Total ZAPs",
+      value: (zapData?.totalZAPs || 0).toLocaleString(),
       subValue: "WIZ Platform",
       icon: Zap,
       gradient: "from-yellow-400 to-orange-500",

@@ -389,20 +389,25 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl w-full h-[90vh] overflow-y-auto bg-gradient-to-br from-white via-[#f7f9fc] to-[#eef1f7] rounded-2xl p-6 shadow-2xl backdrop-blur-xl border-0">
+      <DialogContent className="max-w-7xl w-[95vw] max-h-[92vh] overflow-y-auto bg-gradient-to-br from-white via-[#f7f9fc] to-[#eef1f7] rounded-2xl p-6 shadow-2xl backdrop-blur-xl border-0">
         <div className="flex flex-col md:flex-row gap-6">
           {/* Left: Main Video Section */}
           <div className="flex-1 flex flex-col gap-4">
-            {/* Video */}
-            <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-xl">
+            {/* Video - with loading state */}
+            <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-2xl bg-black">
+              {/* Loading spinner */}
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-10">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+              </div>
               <iframe
                 src={`https://www.youtube.com/embed/${currentVideo.videoId}?autoplay=1&rel=0&modestbranding=1&enablejsapi=1&origin=${window.location.origin}`}
                 title={currentVideo.title}
-                className="w-full h-full"
+                className="absolute inset-0 w-full h-full z-20"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
                 id={`youtube-player-${currentVideo.videoId}`}
+                loading="eager"
               />
             </div>
 

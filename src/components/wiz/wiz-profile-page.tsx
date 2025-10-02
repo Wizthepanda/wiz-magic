@@ -9,34 +9,32 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
-import { useXp } from '@/context/XpContext';
+import { useZAPSystem } from '@/hooks/useZAPSystem';
 import { FloatingParticles } from '@/components/ui/floating-particles';
 
 export const WizProfilePage = () => {
   const { user } = useAuth();
-  const { 
-    xp,
-    totalXp, 
-    level, 
-    progressPercent, 
-    xpToNextLevel,
-    dailyXp,
-    currentStreak 
-  } = useXp();
+  const { zapData, zapProgress } = useZAPSystem();
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Mock user stats and data
+  // Real user stats from ZAP system
+  const totalZAPs = zapData?.totalZAPs || 0;
+  const currentLevel = zapProgress?.level || 1;
+  const progressPercent = zapProgress?.progressPercent || 0;
+  const currentStreak = zapData?.currentStreak || 0;
+  const longestStreak = zapData?.longestStreak || 0;
+
   const userStats = {
-    totalWatchTime: '247h 32m',
-    videosWatched: 156,
+    totalWatchTime: zapData?.totalWatchTime || '0h',
+    videosWatched: zapData?.videosCompleted || 0,
     currentStreak: currentStreak,
-    longestStreak: 45,
+    longestStreak: longestStreak,
     favoriteCategory: 'AI & Technology',
-    joinDate: 'September 2024',
-    rank: 'Top 15%',
-    achievements: 12,
-    totalEarnings: '$127.50'
+    joinDate: user?.metadata?.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Recently',
+    rank: zapProgress?.rank || 'Member',
+    achievements: zapData?.achievementsUnlocked || 0,
+    totalEarnings: zapData?.totalEarnings ? `$${zapData.totalEarnings.toFixed(2)}` : '$0.00'
   };
 
   const recentActivity = [
@@ -257,8 +255,10 @@ export const WizProfilePage = () => {
                 {/* Quick Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-wiz-primary">{totalXp}</div>
-                    <div className="text-sm text-muted-foreground">Total XP</div>
+                    <div className="text-2xl font-bold text-wiz-primary flex items-center justify-center gap-1">
+                      {totalZAPs} <span className="text-amber-500">⚡</span>
+                    </div>
+                    <div className="text-sm text-muted-foreground">Total ZAPs</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-wiz-secondary">{userStats.videosWatched}</div>
