@@ -954,9 +954,10 @@ export const WizCreatePage = () => {
         {/* Main Content - CreationHub only */}
 
         {/* What Do You Want to Create Hub */}
-        <CreationHub
-          isMobile={isMobile}
-          onYouTubeConnect={handleConnectYouTube}
+        <div data-section="create">
+          <CreationHub
+            isMobile={isMobile}
+            onYouTubeConnect={handleConnectYouTube}
           channelInfo={channelInfo}
           videos={videos}
           selectedVideos={selectedVideos}
@@ -970,7 +971,8 @@ export const WizCreatePage = () => {
           onProceedToCategorize={proceedToCategorize}
           onPublishToWiz={publishToWiz}
           toast={toast}
-        />
+          />
+        </div>
 
         {/* Published Creations Manager */}
         <PublishedCreationsManager />

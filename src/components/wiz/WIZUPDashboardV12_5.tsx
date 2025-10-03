@@ -14,7 +14,8 @@ import {
   X,
   ChevronRight,
   BookOpen,
-  Package
+  Package,
+  Search
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -389,6 +390,56 @@ interface WIZUPDashboardV12_5Props {
   loading?: boolean; // Loading state
 }
 
+// Helper function to derive category from tags
+const deriveCategoryFromTags = (tags?: string[]): string => {
+  if (!tags || tags.length === 0) return 'general';
+
+  const tagLower = tags.map(t => t.toLowerCase()).join(' ');
+
+  // Map tags to categories
+  if (tagLower.includes('tech') || tagLower.includes('programming') || tagLower.includes('code') ||
+      tagLower.includes('javascript') || tagLower.includes('react') || tagLower.includes('web')) {
+    return 'tech';
+  }
+  if (tagLower.includes('money') || tagLower.includes('finance') || tagLower.includes('investment') ||
+      tagLower.includes('crypto') || tagLower.includes('bitcoin')) {
+    return 'money';
+  }
+  if (tagLower.includes('design') || tagLower.includes('ui') || tagLower.includes('ux') ||
+      tagLower.includes('art') || tagLower.includes('graphic')) {
+    return 'design';
+  }
+  if (tagLower.includes('business') || tagLower.includes('entrepreneur') || tagLower.includes('startup') ||
+      tagLower.includes('marketing')) {
+    return 'business';
+  }
+  if (tagLower.includes('health') || tagLower.includes('fitness') || tagLower.includes('wellness') ||
+      tagLower.includes('nutrition')) {
+    return 'health';
+  }
+  if (tagLower.includes('self') || tagLower.includes('personal') || tagLower.includes('productivity') ||
+      tagLower.includes('motivation')) {
+    return 'self-improvement';
+  }
+  if (tagLower.includes('education') || tagLower.includes('learning') || tagLower.includes('tutorial')) {
+    return 'education';
+  }
+  if (tagLower.includes('gaming') || tagLower.includes('game') || tagLower.includes('esports')) {
+    return 'gaming';
+  }
+  if (tagLower.includes('lifestyle') || tagLower.includes('vlog') || tagLower.includes('travel')) {
+    return 'lifestyle';
+  }
+  if (tagLower.includes('social') || tagLower.includes('media') || tagLower.includes('influencer')) {
+    return 'social';
+  }
+  if (tagLower.includes('diy') || tagLower.includes('craft') || tagLower.includes('maker')) {
+    return 'diy';
+  }
+
+  return 'general';
+};
+
 // Transform WatchVideoData to VideoData format
 const transformVideoData = (videos: any[]): VideoData[] => {
   return videos.map((video: any) => ({
@@ -420,7 +471,7 @@ const transformVideoData = (videos: any[]): VideoData[] => {
     description: video.description || 'No description available',
     xpReward: video.duration ? calculateVideoZAPs(video.duration, false) : (video.xpReward || 0),
     zapsReward: video.duration ? calculateVideoZAPs(video.duration, false) : (video.zapsReward || video.xpReward || 0),
-    category: video.category || 'general',
+    category: video.category || deriveCategoryFromTags(video.tags),
     publishedAt: video.publishedAt || new Date().toISOString(),
     daysAgo: video.daysAgo || Math.floor(Math.random() * 7) + 1
   }));
@@ -1038,7 +1089,7 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
   return (
     <div className={cn("w-full", className)}>
       {/* Filter Row - Scrollable */}
-      <div className="relative w-full bg-white border-b border-neutral-200">
+      <div className="relative w-full bg-white">
         <div className="flex overflow-x-auto space-x-3 px-6 py-3 scrollbar-hide"
           style={{
             scrollBehavior: 'smooth',
@@ -1111,8 +1162,8 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
         </div>
       </main>
 
-      {/* Loading spinner - show while videos are loading */}
-      {(loading || filteredVideos.length === 0) && (
+      {/* Loading spinner - only show when videos are being loaded from Firestore */}
+      {loading && convertedVideos.length === 0 && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-white/50 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3">
             <div
@@ -1122,6 +1173,22 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
               }}
             />
             <p className="text-sm text-gray-600 font-medium">Loading your videos...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Empty state - show when filter returns no results but videos are loaded */}
+      {!loading && convertedVideos.length > 0 && filteredVideos.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-20 px-6">
+          <div className="text-center space-y-4 max-w-md">
+            <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center">
+              <Search className="w-10 h-10 text-purple-500" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900">No videos found</h3>
+            <p className="text-gray-600">
+              We couldn't find any videos in the "{FILTER_CATEGORIES.find(c => c.id === activeFilter)?.label}" category.
+              Try selecting a different category or check back later!
+            </p>
           </div>
         </div>
       )}

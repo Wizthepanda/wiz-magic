@@ -716,14 +716,13 @@ export const WizCommunityPage = ({ onSectionChange }: WizCommunityPageProps = {}
       try {
         setLoading(true);
 
-        // Query for free communities (USD = 0 and ZAPs = 0)
+        // Simplified query - only filter by status to avoid composite index requirement
+        // We'll filter for free communities (USD = 0 and ZAPs = 0) in-memory
         const communitiesQuery = query(
           collection(db, 'communities'),
           where('status', '==', 'published'),
-          where('zapsRequired', '==', 0),
-          where('usdCoPay', '==', 0),
           orderBy('createdAt', 'desc'),
-          limit(50)
+          limit(100)
         );
 
         const snapshot = await getDocs(communitiesQuery);
@@ -731,34 +730,41 @@ export const WizCommunityPage = ({ onSectionChange }: WizCommunityPageProps = {}
 
         snapshot.forEach((doc) => {
           const data = doc.data();
-          communities.push({
-            id: doc.id,
-            title: data.title,
-            creator: data.creatorName || 'Unknown Creator',
-            role: 'Community Creator',
-            creatorAvatar: data.creatorAvatar || '/Profile Pics/FERA.jpg',
-            thumbnail: data.coverMedia?.[0]?.thumbnail || data.coverMedia?.[0]?.url || '/api/placeholder/400/225',
-            description: data.shortDescription || data.longDescription || '',
-            category: data.category || 'General',
-            difficulty: 'Beginner',
-            duration: data.accessWindow || 'Lifetime',
-            members: 0,
-            rating: 5.0,
-            reviews: 0,
-            xpRequired: 0,
-            originalPrice: 0,
-            isPaid: false,
-            isFree: true,
-            lessons: data.modules?.length || 0,
-            completionRate: 0,
-            slotsTotal: data.slotsAvailable || null,
-            slotsClaimed: 0,
-            levelRequirement: null,
-            tags: data.tags || [],
-            privacy: data.privacy || 'public',
-            // Store original community data
-            communityData: data
-          });
+
+          // Filter for free communities in-memory (USD = 0 and ZAPs = 0)
+          const zapsRequired = data.zapsRequired || 0;
+          const usdCoPay = data.usdCoPay || 0;
+
+          if (zapsRequired === 0 && usdCoPay === 0) {
+            communities.push({
+              id: doc.id,
+              title: data.title,
+              creator: data.creatorName || 'Unknown Creator',
+              role: 'Community Creator',
+              creatorAvatar: data.creatorAvatar || '/Profile Pics/FERA.jpg',
+              thumbnail: data.coverMedia?.[0]?.thumbnail || data.coverMedia?.[0]?.url || '/api/placeholder/400/225',
+              description: data.shortDescription || data.longDescription || '',
+              category: data.category || 'General',
+              difficulty: 'Beginner',
+              duration: data.accessWindow || 'Lifetime',
+              members: 0,
+              rating: 5.0,
+              reviews: 0,
+              xpRequired: 0,
+              originalPrice: 0,
+              isPaid: false,
+              isFree: true,
+              lessons: data.modules?.length || 0,
+              completionRate: 0,
+              slotsTotal: data.slotsAvailable || null,
+              slotsClaimed: 0,
+              levelRequirement: null,
+              tags: data.tags || [],
+              privacy: data.privacy || 'public',
+              // Store original community data
+              communityData: data
+            });
+          }
         });
 
         setPublishedCommunities(communities);

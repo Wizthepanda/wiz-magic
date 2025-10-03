@@ -77,6 +77,7 @@ interface CreationHubProps {
   onProceedToCategorize?: () => void;
   onPublishToWiz?: () => void;
   toast?: any;
+  onEditDraft?: (draftId: string, type: CreationType) => void;
 }
 
 type CreationType = 'course' | 'community' | 'coaching' | 'product' | 'tool' | null;
@@ -821,12 +822,31 @@ export const CreationHub = ({
   onUpdateVideoCategory,
   onProceedToCategorize,
   onPublishToWiz,
-  toast
+  toast,
+  onEditDraft
 }: CreationHubProps) => {
   const [selectedType, setSelectedType] = useState<CreationType>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [showDrafts, setShowDrafts] = useState(false);
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
+
+  // Handle external edit requests (from PublishedCreationsManager)
+  React.useEffect(() => {
+    const handleEditRequest = (draftId: string, type: CreationType) => {
+      console.log('🎯 CreationHub received edit request:', draftId, type);
+      setEditingDraftId(draftId);
+      setSelectedType(type);
+    };
+
+    // Store the handler on window
+    (window as any).__creationHubEditHandler = handleEditRequest;
+    console.log('✅ CreationHub edit handler registered');
+
+    return () => {
+      // Cleanup
+      delete (window as any).__creationHubEditHandler;
+    };
+  }, []);
   const [courseData, setCourseData] = useState<CourseData>({
     coverImage: '',
     title: '',
@@ -2097,39 +2117,6 @@ export const CreationHub = ({
               }`}>
                 {creationTypes.map(renderCreationTypeCard)}
               </div>
-
-              {/* View Drafts Section - Slim Card Pill */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="mt-8 max-w-md mx-auto"
-              >
-                <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer">
-                  <CardContent
-                    className="px-6 py-4"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
-                      backdropFilter: 'blur(20px)',
-                      border: '1px solid rgba(255, 255, 255, 0.3)',
-                      borderRadius: '50px'
-                    }}
-                    onClick={() => {
-                      setShowDrafts(true);
-                    }}
-                  >
-                    <div className="flex items-center justify-center space-x-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-gray-100 to-gray-200 flex items-center justify-center group-hover:from-blue-100 group-hover:to-blue-200 transition-all duration-300">
-                        <Save className="w-4 h-4 text-gray-600 group-hover:text-blue-600 transition-colors duration-300" />
-                      </div>
-                      <span className="text-sm font-semibold text-gray-700 group-hover:text-gray-900 dark:text-gray-200 dark:group-hover:text-white transition-colors duration-300">
-                        View Drafts
-                      </span>
-                      <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-1 transition-all duration-300" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
 
               {/* YouTube Connect Section - Restored 3-Step Flow */}
               <motion.div

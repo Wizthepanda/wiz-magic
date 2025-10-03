@@ -53,7 +53,11 @@ const creationTypes = [
   { id: 'product', label: 'Digital Products', icon: Package }
 ];
 
-export const PublishedCreationsManager: React.FC = () => {
+interface PublishedCreationsManagerProps {
+  onEditDraft?: (draftId: string, type: 'community' | 'course' | 'coaching' | 'product') => void;
+}
+
+export const PublishedCreationsManager: React.FC<PublishedCreationsManagerProps> = ({ onEditDraft }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [activeFilter, setActiveFilter] = useState('all');
@@ -157,12 +161,29 @@ export const PublishedCreationsManager: React.FC = () => {
   };
 
   const handleEdit = (creation: PublishedCreation) => {
-    // Navigate to edit page or open edit modal
-    // For now, just show a toast
+    console.log('🖊️ Edit clicked for:', creation.title, creation.id, creation.type);
+
     toast({
-      title: 'Edit',
-      description: `Editing ${creation.title}...`
+      title: 'Opening Editor',
+      description: `Loading ${creation.title} for editing...`
     });
+
+    // Call the CreationHub edit handler if available
+    if ((window as any).__creationHubEditHandler) {
+      console.log('✅ Found handler, calling it...');
+      (window as any).__creationHubEditHandler(creation.id, creation.type);
+
+      // Scroll to the Create section
+      setTimeout(() => {
+        const createSection = document.querySelector('[data-section="create"]');
+        console.log('📍 Create section found:', !!createSection);
+        if (createSection) {
+          createSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    } else {
+      console.error('❌ CreationHub edit handler not found!');
+    }
   };
 
   return (
