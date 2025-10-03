@@ -42,6 +42,7 @@ interface Reward {
   type: 'community' | 'course' | 'coaching' | 'product';
   thumbnail: string;
   heroMedia?: string;
+  coverMedia?: Array<{ type: 'image' | 'youtube'; url: string; thumbnail?: string; videoId?: string }>;
   zapsCost: number;
   usdCoPay?: number;
   monetizationType: 'zaps-only' | 'zaps-usd' | 'free';
@@ -127,6 +128,7 @@ export default function ZapRewardsHub() {
             type: 'community',
             thumbnail: data.coverMedia?.[0]?.thumbnail || data.coverMedia?.[0]?.url || '/api/placeholder/400/300',
             heroMedia: data.coverMedia?.[0]?.url || data.coverMedia?.[0]?.thumbnail,
+            coverMedia: data.coverMedia || [],
             zapsCost: zapsRequired,
             usdCoPay: usdCoPay > 0 ? usdCoPay : undefined,
             monetizationType,
@@ -147,6 +149,7 @@ export default function ZapRewardsHub() {
           };
 
           fetchedRewards.push(reward);
+          console.log(`📸 Reward ${reward.title} - coverMedia:`, data.coverMedia);
         });
 
         setRewards(fetchedRewards);
@@ -890,6 +893,7 @@ const RewardCard: React.FC<{
   onClick: () => void;
 }> = ({ reward, index, onClick }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
   const typeConfig = {
     community: { icon: Users, color: 'from-blue-500 to-cyan-500', label: 'Community', badge: 'bg-blue-500' },
@@ -909,6 +913,19 @@ const RewardCard: React.FC<{
   };
 
   const badge = monetizationBadge[reward.monetizationType];
+
+  // Get media array for carousel
+  const mediaItems = reward.coverMedia && reward.coverMedia.length > 0 ? reward.coverMedia : [{ type: 'image' as const, url: reward.thumbnail }];
+
+  const handlePrevMedia = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentMediaIndex((prev) => (prev === 0 ? mediaItems.length - 1 : prev - 1));
+  };
+
+  const handleNextMedia = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentMediaIndex((prev) => (prev === mediaItems.length - 1 ? 0 : prev + 1));
+  };
 
   return (
     <motion.article
@@ -942,27 +959,93 @@ const RewardCard: React.FC<{
         }}
         whileTap={{ scale: 0.98 }}
       >
-        {/* Thumbnail with Lightning Flicker on Hover */}
+        {/* Thumbnail with Carousel */}
         <div className="relative h-52 overflow-hidden bg-gray-100">
-          <img
-            src={reward.thumbnail}
-            alt={reward.title}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-            loading="lazy"
-          />
+          {/* Current Media Display */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentMediaIndex}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="w-full h-full"
+            >
+              {mediaItems[currentMediaIndex].type === 'youtube' ? (
+                <div className="relative w-full h-full bg-black">
+                  <img
+                    src={mediaItems[currentMediaIndex].thumbnail || `https://img.youtube.com/vi/${mediaItems[currentMediaIndex].videoId}/maxresdefault.jpg`}
+                    alt={reward.title}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    loading="lazy"
+                  />
+                  {/* Play Icon Overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center shadow-lg">
+                      <Play className="w-6 h-6 text-white ml-1" fill="currentColor" />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <img
+                  src={mediaItems[currentMediaIndex].thumbnail || mediaItems[currentMediaIndex].url}
+                  alt={reward.title}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  loading="lazy"
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
 
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
 
+          {/* Carousel Navigation - Only show if more than 1 media item */}
+          {mediaItems.length > 1 && (
+            <>
+              <button
+                onClick={handlePrevMedia}
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-white"
+              >
+                <ChevronRight className="w-5 h-5 text-gray-900 rotate-180" />
+              </button>
+              <button
+                onClick={handleNextMedia}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-white"
+              >
+                <ChevronRight className="w-5 h-5 text-gray-900" />
+              </button>
+
+              {/* Dot Indicators */}
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
+                {mediaItems.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentMediaIndex(idx);
+                    }}
+                    className={cn(
+                      "transition-all",
+                      idx === currentMediaIndex
+                        ? "w-6 h-1.5 bg-white rounded-full"
+                        : "w-1.5 h-1.5 bg-white/50 rounded-full hover:bg-white/80"
+                    )}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+
           {/* Monetization Badge - Top Left */}
-          <div className="absolute top-3 left-3">
+          <div className="absolute top-3 left-3 z-10">
             <div className={cn("px-3 py-1.5 rounded-full text-white text-xs font-bold shadow-lg", badge.color)}>
               {badge.label}
             </div>
           </div>
 
           {/* Type Badge - Top Right */}
-          <div className="absolute top-3 right-3">
+          <div className="absolute top-3 right-3 z-10">
             <div className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-xl border border-white/40", config.badge)}>
               <TypeIcon className="w-3.5 h-3.5 text-white" />
               <span className="text-xs font-semibold text-white">{config.label}</span>
@@ -1093,7 +1176,24 @@ const CinematicRewardModal: React.FC<{
 }> = ({ reward, onClose, onClaim, userZAPs }) => {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const canAfford = userZAPs >= reward.zapsCost;
+
+  // Get media array for carousel
+  const mediaItems = reward.coverMedia && reward.coverMedia.length > 0 ? reward.coverMedia : [{ type: 'image' as const, url: reward.heroMedia || reward.thumbnail }];
+
+  console.log('🎬 Modal mediaItems:', mediaItems);
+  console.log('🎬 Modal reward.coverMedia:', reward.coverMedia);
+
+  const handlePrevMedia = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentMediaIndex((prev) => (prev === 0 ? mediaItems.length - 1 : prev - 1));
+  };
+
+  const handleNextMedia = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentMediaIndex((prev) => (prev === mediaItems.length - 1 ? 0 : prev + 1));
+  };
 
   // Track mouse for parallax effect
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -1149,45 +1249,134 @@ const CinematicRewardModal: React.FC<{
 
             {/* Split Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-2">
-              {/* Left: Hero Media with Parallax Depth */}
+              {/* Left: Hero Media Carousel with Parallax Depth */}
               <div className="relative h-[500px] lg:h-[700px] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
-                <motion.img
-                  src={reward.heroMedia || reward.thumbnail}
-                  alt={reward.title}
-                  className="w-full h-full object-cover"
-                  initial={{ scale: 1.1 }}
-                  animate={{
-                    scale: 1,
-                    x: mousePosition.x,
-                    y: mousePosition.y
-                  }}
-                  transition={{
-                    duration: 0.6,
-                    type: 'spring',
-                    stiffness: 100,
-                    damping: 20
-                  }}
-                />
+                {/* Current Media Display with Parallax */}
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentMediaIndex}
+                    initial={{ opacity: 0, x: 100 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -100 }}
+                    transition={{ duration: 0.4 }}
+                    className="w-full h-full"
+                  >
+                    {mediaItems[currentMediaIndex].type === 'youtube' ? (
+                      <div className="relative w-full h-full bg-black">
+                        <motion.img
+                          src={mediaItems[currentMediaIndex].thumbnail || `https://img.youtube.com/vi/${mediaItems[currentMediaIndex].videoId}/maxresdefault.jpg`}
+                          alt={reward.title}
+                          className="w-full h-full object-cover"
+                          initial={{ scale: 1.1 }}
+                          animate={{
+                            scale: 1,
+                            x: mousePosition.x,
+                            y: mousePosition.y
+                          }}
+                          transition={{
+                            duration: 0.6,
+                            type: 'spring',
+                            stiffness: 100,
+                            damping: 20
+                          }}
+                        />
+                        {/* Play Button for YouTube */}
+                        <motion.div
+                          className="absolute inset-0 flex items-center justify-center"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.3 }}
+                        >
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="w-24 h-24 rounded-full bg-red-600 flex items-center justify-center shadow-2xl group"
+                          >
+                            <Play className="w-10 h-10 text-white ml-2" fill="currentColor" />
+                          </motion.button>
+                        </motion.div>
+                      </div>
+                    ) : (
+                      <motion.img
+                        src={mediaItems[currentMediaIndex].thumbnail || mediaItems[currentMediaIndex].url}
+                        alt={reward.title}
+                        className="w-full h-full object-cover"
+                        initial={{ scale: 1.1 }}
+                        animate={{
+                          scale: 1,
+                          x: mousePosition.x,
+                          y: mousePosition.y
+                        }}
+                        transition={{
+                          duration: 0.6,
+                          type: 'spring',
+                          stiffness: 100,
+                          damping: 20
+                        }}
+                      />
+                    )}
+                  </motion.div>
+                </AnimatePresence>
 
                 {/* Soft Glow Edges */}
                 <div className="absolute inset-0 shadow-[inset_0_0_60px_rgba(0,0,0,0.3)] pointer-events-none" />
 
-                {/* Play Fullscreen Button for Video */}
-                {reward.type === 'course' && (
-                  <motion.div
-                    className="absolute inset-0 flex items-center justify-center"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                  >
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="w-24 h-24 rounded-full bg-white/95 backdrop-blur-xl flex items-center justify-center shadow-2xl group"
+                {/* Carousel Navigation - Only show if more than 1 media */}
+                {mediaItems.length > 1 && (
+                  <>
+                    <button
+                      onClick={handlePrevMedia}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/95 backdrop-blur-xl flex items-center justify-center shadow-2xl z-20 hover:bg-white transition-all"
                     >
-                      <Play className="w-10 h-10 text-indigo-600 ml-2 group-hover:text-indigo-700 transition-colors" fill="currentColor" />
-                    </motion.button>
-                  </motion.div>
+                      <ChevronRight className="w-6 h-6 text-gray-900 rotate-180" />
+                    </button>
+                    <button
+                      onClick={handleNextMedia}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/95 backdrop-blur-xl flex items-center justify-center shadow-2xl z-20 hover:bg-white transition-all"
+                    >
+                      <ChevronRight className="w-6 h-6 text-gray-900" />
+                    </button>
+
+                    {/* Media Counter & Thumbnails */}
+                    <div className="absolute bottom-6 left-6 right-6 z-20">
+                      {/* Counter */}
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="px-4 py-2 rounded-full bg-black/60 backdrop-blur-xl text-white text-sm font-semibold">
+                          {currentMediaIndex + 1} / {mediaItems.length}
+                        </div>
+                      </div>
+
+                      {/* Thumbnail Strip */}
+                      <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-2">
+                        {mediaItems.map((media, idx) => (
+                          <button
+                            key={idx}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCurrentMediaIndex(idx);
+                            }}
+                            className={cn(
+                              "relative flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition-all",
+                              idx === currentMediaIndex
+                                ? "border-white scale-110 shadow-xl"
+                                : "border-white/30 hover:border-white/60 opacity-70 hover:opacity-100"
+                            )}
+                          >
+                            <img
+                              src={media.thumbnail || media.url}
+                              alt={`Preview ${idx + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                            {media.type === 'youtube' && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                <Play className="w-4 h-4 text-white" fill="currentColor" />
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
 

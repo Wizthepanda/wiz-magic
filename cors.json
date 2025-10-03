@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["https://wizxp.com", "https://wiz-magic-platform.web.app", "https://wiz-magic-platform.firebaseapp.com"],
+    "method": ["GET", "HEAD", "PUT", "POST", "DELETE"],
+    "maxAgeSeconds": 3600,
+    "responseHeader": ["Content-Type", "Access-Control-Allow-Origin"]
+  }
+]

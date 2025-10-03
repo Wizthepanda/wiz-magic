@@ -525,24 +525,38 @@ const Step1Content: React.FC<{
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files && files.length > 0) {
-      const file = files[0];
+    if (!files || files.length === 0) return;
 
-      // Validate file size (max 500KB)
-      if (file.size > 500 * 1024) {
+    // Check total number won't exceed 5
+    const remainingSlots = 5 - coverMedia.length;
+    const filesToUpload = Array.from(files).slice(0, remainingSlots);
+
+    if (filesToUpload.length < files.length) {
+      toast({
+        title: "Upload limit",
+        description: `Only ${remainingSlots} image(s) can be added (max 5 total).`,
+        variant: "destructive"
+      });
+    }
+
+    // Upload each file
+    for (const file of filesToUpload) {
+      // Validate file size (max 5MB for better quality)
+      if (file.size > 5 * 1024 * 1024) {
         toast({
           title: "File too large",
-          description: "Please choose an image smaller than 500KB.",
+          description: `${file.name} is too large. Max size is 5MB.`,
           variant: "destructive"
         });
-        return;
+        continue;
       }
 
       // Show loading state with temporary preview
       const tempUrl = URL.createObjectURL(file);
       onAddCoverMedia({
         type: 'image',
-        url: tempUrl
+        url: tempUrl,
+        thumbnail: tempUrl
       });
 
       try {
@@ -552,32 +566,35 @@ const Step1Content: React.FC<{
 
         // Generate unique filename
         const timestamp = Date.now();
-        const filename = `community-covers/${timestamp}-${file.name}`;
+        const random = Math.random().toString(36).substring(7);
+        const filename = `community-covers/${timestamp}-${random}-${file.name}`;
         const storageRef = ref(storage, filename);
+
+        console.log('📤 Uploading image:', filename);
 
         // Upload file to Firebase Storage
         await uploadBytes(storageRef, file);
         const downloadUrl = await getDownloadURL(storageRef);
 
+        console.log('✅ Image uploaded successfully:', downloadUrl);
+
         // Replace temp URL with real download URL
         const mediaIndex = coverMedia.findIndex(m => m.url === tempUrl);
         if (mediaIndex !== -1) {
           const updatedMedia = [...coverMedia];
-          updatedMedia[mediaIndex] = { type: 'image', url: downloadUrl };
-          onAddCoverMedia({ type: 'image', url: downloadUrl });
-          // Remove the temp one
-          onRemoveCoverMedia(mediaIndex);
+          updatedMedia[mediaIndex] = {
+            type: 'image',
+            url: downloadUrl,
+            thumbnail: downloadUrl
+          };
+          setCoverMedia(updatedMedia);
         }
 
         // Clean up temp URL
         URL.revokeObjectURL(tempUrl);
 
-        toast({
-          title: "Image uploaded!",
-          description: "Your cover image has been uploaded successfully.",
-        });
       } catch (error) {
-        console.error('Error uploading image:', error);
+        console.error('❌ Error uploading image:', error);
         // Remove temp preview on error
         const mediaIndex = coverMedia.findIndex(m => m.url === tempUrl);
         if (mediaIndex !== -1) {
@@ -586,11 +603,22 @@ const Step1Content: React.FC<{
         URL.revokeObjectURL(tempUrl);
         toast({
           title: "Upload failed",
-          description: "Failed to upload image. Please try again.",
+          description: `Failed to upload ${file.name}. Please try again.`,
           variant: "destructive"
         });
       }
     }
+
+    // Show success toast
+    if (filesToUpload.length > 0) {
+      toast({
+        title: "Images uploaded!",
+        description: `Successfully uploaded ${filesToUpload.length} image(s).`,
+      });
+    }
+
+    // Reset file input
+    e.target.value = '';
   };
 
   // Extract YouTube video ID from various URL formats
@@ -799,6 +827,7 @@ const Step1Content: React.FC<{
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
+                  multiple
                   onChange={handleImageUpload}
                   className="hidden"
                 />
