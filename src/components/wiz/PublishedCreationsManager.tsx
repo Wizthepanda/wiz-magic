@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
-import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -172,6 +172,58 @@ export const PublishedCreationsManager: React.FC<PublishedCreationsManagerProps>
     }
   };
 
+  const handleFixBlobUrls = async () => {
+    if (!user || !confirm('This will clear blob URLs from all your communities. You\'ll need to re-upload images. Continue?')) {
+      return;
+    }
+
+    try {
+      console.log('🔍 Scanning your communities for blob URLs...');
+
+      const communitiesQuery = query(
+        collection(db, 'communities'),
+        where('creatorId', '==', user.uid)
+      );
+      const snapshot = await getDocs(communitiesQuery);
+
+      let fixed = 0;
+      for (const docSnap of snapshot.docs) {
+        const data = docSnap.data();
+
+        if (!data.coverMedia || !Array.isArray(data.coverMedia)) {
+          continue;
+        }
+
+        const hasBlobUrls = data.coverMedia.some(
+          (media: any) => media.url?.startsWith('blob:') || media.thumbnail?.startsWith('blob:')
+        );
+
+        if (hasBlobUrls) {
+          console.log(`📝 Fixing: ${data.title}`);
+          await updateDoc(doc(db, 'communities', docSnap.id), {
+            coverMedia: []
+          });
+          fixed++;
+        }
+      }
+
+      toast({
+        title: 'Migration Complete',
+        description: `Fixed ${fixed} communities. Please re-upload images for each.`
+      });
+
+      // Refresh the list
+      fetchCreations();
+    } catch (error) {
+      console.error('Error fixing blob URLs:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fix blob URLs',
+        variant: 'destructive'
+      });
+    }
+  };
+
   const handleEdit = (creation: PublishedCreation) => {
     console.log('🖊️ Edit clicked for:', creation.title, creation.id, creation.type);
 
@@ -220,6 +272,16 @@ export const PublishedCreationsManager: React.FC<PublishedCreationsManagerProps>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
           Manage the communities, courses, coaching, and products you've published.
         </p>
+        <div className="pt-2">
+          <Button
+            onClick={handleFixBlobUrls}
+            variant="outline"
+            size="sm"
+            className="text-xs"
+          >
+            🔧 Fix Missing Images
+          </Button>
+        </div>
       </div>
 
       {/* Filter Row */}
