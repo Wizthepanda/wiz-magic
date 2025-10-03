@@ -664,14 +664,6 @@ const Step1Content: React.FC<{
         continue;
       }
 
-      // Show loading state with temporary preview
-      const tempUrl = URL.createObjectURL(file);
-      onAddCoverMedia({
-        type: 'image',
-        url: tempUrl,
-        thumbnail: tempUrl
-      });
-
       try {
         // Import storage dynamically to avoid import issues
         const { storage } = await import('@/lib/firebase');
@@ -685,34 +677,58 @@ const Step1Content: React.FC<{
 
         console.log('📤 Uploading image:', filename);
 
+        // Show loading state with temporary preview
+        const tempUrl = URL.createObjectURL(file);
+        onAddCoverMedia({
+          type: 'image',
+          url: tempUrl,
+          thumbnail: tempUrl
+        });
+
         // Upload file to Firebase Storage
         await uploadBytes(storageRef, file);
         const downloadUrl = await getDownloadURL(storageRef);
 
         console.log('✅ Image uploaded successfully:', downloadUrl);
 
-        // Replace temp URL with real download URL
-        const mediaIndex = coverMedia.findIndex(m => m.url === tempUrl);
-        if (mediaIndex !== -1) {
-          const updatedMedia = [...coverMedia];
-          updatedMedia[mediaIndex] = {
-            type: 'image',
-            url: downloadUrl,
-            thumbnail: downloadUrl
-          };
-          setCoverMedia(updatedMedia);
-        }
+        // Replace temp URL with real download URL using the latest state
+        setCoverMedia(prevMedia => {
+          const mediaIndex = prevMedia.findIndex(m => m.url === tempUrl);
+          if (mediaIndex !== -1) {
+            const updatedMedia = [...prevMedia];
+            updatedMedia[mediaIndex] = {
+              type: 'image',
+              url: downloadUrl,
+              thumbnail: downloadUrl
+            };
+            // Also update form value
+            form.setValue('coverMedia', updatedMedia);
+            return updatedMedia;
+          }
+          return prevMedia;
+        });
 
         // Clean up temp URL
         URL.revokeObjectURL(tempUrl);
 
       } catch (error) {
         console.error('❌ Error uploading image:', error);
+        toast({
+          title: "Upload failed",
+          description: `Failed to upload ${file.name}. Please try again.`,
+          variant: "destructive"
+        });
         // Remove temp preview on error
-        const mediaIndex = coverMedia.findIndex(m => m.url === tempUrl);
-        if (mediaIndex !== -1) {
-          onRemoveCoverMedia(mediaIndex);
-        }
+        setCoverMedia(prevMedia => {
+          const tempUrl = URL.createObjectURL(file);
+          const mediaIndex = prevMedia.findIndex(m => m.url === tempUrl);
+          if (mediaIndex !== -1) {
+            const updatedMedia = prevMedia.filter((_, i) => i !== mediaIndex);
+            form.setValue('coverMedia', updatedMedia);
+            return updatedMedia;
+          }
+          return prevMedia;
+        });
         URL.revokeObjectURL(tempUrl);
         toast({
           title: "Upload failed",
