@@ -117,7 +117,19 @@ export const PublishedCreationsManager: React.FC<PublishedCreationsManagerProps>
           fetchedCreations.push(creation);
         });
 
-        setCreations(fetchedCreations);
+        // Deduplicate by title - keep only the most recently updated version
+        const deduplicatedCreations = Object.values(
+          fetchedCreations.reduce((acc, creation) => {
+            const existing = acc[creation.title];
+            if (!existing || (creation.createdAt?.toMillis() || 0) > (existing.createdAt?.toMillis() || 0)) {
+              acc[creation.title] = creation;
+            }
+            return acc;
+          }, {} as Record<string, PublishedCreation>)
+        );
+
+        console.log(`📦 Fetched ${fetchedCreations.length} creations, showing ${deduplicatedCreations.length} unique`);
+        setCreations(deduplicatedCreations);
       } catch (error) {
         console.error('Error fetching creations:', error);
         toast({
