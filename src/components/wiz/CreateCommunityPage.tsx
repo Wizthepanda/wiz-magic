@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm, FormProvider, useFormContext, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
   ArrowLeft,
   ArrowRight,
@@ -248,6 +251,11 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
     form.setValue('coverMedia', updatedMedia);
   };
 
+  const handleReorderCoverMedia = (newOrder: typeof coverMedia) => {
+    setCoverMedia(newOrder);
+    form.setValue('coverMedia', newOrder);
+  };
+
   const validateCurrentStep = () => {
     const formData = form.getValues();
 
@@ -411,6 +419,7 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
                     coverMedia={coverMedia}
                     onAddCoverMedia={handleAddCoverMedia}
                     onRemoveCoverMedia={handleRemoveCoverMedia}
+                    onReorderCoverMedia={handleReorderCoverMedia}
                   />}
                   {currentStep === 2 && <Step2Content
                     modules={modules}
@@ -505,6 +514,87 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
   );
 };
 
+// Sortable Media Item Component
+const SortableMediaItem: React.FC<{
+  id: string;
+  media: { type: 'image' | 'youtube'; url: string; thumbnail?: string };
+  index: number;
+  onRemove: () => void;
+}> = ({ id, media, index, onRemove }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="relative group">
+      {/* Drag Handle */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute top-2 left-2 z-10 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-lg flex items-center justify-center cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+      >
+        <GripVertical className="w-4 h-4 text-gray-600" />
+      </div>
+
+      {/* Media Preview */}
+      <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+        {media.type === 'youtube' ? (
+          media.thumbnail ? (
+            <div className="relative w-full h-full">
+              <img
+                src={media.thumbnail}
+                alt={`Video ${index + 1}`}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center">
+                  <Youtube className="w-8 h-8 text-white ml-1" />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="w-full h-full bg-red-100 flex items-center justify-center">
+              <Youtube className="w-8 h-8 text-red-500" />
+            </div>
+          )
+        ) : (
+          <img
+            src={media.url}
+            alt={`Cover ${index + 1}`}
+            className="w-full h-full object-cover"
+          />
+        )}
+      </div>
+
+      {/* Position Badge */}
+      <div className="absolute top-2 right-12 bg-indigo-600 text-white text-xs font-bold px-2 py-1 rounded-md">
+        #{index + 1}
+      </div>
+
+      {/* Remove Button */}
+      <Button
+        size="sm"
+        variant="destructive"
+        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
+        onClick={onRemove}
+      >
+        <Trash2 className="w-4 h-4" />
+      </Button>
+    </div>
+  );
+};
+
 // Step 1: Details Component
 const Step1Content: React.FC<{
   tags: string[];
@@ -515,13 +605,36 @@ const Step1Content: React.FC<{
   coverMedia: Array<{ type: 'image' | 'youtube'; url: string; thumbnail?: string }>;
   onAddCoverMedia: (media: { type: 'image' | 'youtube'; url: string; thumbnail?: string }) => void;
   onRemoveCoverMedia: (index: number) => void;
-}> = ({ tags, newTag, onNewTagChange, onAddTag, onRemoveTag, coverMedia, onAddCoverMedia, onRemoveCoverMedia }) => {
+  onReorderCoverMedia: (newOrder: Array<{ type: 'image' | 'youtube'; url: string; thumbnail?: string }>) => void;
+}> = ({ tags, newTag, onNewTagChange, onAddTag, onRemoveTag, coverMedia, onAddCoverMedia, onRemoveCoverMedia, onReorderCoverMedia }) => {
   const { register, control, formState: { errors } } = useFormContext<CreateCommunityForm>();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showVideoDialog, setShowVideoDialog] = useState(false);
   const [videoUrl, setVideoUrl] = useState('');
   const [videoUrlError, setVideoUrlError] = useState('');
   const { toast } = useToast();
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = coverMedia.findIndex((_, i) => `media-${i}` === active.id);
+      const newIndex = coverMedia.findIndex((_, i) => `media-${i}` === over.id);
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newOrder = arrayMove(coverMedia, oldIndex, newIndex);
+        onReorderCoverMedia(newOrder);
+      }
+    }
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -778,82 +891,62 @@ const Step1Content: React.FC<{
 
         {/* Cover Media */}
         <div className="space-y-4">
-          <Label>Cover Media (up to 5)</Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {coverMedia.map((media, index) => (
-              <div key={index} className="relative group">
-                <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                  {media.type === 'youtube' ? (
-                    media.thumbnail ? (
-                      <div className="relative w-full h-full">
-                        <img
-                          src={media.thumbnail}
-                          alt={`Video ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                          <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center">
-                            <Youtube className="w-8 h-8 text-white ml-1" />
+          <Label>Cover Media (up to 5) - Drag to reorder</Label>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={coverMedia.map((_, i) => `media-${i}`)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {coverMedia.map((media, index) => (
+                  <SortableMediaItem
+                    key={`media-${index}`}
+                    id={`media-${index}`}
+                    media={media}
+                    index={index}
+                    onRemove={() => onRemoveCoverMedia(index)}
+                  />
+                ))}
+
+                {coverMedia.length < 5 && (
+                  <>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <div className="aspect-video border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-violet-400 transition-colors">
+                          <div className="text-center">
+                            <Plus className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                            <p className="text-sm text-gray-500">Add media</p>
                           </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="w-full h-full bg-red-100 flex items-center justify-center">
-                        <Youtube className="w-8 h-8 text-red-500" />
-                      </div>
-                    )
-                  ) : (
-                    <img
-                      src={media.url}
-                      alt={`Cover ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  )}
-                </div>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
-                  onClick={() => onRemoveCoverMedia(index)}
-                >
-                  <Trash2 className="w-3 h-3" />
-                </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Images
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setShowVideoDialog(true)}>
+                          <Youtube className="w-4 h-4 mr-2" />
+                          Add Video URL
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </>
+                )}
               </div>
-            ))}
-
-            {coverMedia.length < 5 && (
-              <>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <div className="aspect-video border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-violet-400 transition-colors">
-                      <div className="text-center">
-                        <Plus className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                        <p className="text-sm text-gray-500">Add media</p>
-                      </div>
-                    </div>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload Image
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setShowVideoDialog(true)}>
-                      <Youtube className="w-4 h-4 mr-2" />
-                      Add Video URL
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
-            )}
-          </div>
+            </SortableContext>
+          </DndContext>
         </div>
 
         {/* Video URL Dialog */}
