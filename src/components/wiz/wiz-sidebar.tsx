@@ -55,7 +55,6 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
   const primaryNavigation = [
     { id: 'discover', label: 'Discover', icon: Compass },
     { id: 'community', label: 'Community', icon: Users },
-    { id: 'create', label: 'Create', icon: Plus },
     { id: 'rewards', label: 'ZAP Rewards', icon: Gift, route: '/rewards' },
     { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
     { id: 'premiere', label: 'WIZ Premiere', icon: Crown },
@@ -64,7 +63,7 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
 
   // Secondary Navigation (Bottom Section)
   const secondaryNavigation: Array<{ id: string; label: string; icon: any }> = [
-    // Empty - Profile moved to primary navigation
+    { id: 'create', label: 'Create', icon: Plus },
   ];
 
   const handleNavigation = (item: any) => {
@@ -438,27 +437,64 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
                         <motion.button
                           onClick={() => handleNavigation(item)}
                           className={cn(
-                            "w-full group px-3 h-12 flex items-center",
-                            isExpanded ? "justify-start" : "justify-center",
+                            "w-full flex items-center group mx-2",
+                            isExpanded ? "px-4 py-4" : "px-3 py-4 justify-center",
                             itemStyles.base
                           )}
-                          whileHover={{ scale: 1.02, y: -1 }}
+                          initial={{ opacity: 0, x: -30 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{
+                            duration: 0.4,
+                            delay: index * 0.08,
+                            ease: "easeOut"
+                          }}
+                          whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          transition={{ duration: 0.2, ease: "easeOut" }}
                         >
-                          <div className="relative z-10 flex items-center">
+                          {/* Glassmorphic glow effect */}
+                          {itemStyles.glow && (
+                            <motion.div
+                              className="absolute inset-0 rounded-2xl bg-gradient-to-r from-violet-500/30 to-cyan-400/30"
+                              style={{ filter: 'blur(8px)' }}
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ duration: 0.3 }}
+                            />
+                          )}
+
+                          {/* Active indicator for minimal variant */}
+                          {isActive && sidebarVariant === 'minimal' && (
+                            <motion.div
+                              className="absolute left-0 top-1/2 w-1 bg-violet-500 rounded-r-full"
+                              style={{ height: '60%', transform: 'translateY(-50%)' }}
+                              initial={{ scaleY: 0 }}
+                              animate={{ scaleY: 1 }}
+                              transition={{ duration: 0.3 }}
+                            />
+                          )}
+
+                          <motion.div
+                            className="relative z-10 flex items-center"
+                            whileHover={{ x: 2, scale: 1.05 }}
+                            transition={{ duration: 0.2 }}
+                          >
                             <Icon
                               className={cn(
-                                "w-5 h-5 transition-all duration-200",
-                                isExpanded ? "mr-3" : "mx-auto"
+                                "w-6 h-6 transition-all duration-200",
+                                isExpanded ? "mr-4" : "mx-auto",
+                                isActive && sidebarVariant === 'minimal' && "text-violet-600 dark:text-violet-400",
+                                "hover:text-indigo-500 hover:drop-shadow-lg"
                               )}
-                              strokeWidth={1.8}
+                              strokeWidth={1.5}
                             />
 
                             <AnimatePresence>
                               {isExpanded && (
                                 <motion.span
-                                  className="font-medium text-sm"
+                                  className={cn(
+                                    "font-medium text-base",
+                                    isActive && sidebarVariant === 'minimal' && "text-violet-600 dark:text-violet-400"
+                                  )}
                                   initial={{ opacity: 0, x: -10 }}
                                   animate={{ opacity: 1, x: 0 }}
                                   exit={{ opacity: 0, x: -10 }}
@@ -468,7 +504,7 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
                                 </motion.span>
                               )}
                             </AnimatePresence>
-                          </div>
+                          </motion.div>
                         </motion.button>
                       </Tooltip.Trigger>
 
@@ -477,9 +513,35 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
                           <Tooltip.Content
                             side="right"
                             sideOffset={16}
-                            className="z-50 overflow-hidden rounded-xl border-0 px-4 py-2 bg-black/90 text-white text-sm font-medium backdrop-blur-sm"
+                            className="z-50 overflow-hidden rounded-xl border-0 px-4 py-2"
+                            style={{
+                              background: sidebarVariant === 'glassmorphic'
+                                ? theme === 'dark'
+                                  ? 'rgba(17, 24, 39, 0.95)'
+                                  : 'rgba(255, 255, 255, 0.95)'
+                                : theme === 'dark'
+                                  ? '#1f2937'
+                                  : '#ffffff',
+                              backdropFilter: sidebarVariant === 'glassmorphic' ? 'blur(16px)' : 'none',
+                              border: theme === 'dark'
+                                ? '1px solid rgba(75, 85, 99, 0.3)'
+                                : '1px solid rgba(229, 231, 235, 0.8)',
+                              boxShadow: theme === 'dark'
+                                ? '0 10px 25px rgba(0, 0, 0, 0.3)'
+                                : '0 10px 25px rgba(0, 0, 0, 0.1)'
+                            }}
                           >
-                            {item.label}
+                            <motion.span
+                              className={cn(
+                                "font-medium text-sm",
+                                theme === 'dark' ? 'text-white' : 'text-gray-900'
+                              )}
+                              initial={{ opacity: 0, scale: 0.95 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ duration: 0.15 }}
+                            >
+                              {item.label}
+                            </motion.span>
                           </Tooltip.Content>
                         </Tooltip.Portal>
                       )}
@@ -494,22 +556,23 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
 
         {/* Premium V3 Bottom Section */}
         <div className="relative z-10 flex-shrink-0 px-2 py-4">
-          {/* Logout Button - No longer in createNavigation */}
+          {/* Logout Button - Uniform size with other items */}
           <motion.button
             onClick={handleLogout}
             className={cn(
-              "w-full h-12 flex items-center transition-all duration-200 rounded-xl group px-3 mx-2",
-              "text-red-500 hover:text-red-400 hover:bg-red-500/8"
+              "w-full flex items-center transition-all duration-200 rounded-xl group mx-2",
+              isExpanded ? "px-4 py-4" : "px-3 py-4 justify-center",
+              "text-red-500 hover:text-red-400 hover:bg-red-500/8 h-12"
             )}
-            whileHover={{ scale: 1.02, y: -1 }}
+            whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <LogOut className={cn("w-5 h-5", isExpanded ? "mr-3" : "mx-auto")} strokeWidth={1.8} />
+            <LogOut className={cn("w-6 h-6 transition-all duration-200", isExpanded ? "mr-4" : "mx-auto")} strokeWidth={1.5} />
 
             <AnimatePresence>
               {isExpanded && (
                 <motion.span
-                  className="font-medium text-sm"
+                  className="font-medium text-base"
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -10 }}
