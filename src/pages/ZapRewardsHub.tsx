@@ -68,17 +68,38 @@ export default function ZapRewardsHub() {
           }
 
           // Convert coverMedia to V9 MediaSlot format
-          const coverMedia: MediaSlot[] = (data.coverMedia || []).map((media: any, idx: number) => ({
-            id: `${doc.id}-media-${idx}`,
-            type: media.type || 'image',
-            url: media.url || media.thumbnail || '/api/placeholder/400/300',
-            thumbnail: media.thumbnail,
-            videoId: media.videoId,
-            alt: data.title || 'Media',
-          }));
+          const coverMedia: MediaSlot[] = (data.coverMedia || []).map((media: any, idx: number) => {
+            console.log(`📸 Media ${idx} for ${data.title}:`, {
+              type: media.type,
+              url: media.url,
+              thumbnail: media.thumbnail,
+              videoId: media.videoId,
+              fullObject: media
+            });
+
+            // Handle blob URLs - they need to be converted to Firebase Storage URLs
+            let finalUrl = media.url || media.thumbnail || '/api/placeholder/400/300';
+            let finalThumbnail = media.thumbnail || media.url;
+
+            // If it's a blob URL, it means the image wasn't uploaded to Firebase Storage properly
+            if (finalUrl?.startsWith('blob:')) {
+              console.warn(`⚠️ Blob URL detected for ${data.title} media ${idx}, this won't persist`);
+              finalUrl = '/api/placeholder/400/300';
+            }
+
+            return {
+              id: `${doc.id}-media-${idx}`,
+              type: media.type || 'image',
+              url: finalUrl,
+              thumbnail: finalThumbnail?.startsWith('blob:') ? finalUrl : finalThumbnail,
+              videoId: media.videoId,
+              alt: data.title || 'Media',
+            };
+          });
 
           // Ensure at least one media slot
           if (coverMedia.length === 0) {
+            console.warn(`⚠️ No coverMedia found for ${data.title}, using placeholder`);
             coverMedia.push({
               id: `${doc.id}-media-0`,
               type: 'image',
@@ -86,6 +107,8 @@ export default function ZapRewardsHub() {
               alt: data.title || 'Placeholder',
             });
           }
+
+          console.log(`✅ Final coverMedia for ${data.title}:`, coverMedia);
 
           const reward: V9Reward = {
             id: doc.id,
