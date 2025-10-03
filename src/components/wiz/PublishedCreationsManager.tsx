@@ -65,11 +65,9 @@ export const PublishedCreationsManager: React.FC<PublishedCreationsManagerProps>
   const [loading, setLoading] = useState(true);
   const [selectedCreation, setSelectedCreation] = useState<PublishedCreation | null>(null);
 
-  // Fetch user's published creations
-  useEffect(() => {
+  // Define fetchCreations outside useEffect so it can be called from handleFixBlobUrls
+  const fetchCreations = async () => {
     if (!user) return;
-
-    const fetchCreations = async () => {
       try {
         setLoading(true);
         const communitiesQuery = query(
@@ -140,8 +138,10 @@ export const PublishedCreationsManager: React.FC<PublishedCreationsManagerProps>
       } finally {
         setLoading(false);
       }
-    };
+  };
 
+  // Fetch user's published creations on mount
+  useEffect(() => {
     fetchCreations();
   }, [user, toast]);
 
