@@ -421,142 +421,48 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
             </div>
           </div>
 
-          {/* Premium V3 Secondary Navigation (Bottom) */}
-          {secondaryNavigation.length > 0 && (
-            <div className="mt-auto pt-4 border-t border-white/5">
-              <div className="space-y-1 px-2">
-                {secondaryNavigation.map((item, index) => {
-                const isActive = activeSection === item.id;
-                const Icon = item.icon;
-                const itemStyles = getItemStyles(isActive);
-
-                return (
-                  <Tooltip.Provider key={item.id} delayDuration={400}>
-                    <Tooltip.Root>
-                      <Tooltip.Trigger asChild>
-                        <motion.button
-                          onClick={() => handleNavigation(item)}
-                          className={cn(
-                            "w-full flex items-center group mx-2",
-                            isExpanded ? "px-4 py-4" : "px-3 py-4 justify-center",
-                            itemStyles.base
-                          )}
-                          initial={{ opacity: 0, x: -30 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{
-                            duration: 0.4,
-                            delay: index * 0.08,
-                            ease: "easeOut"
-                          }}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          {/* Glassmorphic glow effect */}
-                          {itemStyles.glow && (
-                            <motion.div
-                              className="absolute inset-0 rounded-2xl bg-gradient-to-r from-violet-500/30 to-cyan-400/30"
-                              style={{ filter: 'blur(8px)' }}
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ duration: 0.3 }}
-                            />
-                          )}
-
-                          {/* Active indicator for minimal variant */}
-                          {isActive && sidebarVariant === 'minimal' && (
-                            <motion.div
-                              className="absolute left-0 top-1/2 w-1 bg-violet-500 rounded-r-full"
-                              style={{ height: '60%', transform: 'translateY(-50%)' }}
-                              initial={{ scaleY: 0 }}
-                              animate={{ scaleY: 1 }}
-                              transition={{ duration: 0.3 }}
-                            />
-                          )}
-
-                          <motion.div
-                            className="relative z-10 flex items-center"
-                            whileHover={{ x: 2, scale: 1.05 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <Icon
-                              className={cn(
-                                "w-6 h-6 transition-all duration-200",
-                                isExpanded ? "mr-4" : "mx-auto",
-                                isActive && sidebarVariant === 'minimal' && "text-violet-600 dark:text-violet-400",
-                                "hover:text-indigo-500 hover:drop-shadow-lg"
-                              )}
-                              strokeWidth={1.5}
-                            />
-
-                            <AnimatePresence>
-                              {isExpanded && (
-                                <motion.span
-                                  className={cn(
-                                    "font-medium text-base",
-                                    isActive && sidebarVariant === 'minimal' && "text-violet-600 dark:text-violet-400"
-                                  )}
-                                  initial={{ opacity: 0, x: -10 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  exit={{ opacity: 0, x: -10 }}
-                                  transition={{ duration: 0.2 }}
-                                >
-                                  {item.label}
-                                </motion.span>
-                              )}
-                            </AnimatePresence>
-                          </motion.div>
-                        </motion.button>
-                      </Tooltip.Trigger>
-
-                      {!isExpanded && (
-                        <Tooltip.Portal>
-                          <Tooltip.Content
-                            side="right"
-                            sideOffset={16}
-                            className="z-50 overflow-hidden rounded-xl border-0 px-4 py-2"
-                            style={{
-                              background: sidebarVariant === 'glassmorphic'
-                                ? theme === 'dark'
-                                  ? 'rgba(17, 24, 39, 0.95)'
-                                  : 'rgba(255, 255, 255, 0.95)'
-                                : theme === 'dark'
-                                  ? '#1f2937'
-                                  : '#ffffff',
-                              backdropFilter: sidebarVariant === 'glassmorphic' ? 'blur(16px)' : 'none',
-                              border: theme === 'dark'
-                                ? '1px solid rgba(75, 85, 99, 0.3)'
-                                : '1px solid rgba(229, 231, 235, 0.8)',
-                              boxShadow: theme === 'dark'
-                                ? '0 10px 25px rgba(0, 0, 0, 0.3)'
-                                : '0 10px 25px rgba(0, 0, 0, 0.1)'
-                            }}
-                          >
-                            <motion.span
-                              className={cn(
-                                "font-medium text-sm",
-                                theme === 'dark' ? 'text-white' : 'text-gray-900'
-                              )}
-                              initial={{ opacity: 0, scale: 0.95 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ duration: 0.15 }}
-                            >
-                              {item.label}
-                            </motion.span>
-                          </Tooltip.Content>
-                        </Tooltip.Portal>
-                      )}
-                    </Tooltip.Root>
-                  </Tooltip.Provider>
-                );
-                })}
-              </div>
-            </div>
-          )}
         </nav>
 
-        {/* Premium V3 Bottom Section */}
-        <div className="relative z-10 flex-shrink-0 px-2 py-4">
-          {/* Logout Button - Uniform size with other items */}
+        {/* Premium V3 Bottom Section - Create & Logout together */}
+        <div className="relative z-10 flex-shrink-0 px-2 py-4 space-y-1">
+          {/* Create Button */}
+          {secondaryNavigation.map((item) => {
+            const isActive = activeSection === item.id;
+            const Icon = item.icon;
+            const itemStyles = getItemStyles(isActive);
+
+            return (
+              <motion.button
+                key={item.id}
+                onClick={() => handleNavigation(item)}
+                className={cn(
+                  "w-full flex items-center transition-all duration-200 rounded-xl group mx-2",
+                  isExpanded ? "px-4 py-4" : "px-3 py-4 justify-center",
+                  itemStyles.base
+                )}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Icon className={cn("w-6 h-6 transition-all duration-200", isExpanded ? "mr-4" : "mx-auto")} strokeWidth={1.5} />
+
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.span
+                      className="font-medium text-base"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {item.label}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+            );
+          })}
+
+          {/* Logout Button */}
           <motion.button
             onClick={handleLogout}
             className={cn(
