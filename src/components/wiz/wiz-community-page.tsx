@@ -1,13 +1,13 @@
-// Community Page - Redesigned V2 with ZAP Rewards Hub aesthetics
+// Community Command Center - Unified Community + ZAP Rewards Hub
 import React from 'react';
-import { CommunityPage as NewCommunityPage } from './community/CommunityPage';
+import { CommunityCommandCenter } from './community/CommunityCommandCenter';
 
 interface WizCommunityPageProps {
   onSectionChange?: (section: string) => void;
 }
 
 export const WizCommunityPage: React.FC<WizCommunityPageProps> = ({ onSectionChange }) => {
-  return <NewCommunityPage onSectionChange={onSectionChange} />;
+  return <CommunityCommandCenter onSectionChange={onSectionChange} />;
 };
 
 export default WizCommunityPage;
