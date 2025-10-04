@@ -59,7 +59,17 @@ html, body, #root {
     /* Core Background System */
     --background: 260 60% 98%;
     --foreground: 260 15% 15%;
-    
+
+    /* Community Page Design Tokens */
+    --bg-1: #ffffff;
+    --bg-2: #f7f9fc;
+    --bg-3: #eef1f7;
+    --glass: rgba(255, 255, 255, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.6);
+    --primary-grad: linear-gradient(90deg, #6f5af8, #4dd6ff);
+    --zap: #ffb74d;
+    --card-radius: 1rem;
+
     /* WIZ Brand Colors */
     --wiz-primary: 280 65% 60%;
     --wiz-secondary: 220 70% 70%;
