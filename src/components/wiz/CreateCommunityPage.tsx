@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm, FormProvider, useFormContext, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -76,6 +76,7 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
   const [downloads, setDownloads] = useState<Array<{ name: string; url: string }>>([]);
   const [draftLoaded, setDraftLoaded] = useState(false);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const coverMediaRef = useRef<Array<{ type: 'image' | 'youtube'; url: string; thumbnail?: string }>>([]);
 
   const isMobile = useIsMobile();
   const { toast } = useToast();
@@ -170,6 +171,12 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
       });
     }
   }, [draftData, draftId, draftLoaded]);
+
+  // Sync coverMedia state with form whenever it changes
+  useEffect(() => {
+    coverMediaRef.current = coverMedia;
+    form.setValue('coverMedia', coverMedia);
+  }, [coverMedia, form]);
 
   const handleSaveDraft = async () => {
     const formData = form.getValues();
@@ -640,8 +647,9 @@ const Step1Content: React.FC<{
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    // Check total number won't exceed 5
-    const remainingSlots = 5 - coverMedia.length;
+    // Get current media count
+    const currentCount = coverMedia.length;
+    const remainingSlots = 5 - currentCount;
     const filesToUpload = Array.from(files).slice(0, remainingSlots);
 
     if (filesToUpload.length < files.length) {
@@ -651,6 +659,8 @@ const Step1Content: React.FC<{
         variant: "destructive"
       });
     }
+
+    const uploadedUrls: Array<{ type: 'image'; url: string; thumbnail: string }> = [];
 
     // Upload each file
     for (const file of filesToUpload) {
@@ -677,39 +687,17 @@ const Step1Content: React.FC<{
 
         console.log('📤 Uploading image:', filename);
 
-        // Show loading state with temporary preview
-        const tempUrl = URL.createObjectURL(file);
-        onAddCoverMedia({
-          type: 'image',
-          url: tempUrl,
-          thumbnail: tempUrl
-        });
-
         // Upload file to Firebase Storage
         await uploadBytes(storageRef, file);
         const downloadUrl = await getDownloadURL(storageRef);
 
         console.log('✅ Image uploaded successfully:', downloadUrl);
 
-        // Replace temp URL with real download URL using the latest state
-        setCoverMedia(prevMedia => {
-          const mediaIndex = prevMedia.findIndex(m => m.url === tempUrl);
-          if (mediaIndex !== -1) {
-            const updatedMedia = [...prevMedia];
-            updatedMedia[mediaIndex] = {
-              type: 'image',
-              url: downloadUrl,
-              thumbnail: downloadUrl
-            };
-            // Also update form value
-            form.setValue('coverMedia', updatedMedia);
-            return updatedMedia;
-          }
-          return prevMedia;
+        uploadedUrls.push({
+          type: 'image',
+          url: downloadUrl,
+          thumbnail: downloadUrl
         });
-
-        // Clean up temp URL
-        URL.revokeObjectURL(tempUrl);
 
       } catch (error) {
         console.error('❌ Error uploading image:', error);
@@ -718,31 +706,18 @@ const Step1Content: React.FC<{
           description: `Failed to upload ${file.name}. Please try again.`,
           variant: "destructive"
         });
-        // Remove temp preview on error
-        setCoverMedia(prevMedia => {
-          const tempUrl = URL.createObjectURL(file);
-          const mediaIndex = prevMedia.findIndex(m => m.url === tempUrl);
-          if (mediaIndex !== -1) {
-            const updatedMedia = prevMedia.filter((_, i) => i !== mediaIndex);
-            form.setValue('coverMedia', updatedMedia);
-            return updatedMedia;
-          }
-          return prevMedia;
-        });
-        URL.revokeObjectURL(tempUrl);
-        toast({
-          title: "Upload failed",
-          description: `Failed to upload ${file.name}. Please try again.`,
-          variant: "destructive"
-        });
       }
     }
 
-    // Show success toast
-    if (filesToUpload.length > 0) {
+    // Add all uploaded URLs to coverMedia
+    if (uploadedUrls.length > 0) {
+      uploadedUrls.forEach(url => {
+        onAddCoverMedia(url);
+      });
+
       toast({
         title: "Images uploaded!",
-        description: `Successfully uploaded ${filesToUpload.length} image(s).`,
+        description: `Successfully uploaded ${uploadedUrls.length} image(s).`,
       });
     }
 
