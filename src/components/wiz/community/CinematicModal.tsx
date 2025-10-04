@@ -44,14 +44,14 @@ export const CinematicModal: React.FC<CinematicModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] lg:max-w-[1200px] max-h-[95vh] p-0 bg-gradient-to-br from-gray-900 via-purple-900/30 to-cyan-900/30 backdrop-blur-xl border-white/20 overflow-hidden">
+      <DialogContent className="max-w-[95vw] lg:max-w-[1200px] max-h-[95vh] p-0 bg-white border-gray-200 shadow-2xl overflow-hidden rounded-2xl">
         {/* 3D Parallax motion container */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, rotateX: 10 }}
-          animate={{ opacity: 1, scale: 1, rotateX: 0 }}
-          exit={{ opacity: 0, scale: 0.95, rotateX: -10 }}
-          transition={{ duration: 0.4, type: "spring" }}
-          className="flex flex-col lg:flex-row h-full max-h-[95vh] overflow-hidden"
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.96 }}
+          transition={{ duration: 0.3, type: "spring", ease: [0.2, 0.9, 0.17, 1] }}
+          className="flex flex-col lg:flex-row h-full max-h-[95vh] overflow-hidden bg-white"
         >
           {/* Left Side - Banner & Details */}
           <div className="w-full lg:w-2/3 overflow-y-auto custom-scrollbar">

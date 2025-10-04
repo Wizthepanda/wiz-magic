@@ -34,135 +34,72 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
   onSubFilterChange
 }) => {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 mt-10">
       {/* Main Filters - Row 1 */}
-      <div>
-        <label className="text-sm font-semibold text-gray-400 mb-3 block">Main Filters</label>
-        <div className="flex gap-3 flex-wrap">
-          {mainFilters.map((filter) => {
-            const IconComponent = filter.icon;
-            const isActive = mainFilter === filter.id;
+      <div className="flex flex-wrap gap-3">
+        {mainFilters.map((filter) => {
+          const IconComponent = filter.icon;
+          const isActive = mainFilter === filter.id;
 
-            return (
-              <motion.button
-                key={filter.id}
-                onClick={() => onMainFilterChange(filter.id)}
-                className={cn(
-                  "group relative flex items-center gap-2 px-5 py-3 rounded-full font-semibold transition-all duration-300 overflow-hidden",
-                  isActive
-                    ? "bg-gradient-to-r from-purple-600 to-cyan-500 text-white shadow-lg"
-                    : "bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10"
-                )}
-                whileHover={{ scale: 1.05, rotateY: isActive ? 0 : 5 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {/* Glow effect for active filter */}
-                {isActive && (
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-purple-400 to-cyan-400 opacity-50 blur-xl"
-                    animate={{
-                      scale: [1, 1.2, 1],
-                      opacity: [0.3, 0.6, 0.3]
-                    }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
-                )}
-
-                <IconComponent className={cn(
-                  "w-4 h-4 relative z-10",
-                  isActive && "drop-shadow-lg"
-                )} />
-                <span className="relative z-10">{filter.label}</span>
-              </motion.button>
-            );
-          })}
-        </div>
+          return (
+            <motion.button
+              key={filter.id}
+              onClick={() => onMainFilterChange(filter.id)}
+              className={cn(
+                "whitespace-nowrap px-5 py-2.5 rounded-full bg-white/60 backdrop-blur-lg border border-white/40 text-sm font-medium transition-all duration-300",
+                isActive
+                  ? "text-violet-600 shadow-[0_2px_12px_rgba(99,102,241,0.15)]"
+                  : "text-gray-700 hover:text-violet-600 hover:shadow-[0_2px_12px_rgba(99,102,241,0.15)]"
+              )}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.97 }}
+              aria-pressed={isActive}
+            >
+              <span className="flex items-center gap-2">
+                <IconComponent className="w-4 h-4" />
+                {filter.label}
+              </span>
+            </motion.button>
+          );
+        })}
       </div>
 
       {/* Sub Filters - Row 2 */}
-      <div>
-        <label className="text-sm font-semibold text-gray-400 mb-3 block">Sub Filters</label>
-        <div className="flex gap-3 flex-wrap">
-          {subFilters.map((filter) => {
-            const isActive = subFilter === filter.id;
+      <div className="flex flex-wrap gap-2">
+        {subFilters.map((filter) => {
+          const isActive = subFilter === filter.id;
 
-            return (
-              <motion.button
-                key={filter.id}
-                onClick={() => onSubFilterChange(filter.id)}
-                className={cn(
-                  "group relative flex items-center gap-2 px-5 py-3 rounded-full font-semibold transition-all duration-300 overflow-hidden",
-                  isActive
-                    ? `bg-gradient-to-r ${filter.gradient} text-white shadow-lg`
-                    : "bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10"
-                )}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {/* Electric glow for ZAP-related filters */}
-                {isActive && filter.glow && (
-                  <motion.div
-                    className={cn(
-                      "absolute inset-0 blur-xl opacity-50",
-                      `bg-gradient-to-r ${filter.gradient}`
-                    )}
-                    animate={{
-                      scale: [1, 1.3, 1],
-                      opacity: [0.3, 0.7, 0.3]
-                    }}
-                    transition={{
-                      duration: 1.5,
-                      repeat: Infinity,
-                      ease: "easeInOut"
-                    }}
-                  />
-                )}
-
+          return (
+            <motion.button
+              key={filter.id}
+              onClick={() => onSubFilterChange(filter.id)}
+              className={cn(
+                "whitespace-nowrap px-4 py-2 rounded-full border text-xs font-semibold transition-all duration-300",
+                isActive
+                  ? "bg-gradient-to-br from-[#ede9fe] to-[#e0e7ff] border-violet-200 text-violet-600"
+                  : "bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] border-gray-200 text-gray-500 hover:from-[#ede9fe] hover:to-[#e0e7ff] hover:text-violet-600"
+              )}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.97 }}
+              aria-pressed={isActive}
+            >
+              <span className="flex items-center gap-1.5">
                 {/* Icon based on filter type */}
-                {filter.id === 'free' && <Gift className="w-4 h-4 relative z-10" />}
-                {filter.id === 'free-zaps' && (
-                  <Zap className={cn(
-                    "w-4 h-4 relative z-10",
-                    isActive && "fill-current drop-shadow-[0_0_8px_rgba(56,189,248,0.8)]"
-                  )} />
-                )}
-                {filter.id === 'paid' && <DollarSign className="w-4 h-4 relative z-10" />}
-                {filter.id === 'paid-zaps' && (
-                  <Zap className={cn(
-                    "w-4 h-4 relative z-10",
-                    isActive && "fill-current drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]"
-                  )} />
-                )}
+                {filter.id === 'free' && <Gift className="w-3.5 h-3.5" />}
+                {filter.id === 'free-zaps' && <Zap className="w-3.5 h-3.5 fill-current" />}
+                {filter.id === 'paid' && <DollarSign className="w-3.5 h-3.5" />}
+                {filter.id === 'paid-zaps' && <Zap className="w-3.5 h-3.5 fill-current" />}
                 {filter.id === 'zaps-usd' && (
-                  <div className="flex items-center gap-0.5 relative z-10">
-                    <Zap className={cn(
-                      "w-3.5 h-3.5",
-                      isActive && "fill-current drop-shadow-[0_0_6px_rgba(168,85,247,0.8)]"
-                    )} />
-                    <DollarSign className="w-3.5 h-3.5" />
-                  </div>
+                  <>
+                    <Zap className="w-3 h-3 fill-current" />
+                    <DollarSign className="w-3 h-3" />
+                  </>
                 )}
-
-                <span className="relative z-10">{filter.label}</span>
-
-                {/* Shimmer effect for split payment */}
-                {isActive && filter.id === 'zaps-usd' && (
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                    animate={{
-                      x: ['-100%', '200%']
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "linear"
-                    }}
-                  />
-                )}
-              </motion.button>
-            );
-          })}
-        </div>
+                {filter.label}
+              </span>
+            </motion.button>
+          );
+        })}
       </div>
     </div>
   );

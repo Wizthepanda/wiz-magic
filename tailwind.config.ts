@@ -168,6 +168,15 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Community V10 Design Tokens
+				zap: {
+					DEFAULT: '#6C5EF8',
+					alt: '#5DE0FF'
+				},
+				glass: {
+					base: 'rgba(255,255,255,0.65)',
+					dark: 'rgba(17,20,27,0.55)'
 				}
 			},
 			backgroundImage: {
@@ -184,7 +193,8 @@ export default {
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				sm: 'calc(var(--radius) - 4px)',
+				'xl2': '18px'
 			},
 			textShadow: {
 				'3d': '2px 2px 4px rgba(0, 0, 0, 0.3)',
@@ -193,6 +203,11 @@ export default {
 			boxShadow: {
 				'glow': '0 0 20px rgba(147, 51, 234, 0.3)',
 				'glow-lg': '0 0 30px rgba(147, 51, 234, 0.4)',
+				'glass': '0 6px 30px rgba(16,24,40,0.06), inset 0 1px 0 rgba(255,255,255,0.4)',
+				'card': '0 10px 30px rgba(11,14,24,0.06)'
+			},
+			transitionTimingFunction: {
+				'soft': 'cubic-bezier(.2,.9,.17,1)'
 			},
 			keyframes: {
 				'accordion-down': {

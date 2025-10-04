@@ -1,146 +1,115 @@
 import React from "react";
-import { motion } from "framer-motion";
-import { Zap, Plus, TrendingUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from "framer-motion";
+import { Zap, Send } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 interface BalanceWidgetProps {
   zapBalance?: number;
   className?: string;
-  onAddZaps?: () => void;
+  onSendZaps?: () => void;
 }
 
 export const BalanceWidget: React.FC<BalanceWidgetProps> = ({
   zapBalance = 0,
   className = "",
-  onAddZaps
+  onSendZaps
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
+        <motion.button
+          aria-label="Your balance"
+          className={cn(
+            "relative w-14 h-14 rounded-full bg-gradient-to-br from-[#a855f7]/40 to-[#6366f1]/40 backdrop-blur-xl border border-white/40 flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-105",
+            className
+          )}
+          style={{
+            boxShadow: 'inset 0 0 10px rgba(255,255,255,0.4), 0 4px 20px rgba(168,85,247,0.15)'
+          }}
           whileHover={{ scale: 1.05 }}
-          className={cn("cursor-pointer", className)}
+          whileTap={{ scale: 0.95 }}
         >
-          <div className="px-6 py-3 rounded-2xl border border-white/30 shadow-lg backdrop-blur-md bg-gradient-to-br from-purple-50/90 to-indigo-50/90 hover:shadow-xl transition-all">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center shadow-md">
-                <Zap className="w-6 h-6 text-white fill-current" />
-              </div>
-              <div>
-                <div className="text-xs text-gray-600 font-medium">Your Balance</div>
-                <div className="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                  ⚡ {zapBalance.toLocaleString()} ZAPs
-                </div>
-              </div>
-            </div>
-
-            {/* Floating sparkles */}
-            {[...Array(3)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-1 h-1 bg-yellow-400 rounded-full"
-                style={{
-                  left: `${20 + i * 30}%`,
-                  top: `${10 + i * 20}%`,
-                }}
-                animate={{
-                  y: [-10, -20, -10],
-                  opacity: [0, 1, 0],
-                  scale: [0, 1, 0]
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  delay: i * 0.5
-                }}
-              />
-            ))}
-          </div>
-        </motion.div>
+          {/* Animated ZAP Icon */}
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+          >
+            <Zap className="w-6 h-6 text-white fill-current drop-shadow-md" />
+          </motion.div>
+        </motion.button>
       </PopoverTrigger>
 
       <PopoverContent
-        className="w-80 p-0 bg-white/95 backdrop-blur-lg border border-white/30 shadow-2xl rounded-2xl overflow-hidden"
+        className="w-[280px] rounded-2xl p-4 bg-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.08)] backdrop-blur-2xl border border-white/40 z-50"
         align="end"
+        sideOffset={16}
       >
-        <div className="p-5 space-y-4">
-          {/* Header */}
-          <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-            <div>
-              <h3 className="font-bold text-gray-900">ZAP Wallet</h3>
-              <p className="text-xs text-gray-500 mt-0.5">Manage your balance</p>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center">
-              <Zap className="w-5 h-5 text-white fill-current" />
-            </div>
-          </div>
-
-          {/* Balance Display */}
-          <div className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-100">
-            <div className="text-sm text-gray-600 mb-1">Available Balance</div>
-            <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-              ⚡ {zapBalance.toLocaleString()}
-            </div>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 rounded-lg bg-green-50 border border-green-100">
-              <div className="flex items-center gap-2 text-green-700 mb-1">
-                <TrendingUp className="w-4 h-4" />
-                <span className="text-xs font-medium">Earned</span>
-              </div>
-              <div className="text-lg font-bold text-green-800">+{Math.floor(zapBalance * 0.3)}</div>
-            </div>
-            <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
-              <div className="flex items-center gap-2 text-blue-700 mb-1">
-                <Zap className="w-4 h-4" />
-                <span className="text-xs font-medium">Spent</span>
-              </div>
-              <div className="text-lg font-bold text-blue-800">{Math.floor(zapBalance * 0.1)}</div>
-            </div>
-          </div>
-
-          {/* Recent Activity */}
-          <div className="space-y-2">
-            <div className="text-xs font-semibold text-gray-700">Recent Activity</div>
-            <div className="space-y-2 max-h-32 overflow-y-auto">
-              {[
-                { type: 'earned', amount: 100, desc: 'Video completion' },
-                { type: 'spent', amount: -50, desc: 'Community join' },
-                { type: 'earned', amount: 25, desc: 'Daily bonus' }
-              ].map((activity, idx) => (
-                <div key={idx} className="flex items-center justify-between text-sm py-1.5">
-                  <span className="text-gray-600 text-xs">{activity.desc}</span>
-                  <span className={cn(
-                    "font-semibold",
-                    activity.type === 'earned' ? 'text-green-600' : 'text-red-600'
-                  )}>
-                    {activity.amount > 0 ? '+' : ''}{activity.amount} ⚡
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Add ZAPs Button */}
-          <Button
-            onClick={() => {
-              onAddZaps?.();
-              setIsOpen(false);
-            }}
-            className="w-full rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold shadow-md"
+        <AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Add ZAPs
-          </Button>
-        </div>
+            {/* Balance Header */}
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-gray-700 font-semibold text-sm">Your Balance</span>
+              <motion.span
+                key={zapBalance}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-violet-600 font-bold text-lg"
+              >
+                {zapBalance.toLocaleString()} ZAPs
+              </motion.span>
+            </div>
+
+            {/* Earned / Spent with Send icons */}
+            <div className="mt-3 space-y-2">
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>Earned</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">+{Math.floor(zapBalance * 0.6).toLocaleString()}</span>
+                  <button
+                    onClick={() => {
+                      onSendZaps?.();
+                      setIsOpen(false);
+                    }}
+                    className="p-1 hover:bg-violet-50 rounded transition-colors"
+                    aria-label="Send earned ZAPs"
+                  >
+                    <Send className="w-4 h-4 text-violet-500 hover:text-violet-600" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>Spent</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">-{Math.floor(zapBalance * 0.4).toLocaleString()}</span>
+                  <button
+                    onClick={() => {
+                      onSendZaps?.();
+                      setIsOpen(false);
+                    }}
+                    className="p-1 hover:bg-violet-50 rounded transition-colors"
+                    aria-label="Send ZAPs"
+                  >
+                    <Send className="w-4 h-4 text-violet-500 hover:text-violet-600" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="mt-3 pt-2 border-t border-gray-200">
+              <span className="text-xs text-gray-500">Recent activity updated just now</span>
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </PopoverContent>
     </Popover>
   );

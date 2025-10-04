@@ -17,6 +17,15 @@
     display: none;
   }
 
+  /* No scrollbar utility for V10 Community page */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
   /* Blob animations for V9 background */
   @keyframes blob {
     0% {
