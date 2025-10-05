@@ -164,12 +164,10 @@ service cloud.firestore {
                    validateCommunityData(request.resource.data);
       allow update: if request.auth != null && (
                    // Creator can update anything
-                   request.auth.uid == resource.data.creatorId &&
-                   validateCommunityData(request.resource.data)
-                   ) ||
+                   request.auth.uid == resource.data.creatorId ||
                    // Members can update memberCount and members array (for joining)
-                   (request.auth != null &&
-                   validateCommunityMemberUpdate(request.resource.data, resource.data));
+                   validateCommunityMemberUpdate(request.resource.data, resource.data)
+                   );
       allow delete: if request.auth != null && request.auth.uid == resource.data.creatorId;
     }
 
