@@ -204,23 +204,29 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
 
   return (
     <div className={cn("relative", className)}>
-      {/* Premium Gradient Wallet Icon */}
+      {/* Enhanced Visibility Wallet Icon */}
       <button
         ref={buttonRef}
+        aria-label="ZAP Wallet"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative hover:opacity-90 transition"
+        className="relative group hover:opacity-90 transition-all duration-200"
       >
-        <Wallet
-          size={22}
-          className="text-transparent"
-          style={{
-            backgroundImage: "linear-gradient(135deg, #6B4EFF, #4BC0FF)",
-            backgroundClip: "text",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-          }}
-          strokeWidth={2}
-        />
+        <div className="relative">
+          <Wallet
+            size={22}
+            strokeWidth={1.8}
+            className="text-transparent bg-clip-text relative z-10"
+            style={{
+              backgroundImage: "linear-gradient(135deg, #6B4EFF, #4BC0FF)",
+              backgroundClip: "text",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              WebkitTextStroke: "0.6px #4A4A4A",
+            }}
+          />
+          {/* Subtle gradient outline for visibility */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#6B4EFF] to-[#4BC0FF] opacity-60 blur-[2px] rounded-full -z-10" />
+        </div>
       </button>
 
       {/* Dropdown Panel */}
@@ -228,14 +234,14 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
         {isOpen && (
           <motion.div
             ref={dropdownRef}
-            className={cn("absolute right-0 top-full mt-3 w-[320px] rounded-2xl z-[9999] overflow-hidden shadow-xl border border-gray-100")}
+            className={cn("absolute right-0 top-full mt-3 w-[320px] rounded-xl z-[9999] overflow-hidden shadow-xl border border-gray-100 backdrop-blur-md")}
             style={{
-              background: "white",
+              background: "rgba(255, 255, 255, 0.95)",
             }}
-            initial={{ opacity: 0, y: -5, scale: 0.95 }}
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -5, scale: 0.95 }}
-            transition={{ duration: 0.15 }}
+            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            transition={{ duration: 0.18 }}
           >
             <div className="p-4 space-y-3">
               {/* Header */}

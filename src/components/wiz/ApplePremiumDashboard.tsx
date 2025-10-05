@@ -488,8 +488,8 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
             </motion.div>
           </div>
 
-          {/* Right: Profile Elements - v8 Spec-Perfect Integration */}
-          <div className="flex items-center gap-x-4 relative z-[9999]" style={{ flexShrink: 0, marginLeft: 'auto', paddingRight: '28px' }}>
+          {/* Right: Profile Elements - V5 World-Class Header */}
+          <div className="flex items-center gap-x-5 relative z-[9999]" style={{ flexShrink: 0, marginLeft: 'auto', paddingRight: '28px' }}>
 
             {/* Notification Bell */}
             <NotificationsDropdown
@@ -502,13 +502,13 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
             <Button
               variant="ghost"
               size="icon"
-              className="hover:opacity-80 transition h-auto w-auto p-0"
+              className="hover:opacity-80 transition-all duration-150 h-auto w-auto p-0"
               onClick={() => console.log('Messages clicked')}
             >
-              <MessageCircle size={22} className="text-[#444]" strokeWidth={2} />
+              <MessageCircle size={22} strokeWidth={1.8} className="text-[#464646]" />
             </Button>
 
-            {/* ZAP Wallet - Premium Gradient */}
+            {/* ZAP Wallet - Enhanced Visibility */}
             <ZapWalletIcon
               balance={userZAPS}
               earned={Math.floor(userZAPS * 0.6)}

@@ -98,10 +98,11 @@ export const NotificationsDropdown: React.FC<NotificationsDropdownProps> = ({
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <button
-          className="relative hover:opacity-80 transition"
+          aria-label="Notifications"
+          className="relative hover:opacity-80 transition-all duration-150"
           onClick={() => setIsOpen(!isOpen)}
         >
-          <Bell size={22} className="text-[#444]" strokeWidth={2} />
+          <Bell size={22} strokeWidth={1.8} className="text-[#464646]" />
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
               {unreadCount}
