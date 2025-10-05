@@ -184,7 +184,13 @@ service cloud.firestore {
                     request.resource.data.userId == request.auth.uid ||
                     request.resource.data.senderId == request.auth.uid
                    );
-      allow update, delete: if false; // Transactions are immutable
+      // Allow update for serverTimestamp() transforms during transaction creation
+      // The document won't exist yet (resource == null), so this is safe
+      allow update: if request.auth != null &&
+                    resource == null &&
+                    (request.resource.data.userId == request.auth.uid ||
+                    request.resource.data.senderId == request.auth.uid);
+      allow delete: if false; // Transactions are immutable
     }
   }
 }
