@@ -133,7 +133,7 @@ export const WalletPopup: React.FC<WalletPopupProps> = ({
     <motion.div
       className={cn(
         GLASS_STYLES.modal,
-        'absolute top-full right-0 mt-2 p-4 rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/20 z-50 min-w-[280px]'
+        'absolute top-full right-0 mt-2 p-4 rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/20 z-[100] min-w-[280px]'
       )}
       initial={{ opacity: 0, y: -10, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}

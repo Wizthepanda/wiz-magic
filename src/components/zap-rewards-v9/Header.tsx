@@ -44,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <div className={cn('relative z-10', className)}>
+    <div className={cn('relative z-30', className)}>
       {/* Desktop Header */}
       <div className="hidden md:block">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6">

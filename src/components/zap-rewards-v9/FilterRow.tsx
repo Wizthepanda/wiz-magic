@@ -29,7 +29,6 @@ export const FilterRow: React.FC<FilterRowProps> = ({
     <div
       className={cn(
         'sticky top-0 z-20 backdrop-blur-xl border-b border-white/10 dark:border-gray-800/10',
-        'bg-white/80 dark:bg-gray-900/80',
         className
       )}
     >
@@ -133,7 +132,6 @@ export const MobileFilterRow: React.FC<FilterRowProps> = ({
     <div
       className={cn(
         'sticky top-0 z-20 backdrop-blur-xl border-b border-white/10 dark:border-gray-800/10',
-        'bg-white/80 dark:bg-gray-900/80',
         className
       )}
     >

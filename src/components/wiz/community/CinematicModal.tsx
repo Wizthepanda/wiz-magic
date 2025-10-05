@@ -13,13 +13,15 @@ interface CinematicModalProps {
   onOpenChange: (open: boolean) => void;
   community: any;
   onJoin?: (community: any) => void;
+  isProcessing?: boolean;
 }
 
 export const CinematicModal: React.FC<CinematicModalProps> = ({
   open,
   onOpenChange,
   community,
-  onJoin
+  onJoin,
+  isProcessing = false
 }) => {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
   const [selectedIndex, setSelectedIndex] = React.useState(0);
@@ -184,18 +186,40 @@ export const CinematicModal: React.FC<CinematicModalProps> = ({
 
             {/* Join Button */}
             <Button
-              onClick={() => onJoin?.(community)}
-              className="w-full h-12 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-base shadow-lg relative overflow-hidden group"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!isProcessing) {
+                  onJoin?.(community);
+                }
+              }}
+              disabled={isProcessing}
+              className="w-full h-12 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-base shadow-lg relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0"
-                animate={{ x: ['-100%', '200%'] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              />
+              {!isProcessing && (
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0"
+                  animate={{ x: ['-100%', '200%'] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                />
+              )}
               <span className="relative z-10 flex items-center justify-center gap-2">
-                Claim Now
-                <Zap className="w-4 h-4 fill-current ml-1" />
-                {community.zapRequired || community.zapsRequired || 100} ZAPs
+                {isProcessing ? (
+                  <>
+                    <motion.div
+                      className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    Claim Now
+                    <Zap className="w-4 h-4 fill-current ml-1" />
+                    {community.zapRequired || community.zapsRequired || 100} ZAPs
+                  </>
+                )}
               </span>
             </Button>
 

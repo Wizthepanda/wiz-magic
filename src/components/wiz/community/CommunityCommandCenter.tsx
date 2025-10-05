@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit, doc, getDoc, runTransaction, updateDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Search, Wallet, TrendingUp, DollarSign } from "lucide-react";
@@ -14,6 +14,9 @@ import { UnifiedFilterBar } from "./UnifiedFilterBar";
 import { EnhancedCommunityCard } from "./EnhancedCommunityCard";
 import { CinematicModal } from "./CinematicModal";
 import { CreatorDashboard } from "./CreatorDashboard";
+import { useToast } from "@/hooks/use-toast";
+import confetti from 'canvas-confetti';
+import { useZAPSystem } from "@/hooks/useZAPSystem";
 
 interface CommunityCommandCenterProps {
   onSectionChange?: (section: string) => void;
@@ -26,10 +29,13 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
   const [selectedCommunity, setSelectedCommunity] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'discover' | 'creations'>('discover');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const { user } = useAuth();
   const { xpData } = useXp();
   const isMobile = useIsMobile();
+  const { toast } = useToast();
+  const { zapData, zapProgress } = useZAPSystem();
 
   // Fetch all communities and ZAP rewards
   const { data: allItems = [], isLoading } = useQuery({
@@ -139,6 +145,113 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
 
   const displayItems = viewMode === 'discover' ? filteredItems : userCreations;
 
+  // Handle community join/purchase with ZAPs
+  const handleJoinCommunity = async (community: any) => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to claim this community",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (isProcessing) return;
+
+    try {
+      setIsProcessing(true);
+
+      const zapCost = community.zapRequired || community.zapsRequired || 0;
+      const currentBalance = zapData?.totalZAPs || 0;
+
+      // Check if user has sufficient balance
+      if (zapCost > 0 && currentBalance < zapCost) {
+        toast({
+          title: "Insufficient ZAPs",
+          description: `You need ${zapCost} ZAPs but only have ${currentBalance} ZAPs`,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Run transaction to deduct ZAPs and add user to community
+      await runTransaction(db, async (transaction) => {
+        const userDocRef = doc(db, 'users', user.uid);
+        const communityDocRef = doc(db, 'communities', community.id);
+
+        // Get current user data
+        const userDoc = await transaction.get(userDocRef);
+        if (!userDoc.exists()) {
+          throw new Error("User document not found");
+        }
+
+        const userData = userDoc.data();
+        const currentZAPs = userData.totalZAPs || 0;
+
+        // Double-check balance in transaction
+        if (zapCost > 0 && currentZAPs < zapCost) {
+          throw new Error("Insufficient ZAPs");
+        }
+
+        // Deduct ZAPs from user balance
+        if (zapCost > 0) {
+          transaction.update(userDocRef, {
+            totalZAPs: currentZAPs - zapCost,
+            lastUpdated: serverTimestamp()
+          });
+        }
+
+        // Add user to community members
+        transaction.update(communityDocRef, {
+          members: arrayUnion(user.uid),
+          memberCount: (community.memberCount || 0) + 1,
+          lastUpdated: serverTimestamp()
+        });
+
+        // Log transaction
+        const transactionRef = doc(collection(db, 'transactions'));
+        transaction.set(transactionRef, {
+          userId: user.uid,
+          type: 'community_purchase',
+          communityId: community.id,
+          communityTitle: community.title,
+          zapAmount: zapCost,
+          timestamp: serverTimestamp(),
+          status: 'completed'
+        });
+      });
+
+      // Success feedback
+      toast({
+        title: "🎉 Success!",
+        description: `You've joined ${community.title}!`,
+      });
+
+      // Trigger confetti
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+
+      // Close modal
+      setIsModalOpen(false);
+
+      // Refresh user data (XP will update automatically via context)
+      window.location.reload();
+
+    } catch (error: any) {
+      console.error("Error joining community:", error);
+      toast({
+        title: "Transaction Failed",
+        description: error.message || "Unable to complete purchase. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <div className="min-h-screen relative" style={{
       background: 'linear-gradient(180deg, #ffffff 0%, #fafafa 60%, #f5f5f7 100%)'
@@ -209,7 +322,7 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
 
             {/* Right - Balance Widget */}
             <BalanceWidget
-              zapBalance={xpData?.totalXP || 0}
+              zapBalance={zapData?.totalZAPs || 0}
               onSendZaps={() => {
                 // TODO: Open SendZapsModal
                 console.log('Send ZAPs clicked');
@@ -311,10 +424,8 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
           open={isModalOpen}
           onOpenChange={setIsModalOpen}
           community={selectedCommunity}
-          onJoin={(community) => {
-            console.log('Joining:', community.title);
-            // TODO: Implement join logic
-          }}
+          onJoin={handleJoinCommunity}
+          isProcessing={isProcessing}
         />
       )}
     </div>
