@@ -203,7 +203,7 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
   };
 
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative z-[10000]", className)}>
       {/* Premium Gradient Wallet Icon */}
       <button
         ref={buttonRef}
@@ -219,8 +219,9 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
         {isOpen && (
           <motion.div
             ref={dropdownRef}
-            className={cn("absolute right-0 top-full mt-3 w-[320px] rounded-2xl z-[9999] overflow-hidden")}
+            className={cn("absolute right-0 top-full mt-3 w-[320px] rounded-2xl overflow-hidden")}
             style={{
+              zIndex: 10000,
               background: "rgba(30, 32, 46, 0.9)",
               backdropFilter: "blur(10px)",
               border: "1px solid rgba(255, 255, 255, 0.15)",
