@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useXp } from "@/context/XpContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { CommunityWalletV4 } from "./CommunityWalletV4";
+import { ZapWalletV5 } from "./ZapWalletV5";
 import { UnifiedFilterBar } from "./UnifiedFilterBar";
 import { EnhancedCommunityCard } from "./EnhancedCommunityCard";
 import { CinematicModal } from "./CinematicModal";
@@ -320,8 +320,8 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
               </div>
             </div>
 
-            {/* Right - Community Wallet V4 */}
-            <CommunityWalletV4
+            {/* Right - ZAP Wallet V5 */}
+            <ZapWalletV5
               balance={zapData?.totalZAPs || 0}
               earned={Math.floor((zapData?.totalZAPs || 0) * 0.6)}
               spent={Math.floor((zapData?.totalZAPs || 0) * 0.4)}
