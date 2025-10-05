@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useXp } from "@/context/XpContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { ZapWalletV6 } from "./ZapWalletV6";
+import { ZapWalletV7 } from "./ZapWalletV7";
 import { UnifiedFilterBar } from "./UnifiedFilterBar";
 import { EnhancedCommunityCard } from "./EnhancedCommunityCard";
 import { CinematicModal } from "./CinematicModal";
@@ -144,6 +144,70 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
   );
 
   const displayItems = viewMode === 'discover' ? filteredItems : userCreations;
+
+  // Handle sending ZAPs to another user
+  const handleSendZaps = async (recipientUid: string, amount: number) => {
+    if (!user) {
+      throw new Error("Authentication required");
+    }
+
+    if (amount <= 0 || amount > (zapData?.totalZAPs || 0)) {
+      throw new Error("Invalid amount");
+    }
+
+    await runTransaction(db, async (transaction) => {
+      const senderDocRef = doc(db, 'users', user.uid);
+      const recipientDocRef = doc(db, 'users', recipientUid);
+
+      // Get sender and recipient data
+      const senderDoc = await transaction.get(senderDocRef);
+      const recipientDoc = await transaction.get(recipientDocRef);
+
+      if (!senderDoc.exists()) {
+        throw new Error("Sender not found");
+      }
+
+      if (!recipientDoc.exists()) {
+        throw new Error("Recipient not found");
+      }
+
+      const senderData = senderDoc.data();
+      const recipientData = recipientDoc.data();
+
+      const senderBalance = senderData.totalZAPs || 0;
+      const recipientBalance = recipientData.totalZAPs || 0;
+
+      // Verify sender has sufficient balance
+      if (senderBalance < amount) {
+        throw new Error("Insufficient balance");
+      }
+
+      // Update sender balance
+      transaction.update(senderDocRef, {
+        totalZAPs: senderBalance - amount,
+        lastUpdated: serverTimestamp()
+      });
+
+      // Update recipient balance
+      transaction.update(recipientDocRef, {
+        totalZAPs: recipientBalance + amount,
+        lastUpdated: serverTimestamp()
+      });
+
+      // Log transaction
+      const transactionLogRef = doc(collection(db, 'transactions'));
+      transaction.set(transactionLogRef, {
+        type: 'zap_transfer',
+        senderId: user.uid,
+        recipientId: recipientUid,
+        amount: amount,
+        timestamp: serverTimestamp(),
+        status: 'completed'
+      });
+    });
+
+    // Success - wallet will refresh via ZAP system hook
+  };
 
   // Handle community join/purchase with ZAPs
   const handleJoinCommunity = async (community: any) => {
@@ -320,18 +384,15 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
               </div>
             </div>
 
-            {/* Right - ZAP Wallet V6 */}
-            <ZapWalletV6
+            {/* Right - ZAP Wallet V7 */}
+            <ZapWalletV7
               balance={zapData?.totalZAPs || 0}
               earned={Math.floor((zapData?.totalZAPs || 0) * 0.6)}
               spent={Math.floor((zapData?.totalZAPs || 0) * 0.4)}
               onEarnMore={() => {
                 onSectionChange?.('earn');
               }}
-              onSendZaps={() => {
-                // TODO: Open SendZapsModal
-                console.log('Send ZAPs clicked');
-              }}
+              onSendZaps={handleSendZaps}
             />
           </div>
         </motion.div>
