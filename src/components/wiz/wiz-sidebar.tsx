@@ -55,7 +55,7 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
   const primaryNavigation = [
     { id: 'discover', label: 'Discover', icon: Compass },
     { id: 'community', label: 'Community', icon: Users },
-    { id: 'rewards', label: 'ZAP Rewards', icon: Gift, route: '/rewards' },
+    // { id: 'rewards', label: 'ZAP Rewards', icon: Gift, route: '/rewards' }, // Removed - can be restored if needed
     { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
     { id: 'premiere', label: 'WIZ Premiere', icon: Crown },
     { id: 'profile', label: 'Profile', icon: User },
