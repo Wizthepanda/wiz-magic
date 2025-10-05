@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, Flame, Trophy, Target, Gift, Zap, Crown, Users, ChevronRight, X, ShoppingBag, TrendingUp, Sparkles, Bell } from 'lucide-react';
+import { Search, Flame, Trophy, Target, Gift, Zap, Crown, Users, ChevronRight, X, ShoppingBag, TrendingUp, Sparkles, Bell, MessageSquare, Wallet } from 'lucide-react';
 import { collection, onSnapshot, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,6 +19,9 @@ import { NotificationsDropdown } from '@/components/ui/notifications-dropdown';
 import { XPRewardsDropdown } from '@/components/ui/xp-rewards-dropdown';
 import { EnhancedProfileDropdown } from '@/components/ui/enhanced-profile-dropdown';
 import { XPProfileDropdown } from '@/components/ui/xp-profile-dropdown';
+import { ZapWalletIcon } from './community/ZapWalletIcon';
+import { Button } from '@/components/ui/button';
+import { doc, runTransaction, serverTimestamp, collection as firestoreCollection } from 'firebase/firestore';
 import CommunityVideoHubV6 from './CommunityVideoHubV6';
 import PremiumDashboardV8 from './PremiumDashboardV8';
 import PremiumDashboardV9 from './PremiumDashboardV9';
@@ -486,37 +489,69 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
           </div>
 
           {/* Right: Profile Elements - Within Screen Bounds */}
-          <div className="flex items-center gap-3" style={{ flexShrink: 0, marginLeft: 'auto' }}>
+          <div className="flex items-center justify-end gap-[16px] pr-[28px]" style={{ flexShrink: 0, marginLeft: 'auto' }}>
 
-            {/* Clean Icon Dropdowns - No Red Circles */}
-            <div className="flex items-center gap-2">
-              {/* Notifications Dropdown */}
-              <NotificationsDropdown
-                onMarkAsRead={(id) => console.log('Mark notification as read:', id)}
-                onMarkAllAsRead={() => console.log('Mark all notifications as read')}
-                onViewAll={() => console.log('View all notifications')}
-              />
+            {/* Notifications Bell - Untouched */}
+            <NotificationsDropdown
+              onMarkAsRead={(id) => console.log('Mark notification as read:', id)}
+              onMarkAllAsRead={() => console.log('Mark all notifications as read')}
+              onViewAll={() => console.log('View all notifications')}
+            />
 
-              {/* Leaderboard Dropdown */}
-              <LeaderboardDropdownV2
-                onViewFullLeaderboard={() => onSectionChange?.('leaderboard')}
-              />
+            {/* Chat Icon - Replaces Leaderboard */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:opacity-70 transition-all duration-200 h-auto w-auto p-0"
+              onClick={() => console.log('Messages clicked')}
+            >
+              <MessageSquare className="w-5 h-5 text-gray-800" strokeWidth={2} />
+            </Button>
 
-              {/* ZAP Rewards Dropdown */}
-              <ZAPRewardsDropdown
-                currentZAPS={userZAPS}
-                onViewAllRewards={() => setShowShopDrawer(true)}
-                onRewardClick={(id) => console.log('Purchase item:', id)}
-              />
-            </div>
+            {/* ZAP Wallet - Replaces ZAP Rewards Shop */}
+            <ZapWalletIcon
+              balance={userZAPS}
+              earned={Math.floor(userZAPS * 0.6)}
+              spent={Math.floor(userZAPS * 0.4)}
+              onSendZaps={async (recipientUid: string, amount: number) => {
+                await runTransaction(db, async (transaction) => {
+                  const senderZAPRef = doc(db, 'userZAPs', user!.uid);
+                  const recipientZAPRef = doc(db, 'userZAPs', recipientUid);
 
-            {/* Divider - Subtle */}
-            <div
-              className="w-px h-6 mx-2"
-              style={{
-                background: isDarkMode
-                  ? 'linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.15), transparent)'
-                  : 'linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.08), transparent)'
+                  const senderDoc = await transaction.get(senderZAPRef);
+                  const recipientDoc = await transaction.get(recipientZAPRef);
+
+                  if (!senderDoc.exists()) throw new Error("Sender ZAP account not found");
+                  if (!recipientDoc.exists()) throw new Error("Recipient ZAP account not found");
+
+                  const senderData = senderDoc.data();
+                  const recipientData = recipientDoc.data();
+
+                  const senderBalance = senderData.totalZAPs || 0;
+                  const recipientBalance = recipientData.totalZAPs || 0;
+
+                  if (senderBalance < amount) throw new Error("Insufficient balance");
+
+                  transaction.update(senderZAPRef, {
+                    totalZAPs: senderBalance - amount,
+                    lastZAPUpdate: serverTimestamp()
+                  });
+
+                  transaction.update(recipientZAPRef, {
+                    totalZAPs: recipientBalance + amount,
+                    lastZAPUpdate: serverTimestamp()
+                  });
+
+                  const transactionLogRef = doc(firestoreCollection(db, 'transactions'));
+                  transaction.set(transactionLogRef, {
+                    type: 'zap_transfer',
+                    senderId: user!.uid,
+                    recipientId: recipientUid,
+                    amount: amount,
+                    timestamp: serverTimestamp(),
+                    status: 'completed'
+                  });
+                });
               }}
             />
 
