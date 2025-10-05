@@ -48,70 +48,65 @@ export const ZapWallet: React.FC<ZapWalletProps> = ({
   }, [isOpen]);
 
   return (
-    <div className={cn("relative", className)}>
-      {/* Desktop: Wallet Icon + Balance */}
+    <div className={cn("relative flex-shrink-0", className)}>
+      {/* Desktop: Wallet Icon + Balance - Inline Minimal */}
       <motion.button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "hidden md:flex items-center gap-2.5",
-          "text-white/90 hover:text-white transition-all duration-300",
-          "group cursor-pointer"
+          "hidden md:flex items-center gap-2",
+          "text-gray-700 hover:text-gray-900 transition-all duration-300",
+          "group cursor-pointer",
+          "relative"
         )}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
       >
-        {/* Wallet Icon with Glow */}
+        {/* Wallet Icon with Subtle Glow */}
         <motion.div
-          className="relative"
-          animate={
-            isOpen
-              ? {
-                  filter: [
-                    "drop-shadow(0 0 8px rgba(251, 191, 36, 0.6))",
-                    "drop-shadow(0 0 12px rgba(251, 191, 36, 0.8))",
-                    "drop-shadow(0 0 8px rgba(251, 191, 36, 0.6))",
-                  ],
-                }
-              : {}
-          }
-          transition={{ duration: 2, repeat: Infinity }}
+          className="relative w-5 h-5"
+          whileHover={{
+            filter: "drop-shadow(0 0 6px rgba(139, 92, 246, 0.4))"
+          }}
         >
-          <Zap className="w-5 h-5 text-amber-400 fill-amber-400" />
+          <Wallet className="w-5 h-5 text-violet-600" strokeWidth={2} />
         </motion.div>
 
-        {/* Balance Text */}
+        {/* Balance Text - Pearl Gradient */}
         <motion.span
-          className="font-semibold text-base bg-gradient-to-r from-white via-amber-50 to-white bg-clip-text text-transparent"
+          className="font-semibold text-base text-gray-800"
           key={balance}
-          initial={{ opacity: 0, y: -5 }}
+          initial={{ opacity: 0, y: -3 }}
           animate={{ opacity: 1, y: 0 }}
+          style={{ letterSpacing: '-0.01em' }}
         >
-          {balance.toLocaleString()} ZAPs
+          {balance.toLocaleString()}
+          <span className="text-gray-500 ml-1 font-medium">ZAPs</span>
         </motion.span>
 
-        {/* Hover Glow Effect */}
-        <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-r from-amber-400/20 to-yellow-300/20 blur-xl" />
-        </div>
+        {/* Subtle Hover Pulse */}
+        <motion.div
+          className="absolute -inset-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 70%)'
+          }}
+        />
       </motion.button>
 
-      {/* Mobile: Floating ZAP Icon */}
+      {/* Mobile: Floating Wallet Icon */}
       <motion.button
-        ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "md:hidden fixed top-4 right-4 z-50",
           "w-12 h-12 rounded-full",
-          "bg-gradient-to-br from-amber-400/20 to-yellow-300/20",
-          "backdrop-blur-xl border border-amber-400/30",
+          "bg-white/60 backdrop-blur-xl border border-white/40",
           "flex items-center justify-center",
-          "shadow-[0_0_20px_rgba(251,191,36,0.3)]"
+          "shadow-lg"
         )}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
       >
-        <Zap className="w-6 h-6 text-amber-400 fill-amber-400" />
+        <Wallet className="w-5 h-5 text-violet-600" strokeWidth={2} />
       </motion.button>
 
       {/* Dropdown Panel (Desktop & Mobile) */}
@@ -127,41 +122,41 @@ export const ZapWallet: React.FC<ZapWalletProps> = ({
               onClick={() => setIsOpen(false)}
             />
 
-            {/* Dropdown */}
+            {/* Dropdown - Frosted Glass Panel */}
             <motion.div
               ref={dropdownRef}
               className={cn(
                 // Desktop: dropdown below icon
-                "hidden md:block absolute right-0 top-full mt-3 w-64",
-                // Mobile: bottom sheet
-                "md:relative md:w-64",
-                "rounded-2xl backdrop-blur-xl bg-white/5 border border-white/10",
-                "shadow-[0_0_25px_rgba(255,255,255,0.1)]",
-                "p-5"
+                "hidden md:block absolute right-0 top-full mt-3 w-72",
+                // Glassmorphic styling
+                "rounded-2xl backdrop-blur-xl bg-white/5 border border-white/20",
+                "shadow-[0_0_15px_rgba(255,255,255,0.1)]",
+                "p-6"
               )}
-              initial={{ opacity: 0, y: -8, scale: 0.95 }}
+              initial={{ opacity: 0, y: -8, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8, scale: 0.95 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              exit={{ opacity: 0, y: -8, scale: 0.96 }}
+              transition={{ type: "spring", damping: 22, stiffness: 280 }}
             >
               {/* Balance Display */}
-              <div className="mb-4 text-center md:text-left">
+              <div className="mb-5">
                 <motion.p
-                  className="text-2xl font-bold text-white mb-1"
+                  className="text-3xl font-bold text-gray-900 mb-1"
                   key={balance}
-                  initial={{ scale: 0.95 }}
-                  animate={{ scale: 1 }}
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  style={{ letterSpacing: '-0.02em' }}
                 >
                   {balance.toLocaleString()}
-                  <span className="text-lg text-white/70 ml-1">ZAPs</span>
+                  <span className="text-xl text-gray-600 ml-1.5 font-semibold">ZAPs</span>
                 </motion.p>
-                <p className="text-xs text-white/50 uppercase tracking-wider">
+                <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
                   Your Balance
                 </p>
               </div>
 
               {/* Quick Actions */}
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2.5">
                 <motion.button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -169,19 +164,18 @@ export const ZapWallet: React.FC<ZapWalletProps> = ({
                     setIsOpen(false);
                   }}
                   className={cn(
-                    "flex items-center justify-center gap-2",
-                    "px-4 py-2.5 rounded-full text-sm font-medium",
-                    "bg-gradient-to-r from-amber-400/20 to-yellow-300/20",
-                    "hover:from-amber-400/30 hover:to-yellow-300/30",
-                    "text-white border border-amber-400/20",
+                    "flex items-center justify-center gap-2.5",
+                    "px-5 py-3 rounded-full text-sm font-semibold",
+                    "bg-white/10 hover:bg-white/15",
+                    "text-gray-800 hover:text-gray-900",
+                    "border border-white/30",
                     "transition-all duration-300",
-                    "shadow-[0_0_15px_rgba(251,191,36,0.2)]",
-                    "hover:shadow-[0_0_25px_rgba(251,191,36,0.4)]"
+                    "shadow-sm hover:shadow-md"
                   )}
-                  whileHover={{ y: -2, scale: 1.02 }}
+                  whileHover={{ y: -2, scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <Sparkles className="w-4 h-4 text-violet-600" />
                   Earn ZAPs
                 </motion.button>
 
@@ -192,65 +186,57 @@ export const ZapWallet: React.FC<ZapWalletProps> = ({
                     setIsOpen(false);
                   }}
                   className={cn(
-                    "flex items-center justify-center gap-2",
-                    "px-4 py-2.5 rounded-full text-sm font-medium",
-                    "bg-white/10 hover:bg-white/20",
-                    "text-white/90 hover:text-white",
-                    "border border-white/10",
-                    "transition-all duration-300"
+                    "flex items-center justify-center gap-2.5",
+                    "px-5 py-3 rounded-full text-sm font-semibold",
+                    "bg-white/10 hover:bg-white/15",
+                    "text-gray-800 hover:text-gray-900",
+                    "border border-white/30",
+                    "transition-all duration-300",
+                    "shadow-sm hover:shadow-md"
                   )}
-                  whileHover={{ y: -2, scale: 1.02 }}
+                  whileHover={{ y: -2, scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <Send className="w-4 h-4" />
+                  <Send className="w-4 h-4 text-violet-600" />
                   Send ZAPs
                 </motion.button>
               </div>
             </motion.div>
 
-            {/* Mobile: Bottom Sheet */}
+            {/* Mobile: Bottom Sheet - Apple Pay Style */}
             <motion.div
               ref={dropdownRef}
               className={cn(
                 "md:hidden fixed inset-x-4 bottom-4 z-50",
-                "rounded-3xl backdrop-blur-2xl bg-gradient-to-b from-white/10 to-white/5",
-                "border border-white/20",
-                "shadow-[0_20px_60px_rgba(0,0,0,0.5)]",
-                "p-6"
+                "rounded-3xl backdrop-blur-2xl bg-white/10",
+                "border border-white/30",
+                "shadow-[0_20px_60px_rgba(0,0,0,0.3)]",
+                "p-8"
               )}
-              initial={{ opacity: 0, y: 100, scale: 0.9 }}
+              initial={{ opacity: 0, y: 100, scale: 0.92 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 100, scale: 0.9 }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              exit={{ opacity: 0, y: 100, scale: 0.92 }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
             >
-              {/* ZAP Logo */}
-              <div className="flex justify-center mb-4">
-                <motion.div
-                  className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-400/30 to-yellow-300/30 backdrop-blur-xl border border-amber-400/40 flex items-center justify-center"
-                  animate={{
-                    boxShadow: [
-                      "0 0 20px rgba(251, 191, 36, 0.3)",
-                      "0 0 30px rgba(251, 191, 36, 0.5)",
-                      "0 0 20px rgba(251, 191, 36, 0.3)",
-                    ],
-                  }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  <Zap className="w-8 h-8 text-amber-400 fill-amber-400" />
-                </motion.div>
+              {/* Wallet Icon */}
+              <div className="flex justify-center mb-5">
+                <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl border border-white/40 flex items-center justify-center">
+                  <Wallet className="w-8 h-8 text-violet-600" strokeWidth={2} />
+                </div>
               </div>
 
               {/* Balance */}
-              <div className="text-center mb-6">
+              <div className="text-center mb-8">
                 <motion.p
-                  className="text-4xl font-bold text-white mb-2"
+                  className="text-4xl font-bold text-gray-900 mb-2"
                   key={balance}
-                  initial={{ scale: 0.9 }}
-                  animate={{ scale: 1 }}
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  style={{ letterSpacing: '-0.02em' }}
                 >
                   {balance.toLocaleString()}
                 </motion.p>
-                <p className="text-sm text-white/60 uppercase tracking-wider">
+                <p className="text-sm text-gray-600 font-medium uppercase tracking-wider">
                   Your ZAP Balance
                 </p>
               </div>
@@ -264,18 +250,18 @@ export const ZapWallet: React.FC<ZapWalletProps> = ({
                     setIsOpen(false);
                   }}
                   className={cn(
-                    "flex items-center justify-center gap-2",
+                    "flex items-center justify-center gap-2.5",
                     "px-6 py-4 rounded-2xl text-base font-semibold",
-                    "bg-gradient-to-r from-amber-400 to-yellow-300",
-                    "text-black",
-                    "shadow-[0_0_25px_rgba(251,191,36,0.4)]",
-                    "hover:shadow-[0_0_35px_rgba(251,191,36,0.6)]",
+                    "bg-white/20 hover:bg-white/30",
+                    "text-gray-900",
+                    "border border-white/40",
+                    "shadow-lg hover:shadow-xl",
                     "transition-all duration-300"
                   )}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <Sparkles className="w-5 h-5" />
+                  <Sparkles className="w-5 h-5 text-violet-600" />
                   Earn ZAPs
                 </motion.button>
 
@@ -286,16 +272,18 @@ export const ZapWallet: React.FC<ZapWalletProps> = ({
                     setIsOpen(false);
                   }}
                   className={cn(
-                    "flex items-center justify-center gap-2",
-                    "px-6 py-4 rounded-2xl text-base font-medium",
-                    "bg-white/10 hover:bg-white/20",
-                    "text-white border border-white/20",
+                    "flex items-center justify-center gap-2.5",
+                    "px-6 py-4 rounded-2xl text-base font-semibold",
+                    "bg-white/20 hover:bg-white/30",
+                    "text-gray-900",
+                    "border border-white/40",
+                    "shadow-lg hover:shadow-xl",
                     "transition-all duration-300"
                   )}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <Send className="w-5 h-5" />
+                  <Send className="w-5 h-5 text-violet-600" />
                   Send ZAPs
                 </motion.button>
               </div>
