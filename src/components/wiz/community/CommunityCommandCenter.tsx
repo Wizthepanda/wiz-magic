@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { collection, query, where, getDocs, orderBy, limit, doc, getDoc, runTransaction, updateDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, functions } from '@/lib/firebase';
+import { httpsCallable } from 'firebase/functions';
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Search, Wallet, TrendingUp, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -238,73 +239,36 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
         return;
       }
 
-      // Run transaction to deduct ZAPs and add user to community
-      await runTransaction(db, async (transaction) => {
-        const userZAPRef = doc(db, 'userZAPs', user.uid);
-        const communityDocRef = doc(db, 'communities', community.id);
+      // Call Cloud Function to handle the purchase securely
+      const purchaseAccess = httpsCallable(functions, 'purchaseCommunityAccess');
+      const result = await purchaseAccess({
+        communityId: community.id,
+        zapCost: zapCost,
+        communityTitle: community.title
+      });
 
-        // Get current user ZAP data from userZAPs collection
-        const zapDoc = await transaction.get(userZAPRef);
-        if (!zapDoc.exists()) {
-          throw new Error("ZAP account not found. Please earn some ZAPs first.");
-        }
+      const data = result.data as { success: boolean; message: string };
 
-        const zapData = zapDoc.data();
-        const currentZAPs = zapData.totalZAPs || 0;
-
-        console.log(`💰 Transaction Check - User ZAPs: ${currentZAPs}, Required: ${zapCost}`);
-
-        // Double-check balance in transaction
-        if (zapCost > 0 && currentZAPs < zapCost) {
-          throw new Error(`Insufficient ZAPs: You have ${currentZAPs} ZAPs but need ${zapCost} ZAPs`);
-        }
-
-        // Deduct ZAPs from user balance
-        if (zapCost > 0) {
-          transaction.update(userZAPRef, {
-            totalZAPs: currentZAPs - zapCost,
-            lastZAPUpdate: serverTimestamp()
-          });
-        }
-
-        // Add user to community members
-        transaction.update(communityDocRef, {
-          members: arrayUnion(user.uid),
-          memberCount: (community.memberCount || 0) + 1,
-          lastUpdated: serverTimestamp()
+      if (data.success) {
+        // Success feedback
+        toast({
+          title: "🎉 Success!",
+          description: data.message,
         });
 
-        // Log transaction
-        const transactionRef = doc(collection(db, 'transactions'));
-        transaction.set(transactionRef, {
-          userId: user.uid,
-          type: 'community_purchase',
-          communityId: community.id,
-          communityTitle: community.title,
-          zapAmount: zapCost,
-          timestamp: serverTimestamp(),
-          status: 'completed'
+        // Trigger confetti
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
         });
-      });
 
-      // Success feedback
-      toast({
-        title: "🎉 Success!",
-        description: `You've joined ${community.title}!`,
-      });
+        // Close modal
+        setIsModalOpen(false);
 
-      // Trigger confetti
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
-
-      // Close modal
-      setIsModalOpen(false);
-
-      // Refresh user data (XP will update automatically via context)
-      window.location.reload();
+        // Refresh user data (XP will update automatically via context)
+        window.location.reload();
+      }
 
     } catch (error: any) {
       console.error("Error joining community:", error);

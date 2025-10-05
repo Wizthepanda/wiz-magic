@@ -4,7 +4,7 @@
  * Production XP System with YouTube API Integration
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.closeWatchSession = exports.sendWatchEvents = exports.startWatchSession = exports.nowPaymentsTipWebhook = exports.getNowPaymentsStatus = exports.createNowPaymentsPayment = exports.getNowPaymentsEstimate = exports.getNowPaymentsMinAmount = exports.getNowPaymentsCurrencies = exports.getWizLeaderboard = exports.wizDailyReset = exports.getWizXPData = exports.awardWizSubscriptionXP = exports.awardWizReferralXP = exports.awardWizShareXP = exports.awardWatchXP = exports.awardWizXP = exports.initializeYouTubeTracking = exports.dailyYouTubeProfileSync = exports.dailyYouTubeSync = exports.syncYouTubeHistory = exports.dailyReset = exports.awardReferralXP = exports.awardShareXP = exports.awardXP = void 0;
+exports.purchaseCommunityAccess = exports.closeWatchSession = exports.sendWatchEvents = exports.startWatchSession = exports.nowPaymentsTipWebhook = exports.getNowPaymentsStatus = exports.createNowPaymentsPayment = exports.getNowPaymentsEstimate = exports.getNowPaymentsMinAmount = exports.getNowPaymentsCurrencies = exports.getWizLeaderboard = exports.wizDailyReset = exports.getWizXPData = exports.awardWizSubscriptionXP = exports.awardWizReferralXP = exports.awardWizShareXP = exports.awardWatchXP = exports.awardWizXP = exports.exchangeYouTubeToken = exports.initializeYouTubeTracking = exports.dailyYouTubeProfileSync = exports.dailyYouTubeSync = exports.syncYouTubeHistory = exports.dailyReset = exports.awardReferralXP = exports.awardShareXP = exports.awardXP = void 0;
 const app_1 = require("firebase-admin/app");
 // Initialize Firebase Admin SDK
 if ((0, app_1.getApps)().length === 0) {
@@ -16,12 +16,15 @@ Object.defineProperty(exports, "awardXP", { enumerable: true, get: function () {
 Object.defineProperty(exports, "awardShareXP", { enumerable: true, get: function () { return xp_system_1.awardShareXP; } });
 Object.defineProperty(exports, "awardReferralXP", { enumerable: true, get: function () { return xp_system_1.awardReferralXP; } });
 Object.defineProperty(exports, "dailyReset", { enumerable: true, get: function () { return xp_system_1.dailyReset; } });
-// Export new YouTube integration functions  
+// Export new YouTube integration functions
 var youtube_xp_functions_1 = require("./youtube-xp-functions");
 Object.defineProperty(exports, "syncYouTubeHistory", { enumerable: true, get: function () { return youtube_xp_functions_1.syncYouTubeHistory; } });
 Object.defineProperty(exports, "dailyYouTubeSync", { enumerable: true, get: function () { return youtube_xp_functions_1.dailyYouTubeSync; } });
 Object.defineProperty(exports, "dailyYouTubeProfileSync", { enumerable: true, get: function () { return youtube_xp_functions_1.dailyYouTubeProfileSync; } });
 Object.defineProperty(exports, "initializeYouTubeTracking", { enumerable: true, get: function () { return youtube_xp_functions_1.initializeYouTubeTracking; } });
+// Export YouTube token exchange function
+var youtube_token_exchange_1 = require("./youtube-token-exchange");
+Object.defineProperty(exports, "exchangeYouTubeToken", { enumerable: true, get: function () { return youtube_token_exchange_1.exchangeYouTubeToken; } });
 // Export new WIZ XP system functions (milder progression curve)
 var wiz_xp_functions_1 = require("./wiz-xp-functions");
 Object.defineProperty(exports, "awardWizXP", { enumerable: true, get: function () { return wiz_xp_functions_1.awardWizXP; } });
@@ -45,4 +48,7 @@ var anti_cheat_system_1 = require("./anti-cheat-system");
 Object.defineProperty(exports, "startWatchSession", { enumerable: true, get: function () { return anti_cheat_system_1.startWatchSession; } });
 Object.defineProperty(exports, "sendWatchEvents", { enumerable: true, get: function () { return anti_cheat_system_1.sendWatchEvents; } });
 Object.defineProperty(exports, "closeWatchSession", { enumerable: true, get: function () { return anti_cheat_system_1.closeWatchSession; } });
+// Export Community Purchase function
+var purchaseCommunityAccess_1 = require("./purchaseCommunityAccess");
+Object.defineProperty(exports, "purchaseCommunityAccess", { enumerable: true, get: function () { return purchaseCommunityAccess_1.purchaseCommunityAccess; } });
 //# sourceMappingURL=index.js.map

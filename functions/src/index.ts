@@ -52,3 +52,6 @@ export {
   sendWatchEvents,
   closeWatchSession
 } from './anti-cheat-system';
+
+// Export Community Purchase function
+export { purchaseCommunityAccess } from './purchaseCommunityAccess';
