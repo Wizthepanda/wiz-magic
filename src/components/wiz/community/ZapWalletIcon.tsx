@@ -204,29 +204,14 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
 
   return (
     <div className={cn("relative", className)}>
-      {/* Enhanced Visibility Wallet Icon */}
+      {/* Premium Gradient Wallet Icon */}
       <button
         ref={buttonRef}
         aria-label="ZAP Wallet"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative group hover:opacity-90 transition-all duration-200"
+        className="relative w-10 h-10 rounded-full bg-gradient-to-br from-[#6B4EFF] to-[#4BC0FF] hover:from-[#7C5FFF] hover:to-[#5DD1FF] transition-all duration-200 flex items-center justify-center group shadow-sm hover:shadow-md"
       >
-        <div className="relative">
-          <Wallet
-            size={22}
-            strokeWidth={1.8}
-            className="text-transparent bg-clip-text relative z-10"
-            style={{
-              backgroundImage: "linear-gradient(135deg, #6B4EFF, #4BC0FF)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              WebkitTextStroke: "0.6px #4A4A4A",
-            }}
-          />
-          {/* Subtle gradient outline for visibility */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#6B4EFF] to-[#4BC0FF] opacity-60 blur-[2px] rounded-full -z-10" />
-        </div>
+        <Wallet size={20} strokeWidth={2} className="text-white" />
       </button>
 
       {/* Dropdown Panel */}
