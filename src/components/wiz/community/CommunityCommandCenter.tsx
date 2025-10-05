@@ -263,11 +263,11 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
           origin: { y: 0.6 }
         });
 
-        // Close modal
-        setIsModalOpen(false);
-
-        // Refresh user data (XP will update automatically via context)
-        window.location.reload();
+        // Close modal after a brief delay to show success state
+        setTimeout(() => {
+          setIsModalOpen(false);
+          setSelectedCommunity(null);
+        }, 1500);
       }
 
     } catch (error: any) {
