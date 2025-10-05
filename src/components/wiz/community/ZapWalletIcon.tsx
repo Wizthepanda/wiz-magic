@@ -204,146 +204,63 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
 
   return (
     <div className={cn("relative", className)}>
-      {/* Gradient Wallet Icon with Drop Shadow */}
-      <motion.button
+      {/* Premium Gradient Wallet Icon */}
+      <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 hover:scale-105 transition-transform duration-200"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        className="relative hover:opacity-90 transition"
       >
         <Wallet
-          className="w-5 h-5 text-transparent bg-gradient-to-tr from-[#7F5AF0] via-[#6C63FF] to-[#4CC9F0] drop-shadow-[0_1px_3px_rgba(124,58,237,0.25)]"
+          size={22}
+          className="text-transparent"
           style={{
+            backgroundImage: "linear-gradient(135deg, #6B4EFF, #4BC0FF)",
             backgroundClip: "text",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
           }}
           strokeWidth={2}
         />
-      </motion.button>
+      </button>
 
       {/* Dropdown Panel */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             ref={dropdownRef}
-            className={cn("absolute right-0 top-full mt-3 w-[320px] rounded-2xl z-50 overflow-hidden")}
+            className={cn("absolute right-0 top-full mt-3 w-[320px] rounded-2xl z-[9999] overflow-hidden shadow-xl border border-gray-100")}
             style={{
-              background: "rgba(30, 32, 46, 0.9)",
-              backdropFilter: "blur(10px)",
-              border: "1px solid rgba(255, 255, 255, 0.15)",
-              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+              background: "white",
             }}
-            initial={{ opacity: 0, y: -8, scale: 0.96 }}
+            initial={{ opacity: 0, y: -5, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.96 }}
-            transition={{ type: "spring", damping: 22, stiffness: 300 }}
+            exit={{ opacity: 0, y: -5, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
           >
-            <div className="p-5">
+            <div className="p-4 space-y-3">
               {/* Header */}
-              <div className="mb-4 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#7F5AF0] to-[#4CC9F0] flex items-center justify-center">
-                  <Wallet className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
-                </div>
-                <h3
-                  className="text-white font-bold text-base"
-                  style={{
-                    fontFamily: "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
-                  }}
-                >
-                  My Wallet
-                </h3>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-gray-800">Total ZAPs</span>
+                <span className="text-sm font-bold text-[#6B4EFF]">{balance.toLocaleString()}</span>
               </div>
 
-              {/* Divider */}
-              <div className="mb-4" style={{ borderTop: "1px solid rgba(255, 255, 255, 0.15)" }} />
+              {/* ZAP Friends Button */}
+              <button
+                onClick={handleCopyReferralLink}
+                className="w-full bg-gradient-to-r from-[#6B4EFF] to-[#4BC0FF] text-white text-sm py-2 rounded-lg font-medium hover:opacity-90 transition"
+              >
+                ZAP Friends ⚡
+              </button>
 
-              {/* Balance Lines */}
-              <div className="space-y-3 mb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#FFD84D] to-[#FFA834] flex items-center justify-center">
-                      <Zap className="w-3.5 h-3.5 text-[#1E202E]" strokeWidth={2.5} fill="#1E202E" />
-                    </div>
-                    <span className="text-white text-sm font-semibold">Balance</span>
-                  </div>
-                  <motion.span className="text-white font-bold text-sm" key={balance} initial={{ scale: 0.95 }} animate={{ scale: 1 }}>
-                    {balance.toLocaleString()}
-                  </motion.span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-[#4CC9F0]" strokeWidth={2} fill="#4CC9F0" />
-                    <span className="text-[#E8E8E8] text-sm font-medium">Earned</span>
-                  </div>
-                  <span className="text-white text-sm font-semibold">{earned.toLocaleString()}</span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full bg-gradient-to-br from-[#7F5AF0] to-[#6B4FD8] flex items-center justify-center">
-                      <div className="w-2 h-2 rounded-full bg-white" />
-                    </div>
-                    <span className="text-[#E8E8E8] text-sm font-medium">Spent</span>
-                  </div>
-                  <span className="text-white text-sm font-semibold">{spent.toLocaleString()}</span>
-                </div>
-              </div>
-
-              <div className="mb-4" style={{ borderTop: "1px solid rgba(255, 255, 255, 0.15)" }} />
-
-              {/* ZAP Friends Section */}
-              <div className="mb-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Users className="w-4 h-4 text-white/85" strokeWidth={2} />
-                  <span className="text-white font-bold text-sm">ZAP Friends</span>
-                </div>
-                <p className="text-white/80 text-xs mb-3 leading-relaxed">
-                  Invite your friends and earn together
-                </p>
-                <motion.button
-                  onClick={handleCopyReferralLink}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full font-semibold text-sm text-white transition-all duration-300 relative overflow-hidden group"
-                  style={{
-                    background: "linear-gradient(135deg, #7F5AF0 0%, #4CC9F0 100%)",
-                    boxShadow: "0 4px 12px rgba(127, 90, 240, 0.3)",
-                  }}
-                  whileHover={{ boxShadow: "0 6px 20px rgba(127, 90, 240, 0.5)", scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <motion.div
-                    className="absolute inset-0 pointer-events-none"
-                    initial={{ x: "-100%" }}
-                    whileHover={{ x: "100%" }}
-                    transition={{ duration: 0.8 }}
-                    style={{
-                      background: "linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%)",
-                    }}
-                  />
-                  <Link2 className="w-4 h-4 relative z-10" strokeWidth={2.5} />
-                  <span className="relative z-10">Copy My Referral Link</span>
-                </motion.button>
-                <p className="text-white/60 text-xs mt-2.5 text-center">
-                  Friend joins → <span className="text-[#4CC9F0] font-semibold">+50 ZAPs</span> each!
-                </p>
-              </div>
-
-              <div className="mb-4" style={{ borderTop: "1px solid rgba(255, 255, 255, 0.1)" }} />
-
-              {/* Send ZAPs Section - Condensed for dashboard */}
+              {/* Send ZAPs Button */}
               <AnimatePresence>
                 {!isSendMode ? (
-                  <motion.button
+                  <button
                     onClick={() => setIsSendMode(true)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-white/85 text-sm font-medium hover:bg-white/10 transition-all duration-200"
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
+                    className="w-full bg-gray-100 text-gray-800 text-sm py-2 rounded-lg font-medium hover:bg-gray-200 transition"
                   >
-                    <Send className="w-4 h-4" strokeWidth={2} />
-                    <span>Send ZAPs</span>
-                  </motion.button>
+                    Send ZAPs 💬
+                  </button>
                 ) : (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
@@ -354,59 +271,48 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Send className="w-4 h-4 text-white/85" strokeWidth={2} />
-                        <span className="text-white/85 text-sm font-semibold">Send ZAPs</span>
+                        <Send className="w-4 h-4 text-gray-700" strokeWidth={2} />
+                        <span className="text-gray-800 text-sm font-semibold">Send ZAPs</span>
                       </div>
-                      <motion.button
+                      <button
                         onClick={() => {
                           setIsSendMode(false);
                           setSearchQuery("");
                           setSelectedUser(null);
                           setZapAmount("");
                         }}
-                        className="p-1 hover:bg-white/10 rounded-lg transition-colors"
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
+                        className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
                       >
-                        <X className="w-3.5 h-3.5 text-white/60" strokeWidth={2} />
-                      </motion.button>
+                        <X className="w-3.5 h-3.5 text-gray-600" strokeWidth={2} />
+                      </button>
                     </div>
 
-                    <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.1)" }} />
+                    <div className="border-t border-gray-200" />
 
                     {selectedUser ? (
-                      <motion.div
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center gap-3 p-3 rounded-xl"
-                        style={{
-                          background: "rgba(127, 90, 240, 0.15)",
-                          border: "1px solid rgba(127, 90, 240, 0.3)",
-                        }}
-                      >
+                      <div className="flex items-center gap-3 p-3 rounded-xl bg-purple-50 border border-purple-200">
                         <img src={selectedUser.photoURL} alt={selectedUser.displayName} className="w-9 h-9 rounded-full object-cover" />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-white text-sm font-semibold truncate">{selectedUser.displayName}</span>
-                            {selectedUser.verified && <CheckCircle2 className="w-3.5 h-3.5 text-[#4CC9F0] flex-shrink-0" fill="#4CC9F0" />}
+                            <span className="text-gray-800 text-sm font-semibold truncate">{selectedUser.displayName}</span>
+                            {selectedUser.verified && <CheckCircle2 className="w-3.5 h-3.5 text-[#4BC0FF] flex-shrink-0" fill="#4BC0FF" />}
                           </div>
-                          <span className="text-white/60 text-xs">@{selectedUser.username}</span>
+                          <span className="text-gray-600 text-xs">@{selectedUser.username}</span>
                         </div>
-                        <motion.button onClick={() => setSelectedUser(null)} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                          <X className="w-3.5 h-3.5 text-white/60" strokeWidth={2} />
-                        </motion.button>
-                      </motion.div>
+                        <button onClick={() => setSelectedUser(null)} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                          <X className="w-3.5 h-3.5 text-gray-600" strokeWidth={2} />
+                        </button>
+                      </div>
                     ) : (
                       <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" strokeWidth={2} />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" strokeWidth={2} />
                         <input
                           ref={searchInputRef}
                           type="text"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                           placeholder="Search username..."
-                          className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-white placeholder-white/40 bg-white/5 border border-white/10 focus:border-[#7F5AF0] focus:bg-white/8 transition-all outline-none"
-                          style={{ backdropFilter: "blur(4px)" }}
+                          className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-gray-800 placeholder-gray-400 bg-gray-50 border border-gray-200 focus:border-[#6B4EFF] focus:bg-white transition-all outline-none"
                         />
                         {searchResults.length > 0 && (
                           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-2 space-y-1 max-h-32 overflow-y-auto">
@@ -418,17 +324,15 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
                                   setSearchQuery("");
                                   setSearchResults([]);
                                 }}
-                                className="w-full flex items-center gap-2.5 p-2 rounded-lg hover:bg-white/10 transition-colors"
-                                whileHover={{ x: 2 }}
-                                whileTap={{ scale: 0.98 }}
+                                className="w-full flex items-center gap-2.5 p-2 rounded-lg hover:bg-gray-100 transition-colors"
                               >
                                 <img src={user.photoURL} alt={user.displayName} className="w-8 h-8 rounded-full object-cover" />
                                 <div className="flex-1 text-left min-w-0">
                                   <div className="flex items-center gap-1">
-                                    <span className="text-white text-xs font-medium truncate">{user.displayName}</span>
-                                    {user.verified && <CheckCircle2 className="w-3 h-3 text-[#4CC9F0]" fill="#4CC9F0" />}
+                                    <span className="text-gray-800 text-xs font-medium truncate">{user.displayName}</span>
+                                    {user.verified && <CheckCircle2 className="w-3 h-3 text-[#4BC0FF]" fill="#4BC0FF" />}
                                   </div>
-                                  <span className="text-white/50 text-xs">@{user.username}</span>
+                                  <span className="text-gray-500 text-xs">@{user.username}</span>
                                 </div>
                               </motion.button>
                             ))}
@@ -438,9 +342,9 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
                     )}
 
                     {selectedUser && (
-                      <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+                      <div>
                         <div className="relative">
-                          <Zap className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#FFD84D]" strokeWidth={2} fill="#FFD84D" />
+                          <Zap className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-yellow-500" strokeWidth={2} fill="currentColor" />
                           <input
                             type="number"
                             value={zapAmount}
@@ -448,36 +352,26 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
                             placeholder="Amount"
                             min="1"
                             max={balance}
-                            className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-white placeholder-white/40 bg-white/5 border border-white/10 focus:border-[#4CC9F0] focus:bg-white/8 transition-all outline-none"
-                            style={{ backdropFilter: "blur(4px)" }}
+                            className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-gray-800 placeholder-gray-400 bg-gray-50 border border-gray-200 focus:border-[#6B4EFF] focus:bg-white transition-all outline-none"
                           />
                         </div>
                         <div className="flex items-center justify-between mt-1.5 px-1">
-                          <span className="text-white/40 text-xs">Available: {balance} ZAPs</span>
-                          <motion.button onClick={() => setZapAmount(balance.toString())} className="text-[#4CC9F0] text-xs font-medium hover:text-[#58D1F4] transition-colors" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                          <span className="text-gray-500 text-xs">Available: {balance} ZAPs</span>
+                          <button onClick={() => setZapAmount(balance.toString())} className="text-[#6B4EFF] text-xs font-medium hover:text-[#4BC0FF] transition-colors">
                             Max
-                          </motion.button>
+                          </button>
                         </div>
-                      </motion.div>
+                      </div>
                     )}
 
                     {selectedUser && zapAmount && (
-                      <motion.button
+                      <button
                         onClick={handleSendZaps}
                         disabled={isSending}
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.15 }}
                         className={cn(
-                          "w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm text-white transition-all duration-300 relative overflow-hidden",
+                          "w-full bg-gradient-to-r from-[#6B4EFF] to-[#4BC0FF] text-white text-sm py-2 rounded-lg font-medium hover:opacity-90 transition",
                           isSending && "opacity-70 cursor-not-allowed"
                         )}
-                        style={{
-                          background: "linear-gradient(135deg, #7F5AF0 0%, #4CC9F0 100%)",
-                          boxShadow: "0 4px 12px rgba(127, 90, 240, 0.3)",
-                        }}
-                        whileHover={!isSending ? { boxShadow: "0 6px 20px rgba(127, 90, 240, 0.5)", scale: 1.02 } : {}}
-                        whileTap={!isSending ? { scale: 0.98 } : {}}
                       >
                         {isSending && (
                           <motion.div
@@ -488,9 +382,8 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
                             style={{ background: "radial-gradient(circle at center, rgba(255, 255, 255, 0.3) 0%, transparent 70%)" }}
                           />
                         )}
-                        <Send className="w-4 h-4 relative z-10" strokeWidth={2.5} />
-                        <span className="relative z-10">{isSending ? "Sending..." : "Send ZAPs"}</span>
-                      </motion.button>
+                        {isSending ? "Sending..." : "Send ZAPs"}
+                      </button>
                     )}
                   </motion.div>
                 )}

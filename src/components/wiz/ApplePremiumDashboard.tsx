@@ -488,27 +488,27 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
             </motion.div>
           </div>
 
-          {/* Right: Profile Elements - v7 Perfect Integration */}
-          <div className="flex items-center justify-end gap-[16px] pr-[28px] relative z-[9999]" style={{ flexShrink: 0, marginLeft: 'auto' }}>
+          {/* Right: Profile Elements - v8 Spec-Perfect Integration */}
+          <div className="flex items-center gap-x-4 relative z-[9999]" style={{ flexShrink: 0, marginLeft: 'auto', paddingRight: '28px' }}>
 
-            {/* Notification Bell - Polished */}
+            {/* Notification Bell */}
             <NotificationsDropdown
               onMarkAsRead={(id) => console.log('Mark notification as read:', id)}
               onMarkAllAsRead={() => console.log('Mark all notifications as read')}
               onViewAll={() => console.log('View all notifications')}
             />
 
-            {/* Chat Icon - Perfect Consistency */}
+            {/* Chat Icon */}
             <Button
               variant="ghost"
               size="icon"
-              className="hover:opacity-80 transition-all duration-200 h-auto w-auto p-0"
+              className="hover:opacity-80 transition h-auto w-auto p-0"
               onClick={() => console.log('Messages clicked')}
             >
-              <MessageCircle className="w-5 h-5 text-gray-800" strokeWidth={2} />
+              <MessageCircle size={22} className="text-[#444]" strokeWidth={2} />
             </Button>
 
-            {/* ZAP Wallet - Gradient-Only Treatment */}
+            {/* ZAP Wallet - Premium Gradient */}
             <ZapWalletIcon
               balance={userZAPS}
               earned={Math.floor(userZAPS * 0.6)}

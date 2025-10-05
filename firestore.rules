@@ -162,10 +162,29 @@ service cloud.firestore {
       allow create: if request.auth != null &&
                    request.auth.uid == request.resource.data.creatorId &&
                    validateCommunityData(request.resource.data);
-      allow update: if request.auth != null &&
+      allow update: if request.auth != null && (
+                   // Creator can update anything
                    request.auth.uid == resource.data.creatorId &&
-                   validateCommunityData(request.resource.data);
+                   validateCommunityData(request.resource.data)
+                   ) ||
+                   // Members can update memberCount and members array (for joining)
+                   (request.auth != null &&
+                   validateCommunityMemberUpdate(request.resource.data, resource.data));
       allow delete: if request.auth != null && request.auth.uid == resource.data.creatorId;
+    }
+
+    // Transactions collection - for ZAP transfers and purchases
+    match /transactions/{transactionId} {
+      allow read: if request.auth != null && (
+                  resource.data.userId == request.auth.uid ||
+                  resource.data.senderId == request.auth.uid ||
+                  resource.data.recipientId == request.auth.uid
+                );
+      allow create: if request.auth != null && (
+                    request.resource.data.userId == request.auth.uid ||
+                    request.resource.data.senderId == request.auth.uid
+                   );
+      allow update, delete: if false; // Transactions are immutable
     }
   }
 }
@@ -230,4 +249,18 @@ function validateCommunityData(communityData) {
          // Validate numeric fields
          ('zapsRequired' in communityData ? communityData.zapsRequired is number && communityData.zapsRequired >= 0 : true) &&
          ('usdCoPay' in communityData ? communityData.usdCoPay is number && communityData.usdCoPay >= 0 : true);
+}
+
+// Validation function for community member updates (joining communities)
+function validateCommunityMemberUpdate(newData, existingData) {
+  // Only allow updates to memberCount and members array
+  // All other fields must remain unchanged
+  return newData.title == existingData.title &&
+         newData.category == existingData.category &&
+         newData.creatorId == existingData.creatorId &&
+         newData.shortDescription == existingData.shortDescription &&
+         newData.privacy == existingData.privacy &&
+         newData.status == existingData.status &&
+         // Member count can only increase by 1
+         ('memberCount' in newData ? newData.memberCount == existingData.memberCount + 1 : true);
 }
