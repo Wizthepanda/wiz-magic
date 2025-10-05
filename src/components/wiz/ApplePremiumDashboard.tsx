@@ -489,7 +489,7 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
           </div>
 
           {/* Right: Profile Elements - V5 World-Class Header */}
-          <div className="flex items-center gap-x-5 relative z-[9999]" style={{ flexShrink: 0, marginLeft: 'auto', paddingRight: '28px' }}>
+          <div className="flex items-center gap-x-5 relative" style={{ flexShrink: 0, marginLeft: 'auto', paddingRight: '28px' }}>
 
             {/* Notification Bell */}
             <NotificationsDropdown
