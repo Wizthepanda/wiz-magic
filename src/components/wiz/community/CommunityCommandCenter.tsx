@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useXp } from "@/context/XpContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { ZapWalletV7 } from "./ZapWalletV7";
+import { ZapWalletV8 } from "./ZapWalletV8";
 import { UnifiedFilterBar } from "./UnifiedFilterBar";
 import { EnhancedCommunityCard } from "./EnhancedCommunityCard";
 import { CinematicModal } from "./CinematicModal";
@@ -384,14 +384,11 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
               </div>
             </div>
 
-            {/* Right - ZAP Wallet V7 */}
-            <ZapWalletV7
+            {/* Right - ZAP Wallet V8 */}
+            <ZapWalletV8
               balance={zapData?.totalZAPs || 0}
               earned={Math.floor((zapData?.totalZAPs || 0) * 0.6)}
               spent={Math.floor((zapData?.totalZAPs || 0) * 0.4)}
-              onEarnMore={() => {
-                onSectionChange?.('earn');
-              }}
               onSendZaps={handleSendZaps}
             />
           </div>
