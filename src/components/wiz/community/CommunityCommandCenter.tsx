@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useXp } from "@/context/XpContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { ZapWallet } from "./ZapWallet";
+import { ZapWalletV3 } from "./ZapWalletV3";
 import { UnifiedFilterBar } from "./UnifiedFilterBar";
 import { EnhancedCommunityCard } from "./EnhancedCommunityCard";
 import { CinematicModal } from "./CinematicModal";
@@ -320,8 +320,8 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
               </div>
             </div>
 
-            {/* Right - Minimalist ZAP Wallet */}
-            <ZapWallet
+            {/* Right - ZAP Wallet V3 */}
+            <ZapWalletV3
               balance={zapData?.totalZAPs || 0}
               onEarnMore={() => {
                 onSectionChange?.('earn');
