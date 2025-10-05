@@ -501,10 +501,10 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
             {/* Chat Icon */}
             <button
               aria-label="Messages"
-              className="relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 transition-all duration-200 flex items-center justify-center group"
+              className="relative hover:opacity-80 transition-all duration-150"
               onClick={() => console.log('Messages clicked')}
             >
-              <MessageCircle size={20} strokeWidth={2} className="text-gray-700 group-hover:text-gray-900 transition-colors" />
+              <MessageCircle size={22} strokeWidth={1.8} className="text-[#464646]" />
             </button>
 
             {/* ZAP Wallet - Enhanced Visibility */}
