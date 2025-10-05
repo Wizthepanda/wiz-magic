@@ -156,19 +156,19 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
     }
 
     await runTransaction(db, async (transaction) => {
-      const senderDocRef = doc(db, 'users', user.uid);
-      const recipientDocRef = doc(db, 'users', recipientUid);
+      const senderZAPRef = doc(db, 'userZAPs', user.uid);
+      const recipientZAPRef = doc(db, 'userZAPs', recipientUid);
 
-      // Get sender and recipient data
-      const senderDoc = await transaction.get(senderDocRef);
-      const recipientDoc = await transaction.get(recipientDocRef);
+      // Get sender and recipient ZAP data
+      const senderDoc = await transaction.get(senderZAPRef);
+      const recipientDoc = await transaction.get(recipientZAPRef);
 
       if (!senderDoc.exists()) {
-        throw new Error("Sender not found");
+        throw new Error("Sender ZAP account not found");
       }
 
       if (!recipientDoc.exists()) {
-        throw new Error("Recipient not found");
+        throw new Error("Recipient ZAP account not found");
       }
 
       const senderData = senderDoc.data();
@@ -183,15 +183,15 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
       }
 
       // Update sender balance
-      transaction.update(senderDocRef, {
+      transaction.update(senderZAPRef, {
         totalZAPs: senderBalance - amount,
-        lastUpdated: serverTimestamp()
+        lastZAPUpdate: serverTimestamp()
       });
 
       // Update recipient balance
-      transaction.update(recipientDocRef, {
+      transaction.update(recipientZAPRef, {
         totalZAPs: recipientBalance + amount,
-        lastUpdated: serverTimestamp()
+        lastZAPUpdate: serverTimestamp()
       });
 
       // Log transaction
@@ -240,28 +240,30 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
 
       // Run transaction to deduct ZAPs and add user to community
       await runTransaction(db, async (transaction) => {
-        const userDocRef = doc(db, 'users', user.uid);
+        const userZAPRef = doc(db, 'userZAPs', user.uid);
         const communityDocRef = doc(db, 'communities', community.id);
 
-        // Get current user data
-        const userDoc = await transaction.get(userDocRef);
-        if (!userDoc.exists()) {
-          throw new Error("User document not found");
+        // Get current user ZAP data from userZAPs collection
+        const zapDoc = await transaction.get(userZAPRef);
+        if (!zapDoc.exists()) {
+          throw new Error("ZAP account not found. Please earn some ZAPs first.");
         }
 
-        const userData = userDoc.data();
-        const currentZAPs = userData.totalZAPs || 0;
+        const zapData = zapDoc.data();
+        const currentZAPs = zapData.totalZAPs || 0;
+
+        console.log(`💰 Transaction Check - User ZAPs: ${currentZAPs}, Required: ${zapCost}`);
 
         // Double-check balance in transaction
         if (zapCost > 0 && currentZAPs < zapCost) {
-          throw new Error("Insufficient ZAPs");
+          throw new Error(`Insufficient ZAPs: You have ${currentZAPs} ZAPs but need ${zapCost} ZAPs`);
         }
 
         // Deduct ZAPs from user balance
         if (zapCost > 0) {
-          transaction.update(userDocRef, {
+          transaction.update(userZAPRef, {
             totalZAPs: currentZAPs - zapCost,
-            lastUpdated: serverTimestamp()
+            lastZAPUpdate: serverTimestamp()
           });
         }
 
