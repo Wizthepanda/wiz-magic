@@ -204,20 +204,23 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
 
   return (
     <div className={cn("relative", className)}>
-      {/* Compact Wallet Icon Button */}
+      {/* Gradient-Only Wallet Icon Button */}
       <motion.button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className="relative flex items-center justify-center w-10 h-10 rounded-full bg-white/30 backdrop-blur-xl border border-white/20 hover:scale-105 transition-all duration-200 shadow-sm"
+        className="relative p-2 hover:scale-105 transition-all duration-200"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
-        <Wallet className="w-5 h-5" style={{
-          background: "linear-gradient(135deg, #7F5AF0 0%, #4CC9F0 100%)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          backgroundClip: "text",
-        }} strokeWidth={2} />
+        <Wallet
+          className="w-5 h-5 text-transparent bg-gradient-to-tr from-[#7F5AF0] via-[#6C63FF] to-[#4CC9F0]"
+          style={{
+            backgroundClip: "text",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
+          strokeWidth={2}
+        />
       </motion.button>
 
       {/* Dropdown Panel */}

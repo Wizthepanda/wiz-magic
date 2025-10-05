@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, Flame, Trophy, Target, Gift, Zap, Crown, Users, ChevronRight, X, ShoppingBag, TrendingUp, Sparkles, Bell, MessageSquare, Wallet } from 'lucide-react';
+import { Search, Flame, Trophy, Target, Gift, Zap, Crown, Users, ChevronRight, X, ShoppingBag, TrendingUp, Sparkles, Bell, MessageCircle, Wallet } from 'lucide-react';
 import { collection, onSnapshot, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -488,27 +488,27 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
             </motion.div>
           </div>
 
-          {/* Right: Profile Elements - Within Screen Bounds */}
+          {/* Right: Profile Elements - v6 Polished Integration */}
           <div className="flex items-center justify-end gap-[16px] pr-[28px]" style={{ flexShrink: 0, marginLeft: 'auto' }}>
 
-            {/* Notifications Bell - Untouched */}
+            {/* Notification Bell - Polished */}
             <NotificationsDropdown
               onMarkAsRead={(id) => console.log('Mark notification as read:', id)}
               onMarkAllAsRead={() => console.log('Mark all notifications as read')}
               onViewAll={() => console.log('View all notifications')}
             />
 
-            {/* Chat Icon - Replaces Leaderboard */}
+            {/* Chat Icon - Refined Minimalist (MessageCircle) */}
             <Button
               variant="ghost"
               size="icon"
               className="hover:opacity-70 transition-all duration-200 h-auto w-auto p-0"
               onClick={() => console.log('Messages clicked')}
             >
-              <MessageSquare className="w-5 h-5 text-gray-800" strokeWidth={2} />
+              <MessageCircle className="w-5 h-5 text-gray-800" strokeWidth={2} />
             </Button>
 
-            {/* ZAP Wallet - Replaces ZAP Rewards Shop */}
+            {/* ZAP Wallet - Gradient-Only Treatment */}
             <ZapWalletIcon
               balance={userZAPS}
               earned={Math.floor(userZAPS * 0.6)}
