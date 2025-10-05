@@ -253,14 +253,13 @@ function validateCommunityData(communityData) {
 
 // Validation function for community member updates (joining communities)
 function validateCommunityMemberUpdate(newData, existingData) {
-  // Only allow updates to memberCount and members array
-  // All other fields must remain unchanged
-  return newData.title == existingData.title &&
-         newData.category == existingData.category &&
-         newData.creatorId == existingData.creatorId &&
-         newData.shortDescription == existingData.shortDescription &&
-         newData.privacy == existingData.privacy &&
-         newData.status == existingData.status &&
-         // Member count can only increase by 1
+  // Check if this is a member join update (only memberCount, members, lastUpdated changed)
+  // We use keys() to check which fields are being updated
+  let updatedFields = newData.keys();
+  let isMemberJoin = updatedFields.hasOnly(['memberCount', 'members', 'lastUpdated']) ||
+                     updatedFields.hasOnly(['memberCount', 'members']);
+
+  // If it's a member join, validate memberCount increases by 1
+  return isMemberJoin &&
          ('memberCount' in newData ? newData.memberCount == existingData.memberCount + 1 : true);
 }
