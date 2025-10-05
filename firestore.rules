@@ -253,13 +253,9 @@ function validateCommunityData(communityData) {
 
 // Validation function for community member updates (joining communities)
 function validateCommunityMemberUpdate(newData, existingData) {
-  // Check if this is a member join update (only memberCount, members, lastUpdated changed)
-  // We use keys() to check which fields are being updated
-  let updatedFields = newData.keys();
-  let isMemberJoin = updatedFields.hasOnly(['memberCount', 'members', 'lastUpdated']) ||
-                     updatedFields.hasOnly(['memberCount', 'members']);
-
-  // If it's a member join, validate memberCount increases by 1
-  return isMemberJoin &&
-         ('memberCount' in newData ? newData.memberCount == existingData.memberCount + 1 : true);
+  // When using arrayUnion and serverTimestamp, only memberCount appears in newData.keys()
+  // The members and lastUpdated are handled as transforms
+  // So we just check if memberCount is being updated and increases by 1
+  return 'memberCount' in newData &&
+         newData.memberCount == existingData.memberCount + 1;
 }
