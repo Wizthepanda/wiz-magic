@@ -187,16 +187,69 @@ export const useCommunity = (id: string) => {
   return useQuery({
     queryKey: ['community', id],
     queryFn: async () => {
-      const communityRef = doc(db, 'communities', id);
-      const communityDoc = await getDoc(communityRef);
+      const ref = doc(db, 'communities', id);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) throw new Error('Community not found');
+      return { id: snap.id, ...snap.data() };
+    },
+    enabled: !!id,
+  });
+};
 
-      if (!communityDoc.exists()) {
-        throw new Error('Community not found');
+// Join community hook
+export const useJoinCommunity = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (communityId: string) => {
+      if (!user) throw new Error('User not authenticated');
+
+      // Add user to community members subcollection
+      await setDoc(doc(db, 'communities', communityId, 'members', user.uid), {
+        joinedAt: serverTimestamp(),
+        role: 'member',
+        displayName: user.displayName || 'Member',
+        avatarUrl: user.photoURL || '',
+        level: 1,
+        progress: 0
+      });
+
+      // Update members array in main community document
+      const communityRef = doc(db, 'communities', communityId);
+      const communitySnap = await getDoc(communityRef);
+      
+      if (communitySnap.exists()) {
+        const currentMembers = communitySnap.data().members || [];
+        if (!currentMembers.includes(user.uid)) {
+          await updateDoc(communityRef, {
+            members: [...currentMembers, user.uid],
+            membersCount: (communitySnap.data().membersCount || 0) + 1
+          });
+        }
       }
 
-      return { id: communityDoc.id, ...communityDoc.data() } as CommunityData;
+      return { communityId, userId: user.uid };
     },
-    enabled: !!id
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['community', data.communityId] });
+      queryClient.invalidateQueries({ queryKey: ['joinedCommunities', user?.uid] });
+      queryClient.invalidateQueries({ queryKey: ['communityMembers', data.communityId] });
+      
+      toast({
+        title: "Welcome! 🎉",
+        description: "You've successfully joined the community!",
+      });
+    },
+    onError: (error) => {
+      console.error('Error joining community:', error);
+      toast({
+        title: "Join failed",
+        description: "There was an error joining the community. Please try again.",
+        variant: "destructive"
+      });
+    }
   });
 };
 

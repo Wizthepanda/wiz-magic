@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Users, GraduationCap, Trophy, Package, Gift, Zap, DollarSign, Sparkles } from "lucide-react";
+import { Users, GraduationCap, Trophy, Package, Gift, Zap, DollarSign, Sparkles, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface UnifiedFilterBarProps {
@@ -24,7 +24,8 @@ const subFilters = [
   { id: 'free-zaps', label: 'Free ZAPs', gradient: 'from-blue-500 to-cyan-500', glow: true },
   { id: 'paid', label: 'Paid', gradient: 'from-yellow-500 to-amber-600' },
   { id: 'paid-zaps', label: 'Paid ZAPs', gradient: 'from-purple-500 to-violet-600', glow: true },
-  { id: 'zaps-usd', label: 'ZAPs + USD', gradient: 'from-purple-500 via-yellow-500 to-cyan-500', glow: true }
+  { id: 'zaps-usd', label: 'ZAPs + USD', gradient: 'from-purple-500 via-yellow-500 to-cyan-500', glow: true },
+  { id: 'my-communities', label: '💜 My Communities', gradient: 'from-[#8B5CF6] to-[#3B82F6]', glow: true, personal: true }
 ];
 
 export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
@@ -68,6 +69,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
       <div className="flex flex-wrap gap-2">
         {subFilters.map((filter) => {
           const isActive = subFilter === filter.id;
+          const isPersonal = filter.id === 'my-communities';
 
           return (
             <motion.button
@@ -75,7 +77,9 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
               onClick={() => onSubFilterChange(filter.id)}
               className={cn(
                 "whitespace-nowrap px-4 py-2 rounded-full border text-xs font-semibold transition-all duration-300",
-                isActive
+                isActive && isPersonal
+                  ? "bg-gradient-to-r from-[#8B5CF6] to-[#3B82F6] text-white border-transparent shadow-[0_0_16px_rgba(139,92,246,0.4)]"
+                  : isActive
                   ? "bg-gradient-to-br from-[#ede9fe] to-[#e0e7ff] border-violet-200 text-violet-600"
                   : "bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] border-gray-200 text-gray-500 hover:from-[#ede9fe] hover:to-[#e0e7ff] hover:text-violet-600"
               )}
@@ -95,6 +99,7 @@ export const UnifiedFilterBar: React.FC<UnifiedFilterBarProps> = ({
                     <DollarSign className="w-3 h-3" />
                   </>
                 )}
+                {filter.id === 'my-communities' && <Heart className="w-3.5 h-3.5 fill-current" />}
                 {filter.label}
               </span>
             </motion.button>

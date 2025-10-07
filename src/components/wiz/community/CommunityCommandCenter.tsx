@@ -13,11 +13,15 @@ import { cn } from "@/lib/utils";
 import { ZapWalletV8 } from "./ZapWalletV8";
 import { UnifiedFilterBar } from "./UnifiedFilterBar";
 import { EnhancedCommunityCard } from "./EnhancedCommunityCard";
+import { CommunityAccessCard } from "./CommunityAccessCard";
 import { CinematicModal } from "./CinematicModal";
+import { CommunityAccessModal } from "./CommunityAccessModal";
 import { CreatorDashboard } from "./CreatorDashboard";
 import { useToast } from "@/hooks/use-toast";
 import confetti from 'canvas-confetti';
 import { useZAPSystem } from "@/hooks/useZAPSystem";
+import CommunityJoinSuccessOverlay from "./CommunityJoinSuccessOverlay";
+import { useJoinedCommunities } from "@/hooks/useJoinedCommunities";
 
 interface CommunityCommandCenterProps {
   onSectionChange?: (section: string) => void;
@@ -31,12 +35,20 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'discover' | 'creations'>('discover');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
+  const [successOverlayData, setSuccessOverlayData] = useState<{
+    communityName: string;
+    joinType: "Free" | "Free ZAPs" | "Paid" | "Paid ZAPs" | "ZAPs + USD";
+    zapReward?: number;
+    communityLogoUrl?: string;
+  } | null>(null);
 
   const { user } = useAuth();
   const { xpData } = useXp();
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const { zapData, zapProgress } = useZAPSystem();
+  const { data: joinedCommunities = [] } = useJoinedCommunities();
 
   // Fetch all communities and ZAP rewards
   const { data: allItems = [], isLoading } = useQuery({
@@ -134,6 +146,11 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
       if (subFilter === 'paid') matchesSubFilter = item.rewardType === 'paid';
       if (subFilter === 'paid-zaps') matchesSubFilter = item.rewardType === 'paid-zaps';
       if (subFilter === 'zaps-usd') matchesSubFilter = item.rewardType === 'zaps-usd';
+      if (subFilter === 'my-communities') {
+        // Show only communities the user has joined
+        const joinedIds = joinedCommunities.map(c => c.id);
+        matchesSubFilter = joinedIds.includes(item.id);
+      }
     }
 
     return matchesSearch && matchesMainFilter && matchesSubFilter;
@@ -263,11 +280,28 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
           origin: { y: 0.6 }
         });
 
-        // Close modal after a brief delay to show success state
+        // Show success overlay
+        setSuccessOverlayData({
+          communityName: community.title,
+          joinType: community.usdCoPay > 0 && community.zapRequired > 0
+            ? "ZAPs + USD"
+            : community.zapRequired > 0 && community.usdCoPay === 0
+            ? "Paid ZAPs"
+            : community.usdCoPay > 0 && community.zapRequired === 0
+            ? "Paid"
+            : community.offerZaps && community.zapReward > 0
+            ? "Free ZAPs"
+            : "Free",
+          zapReward: community.zapReward || 50,
+          communityLogoUrl: community.coverMedia?.[0]?.url || undefined,
+        });
+        setShowSuccessOverlay(true);
+
+        // Close modal after a brief delay
         setTimeout(() => {
           setIsModalOpen(false);
           setSelectedCommunity(null);
-        }, 1500);
+        }, 800);
       }
 
     } catch (error: any) {
@@ -280,6 +314,19 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  // Overlay CTA handlers
+  const handleEnterCommunity = () => {
+    // Example: Navigate to dashboard/feed for the joined community
+    if (successOverlayData) {
+      // You can implement navigation logic here, e.g. onSectionChange('dashboard', ...)
+      setShowSuccessOverlay(false);
+    }
+  };
+  const handleViewCommunities = () => {
+    setShowSuccessOverlay(false);
+    // Optionally scroll to grid or reset filters
   };
 
   return (
@@ -382,32 +429,50 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
             </div>
           ) : displayItems.length > 0 ? (
             <motion.div
+              key={subFilter}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.25 }}
             >
-              {displayItems.map((item, idx) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 100,
-                    damping: 15,
-                    delay: idx * 0.05
-                  }}
-                >
-                  <EnhancedCommunityCard
-                    item={item}
-                    onView={() => {
-                      setSelectedCommunity(item);
-                      setIsModalOpen(true);
+              {displayItems.map((item, idx) => {
+                const joinedIds = joinedCommunities.map(c => c.id);
+                const isJoined = joinedIds.includes(item.id);
+
+                return (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 100,
+                      damping: 15,
+                      delay: idx * 0.05
                     }}
-                    isCreatorView={viewMode === 'creations'}
-                  />
-                </motion.div>
-              ))}
+                  >
+                    {isJoined ? (
+                      <CommunityAccessCard
+                        community={item}
+                        onEnter={() => {
+                          setSelectedCommunity(item);
+                          setIsModalOpen(true);
+                        }}
+                      />
+                    ) : (
+                      <EnhancedCommunityCard
+                        item={item}
+                        onView={() => {
+                          setSelectedCommunity(item);
+                          setIsModalOpen(true);
+                        }}
+                        isCreatorView={viewMode === 'creations'}
+                      />
+                    )}
+                  </motion.div>
+                );
+              })}
             </motion.div>
           ) : (
             <div className="text-center py-20">
@@ -447,16 +512,37 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
         </section>
       </div>
 
-      {/* Cinematic Modal */}
+      {/* Modal - Show Access Modal for joined communities, Cinematic for others */}
       {selectedCommunity && (
-        <CinematicModal
-          open={isModalOpen}
-          onOpenChange={setIsModalOpen}
-          community={selectedCommunity}
-          onJoin={handleJoinCommunity}
-          isProcessing={isProcessing}
-        />
+        <>
+          {joinedCommunities.map(c => c.id).includes(selectedCommunity.id) ? (
+            <CommunityAccessModal
+              open={isModalOpen}
+              onOpenChange={setIsModalOpen}
+              community={selectedCommunity}
+            />
+          ) : (
+            <CinematicModal
+              open={isModalOpen}
+              onOpenChange={setIsModalOpen}
+              community={selectedCommunity}
+              onJoin={handleJoinCommunity}
+              isProcessing={isProcessing}
+            />
+          )}
+        </>
       )}
+      {/* Community Join Success Overlay */}
+      <CommunityJoinSuccessOverlay
+        isOpen={showSuccessOverlay}
+        onClose={() => setShowSuccessOverlay(false)}
+        communityName={successOverlayData?.communityName || ''}
+        joinType={successOverlayData?.joinType || 'Free'}
+        zapReward={successOverlayData?.zapReward}
+        communityLogoUrl={successOverlayData?.communityLogoUrl}
+        onEnterCommunity={handleEnterCommunity}
+        onViewCommunities={handleViewCommunities}
+      />
     </div>
   );
 };

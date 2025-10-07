@@ -16,6 +16,8 @@ import Claim from "./pages/Claim";
 import ZapRewardsHub from "./pages/ZapRewardsHub";
 import NotFound from "./pages/NotFound";
 import AntiCheatTest from "./pages/AntiCheatTest";
+import CommunityPage from "./pages/CommunityPage";
+import CommunityDashboardPage from "./pages/CommunityDashboardPage";
 import { AntiCheatDashboard } from "./components/admin/AntiCheatDashboard";
 import './lib/firebase'; // Initialize Firebase
 import { useEffect } from 'react';
@@ -57,6 +59,8 @@ const App = () => {
                 <Route path="/c/:handle" element={<CreatorProfile />} />
                 <Route path="/admin/anti-cheat" element={<AntiCheatDashboard />} />
                 <Route path="/test/anti-cheat" element={<AntiCheatTest />} />
+                <Route path="/community" element={<CommunityPage />} />
+                <Route path="/community/:id" element={<CommunityDashboardPage />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
