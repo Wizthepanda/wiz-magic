@@ -22,6 +22,7 @@ import confetti from 'canvas-confetti';
 import { useZAPSystem } from "@/hooks/useZAPSystem";
 import CommunityJoinSuccessOverlay from "./CommunityJoinSuccessOverlay";
 import { useJoinedCommunities } from "@/hooks/useJoinedCommunities";
+import { useNavigate } from "react-router-dom";
 
 interface CommunityCommandCenterProps {
   onSectionChange?: (section: string) => void;
@@ -49,6 +50,7 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
   const { toast } = useToast();
   const { zapData, zapProgress } = useZAPSystem();
   const { data: joinedCommunities = [] } = useJoinedCommunities();
+  const navigate = useNavigate();
 
   // Fetch all communities and ZAP rewards
   const { data: allItems = [], isLoading } = useQuery({
@@ -318,15 +320,19 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
 
   // Overlay CTA handlers
   const handleEnterCommunity = () => {
-    // Example: Navigate to dashboard/feed for the joined community
+    // Navigate to the community dashboard for the joined community
     if (successOverlayData) {
-      // You can implement navigation logic here, e.g. onSectionChange('dashboard', ...)
       setShowSuccessOverlay(false);
+      // Navigate to community dashboard (will open in full page view)
+      navigate(`/community/${selectedCommunity?.slug || selectedCommunity?.id}`);
     }
   };
   const handleViewCommunities = () => {
     setShowSuccessOverlay(false);
-    // Optionally scroll to grid or reset filters
+    // Navigate back to community feed with sidebar (dashboard view)
+    navigate('/?section=community');
+    // Optionally set the filter to show only joined communities
+    setSubFilter('my-communities');
   };
 
   return (
@@ -455,10 +461,7 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
                     {isJoined ? (
                       <CommunityAccessCard
                         community={item}
-                        onEnter={() => {
-                          setSelectedCommunity(item);
-                          setIsModalOpen(true);
-                        }}
+                        // Direct navigation - no modal needed for joined communities
                       />
                     ) : (
                       <EnhancedCommunityCard

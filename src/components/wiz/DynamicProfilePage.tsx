@@ -1,5 +1,5 @@
 import { useUserType } from '@/hooks/useUserType';
-import { PrivateViewerProfile } from './PrivateViewerProfile';
+import { PremiumViewerProfile } from './PremiumViewerProfile';
 import { PrivateCreatorDashboard } from './PrivateCreatorDashboard';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, User } from 'lucide-react';
@@ -77,11 +77,11 @@ export const DynamicProfilePage: React.FC<DynamicProfilePageProps> = ({ classNam
       </div>
     );
   } else {
-    // Load Viewer Profile for users who haven't completed creator requirements
+    // Load Premium Viewer Profile for users who haven't completed creator requirements
     console.log(`👤 Viewer Profile: ${user.displayName} (no YouTube connection or content creation)`);
     return (
       <div className={className}>
-        <PrivateViewerProfile />
+        <PremiumViewerProfile />
       </div>
     );
   }

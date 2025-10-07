@@ -65,7 +65,7 @@ export const CommunityDashboard = ({ communityId }: Props) => {
             You must join this community to view its content and dashboard.
           </p>
           <button
-            onClick={() => navigate('/community')}
+            onClick={() => navigate('/?section=community')}
             className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#8B5CF6] to-[#3B82F6] text-white font-semibold hover:shadow-md transition-all"
           >
             Browse Communities
@@ -84,14 +84,18 @@ export const CommunityDashboard = ({ communityId }: Props) => {
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#ffffff,#f7f9fc)]">
-      <div className="container mx-auto px-4 md:px-6 py-8 max-w-7xl">
+    <div className="min-h-screen bg-gradient-to-br from-[#F9FAFB] via-white to-[#EEF2FF] relative overflow-hidden">
+      {/* Subtle radial gradient background effects */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#8B5CF6]/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#3B82F6]/5 rounded-full blur-3xl" />
+      
+      <div className="relative container mx-auto px-4 md:px-6 py-8 max-w-7xl">
         <HeroBanner 
           community={community} 
           isJoined={true}
         />
         
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-[1fr,360px] gap-8">
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-[1fr,380px] gap-8">
           <main className="space-y-6">
             <CommunityTabs community={community} />
           </main>

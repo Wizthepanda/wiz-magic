@@ -192,12 +192,15 @@ service cloud.firestore {
 
 // Validation function to ensure XP updates are reasonable
 function validateUserUpdate(newData, existingData) {
-  // Allow YouTube profile updates without XP validation
+  // Allow profile updates without XP validation
   return ('youtubeProfile' in newData) || 
          ('youtubeConnected' in newData) || 
          ('youtubeSubscriptions' in newData) ||
          ('displayName' in newData) || 
          ('photoURL' in newData) ||
+         ('username' in newData) ||
+         ('bio' in newData) ||
+         ('updatedAt' in newData) ||
          // For XP-related updates, validate reasonably
          (('currentXP' in newData || 'totalXP' in newData || 'dailyXpEarned' in newData) ? 
            validateXPUpdate(newData, existingData) : true);
