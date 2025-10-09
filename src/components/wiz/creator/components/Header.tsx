@@ -51,35 +51,82 @@ export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
 
   const handleViewPublicProfile = () => {
     // Use YouTube channel ID if available, otherwise fallback to user ID
-    const channelId = creatorProfile?.youtubeData?.channelId || 
-                     creatorProfile?.youtubeData?.handle || 
+    const channelId = creatorProfile?.youtubeData?.channelId ||
+                     creatorProfile?.youtubeData?.handle ||
                      user.uid;
     console.log('🔗 Opening public profile for:', { channelId, creatorProfile: creatorProfile?.youtubeData });
     window.open(`/c/${channelId}`, '_blank');
   };
 
+  // Mock data for followers/following (replace with real data)
+  const followers = creatorProfile?.followers || 0;
+  const following = creatorProfile?.following || 0;
+  const lastActive = "2h ago"; // Replace with real last active data
+
   return (
-    <div className="relative">
+    <div className="relative overflow-hidden">
+      {/* Animated Motion Gradient Background */}
+      <motion.div
+        className="absolute inset-0 bg-gradient-to-br from-purple-200/30 via-blue-200/20 to-purple-100/30"
+        animate={{
+          background: [
+            'linear-gradient(to bottom right, rgba(216, 180, 254, 0.3), rgba(191, 219, 254, 0.2), rgba(216, 180, 254, 0.3))',
+            'linear-gradient(to bottom right, rgba(191, 219, 254, 0.3), rgba(216, 180, 254, 0.2), rgba(191, 219, 254, 0.3))',
+            'linear-gradient(to bottom right, rgba(216, 180, 254, 0.3), rgba(191, 219, 254, 0.2), rgba(216, 180, 254, 0.3))'
+          ]
+        }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      {/* Subtle Sparkles */}
+      <div className="absolute top-4 right-8 pointer-events-none">
+        {[...Array(6)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-purple-400 rounded-full"
+            style={{
+              left: `${Math.random() * 100}px`,
+              top: `${Math.random() * 60}px`,
+            }}
+            animate={{
+              opacity: [0, 1, 0],
+              scale: [0, 1.5, 0],
+            }}
+            transition={{
+              duration: 2 + Math.random() * 2,
+              repeat: Infinity,
+              delay: Math.random() * 2,
+            }}
+          />
+        ))}
+      </div>
+
       {/* YouTube Banner Background */}
       {creatorProfile?.youtubeData?.bannerUrl && (
-        <div 
-          className="absolute inset-0 bg-cover bg-center opacity-10"
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-5"
           style={{ backgroundImage: `url(${creatorProfile.youtubeData.bannerUrl})` }}
         />
       )}
-      
-      {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-100/90 via-white/80 to-slate-100/90" />
       
       {/* Header Content */}
       <div className="relative container mx-auto px-4 py-6">
         <div className={`flex ${isMobile ? 'flex-col space-y-4' : 'items-center justify-between'}`}>
           {/* Left Side - Avatar + Info */}
           <div className={`flex ${isMobile ? 'flex-col items-center space-y-4' : 'items-center space-x-6'}`}>
-            {/* Avatar with XP Ring */}
-            <div className="relative">
+            {/* Avatar with Enhanced XP Ring & Halo Glow */}
+            <div className="relative group">
               {/* XP Progress Ring */}
               <div className="relative">
+                {/* Halo Glow Effect on Hover */}
+                <motion.div
+                  className={`absolute -inset-6 rounded-full bg-gradient-to-r ${getXPAuraColor(level)} opacity-0 group-hover:opacity-40 blur-2xl transition-opacity duration-500`}
+                  animate={{
+                    scale: [1, 1.1, 1],
+                  }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                />
+
                 <motion.div
                   className={`absolute -inset-3 rounded-full bg-gradient-to-r opacity-75 ${getXPAuraColor(level)}`}
                   animate={{ rotate: 360 }}
@@ -89,6 +136,15 @@ export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
                   className={`absolute -inset-2 rounded-full bg-gradient-to-r opacity-50 ${getXPAuraColor(level)}`}
                   animate={{ rotate: -360 }}
                   transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                />
+
+                {/* Parallax Light Sheen on Hover */}
+                <motion.div
+                  className="absolute -inset-4 rounded-full bg-gradient-to-tr from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 pointer-events-none"
+                  animate={{
+                    rotate: [0, 5, -5, 0],
+                  }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 />
                 
                 {/* Progress Ring */}
@@ -134,40 +190,63 @@ export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
 
             {/* Creator Info */}
             <div className={`${isMobile ? 'text-center' : ''}`}>
-              <h1 className="text-2xl font-bold text-slate-900 mb-1">
-                {creatorProfile?.wizName || user.displayName || 'Creator'}
-              </h1>
-              
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-2xl font-bold text-slate-900">
+                  {creatorProfile?.wizName || user.displayName || 'Creator'}
+                </h1>
+                {/* Creator Tier Badge */}
+                <Badge className="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white border-0 px-2 py-0.5">
+                  Level {level} Creator ✦ Wizard Rank
+                </Badge>
+              </div>
+
               {creatorProfile?.youtubeData?.handle && (
-                <p className="text-slate-600 mb-3 flex items-center justify-center space-x-1">
-                  <Youtube className="w-4 h-4" />
-                  <span>@{creatorProfile.youtubeData.handle}</span>
-                </p>
+                <div className="flex items-center gap-3 mb-2">
+                  <p className="text-slate-600 flex items-center space-x-1">
+                    <Youtube className="w-4 h-4" />
+                    <span>@{creatorProfile.youtubeData.handle}</span>
+                  </p>
+                  {/* Followers & Following */}
+                  <div className="flex items-center gap-3 text-sm">
+                    <span className="text-slate-700 font-semibold">
+                      {followers.toLocaleString()} <span className="text-slate-500 font-normal">Followers</span>
+                    </span>
+                    <span className="text-slate-400">·</span>
+                    <span className="text-slate-700 font-semibold">
+                      {following.toLocaleString()} <span className="text-slate-500 font-normal">Following</span>
+                    </span>
+                  </div>
+                </div>
               )}
 
               {/* Badges */}
               <div className={`flex ${isMobile ? 'justify-center' : ''} items-center gap-2 flex-wrap`}>
-                <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
-                  <Crown className="w-3 h-3 mr-1" />
-                  Level {level}
-                </Badge>
-                
                 {creatorProfile?.streakDays && (
-                  <Badge variant="outline" className="border-orange-300 text-orange-700">
+                  <Badge variant="outline" className="border-orange-300 text-orange-700 bg-orange-50/50">
                     <Flame className="w-3 h-3 mr-1" />
                     {creatorProfile.streakDays} day streak
                   </Badge>
                 )}
-                
+
                 {creatorProfile?.joinedAt && (
-                  <Badge variant="outline" className="border-slate-300 text-slate-600">
+                  <Badge variant="outline" className="border-slate-300 text-slate-600 bg-slate-50/50">
                     <Calendar className="w-3 h-3 mr-1" />
                     Joined {new Date(creatorProfile.joinedAt).getFullYear()}
                   </Badge>
                 )}
-                
+
+                {/* Last Active Status */}
+                <Badge variant="outline" className="border-green-300 text-green-700 bg-green-50/50">
+                  <motion.div
+                    className="w-2 h-2 bg-green-500 rounded-full mr-1"
+                    animate={{ opacity: [1, 0.5, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                  Active {lastActive}
+                </Badge>
+
                 {creatorProfile?.youtubeData?.lastSyncedAt && (
-                  <Badge variant="outline" className="border-blue-300 text-blue-700 text-xs">
+                  <Badge variant="outline" className="border-blue-300 text-blue-700 text-xs bg-blue-50/50">
                     Last sync {new Date(creatorProfile.youtubeData.lastSyncedAt).toLocaleDateString()}
                   </Badge>
                 )}
@@ -175,11 +254,9 @@ export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
             </div>
           </div>
 
-          {/* Right Side - Actions */}
+          {/* Right Side - VisionOS-Style Segmented Control */}
           <div className={`flex ${isMobile ? 'justify-center flex-wrap' : ''} items-center gap-3`}>
-            <SyncButton userId={user.uid} />
-            
-            {/* Tip Button - Prominent placement next to XP ring */}
+            {/* Tip Button - Prominent placement */}
             <TipButton
               creatorId={user.uid}
               creatorName={user.displayName || 'Creator'}
@@ -187,26 +264,38 @@ export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
               size={isMobile ? 'md' : 'md'}
               variant="default"
             />
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowEditDialog(true)}
-              className="border-slate-300 hover:bg-slate-50"
-            >
-              <Edit3 className="w-4 h-4 mr-2" />
-              Edit Profile
-            </Button>
 
-            <Button
-              variant="outline" 
-              size="sm"
-              onClick={handleViewPublicProfile}
-              className="border-blue-300 text-blue-700 hover:bg-blue-50"
-            >
-              <ExternalLink className="w-4 h-4 mr-2" />
-              View Public Profile
-            </Button>
+            {/* Segmented Control Group */}
+            <div className="flex items-center bg-white/80 backdrop-blur-md rounded-2xl p-1.5 shadow-lg border border-slate-200/50 gap-1">
+              {/* Sync YouTube Button */}
+              <SyncButton userId={user.uid} />
+
+              {/* Edit Profile Button */}
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowEditDialog(true)}
+                  className="hover:bg-slate-100/80 rounded-xl transition-all duration-200 px-4 py-2"
+                >
+                  <Edit3 className="w-4 h-4 mr-2" />
+                  Edit Profile
+                </Button>
+              </motion.div>
+
+              {/* View Public Profile Button */}
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleViewPublicProfile}
+                  className="hover:bg-blue-50/80 text-blue-700 rounded-xl transition-all duration-200 px-4 py-2"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  View Public Profile
+                </Button>
+              </motion.div>
+            </div>
           </div>
         </div>
       </div>

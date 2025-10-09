@@ -55,51 +55,51 @@ export const CreatorPrivateProfile: React.FC<CreatorPrivateProfileProps> = ({ cl
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          {/* Tab Navigation */}
+          {/* Floating Segmented Control Tab Navigation */}
           <TabsList className={cn(
-            "grid w-full mb-6 bg-white/60 backdrop-blur-sm border border-slate-200/50 rounded-xl p-1",
+            "grid w-full mb-6 bg-white/80 backdrop-blur-xl border border-slate-200/50 rounded-2xl p-2 shadow-xl",
             isMobile ? "grid-cols-3" : "grid-cols-6"
           )}>
-            <TabsTrigger 
-              value="overview" 
-              className="data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            <TabsTrigger
+              value="overview"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all duration-300"
             >
               <BarChart3 className="w-4 h-4 mr-2" />
               {!isMobile && "Overview"}
             </TabsTrigger>
-            <TabsTrigger 
-              value="content" 
-              className="data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            <TabsTrigger
+              value="content"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all duration-300"
             >
               <Video className="w-4 h-4 mr-2" />
               {!isMobile && "Content"}
             </TabsTrigger>
-            <TabsTrigger 
-              value="courses" 
-              className="data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            <TabsTrigger
+              value="courses"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all duration-300"
             >
               <GraduationCap className="w-4 h-4 mr-2" />
               {!isMobile && "Courses"}
             </TabsTrigger>
             {!isMobile && (
               <>
-                <TabsTrigger 
-                  value="earnings" 
-                  className="data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                <TabsTrigger
+                  value="earnings"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all duration-300"
                 >
                   <DollarSign className="w-4 h-4 mr-2" />
                   Earnings
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="analytics" 
-                  className="data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                <TabsTrigger
+                  value="analytics"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all duration-300"
                 >
                   <TrendingUp className="w-4 h-4 mr-2" />
                   Analytics
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="settings" 
-                  className="data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                <TabsTrigger
+                  value="settings"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-slate-600 data-[state=active]:to-slate-700 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all duration-300"
                 >
                   <SettingsIcon className="w-4 h-4 mr-2" />
                   Settings
@@ -110,24 +110,24 @@ export const CreatorPrivateProfile: React.FC<CreatorPrivateProfileProps> = ({ cl
 
           {/* Mobile Additional Tabs */}
           {isMobile && (
-            <TabsList className="grid w-full grid-cols-3 mb-6 bg-white/60 backdrop-blur-sm border border-slate-200/50 rounded-xl p-1">
-              <TabsTrigger 
-                value="earnings" 
-                className="data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            <TabsList className="grid w-full grid-cols-3 mb-6 bg-white/80 backdrop-blur-xl border border-slate-200/50 rounded-2xl p-2 shadow-xl">
+              <TabsTrigger
+                value="earnings"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all duration-300"
               >
                 <DollarSign className="w-4 h-4 mr-2" />
                 Earnings
               </TabsTrigger>
-              <TabsTrigger 
-                value="analytics" 
-                className="data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              <TabsTrigger
+                value="analytics"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all duration-300"
               >
                 <TrendingUp className="w-4 h-4 mr-2" />
                 Analytics
               </TabsTrigger>
-              <TabsTrigger 
-                value="settings" 
-                className="data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              <TabsTrigger
+                value="settings"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-slate-600 data-[state=active]:to-slate-700 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all duration-300"
               >
                 <SettingsIcon className="w-4 h-4 mr-2" />
                 Settings

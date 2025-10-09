@@ -1,4 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
+import { motion } from 'framer-motion';
 import { useCreatorStats } from '../hooks/useCreatorStats';
 import { useZAPSystem } from '@/hooks/useZAPSystem';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -118,45 +119,81 @@ export const CreatorKpiStrip: React.FC<KpiStripProps> = ({ userId }) => {
       )}>
         {kpiCards.map((kpi, index) => {
           const IconComponent = kpi.icon;
-          
+
           return (
-            <Card 
+            <motion.div
               key={kpi.id}
-              className="relative overflow-hidden border-0 bg-white/60 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05, duration: 0.3 }}
+              whileHover={{ scale: 1.02, y: -2 }}
             >
-              {/* Gradient Background */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${kpi.gradient} opacity-5`} />
-              
-              <CardContent className="relative p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${kpi.gradient} flex items-center justify-center shadow-lg`}>
-                    <IconComponent className="w-4 h-4 text-white" />
-                  </div>
-                  
-                  {kpi.loading && (
-                    <div className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
-                  )}
-                </div>
-                
-                <div className="space-y-1">
-                  <div className="text-2xl font-bold text-slate-900">
-                    {kpi.loading ? (
-                      <div className="w-12 h-6 bg-slate-200 rounded animate-pulse" />
-                    ) : (
-                      kpi.value
+              <Card
+                className="relative overflow-hidden border-0 bg-white/70 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 group"
+              >
+                {/* Gradient Micro-Border */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${kpi.gradient} opacity-20 group-hover:opacity-30 transition-opacity`} />
+                <div className="absolute inset-[1px] bg-white rounded-lg" />
+
+                {/* Animated Shimmer Effect */}
+                <motion.div
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100"
+                  style={{
+                    background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent)`,
+                  }}
+                  animate={{
+                    x: ['-100%', '200%'],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    repeatDelay: 1,
+                  }}
+                />
+
+                <CardContent className="relative p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <motion.div
+                      className={`w-8 h-8 rounded-lg bg-gradient-to-br ${kpi.gradient} flex items-center justify-center shadow-lg`}
+                      whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <IconComponent className="w-4 h-4 text-white" />
+                    </motion.div>
+
+                    {kpi.loading && (
+                      <motion.div
+                        className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full"
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      />
                     )}
                   </div>
-                  <div className="text-xs font-medium text-slate-600">
-                    {kpi.title}
-                  </div>
-                  {kpi.subValue && (
-                    <div className="text-xs text-slate-500">
-                      {kpi.subValue}
+
+                  <div className="space-y-1">
+                    <div className="text-2xl font-bold text-slate-900">
+                      {kpi.loading ? (
+                        <motion.div
+                          className="w-12 h-6 bg-slate-200 rounded"
+                          animate={{ opacity: [0.5, 1, 0.5] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                        />
+                      ) : (
+                        kpi.value
+                      )}
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                    <div className="text-xs font-medium text-slate-600">
+                      {kpi.title}
+                    </div>
+                    {kpi.subValue && (
+                      <div className="text-xs text-slate-500">
+                        {kpi.subValue}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
           );
         })}
       </div>
