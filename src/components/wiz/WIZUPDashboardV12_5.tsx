@@ -20,6 +20,8 @@ import {
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { calculateVideoZAPs } from "@/lib/zap-system";
+import { BackToTopButton } from '@/components/ui/BackToTopButton';
+import { VideoCardSkeleton } from '@/components/ui/VideoCardSkeleton';
 
 // Enhanced video data interface for V12.5
 interface VideoData {
@@ -1140,7 +1142,13 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
 
       {/* Video Grid - 3×4 Layout (12 videos) */}
       <main className="p-6">
-        <div className="grid grid-cols-3 gap-6">
+        {/* Show skeleton loaders while initial videos are loading */}
+        {loading && convertedVideos.length === 0 ? (
+          <div className="grid grid-cols-3 gap-6">
+            <VideoCardSkeleton count={12} />
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-6">
             <AnimatePresence mode="sync">
               {filteredVideos.map((video, index) => (
                 <motion.div
@@ -1159,23 +1167,9 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
                 </motion.div>
               ))}
             </AnimatePresence>
-        </div>
-      </main>
-
-      {/* Loading spinner - only show when videos are being loaded from Firestore */}
-      {loading && convertedVideos.length === 0 && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-white/50 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-3">
-            <div
-              className="w-12 h-12 border-3 border-gray-200 border-t-purple-500 rounded-full animate-spin"
-              style={{
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
-              }}
-            />
-            <p className="text-sm text-gray-600 font-medium">Loading your videos...</p>
           </div>
-        </div>
-      )}
+        )}
+      </main>
 
       {/* Empty state - show when filter returns no results but videos are loaded */}
       {!loading && convertedVideos.length > 0 && filteredVideos.length === 0 && (
@@ -1193,6 +1187,8 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
         </div>
       )}
 
+      {/* Back to Top Button */}
+      <BackToTopButton />
     </div>
   );
 };

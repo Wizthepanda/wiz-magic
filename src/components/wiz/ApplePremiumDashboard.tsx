@@ -263,7 +263,8 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
           return 0; // Keep original order for same priority
         });
 
-        const finalVideos = loadedVideos.slice(0, 12);
+        // Remove 12-video limit for infinite scroll
+        const finalVideos = loadedVideos;
         console.log('📺 ApplePremiumDashboard: Final loaded videos:', finalVideos.length);
 
         setDynamicVideos(finalVideos);
