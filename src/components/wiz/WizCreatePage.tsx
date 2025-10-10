@@ -16,6 +16,7 @@ import { youTubeAPI, YouTubeChannelInfo, YouTubeVideo } from '@/lib/youtube-api'
 import { isYouTubeAPIEnabled } from '@/lib/feature-flags';
 import { CreationHub } from './CreationHub';
 import { PublishedCreationsManager } from './PublishedCreationsManager';
+import { ConnectYouTubeButton } from '@/components/wiz/ConnectYouTubeButton';
 
 interface Video {
   id: string;
@@ -952,6 +953,36 @@ export const WizCreatePage = () => {
         </motion.div>
 
         {/* Main Content - CreationHub only */}
+
+        {/* YouTube Connection Prompt for Non-Connected Users */}
+        {!user?.youtubeConnected && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Card className="mb-6 bg-gradient-to-br from-blue-50/80 to-purple-50/80 border-blue-200/50 backdrop-blur-xl shadow-lg">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <div className="flex-1 min-w-[250px]">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                        <Youtube className="w-5 h-5 text-white" />
+                      </div>
+                      <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        Connect YouTube to Upload
+                      </h3>
+                    </div>
+                    <p className="text-slate-600 ml-[52px]">
+                      Link your channel to import videos and publish content to WIZ Discover
+                    </p>
+                  </div>
+                  <ConnectYouTubeButton variant="button" size="lg" />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         {/* What Do You Want to Create Hub */}
         <div data-section="create">

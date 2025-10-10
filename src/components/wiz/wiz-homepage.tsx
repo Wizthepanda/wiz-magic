@@ -11,6 +11,7 @@ import { isYouTubeAPIEnabled, isGoogleAuthEnabled, logFeatureFlag } from '@/lib/
 import { AdminTestPanel } from '@/components/admin/AdminTestPanel';
 import { YouTubeAuthModal } from './YouTubeAuthModal';
 import { VideoPanel } from './VideoPanel';
+import { AuthLoadingOverlay } from '@/components/ui/AuthLoadingOverlay';
 import WizUp from '@/components/WizUp';
 import { db } from '@/lib/firebase';
 import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
@@ -179,58 +180,64 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
   ];
 
   const handleEnterPlatform = async () => {
-    // Debug logs disabled for production
-    // console.log('🎯 handleEnterPlatform called');
-    // console.log('🔍 Current user state:', user ? `${user.email} (YouTube: ${user.youtubeConnected})` : 'No user');
-
     try {
-      // Check if Google Auth is disabled
+      // Check if Google Auth is disabled (testing mode)
       if (!isGoogleAuthEnabled()) {
         logFeatureFlag('Google Authentication', false, 'bypassing auth for testing');
-        // console.log('🚀 Google Auth disabled, proceeding directly to dashboard');
         onEnterPlatform();
         return;
       }
 
-      // 1) If user is already signed in, proceed to platform
+      // 1) If user is already signed in, proceed to dashboard instantly
       if (user) {
-        // console.log('✅ User already authenticated, proceeding to platform');
+        console.log('✅ User already authenticated, proceeding to dashboard');
         onEnterPlatform();
         return;
       }
 
-      // 2) If not signed in, show the pre-auth modal for YouTube connection
-      if (isYouTubeAPIEnabled()) {
-        // console.log('🎬 Showing YouTube auth modal');
-        setShowYouTubeModal(true);
-      } else {
-        // Fallback to basic Google auth
-        // console.log('🚀 Basic Google auth fallback');
-        await signInWithGoogle(false);
+      // 2) ChatGPT-style popup authentication - instant, no page reload
+      setIsAuthLoading(true);
+      console.log('🚀 Opening Google Sign-In popup...');
+
+      const result = await signInWithGoogle(true); // Use popup for instant UX
+
+      if (result && result.user) {
+        console.log('✅ Authentication successful! Navigating to dashboard...');
+        // Small delay for smooth transition effect
+        setTimeout(() => {
+          onEnterPlatform();
+        }, 300);
       }
-      
+
     } catch (error: any) {
       console.error('❌ Authentication error:', error);
-      alert('Unable to connect right now. Please refresh the page and try again.');
+      setIsAuthLoading(false);
+
+      // User-friendly error messages
+      if (error.message?.includes('cancelled') || error.message?.includes('closed')) {
+        // User closed popup - silent failure, no alert
+        return;
+      }
+
+      alert(error.message || 'Unable to sign in. Please try again.');
     }
   };
 
+  // DEPRECATED: YouTube auth modal is no longer used for primary login
+  // Kept for backward compatibility but will be removed
   const handleYouTubeAuthConfirm = async () => {
     try {
       setIsAuthLoading(true);
-      // console.log('🚀 User confirmed YouTube auth, triggering OAuth...');
-      
-      // This will redirect to Google OAuth with YouTube scopes
-      await signInWithGoogle(true);
-      
-      // This code won't execute due to redirect
-      // console.log('🔄 Sign-in initiated, redirecting...');
-      
+      console.log('🚀 Signing in with Google Auth (YouTube connection is optional)');
+
+      // REFACTORED: Use basic Google auth for login
+      await signInWithGoogle();
+
     } catch (error: any) {
-      console.error('❌ YouTube authentication error:', error);
+      console.error('❌ Authentication error:', error);
       setIsAuthLoading(false);
       setShowYouTubeModal(false);
-      alert('Unable to connect YouTube right now. Please try again.');
+      alert('Unable to sign in right now. Please try again.');
     }
   };
 
@@ -540,8 +547,11 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
+      {/* ChatGPT-style Premium Loading Overlay */}
+      <AuthLoadingOverlay isVisible={isAuthLoading} message="Signing you in with Google..." />
+
       {/* Top Left Navigation Links */}
-      <motion.div 
+      <motion.div
         className="fixed top-4 left-4 sm:top-6 sm:left-6 z-50 flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-1"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

@@ -2,26 +2,29 @@ import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Slider } from '@/components/ui/slider';
+import { Input } from '@/components/ui/input';
 import { 
-  Wallet, 
   Zap, 
   ArrowUpRight, 
-  ArrowDownRight, 
-  DollarSign,
+  Send,
   TrendingUp,
   Clock,
   CheckCircle,
   XCircle,
-  Loader2
+  Loader2,
+  Link2,
+  Lock,
+  Copy,
+  Users
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface Transaction {
   id: string;
   date: string;
-  type: 'earned' | 'converted' | 'withdrawn' | 'topped_up';
+  type: 'earned' | 'sent' | 'topped_up';
   amount: number;
   status: 'success' | 'pending' | 'failed';
   description: string;
@@ -39,10 +42,10 @@ const mockTransactions: Transaction[] = [
   {
     id: '2',
     date: 'Oct 5, 2024',
-    type: 'converted',
+    type: 'sent',
     amount: -50,
     status: 'success',
-    description: 'ZAPs → $5.00 USD',
+    description: 'Sent 50 ZAPs to @user',
   },
   {
     id: '3',
@@ -50,14 +53,43 @@ const mockTransactions: Transaction[] = [
     type: 'topped_up',
     amount: 100,
     status: 'pending',
-    description: 'Top Up Purchase',
+    description: 'Top Up (Coming Soon)',
   },
 ];
 
+interface User {
+  id: string;
+  username: string;
+  displayName: string;
+  avatar: string;
+}
+
+const mockUsers: User[] = [
+  { id: '1', username: '@cr8r', displayName: 'Cr8r', avatar: '/Profile Pics/FERA.jpg' },
+  { id: '2', username: '@techmaster', displayName: 'Tech Master', avatar: '/Profile Pics/Ale.jpg' },
+  { id: '3', username: '@wizpanda', displayName: 'Wiz Panda', avatar: '/Profile Pics/Bogdan.jpg' },
+];
+
 export const ManageWalletTab = () => {
-  const [convertAmount, setConvertAmount] = useState([50]);
-  const totalZAPs = 92;
-  const walletBalance = 92.40;
+  const { toast } = useToast();
+  const [sendAmount, setSendAmount] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const totalZAPs = 924;
+
+  const filteredUsers = mockUsers.filter(user => 
+    user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.displayName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleCopyReferral = () => {
+    navigator.clipboard.writeText('https://wizxp.com/ref/cr8r');
+    toast({
+      title: "Referral link copied! 🔗",
+      description: "Share it with friends to earn bonus ZAPs",
+    });
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -95,6 +127,17 @@ export const ManageWalletTab = () => {
     );
   };
 
+  const getTransactionIcon = (type: string) => {
+    switch (type) {
+      case 'sent':
+        return <Send className="w-4 h-4 text-blue-500" />;
+      case 'earned':
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      default:
+        return <Loader2 className="w-4 h-4 text-yellow-500" />;
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -110,16 +153,38 @@ export const ManageWalletTab = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <Card className="border-0 bg-gradient-to-br from-[#06B6D4]/10 to-[#0EA5E9]/10 backdrop-blur-xl shadow-lg">
-            <CardContent className="p-6">
+          <Card className="border-0 bg-gradient-to-br from-[#06B6D4]/10 to-[#0EA5E9]/10 backdrop-blur-xl shadow-lg relative overflow-hidden">
+            {/* Subtle ZAP particle animation */}
+            <div className="absolute inset-0 opacity-10">
+              {[...Array(8)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-1 h-1 bg-[#06B6D4] rounded-full"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                  }}
+                  animate={{
+                    y: [0, -20, 0],
+                    opacity: [0.3, 1, 0.3],
+                  }}
+                  transition={{
+                    duration: 2 + Math.random(),
+                    repeat: Infinity,
+                    delay: Math.random() * 2,
+                  }}
+                />
+              ))}
+            </div>
+            <CardContent className="p-6 relative">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#06B6D4] to-[#0EA5E9] flex items-center justify-center">
-                  <Wallet className="w-5 h-5 text-white" />
+                  <Zap className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="text-sm font-medium text-slate-600">Wallet Balance</h3>
+                <h3 className="text-sm font-medium text-slate-600">ZAP Balance</h3>
               </div>
               <div className="text-3xl font-bold bg-gradient-to-r from-[#06B6D4] to-[#0EA5E9] bg-clip-text text-transparent">
-                ${walletBalance.toFixed(2)}
+                {totalZAPs} ZAPs
               </div>
             </CardContent>
           </Card>
@@ -169,96 +234,17 @@ export const ManageWalletTab = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column - Actions */}
         <div className="space-y-6">
-          {/* Top Up ZAPs */}
+          {/* Top Up ZAPs - Coming Soon */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <Card className="border-0 bg-white/60 backdrop-blur-xl shadow-lg">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                  <ArrowUpRight className="w-5 h-5 text-[#06B6D4]" />
-                  Top Up ZAPs
-                </h3>
-                
-                <div className="space-y-4">
-                  <div className="grid grid-cols-3 gap-3">
-                    {[50, 100, 200].map((amount) => (
-                      <Button
-                        key={amount}
-                        variant="outline"
-                        className="border-2 border-slate-200 hover:border-[#06B6D4] hover:bg-[#06B6D4]/5"
-                      >
-                        {amount} ZAPs
-                      </Button>
-                    ))}
-                  </div>
-                  
-                  <Button className="w-full bg-gradient-to-r from-[#06B6D4] to-[#0EA5E9] hover:from-[#0891B2] hover:to-[#0284C7] text-white shadow-lg">
-                    Purchase ZAPs
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Convert ZAPs → USD */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <Card className="border-0 bg-white/60 backdrop-blur-xl shadow-lg">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-emerald-500" />
-                  Convert ZAPs → USD
-                </h3>
-                
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm text-slate-600">Amount</span>
-                      <span className="text-lg font-bold text-slate-900">
-                        {convertAmount[0]} ZAPs → ${(convertAmount[0] * 0.1).toFixed(2)}
-                      </span>
-                    </div>
-                    <Slider
-                      value={convertAmount}
-                      onValueChange={setConvertAmount}
-                      max={totalZAPs}
-                      step={1}
-                      className="[&_[role=slider]]:bg-gradient-to-r [&_[role=slider]]:from-[#06B6D4] [&_[role=slider]]:to-[#0EA5E9]"
-                    />
-                  </div>
-                  
-                  <Button 
-                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg"
-                    disabled={convertAmount[0] === 0}
-                  >
-                    Convert Now
-                  </Button>
-                  
-                  <p className="text-xs text-slate-500 text-center">
-                    Conversion rate: 1 ZAP = $0.10 USD
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Withdraw */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.6 }}
-          >
             <Card className="border-0 bg-white/60 backdrop-blur-xl shadow-lg opacity-60">
               <CardContent className="p-6">
                 <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                  <ArrowDownRight className="w-5 h-5 text-slate-400" />
-                  Withdraw Funds
+                  <Zap className="w-5 h-5 text-slate-400 opacity-50" />
+                  Top Up ZAPs
                 </h3>
                 
                 <Button 
@@ -269,7 +255,187 @@ export const ManageWalletTab = () => {
                 </Button>
                 
                 <p className="text-xs text-slate-400 text-center mt-3">
-                  Withdrawal feature will be available soon
+                  Top Up ZAPs feature will be available soon.
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Send ZAPs */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+            whileHover={{ y: -2 }}
+          >
+            <Card className="border-0 bg-white/60 backdrop-blur-xl shadow-lg hover:shadow-xl transition-all">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
+                  <Send className="w-5 h-5 text-[#8B5CF6]" />
+                  Send ZAPs
+                </h3>
+                <p className="text-sm text-slate-600 mb-4">
+                  Send ZAPs to another user on the platform.
+                </p>
+                
+                <div className="space-y-4">
+                  <div className="relative">
+                    <Input
+                      placeholder="Enter Username"
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setShowUserDropdown(e.target.value.length > 0);
+                      }}
+                      onFocus={() => setShowUserDropdown(searchQuery.length > 0)}
+                      className="border-2 border-slate-200 focus:border-[#8B5CF6] transition-colors"
+                    />
+                    
+                    {/* User Dropdown */}
+                    {showUserDropdown && filteredUsers.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="absolute z-10 w-full mt-2 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden"
+                      >
+                        {filteredUsers.map((user) => (
+                          <button
+                            key={user.id}
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setSearchQuery(user.username);
+                              setShowUserDropdown(false);
+                            }}
+                            className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors"
+                          >
+                            <img
+                              src={user.avatar}
+                              alt={user.username}
+                              className="w-8 h-8 rounded-full"
+                            />
+                            <div className="text-left">
+                              <div className="text-sm font-semibold text-slate-900">
+                                {user.username}
+                              </div>
+                              <div className="text-xs text-slate-500">
+                                {user.displayName}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </div>
+
+                  {/* Selected User Preview */}
+                  {selectedUser && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="flex items-center gap-3 p-3 bg-gradient-to-r from-[#8B5CF6]/10 to-[#06B6D4]/10 rounded-xl"
+                    >
+                      <img
+                        src={selectedUser.avatar}
+                        alt={selectedUser.username}
+                        className="w-10 h-10 rounded-full"
+                      />
+                      <div>
+                        <div className="text-sm font-semibold text-slate-900">
+                          Sending to {selectedUser.username}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {selectedUser.displayName}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  <Input
+                    type="number"
+                    placeholder="Amount"
+                    value={sendAmount}
+                    onChange={(e) => setSendAmount(e.target.value)}
+                    className="border-2 border-slate-200 focus:border-[#8B5CF6] transition-colors"
+                  />
+                  
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button 
+                      className="w-full bg-gradient-to-r from-[#8B5CF6] to-[#06B6D4] hover:from-[#7C3AED] hover:to-[#0891B2] text-white shadow-lg hover:shadow-xl transition-all"
+                      disabled={!selectedUser || !sendAmount}
+                    >
+                      Send ZAPs
+                    </Button>
+                  </motion.div>
+                  
+                  <p className="text-xs text-slate-500 text-center">
+                    Transfers are instant and available to verified users only.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* ZAP Friends */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <Card className="border-0 bg-white/60 backdrop-blur-xl shadow-lg">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <Link2 className="w-5 h-5 text-[#06B6D4]" />
+                  ZAP Friends
+                </h3>
+                
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button 
+                    onClick={handleCopyReferral}
+                    className="w-full bg-gradient-to-r from-[#06B6D4] to-[#0EA5E9] hover:from-[#0891B2] hover:to-[#0284C7] text-white shadow-lg hover:shadow-xl transition-all"
+                  >
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy My Referral Link
+                  </Button>
+                </motion.div>
+                
+                <p className="text-xs text-slate-500 text-center mt-3">
+                  Invite friends and earn bonus ZAPs when they join your communities.
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Lock ZAPs - Coming Soon */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.7 }}
+          >
+            <Card className="border-0 bg-white/60 backdrop-blur-xl shadow-lg opacity-60 relative overflow-hidden">
+              {/* Animated lock pulse */}
+              <motion.div
+                className="absolute top-4 right-4 opacity-20"
+                animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
+                transition={{ duration: 3, repeat: Infinity }}
+              >
+                <Lock className="w-8 h-8 text-slate-400" />
+              </motion.div>
+              
+              <CardContent className="p-6">
+                <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <Lock className="w-5 h-5 text-slate-400 opacity-50" />
+                  Lock ZAPs
+                </h3>
+                
+                <Button 
+                  className="w-full bg-slate-200 text-slate-500 cursor-not-allowed"
+                  disabled
+                >
+                  Coming Soon
+                </Button>
+                
+                <p className="text-xs text-slate-400 text-center mt-3">
+                  Earn double ZAPs when you lock your points.
                 </p>
               </CardContent>
             </Card>
@@ -301,7 +467,7 @@ export const ManageWalletTab = () => {
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          {getStatusIcon(tx.status)}
+                          {getTransactionIcon(tx.type)}
                           <h4 className="font-semibold text-slate-900 text-sm">
                             {tx.description}
                           </h4>
@@ -315,10 +481,9 @@ export const ManageWalletTab = () => {
                       <div className="text-right">
                         <div className={cn(
                           "text-lg font-bold",
-                          tx.amount > 0 ? "text-emerald-600" : "text-slate-900"
+                          tx.amount > 0 ? "text-emerald-600" : "text-blue-600"
                         )}>
-                          {tx.amount > 0 ? '+' : ''}{tx.amount} 
-                          {tx.type === 'converted' ? '' : ' ZAPs'}
+                          {tx.amount > 0 ? '+' : ''}{tx.amount} ZAPs
                         </div>
                       </div>
                     </div>

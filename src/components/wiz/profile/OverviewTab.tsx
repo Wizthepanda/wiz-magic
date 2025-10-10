@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Zap, Eye, Clock, Flame, Trophy, ArrowUpRight, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { ConnectYouTubeButton } from '@/components/wiz/ConnectYouTubeButton';
 
 interface OverviewTabProps {
   totalZAPs: number;
@@ -165,11 +166,20 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
         </motion.div>
       )}
 
-      {/* Leaderboard Rank */}
+      {/* YouTube Connection */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
+      >
+        <ConnectYouTubeButton variant="card" showChannelInfo={true} />
+      </motion.div>
+
+      {/* Leaderboard Rank */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7 }}
       >
         <Card className="border-0 bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-xl shadow-lg">
           <CardContent className="p-6">
@@ -194,7 +204,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                 <div className="text-sm text-slate-500 mb-1">Next Rank</div>
                 <div className="flex items-center gap-2">
                   <div className="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className="h-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] rounded-full"
                       style={{ width: `92%` }}
                     />

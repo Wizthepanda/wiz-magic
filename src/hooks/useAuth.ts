@@ -508,38 +508,58 @@ export const useAuth = () => {
     }
   };
 
-  const signInWithGoogle = async (withYouTube: boolean = false) => {
+  /**
+   * REFACTORED: Sign in with Google Auth (Primary Login)
+   * ChatGPT-style seamless popup authentication - no page redirects
+   * YouTube connection is handled separately via connectYouTube()
+   *
+   * @param usePopup - Use popup instead of redirect (default: true for instant UX)
+   */
+  const signInWithGoogle = async (usePopup: boolean = true) => {
     try {
-      // Always use basic Google provider when YouTube API is disabled
-      const shouldUseYouTube = withYouTube && isYouTubeAPIEnabled();
-      const provider = shouldUseYouTube ? googleProviderWithYouTube : googleProvider;
-      
-      if (withYouTube && !isYouTubeAPIEnabled()) {
-        logFeatureFlag('YouTube OAuth Scope', false, 'using basic Google Auth instead');
-      }
-      
+      // REFACTORED: Always use basic Google provider for login
+      // YouTube connection is now optional and separate
+      const provider = googleProvider;
+
       // 🔍 FIREBASE AUTH DEBUG: Verify client_id configuration
       console.group('🔍 FIREBASE AUTH DEBUG');
       console.log('Auth Domain from config:', auth.config?.authDomain || 'undefined');
       console.log('Current origin:', window.location.origin);
-      console.log('Expected redirect URI:', `${window.location.origin}/__/auth/handler`);
+      console.log('Auth method:', usePopup ? 'POPUP (instant)' : 'REDIRECT (fallback)');
       console.log('Firebase App ID:', auth.app?.options?.appId || 'undefined');
       console.log('🔑 Explicit Client ID (from env):', import.meta.env.VITE_GOOGLE_CLIENT_ID);
-      console.log('🎯 Expected Client ID (from Google Cloud Console): 543256047502-4fdauu19uj3t63kf5saclcg597niecsh.apps.googleusercontent.com');
-      console.log('✅ Client ID Match:', import.meta.env.VITE_GOOGLE_CLIENT_ID === '543256047502-4fdauu19uj3t63kf5saclcg597niecsh.apps.googleusercontent.com' ? '✅ YES' : '❌ NO - MISMATCH DETECTED!');
       console.log('Provider custom params:', provider.customParameters || 'none');
-      console.log('Firebase auth app name:', auth.app?.name);
       console.groupEnd();
-      
-      // Use redirect authentication - this is more reliable
-      console.log('🚀 Using redirect sign-in for better compatibility');
-      await signInWithRedirect(auth, provider);
-      // Note: This function doesn't return as the page will redirect
+
+      let result;
+
+      if (usePopup) {
+        // ChatGPT-style popup authentication - instant, no page reload
+        console.log('🚀 Using popup sign-in for instant authentication');
+        result = await signInWithPopup(auth, provider);
+        console.log('✅ Popup authentication successful:', result.user.email);
+
+        // Initialize user data immediately
+        await setupUserData(result.user);
+
+        return result;
+      } else {
+        // Fallback to redirect if popup fails (e.g., blocked by browser)
+        console.log('🚀 Using redirect sign-in as fallback');
+        await signInWithRedirect(auth, provider);
+        // Note: This function doesn't return as the page will redirect
+      }
     } catch (error: any) {
       console.error('Error signing in with Google:', error);
-      
+
       // Enhanced error messages for common issues
-      if (error.code === 'auth/network-request-failed' || 
+      if (error.code === 'auth/popup-blocked') {
+        // If popup blocked, retry with redirect as fallback
+        console.log('⚠️ Popup blocked, falling back to redirect authentication');
+        return signInWithGoogle(false); // Retry with redirect
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        throw new Error('Sign-in cancelled. Please try again.');
+      } else if (error.code === 'auth/network-request-failed' ||
           error.message?.includes('ERR_BLOCKED_BY_CLIENT')) {
         throw new Error('🚫 Google services are blocked by your ad blocker or network.\n\n' +
           '✅ Quick fix:\n' +
@@ -547,8 +567,6 @@ export const useAuth = () => {
           '2. Add *.googleapis.com to whitelist\n' +
           '3. Try incognito mode\n' +
           '4. Clear browser cache');
-      } else if (error.code === 'auth/popup-blocked') {
-        throw new Error('Popup was blocked. Please allow popups for this site or try refreshing the page.');
       } else if (error.code === 'auth/unauthorized-domain') {
         throw new Error('This domain is not authorized for authentication. Please contact support.');
       } else if (error.code === 'auth/internal-error' || error.message?.includes('internal-error')) {
@@ -556,97 +574,47 @@ export const useAuth = () => {
         throw new Error('🚫 Authentication blocked by ad blocker.\n\n' +
           '✅ Please disable ad blockers for wizxp.com and reload the page.');
       }
-      
+
       throw error;
     }
   };
 
-  const connectYouTube = async () => {
+  /**
+   * REFACTORED: Connect YouTube to existing Google-authenticated account
+   * This is now a separate, optional action available in:
+   * - User Profile
+   * - Creator Profile
+   * - Create Tab
+   *
+   * Flow: User already logged in with Google → Optionally connects YouTube
+   */
+  const connectYouTube = async (usePopup: boolean = false) => {
     if (!isYouTubeAPIEnabled()) {
       logFeatureFlag('YouTube Connection', false, 'feature temporarily disabled');
       return false;
     }
-    
+
+    if (!user) {
+      console.error('❌ Cannot connect YouTube: User not authenticated');
+      return false;
+    }
+
     try {
-      const success = await YouTubeService.authenticateWithYouTube();
-      if (success && user) {
-        try {
-          // Initialize YouTube API with OAuth token from redirect result
-          const authResult = await getRedirectResult(auth);
-          if (authResult?.credential) {
-            // Get OAuth access token
-            const accessToken = (authResult.credential as any).accessToken;
-            if (accessToken) {
-              youTubeAPI.setAccessToken(accessToken);
-              
-              // Fetch channel information
-              console.log('📺 Fetching YouTube channel information...');
-              const channelInfo = await youTubeAPI.getChannelInfo();
-              
-              // Prepare YouTube profile data
-              const youtubeProfile = {
-                channelId: channelInfo.id,
-                channelTitle: channelInfo.name,
-                description: channelInfo.description || '',
-                thumbnailUrl: channelInfo.avatar,
-                subscriberCount: channelInfo.subscriberCount,
-                customUrl: channelInfo.customUrl,
-                bannerImageUrl: channelInfo.bannerImageUrl,
-                lastSynced: new Date(),
-              };
-              
-              // Update user document in Firestore
-              await setDoc(doc(db, 'users', user.uid), {
-                youtubeConnected: true,
-                youtubeProfile: youtubeProfile,
-                displayName: user.displayName || channelInfo.name, // Auto-populate display name
-                photoURL: user.photoURL || channelInfo.avatar, // Auto-populate profile picture
-              }, { merge: true });
-              
-              console.log('✅ YouTube profile data saved:', youtubeProfile);
-              
-              // Update local user state
-              const userDoc = await getDoc(doc(db, 'users', user.uid));
-              const userData = userDoc.data();
-              
-              const updatedUser: WizUser = {
-                ...user,
-                youtubeConnected: true,
-                level: userData?.level || 1,
-                totalXP: userData?.totalXP || 0,
-                createdAt: userData?.createdAt?.toDate() || new Date(),
-                youtubeProfile: youtubeProfile,
-                displayName: user.displayName || channelInfo.name,
-                photoURL: user.photoURL || channelInfo.avatar,
-              };
-              
-              updateGlobalAuthState(updatedUser, false);
-            }
-          }
-        } catch (profileError) {
-          console.warn('⚠️ Failed to fetch YouTube profile data (non-blocking):', profileError);
-          // Still mark as connected even if profile fetch fails
-          await setDoc(doc(db, 'users', user.uid), {
-            youtubeConnected: true,
-          }, { merge: true });
-          
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          const userData = userDoc.data();
-          
-          const updatedUser: WizUser = {
-            ...user,
-            youtubeConnected: true,
-            level: userData?.level || 1,
-            totalXP: userData?.totalXP || 0,
-            createdAt: userData?.createdAt?.toDate() || new Date(),
-          };
-          
-          setUser(updatedUser);
-        }
+      console.log('🎬 Connecting YouTube for user:', user.uid);
+
+      // Use new YouTube Connection Service
+      const YouTubeConnectionService = (await import('@/lib/youtube-connection-service')).default;
+      const success = await YouTubeConnectionService.connectYouTubeChannel(user.uid, usePopup);
+
+      if (success) {
+        // Refresh user data to include YouTube connection
+        await refreshUserData();
+        console.log('✅ YouTube connected successfully');
       }
+
       return success;
     } catch (error) {
-      console.error('Error connecting YouTube:', error);
+      console.error('❌ Error connecting YouTube:', error);
       throw error;
     }
   };

@@ -12,11 +12,12 @@ import { CreatorCourseList } from './components/CourseList';
 import { CreatorEarningsPanel } from './components/EarningsPanel';
 import { CreatorAnalyticsPanel } from './components/AnalyticsPanel';
 import { CreatorSettings } from './components/Settings';
-import { 
-  BarChart3, 
-  Video, 
-  GraduationCap, 
-  DollarSign, 
+import { ConnectYouTubeButton } from '@/components/wiz/ConnectYouTubeButton';
+import {
+  BarChart3,
+  Video,
+  GraduationCap,
+  DollarSign,
   TrendingUp,
   Settings as SettingsIcon
 } from 'lucide-react';
@@ -54,6 +55,11 @@ export const CreatorPrivateProfile: React.FC<CreatorPrivateProfileProps> = ({ cl
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
+        {/* YouTube Connection for Content Sync */}
+        <div className="mb-6">
+          <ConnectYouTubeButton variant="card" showChannelInfo={true} />
+        </div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {/* Floating Segmented Control Tab Navigation */}
           <TabsList className={cn(

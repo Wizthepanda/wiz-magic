@@ -98,21 +98,42 @@ try {
 }
 export { analytics };
 
-// Configure Google Auth Provider - Ultra-smooth for wizxp.com
+// ========================================
+// AUTH PROVIDERS - REFACTORED ARCHITECTURE
+// ========================================
+
+/**
+ * PRIMARY LOGIN PROVIDER - Google Auth Only
+ * Used for: Sign Up / Sign In to WIZXP platform
+ * Scopes: Basic profile (email, name, avatar)
+ * Flow: User authenticates → Gets access to dashboard
+ */
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
   prompt: 'select_account',
   client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID
 });
 
-// Create a separate provider for YouTube scopes - Maximum smoothness
-export const googleProviderWithYouTube = new GoogleAuthProvider();
-googleProviderWithYouTube.addScope('https://www.googleapis.com/auth/youtube.readonly');
-googleProviderWithYouTube.setCustomParameters({
-  prompt: 'select_account', // Direct to account picker
-  include_granted_scopes: 'true', // Remember previous permissions
+/**
+ * OPTIONAL YOUTUBE CONNECTION PROVIDER
+ * Used for: Linking YouTube channel to existing Google-authenticated account
+ * Scopes: youtube.readonly (for content sync, channel data, analytics)
+ * Flow: Authenticated user → Optionally connects YouTube → Links via googleId
+ * Available in: User Profile, Creator Profile, Create Tab
+ */
+export const youtubeAuthProvider = new GoogleAuthProvider();
+youtubeAuthProvider.addScope('https://www.googleapis.com/auth/youtube.readonly');
+youtubeAuthProvider.setCustomParameters({
+  prompt: 'select_account',
+  include_granted_scopes: 'true', // Preserve existing Google auth
   client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID
 });
+
+/**
+ * @deprecated Use youtubeAuthProvider instead for clarity
+ * Kept for backward compatibility - will be removed in future versions
+ */
+export const googleProviderWithYouTube = youtubeAuthProvider;
 
 // Auth Provider Debug (Development Only)
 if (import.meta.env.MODE === 'development') {
