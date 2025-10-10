@@ -763,9 +763,10 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
               className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 -mx-2 px-2 py-1.5 rounded-lg transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
-                const channelId = video.creatorDetails?.channelId || video.channelId || video.creatorId;
-                if (channelId) {
-                  window.location.href = `/creator/${channelId}`;
+                // Try to get creator ID from various possible locations
+                const creatorId = video.creatorDetails?.id || video.creator?.id || video.creatorId || video.channelId || video.id;
+                if (creatorId) {
+                  window.location.href = `/creator/${creatorId}`;
                 }
               }}
             >
@@ -912,9 +913,10 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
                   <div
                     className="flex items-start gap-5 cursor-pointer hover:bg-gray-50 -mx-3 px-3 py-2 rounded-xl transition-colors group"
                     onClick={() => {
-                      const channelId = selectedVideo.creator.channelId || selectedVideo.channelId || selectedVideo.creator.id;
-                      if (channelId) {
-                        window.location.href = `/creator/${channelId}`;
+                      // Try to get creator ID from various possible locations
+                      const creatorId = selectedVideo.creatorDetails?.id || selectedVideo.creator?.id || selectedVideo.creatorId || selectedVideo.channelId || selectedVideo.id;
+                      if (creatorId) {
+                        window.location.href = `/creator/${creatorId}`;
                       }
                     }}
                   >

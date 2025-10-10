@@ -463,8 +463,17 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
 
             {/* Creator Info + Action Row */}
             <div className="flex items-center justify-between mt-2">
-              {/* Creator Info */}
-              <div className="flex items-center gap-3">
+              {/* Creator Info - Clickable to visit creator profile */}
+              <div
+                className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 -mx-2 px-2 py-1.5 rounded-lg transition-colors"
+                onClick={() => {
+                  // Try to get creator ID from various possible locations
+                  const creatorId = currentVideo.creator?.id || currentVideo.creatorDetails?.id || currentVideo.creatorId || currentVideo.channelId || currentVideo.id;
+                  if (creatorId) {
+                    window.location.href = `/creator/${creatorId}`;
+                  }
+                }}
+              >
                 <Avatar className="w-10 h-10 shadow-sm">
                   <AvatarImage src={currentVideo.creator.avatar} alt={currentVideo.creator.name} />
                   <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-blue-400 text-white text-sm font-medium">
@@ -473,7 +482,7 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
                 </Avatar>
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-neutral-900">{currentVideo.creator.name}</span>
+                    <span className="font-semibold text-neutral-900 hover:text-purple-600 transition-colors">{currentVideo.creator.name}</span>
                     <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-blue-400 text-white text-xs font-medium">
                       Lv.{currentVideo.creator.level || 7}
                     </span>
