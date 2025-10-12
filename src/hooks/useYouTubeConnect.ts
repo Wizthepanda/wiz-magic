@@ -154,10 +154,13 @@ export function useYouTubeConnect(): UseYouTubeConnectReturn {
       console.log('🚀 Initiating YouTube OAuth popup flow...');
 
       // Step 1: Get OAuth URL from backend (includes state + PKCE)
-      const response = await fetch('/api/oauth/youtube/init', {
+      // TODO: Get user ID from auth context
+      const userId = 'anonymous';
+
+      const response = await fetch('https://us-central1-wiz-magic-platform.cloudfunctions.net/initializeYouTubeOAuth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // Include cookies for session
+        body: JSON.stringify({ userId }),
       });
 
       if (!response.ok) {

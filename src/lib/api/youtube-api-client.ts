@@ -58,9 +58,11 @@ export interface YouTubeConnectionStatus {
  * Check if user has connected YouTube
  */
 export async function fetchYouTubeConnectionStatus(): Promise<YouTubeConnectionStatus> {
-  const response = await fetch('/api/youtube/status', {
+  // Get current user ID (implement your auth logic)
+  const userId = 'anonymous'; // TODO: Get from auth context
+
+  const response = await fetch(`https://us-central1-wiz-magic-platform.cloudfunctions.net/checkYouTubeStatus?userId=${userId}`, {
     method: 'GET',
-    credentials: 'include', // Include httpOnly cookies
   });
 
   if (!response.ok) {
@@ -74,9 +76,10 @@ export async function fetchYouTubeConnectionStatus(): Promise<YouTubeConnectionS
  * Fetch user's YouTube channel info
  */
 export async function fetchYouTubeChannel(): Promise<YouTubeChannel> {
-  const response = await fetch('/api/youtube/channel', {
+  const userId = 'anonymous'; // TODO: Get from auth context
+
+  const response = await fetch(`https://us-central1-wiz-magic-platform.cloudfunctions.net/checkYouTubeStatus?userId=${userId}`, {
     method: 'GET',
-    credentials: 'include',
   });
 
   if (!response.ok) {
@@ -86,7 +89,19 @@ export async function fetchYouTubeChannel(): Promise<YouTubeChannel> {
     throw new Error(`Failed to fetch channel: ${response.statusText}`);
   }
 
-  return response.json();
+  const status = await response.json();
+
+  // Map status response to channel format
+  return {
+    id: status.channelId || '',
+    title: status.channelTitle || '',
+    description: '',
+    avatar: status.channelAvatar || '',
+    subscriberCount: status.subscriberCount || '0',
+    videoCount: '0',
+    viewCount: '0',
+    publishedAt: '',
+  };
 }
 
 /**
@@ -100,13 +115,15 @@ export async function fetchYouTubeVideos(options?: {
   nextPageToken?: string;
   totalResults: number;
 }> {
+  const userId = 'anonymous'; // TODO: Get from auth context
+
   const params = new URLSearchParams();
+  params.set('userId', userId);
   if (options?.maxResults) params.set('maxResults', options.maxResults.toString());
   if (options?.pageToken) params.set('pageToken', options.pageToken);
 
-  const response = await fetch(`/api/youtube/videos?${params.toString()}`, {
+  const response = await fetch(`https://us-central1-wiz-magic-platform.cloudfunctions.net/fetchYouTubeVideos?${params.toString()}`, {
     method: 'GET',
-    credentials: 'include',
   });
 
   if (!response.ok) {
@@ -123,14 +140,8 @@ export async function fetchYouTubeVideos(options?: {
  * Disconnect YouTube channel
  */
 export async function disconnectYouTube(): Promise<void> {
-  const response = await fetch('/api/youtube/disconnect', {
-    method: 'POST',
-    credentials: 'include',
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to disconnect: ${response.statusText}`);
-  }
+  // TODO: Implement disconnect endpoint
+  throw new Error('Disconnect not yet implemented');
 }
 
 // ============================================================================

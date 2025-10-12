@@ -104,13 +104,12 @@
 
         console.log('📋 Authorization code received, exchanging for tokens...');
 
-        // Exchange code for tokens via backend
-        const response = await fetch('/api/oauth/youtube/exchange', {
+        // Exchange code for tokens via backend (Firebase Cloud Function)
+        const response = await fetch('https://us-central1-wiz-magic-platform.cloudfunctions.net/exchangeYouTubeCode', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          credentials: 'include', // Include session cookies
           body: JSON.stringify({
             code,
             state

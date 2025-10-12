@@ -24,6 +24,14 @@ export {
 // Export YouTube token exchange function
 export { exchangeYouTubeToken } from './youtube-token-exchange';
 
+// Export new YouTube OAuth popup flow functions
+export {
+  initializeYouTubeOAuth,
+  exchangeYouTubeCode,
+  fetchYouTubeVideos,
+  checkYouTubeStatus
+} from './youtube-oauth-popup';
+
 // Export new WIZ XP system functions (milder progression curve)
 export {
   awardWizXP,
