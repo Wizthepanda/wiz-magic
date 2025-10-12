@@ -65,7 +65,7 @@ export class YouTubeConnectionService {
     }
 
     try {
-      console.log('🎬 Initiating YouTube connection for user:', userId);
+      console.log('🎬 Initiating YouTube connection for user:', userId, 'using', usePopup ? 'POPUP' : 'REDIRECT');
 
       // Store connection attempt metadata
       localStorage.setItem('wizxp_youtube_connect', 'true');
@@ -73,19 +73,43 @@ export class YouTubeConnectionService {
       localStorage.setItem('wizxp_redirect_url', window.location.pathname + window.location.search);
 
       if (usePopup) {
-        // Popup flow - faster but can be blocked
+        // ✅ Popup flow - instant, seamless (no page reload)
+        console.log('🚀 Opening YouTube OAuth popup...');
         const result = await signInWithPopup(auth, youtubeAuthProvider);
-        return await this.handleYouTubeAuthResult(result, userId);
+        console.log('✅ Popup returned successfully');
+
+        const success = await this.handleYouTubeAuthResult(result, userId);
+
+        // Clean up flags on success
+        if (success) {
+          localStorage.removeItem('wizxp_youtube_connect');
+          localStorage.removeItem('wizxp_connecting_user_id');
+          localStorage.removeItem('wizxp_redirect_url');
+        }
+
+        return success;
       } else {
-        // Redirect flow - more reliable
+        // Redirect flow - fallback for popup blockers
+        console.log('🔄 Using redirect flow (fallback)');
         await signInWithRedirect(auth, youtubeAuthProvider);
         // Result will be handled in useAuth hook's handleRedirectResult
         return true;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ YouTube connection failed:', error);
+
+      // Clean up flags on error
       localStorage.removeItem('wizxp_youtube_connect');
       localStorage.removeItem('wizxp_connecting_user_id');
+
+      // If popup was blocked, provide helpful message
+      if (error.code === 'auth/popup-blocked') {
+        throw new Error('Popup was blocked. Please allow popups for this site and try again.');
+      }
+      if (error.code === 'auth/popup-closed-by-user') {
+        throw new Error('Connection cancelled. Please try again.');
+      }
+
       throw error;
     }
   }

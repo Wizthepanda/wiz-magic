@@ -86,14 +86,17 @@ export const ConnectYouTubeButton = ({
 
     try {
       setConnecting(true);
-      const success = await connectYouTube(false); // Use redirect flow
+
+      // ✅ Use popup flow for seamless experience (no page redirect)
+      const success = await connectYouTube(true); // true = popup flow
 
       if (success) {
         await loadConnectionStatus();
         toast({
-          title: "YouTube Connected! 🎉",
-          description: "Your YouTube channel is now linked to your account"
+          title: "YouTube Connected! 🎥",
+          description: "Your YouTube channel is now linked successfully"
         });
+        onConnectionChange?.(true);
       }
     } catch (error: any) {
       console.error('Error connecting YouTube:', error);

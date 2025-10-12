@@ -417,13 +417,13 @@ export const WizCreatePage = () => {
     });
   };
 
-  // Original working YouTube OAuth connection using Firebase Auth
+  // Seamless YouTube OAuth connection with popup (no page redirect)
   const handleConnectYouTube = async () => {
     setIsConnecting(true);
 
     try {
-      // Use the original working connectYouTube method from useAuth
-      const success = await connectYouTube();
+      // ✅ Use popup flow for instant, seamless connection
+      const success = await connectYouTube(true); // true = popup flow
 
       if (success) {
         // Try to get channel info after successful connection
@@ -432,32 +432,29 @@ export const WizCreatePage = () => {
           setChannelInfo(channelInfo);
 
           toast({
-            title: "🎉 Connected Successfully!",
-            description: `Connected to ${channelInfo.name}!`,
+            title: "YouTube Connected Successfully 🎥",
+            description: `Connected to ${channelInfo.name}! Loading your videos...`,
             duration: 3000,
           });
 
-          setTimeout(() => {
-            setCurrentStep(2);
-            loadVideos();
-          }, 1500);
+          // Immediately move to step 2 and load videos (no setTimeout delay)
+          setCurrentStep(2);
+          loadVideos();
         } catch (channelError) {
           // Connection succeeded but couldn't get channel info - that's ok
           console.log('YouTube connected but channel info unavailable:', channelError);
           toast({
-            title: "🎉 Connected Successfully!",
-            description: "YouTube channel connected!",
+            title: "YouTube Connected Successfully 🎥",
+            description: "Loading your videos...",
             duration: 3000,
           });
 
-          setTimeout(() => {
-            setCurrentStep(2);
-            loadVideos();
-          }, 1500);
+          setCurrentStep(2);
+          loadVideos();
         }
       } else {
         toast({
-          title: "Connection Failed",
+          title: "Connection Failed — Try Again",
           description: "Failed to connect to YouTube. Please try again.",
           duration: 5000,
         });
@@ -467,7 +464,7 @@ export const WizCreatePage = () => {
       console.error('YouTube connection error:', error);
 
       toast({
-        title: "Connection Failed",
+        title: "Connection Failed — Try Again",
         description: error instanceof Error ? error.message : "Failed to connect to YouTube. Please try again.",
         duration: 5000,
       });

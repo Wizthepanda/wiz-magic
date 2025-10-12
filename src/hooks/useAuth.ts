@@ -194,6 +194,7 @@ export const useAuth = () => {
           const user = result.user;
 
           // Check if this was a YouTube authentication and redirect back to the Create page
+          // NOTE: Popup flow handles its own completion, so only handle redirect flow here
           const redirectUrl = localStorage.getItem('wizxp_redirect_url');
           const wasYouTubeConnect = localStorage.getItem('wizxp_youtube_connect');
           const wasYouTubeReauth = localStorage.getItem('wizxp_youtube_reauth');
@@ -201,6 +202,7 @@ export const useAuth = () => {
           // Store navigation info but don't navigate yet if this is YouTube auth
           let pendingNavigation = null;
 
+          // Only handle redirect flow (popup flow cleans up its own flags)
           if (wasYouTubeConnect && redirectUrl && redirectUrl !== '/') {
             console.log('🎯 Detected YouTube auth redirect, will navigate to:', redirectUrl, 'after save');
             localStorage.removeItem('wizxp_redirect_url');

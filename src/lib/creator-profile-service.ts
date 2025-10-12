@@ -127,8 +127,8 @@ export class CreatorProfileService {
       if (creatorData?.channelId && userData.youtubeProfile?.thumbnailUrl) {
         // Try to fetch YouTube channel banner from stored profile data
         const youtubeProfile = userData.youtubeProfile;
-        if (youtubeProfile.bannerUrl) {
-          youtubeBanner = youtubeProfile.bannerUrl;
+        if (youtubeProfile.bannerImageUrl) {
+          youtubeBanner = youtubeProfile.bannerImageUrl;
         } else if (youtubeProfile.thumbnailUrl) {
           // Use channel thumbnail as fallback
           youtubeBanner = youtubeProfile.thumbnailUrl;
@@ -212,8 +212,8 @@ export class CreatorProfileService {
       if (creatorData?.channelId && userData.youtubeProfile?.thumbnailUrl) {
         // Try to fetch YouTube channel banner from stored profile data
         const youtubeProfile = userData.youtubeProfile;
-        if (youtubeProfile.bannerUrl) {
-          youtubeBanner = youtubeProfile.bannerUrl;
+        if (youtubeProfile.bannerImageUrl) {
+          youtubeBanner = youtubeProfile.bannerImageUrl;
         } else if (youtubeProfile.thumbnailUrl) {
           // Use channel thumbnail as fallback
           youtubeBanner = youtubeProfile.thumbnailUrl;
