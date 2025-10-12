@@ -4,7 +4,7 @@
  * Production XP System with YouTube API Integration
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.purchaseCommunityAccess = exports.closeWatchSession = exports.sendWatchEvents = exports.startWatchSession = exports.nowPaymentsTipWebhook = exports.getNowPaymentsStatus = exports.createNowPaymentsPayment = exports.getNowPaymentsEstimate = exports.getNowPaymentsMinAmount = exports.getNowPaymentsCurrencies = exports.getWizLeaderboard = exports.wizDailyReset = exports.getWizXPData = exports.awardWizSubscriptionXP = exports.awardWizReferralXP = exports.awardWizShareXP = exports.awardWatchXP = exports.awardWizXP = exports.exchangeYouTubeToken = exports.initializeYouTubeTracking = exports.dailyYouTubeProfileSync = exports.dailyYouTubeSync = exports.syncYouTubeHistory = exports.dailyReset = exports.awardReferralXP = exports.awardShareXP = exports.awardXP = void 0;
+exports.purchaseCommunityAccess = exports.closeWatchSession = exports.sendWatchEvents = exports.startWatchSession = exports.nowPaymentsTipWebhook = exports.getNowPaymentsStatus = exports.createNowPaymentsPayment = exports.getNowPaymentsEstimate = exports.getNowPaymentsMinAmount = exports.getNowPaymentsCurrencies = exports.getWizLeaderboard = exports.wizDailyReset = exports.getWizXPData = exports.awardWizSubscriptionXP = exports.awardWizReferralXP = exports.awardWizShareXP = exports.awardWatchXP = exports.awardWizXP = exports.checkYouTubeStatus = exports.fetchYouTubeVideos = exports.exchangeYouTubeCode = exports.initializeYouTubeOAuth = exports.exchangeYouTubeToken = exports.initializeYouTubeTracking = exports.dailyYouTubeProfileSync = exports.dailyYouTubeSync = exports.syncYouTubeHistory = exports.dailyReset = exports.awardReferralXP = exports.awardShareXP = exports.awardXP = void 0;
 const app_1 = require("firebase-admin/app");
 // Initialize Firebase Admin SDK
 if ((0, app_1.getApps)().length === 0) {
@@ -25,6 +25,12 @@ Object.defineProperty(exports, "initializeYouTubeTracking", { enumerable: true, 
 // Export YouTube token exchange function
 var youtube_token_exchange_1 = require("./youtube-token-exchange");
 Object.defineProperty(exports, "exchangeYouTubeToken", { enumerable: true, get: function () { return youtube_token_exchange_1.exchangeYouTubeToken; } });
+// Export new YouTube OAuth popup flow functions
+var youtube_oauth_popup_1 = require("./youtube-oauth-popup");
+Object.defineProperty(exports, "initializeYouTubeOAuth", { enumerable: true, get: function () { return youtube_oauth_popup_1.initializeYouTubeOAuth; } });
+Object.defineProperty(exports, "exchangeYouTubeCode", { enumerable: true, get: function () { return youtube_oauth_popup_1.exchangeYouTubeCode; } });
+Object.defineProperty(exports, "fetchYouTubeVideos", { enumerable: true, get: function () { return youtube_oauth_popup_1.fetchYouTubeVideos; } });
+Object.defineProperty(exports, "checkYouTubeStatus", { enumerable: true, get: function () { return youtube_oauth_popup_1.checkYouTubeStatus; } });
 // Export new WIZ XP system functions (milder progression curve)
 var wiz_xp_functions_1 = require("./wiz-xp-functions");
 Object.defineProperty(exports, "awardWizXP", { enumerable: true, get: function () { return wiz_xp_functions_1.awardWizXP; } });
