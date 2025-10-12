@@ -3,7 +3,9 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Users and their subcollections
     match /users/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
+      // Allow public read for profile viewing (usernames, avatars, bios, etc.)
+      // But write only your own data
+      allow read: if true;
       allow write: if request.auth != null && request.auth.uid == userId
         && validateUserUpdate(request.resource.data, resource != null ? resource.data : {});
       
@@ -98,6 +100,16 @@ service cloud.firestore {
     // YouTube subscriptions tracking
     match /youtubeSubscriptions/{subscriptionId} {
       allow read, write: if request.auth != null;
+    }
+
+    // Followers collection - users can follow/unfollow
+    match /followers/{followId} {
+      allow read: if true; // Public read for follower counts and lists
+      allow create: if request.auth != null &&
+                    request.resource.data.followerId == request.auth.uid;
+      allow delete: if request.auth != null &&
+                    resource.data.followerId == request.auth.uid;
+      allow update: if false; // Followers are immutable after creation
     }
     
     // Anti-cheat watch sessions - users can read their own sessions only

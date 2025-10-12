@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Award } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import OptimizedImage from '@/components/ui/optimized-image';
@@ -24,15 +25,28 @@ export const CreatorCard = memo<CreatorCardProps>(({
   isSubscribed,
   className
 }) => {
+  const navigate = useNavigate();
+
+  const handleCreatorClick = () => {
+    if (creator.id) {
+      console.log('🎯 Navigating to creator profile:', creator.id);
+      navigate(`/creator/${creator.id}`);
+    }
+  };
+
   return (
     <motion.div
       className={cn(
         "flex items-center gap-3 p-3 bg-white/60 backdrop-blur-md rounded-xl border border-white/50",
+        "cursor-pointer hover:bg-white/80 transition-all duration-200",
         className
       )}
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.1, duration: 0.4 }}
+      onClick={handleCreatorClick}
+      whileHover={{ scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
     >
       {/* Creator Avatar */}
       <div className="relative">

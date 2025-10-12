@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
   Play,
   ArrowLeft,
@@ -22,6 +23,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { calculateVideoZAPs } from "@/lib/zap-system";
 import { BackToTopButton } from '@/components/ui/BackToTopButton';
 import { VideoCardSkeleton } from '@/components/ui/VideoCardSkeleton';
+import { usePrefetchCreatorProfile } from '@/hooks/useCreatorProfile';
 
 // Enhanced video data interface for V12.5
 interface VideoData {
@@ -35,6 +37,8 @@ interface VideoData {
   creatorAvatar?: string;
   subscriberCount?: string;
   isVerified?: boolean;
+  creatorId?: string; // Add creatorId for navigation
+  channelId?: string; // Add channelId for fallback navigation
   creatorDetails?: {
     id: string;
     name: string;
@@ -444,39 +448,46 @@ const deriveCategoryFromTags = (tags?: string[]): string => {
 
 // Transform WatchVideoData to VideoData format
 const transformVideoData = (videos: any[]): VideoData[] => {
-  return videos.map((video: any) => ({
-    id: video.id || Math.random().toString(),
-    title: video.title || 'Untitled Video',
-    thumbnail: video.thumbnail || '',
-    videoUrl: video.videoUrl || '',
-    videoId: video.videoId || video.id,
-    creator: video.creator?.name || video.creator || 'Unknown Creator',
-    creatorAvatar: video.creator?.avatar || video.creatorAvatar,
-    subscriberCount: video.creator?.subscribers || video.subscriberCount,
-    isVerified: video.creator?.isVerified || video.isVerified,
-    creatorDetails: video.creator ? {
-      id: video.creator.id || 'unknown',
-      name: video.creator.name || video.creator,
-      avatar: video.creator.avatar || video.creatorAvatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default',
-      subscribers: video.creator.subscribers || video.subscriberCount || '1K subscribers',
-      verified: video.creator.isVerified || video.isVerified || false,
-      bio: video.creator.bio,
-      hasExtras: video.creator.hasExtras,
-      community: video.creator.community,
-      courses: video.creator.courses,
-      coaching: video.creator.coaching,
-      products: video.creator.products
-    } : undefined,
-    duration: video.duration || '0:00',
-    views: video.views || '0 views',
-    likes: video.likes || '0',
-    description: video.description || 'No description available',
-    xpReward: video.duration ? calculateVideoZAPs(video.duration, false) : (video.xpReward || 0),
-    zapsReward: video.duration ? calculateVideoZAPs(video.duration, false) : (video.zapsReward || video.xpReward || 0),
-    category: video.category || deriveCategoryFromTags(video.tags),
-    publishedAt: video.publishedAt || new Date().toISOString(),
-    daysAgo: video.daysAgo || Math.floor(Math.random() * 7) + 1
-  }));
+  return videos.map((video: any) => {
+    // Extract creator ID from various possible sources
+    const creatorId = video.creator?.id || video.creatorId || video.channelId;
+
+    return {
+      id: video.id || Math.random().toString(),
+      title: video.title || 'Untitled Video',
+      thumbnail: video.thumbnail || '',
+      videoUrl: video.videoUrl || '',
+      videoId: video.videoId || video.id,
+      creator: video.creator?.name || video.creator || 'Unknown Creator',
+      creatorAvatar: video.creator?.avatar || video.creatorAvatar,
+      subscriberCount: video.creator?.subscribers || video.subscriberCount,
+      isVerified: video.creator?.isVerified || video.isVerified,
+      creatorId: creatorId, // ✅ Preserve creator ID for navigation
+      channelId: creatorId, // ✅ Also set as channelId for fallback
+      creatorDetails: video.creator ? {
+        id: creatorId || 'unknown',
+        name: video.creator.name || video.creator,
+        avatar: video.creator.avatar || video.creatorAvatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default',
+        subscribers: video.creator.subscribers || video.subscriberCount || '1K subscribers',
+        verified: video.creator.isVerified || video.isVerified || false,
+        bio: video.creator.bio,
+        hasExtras: video.creator.hasExtras,
+        community: video.creator.community,
+        courses: video.creator.courses,
+        coaching: video.creator.coaching,
+        products: video.creator.products
+      } : undefined,
+      duration: video.duration || '0:00',
+      views: video.views || '0 views',
+      likes: video.likes || '0',
+      description: video.description || 'No description available',
+      xpReward: video.duration ? calculateVideoZAPs(video.duration, false) : (video.xpReward || 0),
+      zapsReward: video.duration ? calculateVideoZAPs(video.duration, false) : (video.zapsReward || video.xpReward || 0),
+      category: video.category || deriveCategoryFromTags(video.tags),
+      publishedAt: video.publishedAt || new Date().toISOString(),
+      daysAgo: video.daysAgo || Math.floor(Math.random() * 7) + 1
+    };
+  });
 };
 
 // Optimized debounce hook
@@ -528,8 +539,10 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
   const [isWatchMode, setIsWatchMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const filterScrollRef = useRef<HTMLDivElement>(null);
+  const prefetchCreatorProfile = usePrefetchCreatorProfile();
 
   // Convert dynamic videos to VideoData format
   const convertedVideos: VideoData[] = useMemo(() => {
@@ -761,12 +774,19 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
             {/* Creator row - clickable to visit profile */}
             <div
               className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 -mx-2 px-2 py-1.5 rounded-lg transition-colors"
+              onMouseEnter={() => {
+                // Prefetch creator profile on hover
+                const creatorId = video.creatorDetails?.id || video.creatorId || video.channelId;
+                if (creatorId && creatorId.length > 15) {
+                  prefetchCreatorProfile(creatorId);
+                }
+              }}
               onClick={(e) => {
                 e.stopPropagation();
                 // Try to get creator ID from various possible locations
                 const creatorId = video.creatorDetails?.id || video.creator?.id || video.creatorId || video.channelId || video.id;
                 if (creatorId) {
-                  window.location.href = `/creator/${creatorId}`;
+                  navigate(`/creator/${creatorId}`);
                 }
               }}
             >
@@ -916,7 +936,7 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
                       // Try to get creator ID from various possible locations
                       const creatorId = selectedVideo.creatorDetails?.id || selectedVideo.creator?.id || selectedVideo.creatorId || selectedVideo.channelId || selectedVideo.id;
                       if (creatorId) {
-                        window.location.href = `/creator/${creatorId}`;
+                        navigate(`/creator/${creatorId}`);
                       }
                     }}
                   >

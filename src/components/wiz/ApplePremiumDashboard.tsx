@@ -192,6 +192,18 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
             console.log('🎯 Found creator video:', data.title);
           }
 
+          // CRITICAL FIX: Use current user ID as fallback for videos without creatorId
+          // This handles legacy videos uploaded before creatorId field was added
+          const creatorId = data.creatorId || data.channelId || user?.uid || 'unknown';
+
+          console.log('🔍 Video processing debug:', {
+            title: data.title,
+            hasCreatorId: !!data.creatorId,
+            hasChannelId: !!data.channelId,
+            usingFallback: !data.creatorId && !data.channelId,
+            finalCreatorId: creatorId
+          });
+
           const video: WatchVideoData = {
             id: doc.id,
             videoId: data.videoId || data.id || doc.id,
@@ -202,7 +214,7 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
             views: data.views || '0 views',
             xpReward: data.xpValue || data.xpReward || 100,
             creator: {
-              id: data.creatorId || 'unknown',
+              id: creatorId,
               name: data.creator || data.channelName || 'Unknown Creator',
               avatar: data.creatorAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.creator || 'default'}`,
               subscribers: data.subscriberCount || '1K subscribers',
@@ -224,6 +236,18 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
           const data = doc.data();
           console.log('🎯 Processing creator video:', data.title);
 
+          // CRITICAL FIX: Use current user ID as fallback for videos without creatorId
+          // This handles legacy videos uploaded before creatorId field was added
+          const creatorId = data.creatorId || data.channelId || user?.uid || 'unknown';
+
+          console.log('🔍 Creator video processing debug:', {
+            title: data.title,
+            hasCreatorId: !!data.creatorId,
+            hasChannelId: !!data.channelId,
+            usingFallback: !data.creatorId && !data.channelId,
+            finalCreatorId: creatorId
+          });
+
           const video: WatchVideoData = {
             id: doc.id,
             videoId: data.videoId || data.id || doc.id,
@@ -234,7 +258,7 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
             views: data.views || '0 views',
             xpReward: data.xpValue || data.xpReward || 100,
             creator: {
-              id: data.creatorId || 'unknown',
+              id: creatorId,
               name: data.creator || data.channelName || 'Unknown Creator',
               avatar: data.creatorAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.creator || 'default'}`,
               subscribers: data.subscriberCount || '1K subscribers',
@@ -298,7 +322,31 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
   const displayVideos = dynamicVideos;
 
   const handleWatchVideo = (video: any) => {
-    // Convert any video object to WatchVideoData format
+    // If video already has proper structure from our processing, use it directly
+    if (video.creator && video.creator.id) {
+      setSelectedVideo(video);
+      setShowVideoPlayer(true);
+      return;
+    }
+
+    // Convert any video object to WatchVideoData format (fallback for external videos)
+    // Extract creator ID from various possible locations in the video data
+    const creatorId = video.creator?.id || video.creatorId || video.channelId || user?.uid;
+
+    console.log('🎯 handleWatchVideo - Debug info:');
+    console.log('  - video.creator?.id:', video.creator?.id);
+    console.log('  - video.creatorId:', video.creatorId);
+    console.log('  - video.channelId:', video.channelId);
+    console.log('  - Final creatorId:', creatorId);
+    console.log('  - Full video object:', video);
+
+    // Warning if creator ID looks like a video ID (11 chars)
+    if (creatorId && creatorId.length === 11) {
+      console.warn('⚠️ WARNING: Creator ID appears to be a YouTube video ID!');
+      console.warn('⚠️ This will cause "Creator not found" errors when clicking creator profile');
+      console.warn('⚠️ Expected Firebase UID (28 chars), got:', creatorId);
+    }
+
     const watchVideoData: WatchVideoData = {
       id: video.id || Math.random().toString(),
       videoId: video.videoId || 'dQw4w9WgXcQ',
@@ -309,8 +357,8 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
       views: video.views || '1K views',
       xpReward: video.xpReward || video.xp || 100,
       creator: {
-        id: video.creator?.id || 'creator1',
-        name: video.creator?.name || video.creator || 'Unknown Creator',
+        id: creatorId,
+        name: video.creator?.name || video.creator || video.channelName || 'Unknown Creator',
         avatar: video.creator?.avatar || video.creatorAvatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=creator',
         subscribers: video.creator?.subscribers || video.subscriberCount || '1K subscribers',
         isVerified: video.creator?.isVerified || video.verified || false,
@@ -1040,11 +1088,14 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
           title: selectedVideo.title,
           description: selectedVideo.description,
           creator: {
+            id: selectedVideo.creator.id,
             name: selectedVideo.creator.name,
             avatar: selectedVideo.creator.avatar,
             subscribers: selectedVideo.creator.subscribers,
             level: selectedVideo.creator.level
           },
+          creatorId: selectedVideo.creator.id,
+          channelId: selectedVideo.creator.id,
           views: selectedVideo.views,
           duration: selectedVideo.duration,
           xpReward: selectedVideo.xpReward

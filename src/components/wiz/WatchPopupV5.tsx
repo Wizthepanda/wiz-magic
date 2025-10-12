@@ -3,6 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Share2, Bookmark, Zap, ChevronLeft, ChevronRight, Star, Users } from "lucide-react"
 import { useState, useEffect } from "react"
+import { useNavigate } from 'react-router-dom'
 import { TipModal } from './creator/components/TipModal'
 import { useWatchTimeZAPs } from '@/hooks/useWatchTimeZAPs'
 import { useZAPSystem } from '@/hooks/useZAPSystem'
@@ -10,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { db } from '@/lib/firebase'
 import { collection, query, where, limit, getDocs } from 'firebase/firestore'
 import { cn } from '@/lib/utils'
+import { usePrefetchCreatorProfile } from '@/hooks/useCreatorProfile'
 
 // YouTube Player API type declarations
 declare global {
@@ -34,11 +36,14 @@ interface WatchPopupProps {
     title: string
     description: string
     creator: {
+      id?: string
       name: string
       avatar: string
       subscribers: string
       level?: number
     }
+    creatorId?: string
+    channelId?: string
     views: string
     duration: string
     xpReward: number
@@ -46,6 +51,8 @@ interface WatchPopupProps {
 }
 
 export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
+  const navigate = useNavigate()
+  const prefetchCreatorProfile = usePrefetchCreatorProfile()
   const [showTipModal, setShowTipModal] = useState(false)
   const [showZAPsEarned, setShowZAPsEarned] = useState(false)
   const [zapsEarnedAmount, setZapsEarnedAmount] = useState(0)
@@ -466,12 +473,53 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
               {/* Creator Info - Clickable to visit creator profile */}
               <div
                 className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 -mx-2 px-2 py-1.5 rounded-lg transition-colors"
+                onMouseEnter={() => {
+                  // Prefetch creator profile on hover for instant navigation
+                  const creatorId = currentVideo.creator?.id || currentVideo.creatorId || currentVideo.channelId;
+                  if (creatorId && creatorId.length > 15) {
+                    prefetchCreatorProfile(creatorId);
+                  }
+                }}
                 onClick={() => {
                   // Try to get creator ID from various possible locations
-                  const creatorId = currentVideo.creator?.id || currentVideo.creatorDetails?.id || currentVideo.creatorId || currentVideo.channelId || currentVideo.id;
-                  if (creatorId) {
-                    window.location.href = `/creator/${creatorId}`;
+                  // Prioritize explicit creator ID fields over video ID
+                  const creatorId = currentVideo.creator?.id || currentVideo.creatorId || currentVideo.channelId;
+
+                  console.group('🎯 WatchPopupV5 - Creator Profile Click');
+                  console.log('Creator object:', currentVideo.creator);
+                  console.log('  - creator.id:', currentVideo.creator?.id);
+                  console.log('  - creatorId:', currentVideo.creatorId);
+                  console.log('  - channelId:', currentVideo.channelId);
+                  console.log('  - videoId:', currentVideo.videoId);
+                  console.log('  - Final creatorId:', creatorId);
+                  console.log('Full video object:', currentVideo);
+
+                  // Defensive check: Ensure we have a valid creator ID
+                  if (!creatorId) {
+                    console.error('❌ NAVIGATION BLOCKED: No creator ID found');
+                    console.error('❌ The video object is missing all creator identification fields');
+                    console.error('❌ Required: creator.id, creatorId, or channelId');
+                    console.error('💡 TIP: Videos need to have creatorId field in Firestore');
+                    console.groupEnd();
+                    return;
                   }
+
+                  // Video IDs are typically 11 characters, Firebase UIDs are 28 characters
+                  if (creatorId.length === 11) {
+                    console.error('❌ NAVIGATION BLOCKED: Invalid creator ID format');
+                    console.error('❌ Detected YouTube video ID instead of Firebase UID');
+                    console.error(`❌ Got "${creatorId}" (${creatorId.length} chars)`);
+                    console.error('❌ Expected Firebase UID (28 characters)');
+                    console.error('❌ This would cause "Creator not found" error on profile page');
+                    console.error('💡 TIP: Update video document to use actual creator Firebase UID');
+                    console.groupEnd();
+                    return;
+                  }
+
+                  console.log(`✅ Navigation allowed - creatorId is valid (${creatorId.length} chars)`);
+                  console.log(`✅ Navigating to: /creator/${creatorId}`);
+                  console.groupEnd();
+                  navigate(`/creator/${creatorId}`);
                 }}
               >
                 <Avatar className="w-10 h-10 shadow-sm">
