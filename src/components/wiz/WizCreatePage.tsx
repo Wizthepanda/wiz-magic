@@ -417,13 +417,14 @@ export const WizCreatePage = () => {
     });
   };
 
-  // Seamless YouTube OAuth connection with popup (no page redirect)
+  // YouTube OAuth connection (using redirect for reliable token acquisition)
   const handleConnectYouTube = async () => {
     setIsConnecting(true);
 
     try {
-      // ✅ Use popup flow for instant, seamless connection
-      const success = await connectYouTube(true); // true = popup flow
+      // ✅ Use redirect flow for reliable YouTube token acquisition
+      // Popup flow doesn't reliably return access tokens for YouTube scope
+      const success = await connectYouTube(false); // false = redirect flow
 
       if (success) {
         // Try to get channel info after successful connection

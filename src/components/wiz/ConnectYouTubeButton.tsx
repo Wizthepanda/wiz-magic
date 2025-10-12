@@ -87,8 +87,9 @@ export const ConnectYouTubeButton = ({
     try {
       setConnecting(true);
 
-      // ✅ Use popup flow for seamless experience (no page redirect)
-      const success = await connectYouTube(true); // true = popup flow
+      // ✅ Use redirect flow for reliable YouTube token acquisition
+      // Popup flow doesn't reliably return access tokens for YouTube scope
+      const success = await connectYouTube(false); // false = redirect flow
 
       if (success) {
         await loadConnectionStatus();
