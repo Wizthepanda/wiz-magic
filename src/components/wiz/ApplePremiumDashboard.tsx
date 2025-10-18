@@ -185,8 +185,42 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
         const loadedVideos: WatchVideoData[] = [];
         const processedVideoIds = new Map();
 
+        // Create a map to cache creator info lookups
+        const creatorInfoCache = new Map<string, {name: string, avatar: string}>();
+
+        // Helper function to get creator info from users collection
+        const getCreatorInfo = async (creatorId: string) => {
+          if (creatorInfoCache.has(creatorId)) {
+            return creatorInfoCache.get(creatorId)!;
+          }
+
+          try {
+            const { doc: firestoreDoc, getDoc } = await import('firebase/firestore');
+            const userDoc = await getDoc(firestoreDoc(db, 'users', creatorId));
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              const info = {
+                name: userData.displayName || userData.username || 'Unknown Creator',
+                avatar: userData.photoURL || userData.profilePicture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${creatorId}`
+              };
+              creatorInfoCache.set(creatorId, info);
+              return info;
+            }
+          } catch (error) {
+            console.warn('Could not fetch creator info for:', creatorId, error);
+          }
+
+          // Fallback
+          const fallback = {
+            name: 'Unknown Creator',
+            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${creatorId}`
+          };
+          creatorInfoCache.set(creatorId, fallback);
+          return fallback;
+        };
+
         // Process videos from videos collection first (prioritize creator content)
-        videosSnapshot.docs.forEach((doc: any) => {
+        for (const doc of videosSnapshot.docs) {
           const data = doc.data();
           if (data.isCreatorContent) {
             console.log('🎯 Found creator video:', data.title);
@@ -196,12 +230,16 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
           // This handles legacy videos uploaded before creatorId field was added
           const creatorId = data.creatorId || data.channelId || user?.uid || 'unknown';
 
+          // Fetch actual creator info from users collection
+          const creatorInfo = await getCreatorInfo(creatorId);
+
           console.log('🔍 Video processing debug:', {
             title: data.title,
             hasCreatorId: !!data.creatorId,
             hasChannelId: !!data.channelId,
             usingFallback: !data.creatorId && !data.channelId,
-            finalCreatorId: creatorId
+            finalCreatorId: creatorId,
+            creatorName: creatorInfo.name
           });
 
           const video: WatchVideoData = {
@@ -215,8 +253,8 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
             xpReward: data.xpValue || data.xpReward || 100,
             creator: {
               id: creatorId,
-              name: data.creator || data.channelName || 'Unknown Creator',
-              avatar: data.creatorAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.creator || 'default'}`,
+              name: creatorInfo.name, // Use name from users collection
+              avatar: creatorInfo.avatar, // Use avatar from users collection
               subscribers: data.subscriberCount || '1K subscribers',
               isVerified: data.verified || false,
               level: 5
@@ -229,10 +267,10 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
             processedVideoIds.set(video.videoId, video);
             loadedVideos.push(video);
           }
-        });
+        }
 
         // Process videos from creatorVideos collection
-        creatorVideosSnapshot.docs.forEach((doc: any) => {
+        for (const doc of creatorVideosSnapshot.docs) {
           const data = doc.data();
           console.log('🎯 Processing creator video:', data.title);
 
@@ -240,12 +278,16 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
           // This handles legacy videos uploaded before creatorId field was added
           const creatorId = data.creatorId || data.channelId || user?.uid || 'unknown';
 
+          // Fetch actual creator info from users collection
+          const creatorInfo = await getCreatorInfo(creatorId);
+
           console.log('🔍 Creator video processing debug:', {
             title: data.title,
             hasCreatorId: !!data.creatorId,
             hasChannelId: !!data.channelId,
             usingFallback: !data.creatorId && !data.channelId,
-            finalCreatorId: creatorId
+            finalCreatorId: creatorId,
+            creatorName: creatorInfo.name
           });
 
           const video: WatchVideoData = {
@@ -259,8 +301,8 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
             xpReward: data.xpValue || data.xpReward || 100,
             creator: {
               id: creatorId,
-              name: data.creator || data.channelName || 'Unknown Creator',
-              avatar: data.creatorAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.creator || 'default'}`,
+              name: creatorInfo.name, // Use name from users collection
+              avatar: creatorInfo.avatar, // Use avatar from users collection
               subscribers: data.subscriberCount || '1K subscribers',
               isVerified: data.verified || false,
               level: 5
@@ -273,7 +315,7 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
             processedVideoIds.set(video.videoId, video);
             loadedVideos.push(video);
           }
-        });
+        }
 
         // Sort videos to prioritize creator content
         loadedVideos.sort((a, b) => {

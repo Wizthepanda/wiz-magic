@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Check Community Status</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 900px;
+      margin: 50px auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    h1 {
+      margin-top: 0;
+    }
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      font-size: 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin: 10px 5px;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+    #results {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.2);
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 600px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    .status-draft { color: #fbbf24; font-weight: bold; }
+    .status-published { color: #4ade80; font-weight: bold; }
+    .community-item {
+      margin: 10px 0;
+      padding: 10px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🔍 Check Community Status</h1>
+    <p>This tool checks the status of your communities in Firestore</p>
+
+    <button onclick="checkAllCommunities()">Check All Communities</button>
+    <button onclick="checkSpecificCommunity()">Check Cyberpunk Wolf Forge</button>
+    <button onclick="publishCommunity()">Publish Cyberpunk Wolf Forge</button>
+
+    <div id="results"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+    import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+    import { getAuth } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC8CRDKiPON_m_lPJuMRd9xXDvfvMK7DQU",
+      authDomain: "wiz-magic-platform.firebaseapp.com",
+      projectId: "wiz-magic-platform",
+      storageBucket: "wiz-magic-platform.firebasestorage.app",
+      messagingSenderId: "485151111726",
+      appId: "1:485151111726:web:e35bc51f68a8f55c5ce18e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    window.checkAllCommunities = async () => {
+      const results = document.getElementById('results');
+      results.innerHTML = '🔄 Loading communities...\n\n';
+
+      try {
+        const querySnapshot = await getDocs(collection(db, 'communities'));
+        results.innerHTML = `✅ Found ${querySnapshot.size} communities:\n\n`;
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const statusClass = data.status === 'published' ? 'status-published' : 'status-draft';
+
+          results.innerHTML += `<div class="community-item">
+<strong>📦 ID:</strong> ${doc.id}
+<strong>📝 Title:</strong> ${data.title || 'No title'}
+<strong>🏷️ Status:</strong> <span class="${statusClass}">${data.status || 'unknown'}</span>
+<strong>👤 Creator:</strong> ${data.creatorName || data.creatorId || 'Unknown'}
+<strong>💰 Pricing:</strong> ${data.pricingModel || 'free'}
+${data.offerZAPsToNewMembers ? `<strong>🎁 ZAP Reward:</strong> ${data.newMemberZAPsReward || 0} ZAPs` : ''}
+<strong>📅 Created:</strong> ${data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleString() : 'Unknown'}
+</div>\n`;
+        });
+      } catch (error) {
+        results.innerHTML += `❌ Error: ${error.message}`;
+      }
+    };
+
+    window.checkSpecificCommunity = async () => {
+      const results = document.getElementById('results');
+      results.innerHTML = '🔄 Checking Cyberpunk Wolf Forge community...\n\n';
+
+      const communityId = '0CNfxTR7RxNaEX1NoX9g';
+
+      try {
+        const docRef = doc(db, 'communities', communityId);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const statusClass = data.status === 'published' ? 'status-published' : 'status-draft';
+
+          results.innerHTML = `✅ Found community!\n\n`;
+          results.innerHTML += `<div class="community-item">
+<strong>📦 ID:</strong> ${docSnap.id}
+<strong>📝 Title:</strong> ${data.title || 'No title'}
+<strong>🏷️ Status:</strong> <span class="${statusClass}">${data.status || 'unknown'}</span>
+<strong>🎯 Category:</strong> ${data.category || 'None'}
+<strong>📄 Description:</strong> ${data.shortDescription || 'None'}
+<strong>👤 Creator:</strong> ${data.creatorName || 'Unknown'} (${data.creatorId})
+<strong>💰 Pricing Model:</strong> ${data.pricingModel || 'free'}
+<strong>🔢 ZAPs Required:</strong> ${data.zapsRequired || 0}
+<strong>💵 USD Co-Pay:</strong> ${data.usdCoPay || 0}
+<strong>🎁 Offer ZAPs:</strong> ${data.offerZAPsToNewMembers ? 'Yes' : 'No'}
+${data.offerZAPsToNewMembers ? `<strong>⚡ ZAP Reward:</strong> ${data.newMemberZAPsReward || 0} ZAPs` : ''}
+<strong>📅 Created:</strong> ${data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleString() : 'Unknown'}
+<strong>🔄 Updated:</strong> ${data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toLocaleString() : 'Unknown'}
+</div>\n`;
+
+          if (data.status !== 'published') {
+            results.innerHTML += `\n⚠️ <strong>This community is in "${data.status}" status</strong>\n`;
+            results.innerHTML += `💡 To see it on the Community tab, you need to publish it using the "Publish" button below.\n`;
+          }
+        } else {
+          results.innerHTML = '❌ Community not found with ID: ' + communityId;
+        }
+      } catch (error) {
+        results.innerHTML += `❌ Error: ${error.message}`;
+      }
+    };
+
+    window.publishCommunity = async () => {
+      const results = document.getElementById('results');
+      const communityId = '0CNfxTR7RxNaEX1NoX9g';
+
+      if (!confirm('Are you sure you want to publish "Cyberpunk Wolf Forge"?')) {
+        return;
+      }
+
+      results.innerHTML = '🚀 Publishing community...\n\n';
+
+      try {
+        const docRef = doc(db, 'communities', communityId);
+        await updateDoc(docRef, {
+          status: 'published',
+          publishedAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+
+        results.innerHTML += '✅ Community published successfully!\n\n';
+        results.innerHTML += '🔄 Refresh your WIZ site to see the community in the Community tab.\n';
+      } catch (error) {
+        results.innerHTML += `❌ Error publishing: ${error.message}`;
+      }
+    };
+  </script>
+</body>
+</html>

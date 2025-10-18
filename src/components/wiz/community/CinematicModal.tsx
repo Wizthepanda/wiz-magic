@@ -213,6 +213,26 @@ export const CinematicModal: React.FC<CinematicModalProps> = ({
                     />
                     Processing...
                   </>
+                ) : community.rewardType === 'free-zaps' ? (
+                  <>
+                    Join Free & Earn {community.zapReward || community.newMemberZAPsReward || 0} ⚡
+                  </>
+                ) : community.rewardType === 'free' ? (
+                  <>
+                    Join Free
+                  </>
+                ) : community.rewardType === 'paid' ? (
+                  <>
+                    Pay ${community.usdCoPay || 0}
+                  </>
+                ) : community.rewardType === 'paid-zaps' ? (
+                  <>
+                    Claim with {community.zapRequired || community.zapsRequired || 0} ⚡
+                  </>
+                ) : community.rewardType === 'zaps-usd' ? (
+                  <>
+                    Pay {community.zapRequired || 0} ⚡ + ${community.usdCoPay || 0}
+                  </>
                 ) : (
                   <>
                     Claim Now

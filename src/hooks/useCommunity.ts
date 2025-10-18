@@ -63,8 +63,12 @@ export const useUpdateCommunity = () => {
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<CreateCommunityForm> }) => {
       const communityRef = doc(db, 'communities', id);
+
+      // Clean data to remove undefined values completely
+      const cleanedData = deepClean(data);
+
       const updateData = {
-        ...data,
+        ...cleanedData,
         updatedAt: serverTimestamp()
       };
 
@@ -293,32 +297,39 @@ export const useDraftCommunities = () => {
 
 // Deep clean function to remove undefined, File objects, and invalid Firestore values
 const deepClean = (obj: any): any => {
-  if (obj === null || obj === undefined) return null;
+  // Return null for null/undefined - these will be filtered out at object level
+  if (obj === null || obj === undefined) return undefined;
 
   // Don't allow File objects, Blob objects, or functions
   if (obj instanceof File || obj instanceof Blob || typeof obj === 'function') {
-    return null;
+    return undefined;
   }
 
   if (Array.isArray(obj)) {
     return obj
       .map(item => deepClean(item))
-      .filter(item => item !== null && item !== undefined);
+      .filter(item => item !== undefined);
   }
 
   // Only clean plain objects, not class instances
   if (typeof obj === 'object' && obj.constructor === Object) {
-    return Object.fromEntries(
-      Object.entries(obj)
-        .filter(([key, value]) => {
-          // Remove undefined values and 'file' keys that might contain File objects
-          if (value === undefined || key === 'file') return false;
-          // Remove any File or Blob values
-          if (value instanceof File || value instanceof Blob) return false;
-          return true;
-        })
-        .map(([key, value]) => [key, deepClean(value)])
-    );
+    const cleaned: any = {};
+
+    for (const [key, value] of Object.entries(obj)) {
+      // Skip undefined values, 'file' keys, and File/Blob objects completely
+      if (value === undefined || key === 'file' || value instanceof File || value instanceof Blob) {
+        continue;
+      }
+
+      const cleanedValue = deepClean(value);
+
+      // Only add to object if the cleaned value is not undefined
+      if (cleanedValue !== undefined) {
+        cleaned[key] = cleanedValue;
+      }
+    }
+
+    return cleaned;
   }
 
   // Return primitives and dates as-is
@@ -326,7 +337,7 @@ const deepClean = (obj: any): any => {
     return obj;
   }
 
-  return null;
+  return undefined;
 };
 
 // Save draft hook with optimistic updates
@@ -336,7 +347,7 @@ export const useSaveDraft = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id?: string; data: Partial<CreateCommunityForm> }) => {
+    mutationFn: async ({ id, data, silent = true }: { id?: string; data: Partial<CreateCommunityForm>; silent?: boolean }) => {
       if (!user) throw new Error('User not authenticated');
 
       // Strip out large file data from coverMedia to avoid payload size limits
@@ -391,7 +402,7 @@ export const useSaveDraft = () => {
         // Update existing draft
         const communityRef = doc(db, 'communities', id);
         await updateDoc(communityRef, draftData);
-        return { id, ...draftData };
+        return { id, ...draftData, silent };
       } else {
         // Create new draft
         const docRef = await addDoc(collection(db, 'communities'), {
@@ -401,15 +412,19 @@ export const useSaveDraft = () => {
           creatorAvatar: user.photoURL || '',
           createdAt: serverTimestamp()
         });
-        return { id: docRef.id, ...draftData };
+        return { id: docRef.id, ...draftData, silent };
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['communities', 'drafts'] });
-      toast({
-        title: "Draft saved!",
-        description: "Your progress has been saved.",
-      });
+
+      // Only show toast if not silent mode
+      if (!data.silent) {
+        toast({
+          title: "Draft saved!",
+          description: "Your progress has been saved.",
+        });
+      }
     },
     onError: (error) => {
       console.error('Error saving draft:', error);

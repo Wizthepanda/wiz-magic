@@ -28,7 +28,13 @@ import {
   Lock,
   Eye,
   Trash2,
-  GripVertical
+  GripVertical,
+  Info,
+  Bitcoin,
+  Coins,
+  Gift,
+  BookOpen,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -53,6 +59,9 @@ import {
   type CreateCommunityForm
 } from '@/lib/schemas/community';
 import { useCreateCommunity, useUpdateCommunity, usePublishCommunity, useSaveDraft, useCommunity } from '@/hooks/useCommunity';
+import { CourseService, type Course } from '@/lib/course-service';
+import { CommunityService } from '@/lib/community-service';
+import { useAuth } from '@/hooks/useAuth';
 
 interface CreateCommunityPageProps {
   onBack: () => void;
@@ -61,7 +70,7 @@ interface CreateCommunityPageProps {
 
 const steps = [
   { id: 1, title: 'Details', icon: FileText },
-  { id: 2, title: 'Content', icon: Youtube },
+  { id: 2, title: 'Content', icon: BookOpen },
   { id: 3, title: 'Monetize', icon: DollarSign },
   { id: 4, title: 'Publish', icon: Rocket }
 ];
@@ -96,11 +105,11 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
       longDescription: '',
       tags: [],
       privacy: 'public',
-      youtubeChannelConnected: false,
-      youtubeVideoIds: [],
+      linkedCourseId: undefined,
+      linkedCourseName: undefined,
       modules: [],
       downloads: [],
-      pricingModel: 'usd',
+      pricingModel: 'free',
       zapsRequired: 0,
       usdCoPay: 0,
       slotsAvailable: null,
@@ -110,6 +119,8 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
       accessWindow: 'lifetime',
       offerZAPsToNewMembers: false,
       newMemberZAPsReward: 0,
+      cryptoTypes: [],
+      cryptoAmount: '',
       status: 'draft'
     },
     mode: 'onChange'
@@ -139,11 +150,11 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
         longDescription: draftData.longDescription || '',
         tags: draftData.tags || [],
         privacy: draftData.privacy || 'public',
-        youtubeChannelConnected: draftData.youtubeChannelConnected || false,
-        youtubeVideoIds: draftData.youtubeVideoIds || [],
+        linkedCourseId: draftData.linkedCourseId || undefined,
+        linkedCourseName: draftData.linkedCourseName || undefined,
         modules: draftData.modules || [],
         downloads: draftData.downloads || [],
-        pricingModel: draftData.pricingModel || 'usd',
+        pricingModel: draftData.pricingModel || 'free',
         zapsRequired: draftData.zapsRequired || 0,
         usdCoPay: draftData.usdCoPay || 0,
         slotsAvailable: draftData.slotsAvailable || null,
@@ -178,7 +189,7 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
     form.setValue('coverMedia', coverMedia);
   }, [coverMedia, form]);
 
-  const handleSaveDraft = async () => {
+  const handleSaveDraft = async (silent = true) => {
     const formData = form.getValues();
     const draftData = {
       ...formData,
@@ -191,7 +202,8 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
     try {
       const result = await saveDraft.mutateAsync({
         id: communityId || undefined,
-        data: draftData
+        data: draftData,
+        silent // Pass silent flag to control toast notifications
       });
 
       // Update communityId if this was a new draft
@@ -204,7 +216,7 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
     }
   };
 
-  // Debounced auto-save - saves 2 seconds after user stops typing
+  // Debounced auto-save - saves 5 seconds after user stops typing (silent mode)
   const debouncedAutoSave = () => {
     if (autoSaveTimeoutRef.current) {
       clearTimeout(autoSaveTimeoutRef.current);
@@ -213,14 +225,19 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
     autoSaveTimeoutRef.current = setTimeout(() => {
       if (form.formState.isDirty) {
         console.log('💾 Auto-saving draft...');
-        handleSaveDraft();
+        handleSaveDraft(true); // Silent auto-save
       }
-    }, 2000); // 2 second delay
+    }, 5000); // 5 second delay - reduced frequency
   };
 
   // Trigger debounced save when data changes
   useEffect(() => {
-    debouncedAutoSave();
+    // Only auto-save if we have a communityId or if user has entered at least a title
+    const hasMinimumData = communityId || watchedData.title?.length > 0;
+
+    if (hasMinimumData) {
+      debouncedAutoSave();
+    }
 
     return () => {
       if (autoSaveTimeoutRef.current) {
@@ -365,44 +382,48 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
             {/* Stepper */}
             <Card>
               <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  {steps.map((step, index) => (
-                    <div key={step.id} className="flex items-center">
-                      <div className="flex items-center space-x-3">
-                        <motion.div
-                          className={cn(
-                            "w-10 h-10 rounded-full border-2 flex items-center justify-center font-bold transition-all duration-300",
-                            currentStep >= step.id
-                              ? "bg-gradient-to-r from-violet-500 to-purple-600 text-white border-violet-500"
-                              : "border-gray-300 text-gray-400 bg-gray-50"
-                          )}
-                          whileHover={{ scale: currentStep >= step.id ? 1.05 : 1 }}
-                        >
-                          {currentStep > step.id ? (
-                            <Check className="w-5 h-5" />
-                          ) : (
-                            <step.icon className="w-5 h-5" />
-                          )}
-                        </motion.div>
-                        {!isMobile && (
-                          <div className="text-left">
-                            <div className={cn(
-                              "font-semibold text-sm",
-                              currentStep >= step.id ? "text-gray-900" : "text-gray-500"
-                            )}>
-                              {step.title}
+                <div className="w-full max-w-4xl mx-auto">
+                  <div className="flex items-center justify-between relative">
+                    {steps.map((step, index) => (
+                      <React.Fragment key={step.id}>
+                        <div className="flex flex-col items-center relative z-10">
+                          <motion.div
+                            className={cn(
+                              "w-10 h-10 rounded-full border-2 flex items-center justify-center font-bold transition-all duration-300 bg-white",
+                              currentStep >= step.id
+                                ? "bg-gradient-to-r from-violet-500 to-purple-600 text-white border-violet-500 shadow-md"
+                                : "border-gray-300 text-gray-400 bg-gray-50"
+                            )}
+                            whileHover={{ scale: currentStep >= step.id ? 1.05 : 1 }}
+                          >
+                            {currentStep > step.id ? (
+                              <Check className="w-5 h-5" />
+                            ) : (
+                              <step.icon className="w-5 h-5" />
+                            )}
+                          </motion.div>
+                          {!isMobile && (
+                            <div className="mt-2 text-center">
+                              <div className={cn(
+                                "font-semibold text-sm whitespace-nowrap transition-colors",
+                                currentStep >= step.id ? "text-gray-900" : "text-gray-500"
+                              )}>
+                                {step.title}
+                              </div>
                             </div>
+                          )}
+                        </div>
+                        {index < steps.length - 1 && (
+                          <div className="flex-1 mx-3 relative" style={{ top: isMobile ? '0' : '-12px' }}>
+                            <div className={cn(
+                              "h-0.5 w-full transition-all duration-300",
+                              currentStep > step.id ? "bg-violet-500" : "bg-gray-300"
+                            )} />
                           </div>
                         )}
-                      </div>
-                      {index < steps.length - 1 && (
-                        <div className={cn(
-                          "w-16 h-0.5 mx-4 transition-all duration-300",
-                          currentStep > step.id ? "bg-violet-500" : "bg-gray-300"
-                        )} />
-                      )}
-                    </div>
-                  ))}
+                      </React.Fragment>
+                    ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -433,6 +454,7 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
                     setModules={setModules}
                     downloads={downloads}
                     setDownloads={setDownloads}
+                    communityId={communityId}
                   />}
                   {currentStep === 3 && <Step3Content />}
                   {currentStep === 4 && <Step4Content onPublish={handlePublish} />}
@@ -458,7 +480,7 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
 
                     <Button
                       variant="ghost"
-                      onClick={handleSaveDraft}
+                      onClick={() => handleSaveDraft(false)}
                       disabled={saveDraft.isPending}
                       className="flex items-center space-x-2"
                     >
@@ -1063,29 +1085,208 @@ const Step2Content: React.FC<{
   setModules: React.Dispatch<React.SetStateAction<Array<{ title: string; type: 'video' | 'article'; link?: string; duration?: string }>>>;
   downloads: Array<{ name: string; url: string }>;
   setDownloads: React.Dispatch<React.SetStateAction<Array<{ name: string; url: string }>>>;
-}> = ({ modules, setModules, downloads, setDownloads }) => {
+  communityId: string | null;
+}> = ({ modules, setModules, downloads, setDownloads, communityId }) => {
+  const { control, watch, setValue } = useFormContext<CreateCommunityForm>();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [userCourses, setUserCourses] = useState<Course[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<string>('');
+
+  const linkedCourseId = watch('linkedCourseId');
+  const linkedCourseName = watch('linkedCourseName');
+
+  // Fetch user's courses when component mounts
+  useEffect(() => {
+    const fetchUserCourses = async () => {
+      if (!user?.uid) return;
+
+      setLoadingCourses(true);
+      try {
+        const courseService = CourseService.getInstance();
+        const courses = await courseService.getUserCourses(user.uid);
+        // Only show published courses
+        const publishedCourses = courses.filter(c => c.status === 'published');
+        setUserCourses(publishedCourses);
+      } catch (error) {
+        console.error('Error fetching user courses:', error);
+        toast({
+          title: "Failed to load courses",
+          description: "Could not fetch your courses. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoadingCourses(false);
+      }
+    };
+
+    fetchUserCourses();
+  }, [user?.uid]);
+
+  const handleConnectCourse = async () => {
+    if (!selectedCourse) {
+      toast({
+        title: "No course selected",
+        description: "Please select a course to connect.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const course = userCourses.find(c => c.id === selectedCourse);
+    if (!course) return;
+
+    setValue('linkedCourseId', course.id);
+    setValue('linkedCourseName', course.title);
+
+    // Sync course content if community exists
+    if (communityId && course.id) {
+      try {
+        const communityService = CommunityService.getInstance();
+        await communityService.syncCourseToComm(communityId, course.id);
+
+        // Setup real-time sync listener
+        communityService.setupCourseSync(course.id);
+
+        toast({
+          title: "Course linked successfully!",
+          description: `${course.title} is now connected and syncing with this community.`,
+        });
+      } catch (error) {
+        console.error('Error syncing course:', error);
+        toast({
+          title: "Link succeeded but sync failed",
+          description: "Course is linked but content may need manual refresh.",
+          variant: "destructive"
+        });
+      }
+    } else {
+      toast({
+        title: "Course linked!",
+        description: `${course.title} will be synced when you save the community.`,
+      });
+    }
+  };
+
+  const handleDisconnectCourse = () => {
+    setValue('linkedCourseId', undefined);
+    setValue('linkedCourseName', undefined);
+    setSelectedCourse('');
+
+    toast({
+      title: "Course disconnected",
+      description: "The course has been removed from this community.",
+    });
+  };
+
   return (
     <div className="space-y-6">
-      {/* YouTube Connect Card */}
-      <Card>
+      {/* Connect Course Card */}
+      <Card className="border-2 border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <Youtube className="w-5 h-5 text-red-500" />
-            <span>YouTube Integration</span>
+            <BookOpen className="w-5 h-5 text-violet-600" />
+            <span>Connect Course</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">
-            <Youtube className="w-16 h-16 mx-auto mb-4 text-red-500" />
-            <h3 className="font-semibold mb-2">Connect Your YouTube Channel</h3>
-            <p className="text-gray-600 mb-4">
-              Import your best videos to showcase in your community
-            </p>
-            <Button className="bg-red-500 hover:bg-red-600 text-white">
-              <Youtube className="w-4 h-4 mr-2" />
-              Connect YouTube
-            </Button>
-          </div>
+          {linkedCourseId ? (
+            // Show connected course
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white rounded-xl p-6 border-2 border-violet-300 shadow-sm"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-start space-x-4 flex-1">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                    <BookOpen className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                      <h3 className="font-semibold text-lg text-gray-900">Course Connected</h3>
+                    </div>
+                    <p className="text-violet-700 font-medium mb-1">{linkedCourseName}</p>
+                    <p className="text-sm text-gray-600">
+                      All course lessons and content will sync automatically with this community.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleDisconnectCourse}
+                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  Disconnect
+                </Button>
+              </div>
+            </motion.div>
+          ) : (
+            // Show course selection
+            <div className="text-center py-8">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 200 }}
+              >
+                <BookOpen className="w-16 h-16 mx-auto mb-4 text-violet-500" />
+              </motion.div>
+              <h3 className="font-semibold text-lg mb-2 text-gray-900">Connect Your Course</h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                Seamlessly link one of your existing courses to this community. All lessons and content will sync automatically.
+              </p>
+
+              {loadingCourses ? (
+                <div className="flex items-center justify-center space-x-2 text-violet-600">
+                  <Loader className="w-5 h-5 animate-spin" />
+                  <span>Loading your courses...</span>
+                </div>
+              ) : userCourses.length > 0 ? (
+                <div className="max-w-md mx-auto space-y-4">
+                  <Select onValueChange={setSelectedCourse} value={selectedCourse}>
+                    <SelectTrigger className="w-full bg-white border-2 border-violet-300 hover:border-violet-400 transition-colors">
+                      <SelectValue placeholder="Select a course..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {userCourses.map((course) => (
+                        <SelectItem key={course.id} value={course.id!}>
+                          <div className="flex items-center space-x-2">
+                            <BookOpen className="w-4 h-4 text-violet-500" />
+                            <span>{course.title}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Button
+                    onClick={handleConnectCourse}
+                    disabled={!selectedCourse}
+                    className="w-full bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl py-6 font-medium hover:from-violet-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <BookOpen className="w-5 h-5 mr-2" />
+                    Connect Course
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-gray-500 text-sm">You haven't created any courses yet.</p>
+                  <Button
+                    variant="outline"
+                    onClick={() => window.location.href = '/create'}
+                    className="border-2 border-violet-300 text-violet-700 hover:bg-violet-50"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create New Course
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -1236,14 +1437,121 @@ const Step2Content: React.FC<{
   );
 };
 
-// Step 3: Monetize Component
+// Step 3: Monetize Component - Enhanced with 6 Pricing Models
 const Step3Content: React.FC = () => {
   const { register, control, watch, setValue } = useFormContext<CreateCommunityForm>();
+  const { toast } = useToast();
 
   const pricingModel = watch('pricingModel');
   const splitPayEnabled = watch('splitPayEnabled');
   const waitlistEnabled = watch('waitlistEnabled');
   const offerZAPsToNewMembers = watch('offerZAPsToNewMembers');
+  const cryptoTypes = watch('cryptoTypes') || [];
+
+  // Pricing model configuration
+  const pricingModels = [
+    {
+      id: 'free',
+      label: 'Free',
+      icon: Gift,
+      description: 'Free community access',
+      gradient: 'from-emerald-50 to-teal-50',
+      borderColor: 'border-emerald-200',
+      iconColor: 'text-emerald-600'
+    },
+    {
+      id: 'free-zaps',
+      label: 'Free ZAPs',
+      icon: Zap,
+      description: 'Reward new members with ZAPs',
+      gradient: 'from-purple-50 to-pink-50',
+      borderColor: 'border-purple-200',
+      iconColor: 'text-purple-600'
+    },
+    {
+      id: 'usd',
+      label: 'USD Pay',
+      icon: DollarSign,
+      description: 'Members pay in USD only',
+      gradient: 'from-green-50 to-emerald-50',
+      borderColor: 'border-green-200',
+      iconColor: 'text-green-600'
+    },
+    {
+      id: 'zaps',
+      label: 'ZAPs Pay',
+      icon: Zap,
+      description: 'Members pay with ZAPs only',
+      gradient: 'from-violet-50 to-purple-50',
+      borderColor: 'border-violet-200',
+      iconColor: 'text-violet-600'
+    },
+    {
+      id: 'zaps-usd',
+      label: 'ZAPs + USD',
+      icon: Coins,
+      description: 'Combination of ZAPs and USD',
+      gradient: 'from-indigo-50 to-blue-50',
+      borderColor: 'border-indigo-200',
+      iconColor: 'text-indigo-600'
+    },
+    {
+      id: 'crypto',
+      label: 'Crypto',
+      icon: Bitcoin,
+      description: 'USDT / BTC / USDC / DOGE',
+      gradient: 'from-orange-50 to-amber-50',
+      borderColor: 'border-orange-200',
+      iconColor: 'text-orange-600'
+    }
+  ];
+
+  const cryptoOptions = [
+    { value: 'usdt', label: 'USDT', color: 'bg-green-100 text-green-800' },
+    { value: 'btc', label: 'BTC', color: 'bg-orange-100 text-orange-800' },
+    { value: 'usdc', label: 'USDC', color: 'bg-blue-100 text-blue-800' },
+    { value: 'doge', label: 'DOGE', color: 'bg-yellow-100 text-yellow-800' }
+  ];
+
+  const handlePricingModelChange = (newModel: string) => {
+    setValue('pricingModel', newModel as any);
+
+    // Reset related fields based on model
+    if (newModel === 'free') {
+      setValue('usdCoPay', 0);
+      setValue('zapsRequired', 0);
+      setValue('splitPayEnabled', false);
+      setValue('offerZAPsToNewMembers', false);
+      setValue('cryptoTypes', []);
+    } else if (newModel === 'free-zaps') {
+      setValue('usdCoPay', 0);
+      setValue('zapsRequired', 0);
+      setValue('splitPayEnabled', false);
+      setValue('cryptoTypes', []);
+    } else if (newModel === 'usd') {
+      setValue('zapsRequired', 0);
+      setValue('splitPayEnabled', false);
+      setValue('cryptoTypes', []);
+    } else if (newModel === 'zaps') {
+      setValue('usdCoPay', 0);
+      setValue('cryptoTypes', []);
+    } else if (newModel === 'zaps-usd') {
+      setValue('splitPayEnabled', false);
+      setValue('cryptoTypes', []);
+    } else if (newModel === 'crypto') {
+      setValue('usdCoPay', 0);
+      setValue('zapsRequired', 0);
+      setValue('splitPayEnabled', false);
+    }
+  };
+
+  const toggleCryptoType = (crypto: string) => {
+    const current = cryptoTypes as string[];
+    const updated = current.includes(crypto)
+      ? current.filter(c => c !== crypto)
+      : [...current, crypto];
+    setValue('cryptoTypes', updated as any);
+  };
 
   return (
     <Card>
@@ -1256,138 +1564,181 @@ const Step3Content: React.FC = () => {
       <CardContent className="space-y-6">
         {/* Pricing Model Section */}
         <div className="space-y-4">
-          <Label className="text-base font-semibold">Pricing Model</Label>
-
-          {/* 1. USD Pay */}
-          <div className="space-y-3">
-            <div className="flex items-center space-x-2">
-              <Controller
-                name="pricingModel"
-                control={control}
-                render={({ field }) => (
-                  <input
-                    type="radio"
-                    checked={field.value === 'usd'}
-                    onChange={() => {
-                      field.onChange('usd');
-                      setValue('splitPayEnabled', false);
-                      setValue('zapsRequired', 0);
-                    }}
-                    className="w-4 h-4"
-                  />
-                )}
-              />
-              <Label className="text-base cursor-pointer">USD Pay</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-base font-semibold">Pricing Model</Label>
+            <div className="flex items-center gap-2 text-xs text-slate-500">
+              <Info className="w-3.5 h-3.5" />
+              <span>Select one option</span>
             </div>
-            {pricingModel === 'usd' && (
-              <div className="ml-6 space-y-2">
-                <Label>USD Price</Label>
-                <div className="relative">
-                  <Input
-                    {...register('usdCoPay', { valueAsNumber: true })}
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="0.00"
-                    className="pl-8"
-                  />
-                  <DollarSign className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500" />
-                </div>
-                <p className="text-xs text-gray-500">
-                  Enter 0 to create a free community
-                </p>
-              </div>
-            )}
           </div>
 
-          {/* 2. ZAPs Pay */}
-          <div className="space-y-3">
-            <div className="flex items-center space-x-2">
-              <Controller
-                name="pricingModel"
-                control={control}
-                render={({ field }) => (
-                  <input
-                    type="radio"
-                    checked={field.value === 'zaps'}
-                    onChange={() => {
-                      field.onChange('zaps');
-                      setValue('usdCoPay', 0);
-                      setValue('splitPayEnabled', false);
-                    }}
-                    className="w-4 h-4"
-                  />
-                )}
-              />
-              <Label className="text-base cursor-pointer">ZAPs Pay</Label>
-            </div>
-            {pricingModel === 'zaps' && !splitPayEnabled && (
-              <div className="ml-6 space-y-2">
-                <Label>ZAPs Required</Label>
-                <div className="relative">
-                  <Input
-                    {...register('zapsRequired', { valueAsNumber: true })}
-                    type="number"
-                    min="0"
-                    placeholder="0"
-                    className="pl-8"
-                  />
-                  <Zap className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-violet-500" />
-                </div>
-                <p className="text-xs text-gray-500">
-                  Members pay with ZAPs only
-                </p>
-              </div>
-            )}
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {pricingModels.map((model) => {
+              const Icon = model.icon;
+              const isSelected = pricingModel === model.id;
 
-          {/* 3. Enable Split Payment */}
-          {pricingModel === 'zaps' && (
-            <div className="ml-6 space-y-3">
-              <div className="flex flex-row items-center justify-between rounded-lg border p-4 bg-indigo-50">
-                <div className="space-y-0.5">
-                  <Label className="text-base">
-                    Enable Split Payment
-                  </Label>
-                  <p className="text-sm text-gray-500">
-                    Require both ZAPs + USD together
-                  </p>
-                </div>
-                <Controller
-                  name="splitPayEnabled"
-                  control={control}
-                  render={({ field }) => (
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={(checked) => {
-                        field.onChange(checked);
-                        if (!checked) {
-                          setValue('usdCoPay', 0);
-                        }
-                      }}
-                    />
-                  )}
-                />
-              </div>
-
-              {/* Split Payment Fields */}
-              {splitPayEnabled && (
-                <div className="space-y-4 pl-4 border-l-2 border-indigo-300">
-                  <div className="space-y-2">
-                    <Label>ZAPs Required</Label>
-                    <div className="relative">
-                      <Input
-                        {...register('zapsRequired', { valueAsNumber: true })}
-                        type="number"
-                        min="0"
-                        placeholder="0"
-                        className="pl-8"
-                      />
-                      <Zap className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-violet-500" />
+              return (
+                <motion.div
+                  key={model.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                >
+                  <div
+                    onClick={() => handlePricingModelChange(model.id)}
+                    className={cn(
+                      'relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-300',
+                      isSelected
+                        ? `bg-gradient-to-br ${model.gradient} ${model.borderColor} shadow-md`
+                        : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                    )}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-3">
+                        <div className={cn(
+                          'p-2 rounded-lg transition-colors',
+                          isSelected ? 'bg-white/80 shadow-sm' : 'bg-gray-50'
+                        )}>
+                          <Icon className={cn('w-5 h-5', isSelected ? model.iconColor : 'text-gray-400')} />
+                        </div>
+                        <div>
+                          <div className={cn(
+                            'font-semibold mb-1 transition-colors',
+                            isSelected ? 'text-gray-900' : 'text-gray-700'
+                          )}>
+                            {model.label}
+                          </div>
+                          <p className={cn(
+                            'text-xs transition-colors',
+                            isSelected ? 'text-gray-700' : 'text-gray-500'
+                          )}>
+                            {model.description}
+                          </p>
+                        </div>
+                      </div>
+                      <AnimatePresence>
+                        {isSelected && (
+                          <motion.div
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0, opacity: 0 }}
+                            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                          >
+                            <CheckCircle className="w-5 h-5 text-green-600" />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label>USD Co-Pay</Label>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* Conditional Sub-Options */}
+          <AnimatePresence mode="wait">
+            {/* 1. FREE - Optional ZAPs Reward Toggle */}
+            {pricingModel === 'free' && (
+              <motion.div
+                key="free-options"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="overflow-hidden"
+              >
+                <Card className="mt-4 border-emerald-200 bg-emerald-50/30">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-sm font-medium text-slate-900">
+                          Offer Free ZAPs to new members for joining
+                        </Label>
+                        <p className="text-xs text-slate-600">
+                          Reward new members with a welcome amount of ZAPs
+                        </p>
+                      </div>
+                      <Controller
+                        name="offerZAPsToNewMembers"
+                        control={control}
+                        render={({ field }) => (
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        )}
+                      />
+                    </div>
+
+                    <AnimatePresence>
+                      {offerZAPsToNewMembers && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="space-y-2"
+                        >
+                          <Label className="text-sm">ZAPs Reward Amount</Label>
+                          <div className="relative">
+                            <Input
+                              {...register('newMemberZAPsReward', { valueAsNumber: true })}
+                              type="number"
+                              min="0"
+                              placeholder="e.g., 50"
+                              className="pl-10 bg-white"
+                            />
+                            <Zap className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500" />
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* 2. FREE ZAPS */}
+            {pricingModel === 'free-zaps' && (
+              <motion.div
+                key="free-zaps-options"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              >
+                <Card className="mt-4 border-purple-200 bg-purple-50/30">
+                  <CardContent className="p-4 space-y-3">
+                    <Label className="text-sm font-medium">ZAPs Reward Amount</Label>
+                    <div className="relative">
+                      <Input
+                        {...register('newMemberZAPsReward', { valueAsNumber: true })}
+                        type="number"
+                        min="0"
+                        placeholder="e.g., 100"
+                        className="pl-10 bg-white"
+                      />
+                      <Zap className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500" />
+                    </div>
+                    <p className="text-xs text-slate-600">
+                      Each new member receives this ZAPs bonus upon joining
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* 3. USD PAY */}
+            {pricingModel === 'usd' && (
+              <motion.div
+                key="usd-options"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              >
+                <Card className="mt-4 border-green-200 bg-green-50/30">
+                  <CardContent className="p-4 space-y-3">
+                    <Label className="text-sm font-medium">USD Price</Label>
                     <div className="relative">
                       <Input
                         {...register('usdCoPay', { valueAsNumber: true })}
@@ -1395,100 +1746,255 @@ const Step3Content: React.FC = () => {
                         step="0.01"
                         min="0"
                         placeholder="0.00"
-                        className="pl-8"
+                        className="pl-10 bg-white"
                       />
-                      <DollarSign className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500" />
+                      <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-600" />
                     </div>
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    Members must pay both amounts to join
+                    <p className="text-xs text-slate-600">
+                      Members pay in USD only
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* 4. ZAPS PAY */}
+            {pricingModel === 'zaps' && (
+              <motion.div
+                key="zaps-options"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              >
+                <Card className="mt-4 border-violet-200 bg-violet-50/30">
+                  <CardContent className="p-4 space-y-4">
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">ZAPs Required</Label>
+                      <div className="relative">
+                        <Input
+                          {...register('zapsRequired', { valueAsNumber: true })}
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          className="pl-10 bg-white"
+                        />
+                        <Zap className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-violet-600" />
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-violet-200">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-indigo-50/50">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-medium">Enable Split Payment</Label>
+                          <p className="text-xs text-slate-600">
+                            Require both ZAPs + USD together
+                          </p>
+                        </div>
+                        <Controller
+                          name="splitPayEnabled"
+                          control={control}
+                          render={({ field }) => (
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          )}
+                        />
+                      </div>
+
+                      <AnimatePresence>
+                        {splitPayEnabled && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="mt-3 space-y-2"
+                          >
+                            <Label className="text-sm">USD Co-Pay</Label>
+                            <div className="relative">
+                              <Input
+                                {...register('usdCoPay', { valueAsNumber: true })}
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                placeholder="0.00"
+                                className="pl-10 bg-white"
+                              />
+                              <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-600" />
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* 5. ZAPS + USD */}
+            {pricingModel === 'zaps-usd' && (
+              <motion.div
+                key="zaps-usd-options"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              >
+                <Card className="mt-4 border-indigo-200 bg-indigo-50/30">
+                  <CardContent className="p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">ZAPs Required</Label>
+                        <div className="relative">
+                          <Input
+                            {...register('zapsRequired', { valueAsNumber: true })}
+                            type="number"
+                            min="0"
+                            placeholder="0"
+                            className="pl-10 bg-white"
+                          />
+                          <Zap className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-violet-600" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">USD Price</Label>
+                        <div className="relative">
+                          <Input
+                            {...register('usdCoPay', { valueAsNumber: true })}
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="0.00"
+                            className="pl-10 bg-white"
+                          />
+                          <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-600" />
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-600 mt-3">
+                      Members pay with a combination of ZAPs and USD
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* 6. CRYPTO */}
+            {pricingModel === 'crypto' && (
+              <motion.div
+                key="crypto-options"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              >
+                <Card className="mt-4 border-orange-200 bg-orange-50/30">
+                  <CardContent className="p-4 space-y-4">
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Select Crypto Currency</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {cryptoOptions.map((crypto) => (
+                          <motion.button
+                            key={crypto.value}
+                            type="button"
+                            onClick={() => toggleCryptoType(crypto.value)}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className={cn(
+                              'px-4 py-2 rounded-lg font-medium text-sm transition-all border-2',
+                              (cryptoTypes as string[]).includes(crypto.value)
+                                ? `${crypto.color} border-current shadow-sm`
+                                : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                            )}
+                          >
+                            {crypto.label}
+                          </motion.button>
+                        ))}
+                      </div>
+                      <p className="text-xs text-slate-600">
+                        Select which cryptocurrencies to accept
+                      </p>
+                    </div>
+
+                    <AnimatePresence>
+                      {cryptoTypes.length > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="space-y-2 pt-3 border-t border-orange-200"
+                        >
+                          <Label className="text-sm">Enter Amount in Selected Crypto</Label>
+                          <div className="relative">
+                            <Input
+                              {...register('cryptoAmount')}
+                              type="text"
+                              placeholder="0.005 BTC or 10 USDT"
+                              className="pl-10 bg-white"
+                            />
+                            <Bitcoin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-orange-600" />
+                          </div>
+                          <p className="text-xs text-slate-600">
+                            Payments processed via integrated wallet
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <div className="border-t border-gray-200"></div>
+
+        {/* Join Waitlist Section */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Card className={cn(
+            'border-2 transition-all duration-300',
+            waitlistEnabled ? 'border-amber-300 bg-amber-50/50' : 'border-gray-200'
+          )}>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-base font-semibold flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    Join Waitlist
+                  </Label>
+                  <p className="text-sm text-slate-600">
+                    Enable this if your community is collecting interest via email signups instead of payments
                   </p>
                 </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="border-t border-gray-200"></div>
-
-        {/* 4. Reward Members Tab */}
-        <div className="space-y-3">
-          <div className="flex flex-row items-center justify-between rounded-lg border p-4 bg-purple-50">
-            <div className="space-y-0.5">
-              <Label className="text-base">
-                Reward Members
-              </Label>
-              <p className="text-sm text-gray-500">
-                Offer ZAPs to new members for joining
-              </p>
-            </div>
-            <Controller
-              name="offerZAPsToNewMembers"
-              control={control}
-              render={({ field }) => (
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
+                <Controller
+                  name="waitlistEnabled"
+                  control={control}
+                  render={({ field }) => (
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
                 />
-              )}
-            />
-          </div>
-
-          {/* ZAPs Reward Amount */}
-          {offerZAPsToNewMembers && (
-            <div className="ml-6 space-y-2">
-              <Label htmlFor="newMemberZAPsReward">ZAPs Reward Amount</Label>
-              <div className="relative">
-                <Input
-                  {...register('newMemberZAPsReward', { valueAsNumber: true })}
-                  type="number"
-                  min="0"
-                  id="newMemberZAPsReward"
-                  placeholder="e.g. 50"
-                  className="pl-8"
-                />
-                <Zap className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-500" />
               </div>
-              <p className="text-xs text-gray-500">
-                Each new member receives this amount when they join
-              </p>
-            </div>
-          )}
-        </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         <div className="border-t border-gray-200"></div>
 
-        {/* 5. Join Waitlist */}
-        <div className="flex flex-row items-center justify-between rounded-lg border p-4 bg-amber-50">
-          <div className="space-y-0.5">
-            <Label className="text-base">
-              Join Waitlist
-            </Label>
-            <p className="text-sm text-gray-500">
-              Collect email addresses only (no payments processed)
-            </p>
-          </div>
-          <Controller
-            name="waitlistEnabled"
-            control={control}
-            render={({ field }) => (
-              <Switch
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            )}
-          />
-        </div>
-
-        <div className="border-t border-gray-200"></div>
-
-        {/* Additional Pricing Options */}
+        {/* Additional Options */}
         <div className="space-y-4">
           <Label className="text-base font-semibold">Additional Options</Label>
 
           {/* Member Limit */}
           <div className="space-y-2">
-            <Label>Member Limit</Label>
+            <Label className="text-sm">Member List</Label>
             <Input
               {...register('slotsAvailable', {
                 setValueAs: (v) => v === '' ? null : parseInt(v, 10)
@@ -1496,6 +2002,7 @@ const Step3Content: React.FC = () => {
               type="number"
               min="0"
               placeholder="Unlimited"
+              className="bg-white"
             />
             <p className="text-xs text-gray-500">
               Leave empty for unlimited members
@@ -1504,13 +2011,13 @@ const Step3Content: React.FC = () => {
 
           {/* Access Duration */}
           <div className="space-y-2">
-            <Label>Access Duration</Label>
+            <Label className="text-sm">Access Duration</Label>
             <Controller
               name="accessWindow"
               control={control}
               render={({ field }) => (
                 <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white">
                     <SelectValue placeholder="Select access duration" />
                   </SelectTrigger>
                   <SelectContent>

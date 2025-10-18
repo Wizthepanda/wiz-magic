@@ -29,6 +29,7 @@ export interface CreatorVideo {
   publishedAt: string;
   views: string;
   categoryTags: string[];
+  subcategory?: string;
   creatorId: string;
   channelId: string;
   addedToWiz: Date;
@@ -643,6 +644,7 @@ export class CreatorService {
           views: video.views,
           category: video.categoryTags[0] || 'tech',
           categoryTags: video.categoryTags,
+          subcategory: video.subcategory,
           contentType: video.contentType,
           creatorId: video.creatorId,
           channelId: video.channelId,

@@ -15,8 +15,8 @@ export const createCommunitySchema = z.object({
   privacy: z.enum(["public", "private", "invite"]),
 
   // Content fields
-  youtubeChannelConnected: z.boolean().optional(),
-  youtubeVideoIds: z.array(z.string()).optional(),
+  linkedCourseId: z.string().optional(),
+  linkedCourseName: z.string().optional(),
   modules: z.array(z.object({
     title: z.string(),
     type: z.enum(["video", "article"]),
@@ -29,7 +29,7 @@ export const createCommunitySchema = z.object({
   })).optional(),
 
   // Monetization fields
-  pricingModel: z.enum(["usd", "zaps"]),
+  pricingModel: z.enum(["free", "free-zaps", "usd", "zaps", "zaps-usd", "crypto"]),
   zapsRequired: z.number().int().nonnegative(),
   usdCoPay: z.number().nonnegative(),
   slotsAvailable: z.number().int().nonnegative().nullable(),
@@ -41,6 +41,10 @@ export const createCommunitySchema = z.object({
   // Reward Members fields
   offerZAPsToNewMembers: z.boolean().optional(),
   newMemberZAPsReward: z.number().int().nonnegative().optional(),
+
+  // Crypto payment fields
+  cryptoTypes: z.array(z.enum(["usdt", "btc", "usdc", "doge"])).optional(),
+  cryptoAmount: z.string().optional(),
 
   // Publishing fields
   status: z.enum(["draft", "published", "scheduled"]),
@@ -75,8 +79,8 @@ export const step1Schema = z.object({
 });
 
 export const step2Schema = z.object({
-  youtubeChannelConnected: z.boolean().optional(),
-  youtubeVideoIds: z.array(z.string()).optional(),
+  linkedCourseId: z.string().optional(),
+  linkedCourseName: z.string().optional(),
   modules: z.array(z.object({
     title: z.string(),
     type: z.enum(["video", "article"]),
@@ -90,7 +94,7 @@ export const step2Schema = z.object({
 });
 
 export const step3Schema = z.object({
-  pricingModel: z.enum(["usd", "zaps"]),
+  pricingModel: z.enum(["free", "free-zaps", "usd", "zaps", "zaps-usd", "crypto"]),
   zapsRequired: z.number().int().nonnegative(),
   usdCoPay: z.number().nonnegative(),
   slotsAvailable: z.number().int().nonnegative().nullable(),
@@ -99,7 +103,9 @@ export const step3Schema = z.object({
   waitlistEnabled: z.boolean().optional(),
   accessWindow: z.string().optional(),
   offerZAPsToNewMembers: z.boolean().optional(),
-  newMemberZAPsReward: z.number().int().nonnegative().optional()
+  newMemberZAPsReward: z.number().int().nonnegative().optional(),
+  cryptoTypes: z.array(z.enum(["usdt", "btc", "usdc", "doge"])).optional(),
+  cryptoAmount: z.string().optional()
 });
 
 export const step4Schema = z.object({

@@ -56,70 +56,161 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
   const { data: allItems = [], isLoading } = useQuery({
     queryKey: ['community-command-center', mainFilter, subFilter],
     queryFn: async () => {
-      // Fetch published communities
-      const communitiesQuery = query(
-        collection(db, 'communities'),
-        where('status', '==', 'published'),
-        orderBy('createdAt', 'desc'),
-        limit(100)
-      );
+      try {
+        const results: any[] = [];
 
-      const snapshot = await getDocs(communitiesQuery);
-      const results: any[] = [];
+        // Fetch published communities
+        const communitiesQuery = query(
+          collection(db, 'communities'),
+          where('status', '==', 'published'),
+          orderBy('createdAt', 'desc'),
+          limit(100)
+        );
 
-      snapshot.forEach((doc) => {
-        const data = doc.data();
+        const communitiesSnapshot = await getDocs(communitiesQuery);
+        console.log(`📊 Fetched ${communitiesSnapshot.size} communities from Firestore`);
 
-        // Determine item type and reward model
-        const zapRequired = data.zapsRequired || 0;
-        const usdCoPay = data.usdCoPay || 0;
-        const offerZaps = data.offerZAPsToNewMembers || false;
-        const zapReward = data.newMemberZAPsReward || 0;
+        // Fetch published courses from courses_community collection
+        const coursesQuery = query(
+          collection(db, 'courses_community'),
+          where('status', '==', 'published'),
+          orderBy('createdAt', 'desc'),
+          limit(100)
+        );
 
-        let itemType = 'community';
-        let rewardType = 'free';
+        const coursesSnapshot = await getDocs(coursesQuery);
+        console.log(`📊 Fetched ${coursesSnapshot.size} courses from Firestore`);
 
-        if (data.category?.toLowerCase().includes('course')) {
-          itemType = 'course';
-        } else if (data.category?.toLowerCase().includes('coaching')) {
-          itemType = 'coaching';
-        } else if (data.category?.toLowerCase().includes('product') || data.category?.toLowerCase().includes('digital')) {
-          itemType = 'product';
-        }
+        // Process communities
+        communitiesSnapshot.forEach((doc) => {
+          const data = doc.data();
 
-        // Determine reward type
-        if (offerZaps && zapReward > 0) {
-          rewardType = 'free-zaps';
-        } else if (zapRequired > 0 && usdCoPay > 0) {
-          rewardType = 'zaps-usd';
-        } else if (zapRequired > 0) {
-          rewardType = 'paid-zaps';
-        } else if (usdCoPay > 0) {
-          rewardType = 'paid';
-        }
+          // Determine item type and reward model
+          const zapRequired = data.zapsRequired || 0;
+          const usdCoPay = data.usdCoPay || 0;
+          const offerZaps = data.offerZAPsToNewMembers || false;
+          const zapReward = data.newMemberZAPsReward || 0;
+          const pricingModel = data.pricingModel || 'free';
 
-        results.push({
-          id: doc.id,
-          ...data,
-          itemType,
-          rewardType,
-          zapRequired,
-          usdCoPay,
-          offerZaps,
-          zapReward,
-          coverMedia: data.coverMedia || [],
-          tags: data.tags || [],
-          modules: data.modules || [],
-          creator: {
-            name: data.creatorName || 'Unknown Creator',
-            avatarUrl: data.creatorAvatar || '/Profile Pics/FERA.jpg',
-            level: data.creatorLevel || 1
+          // Debug logging for Free ZAPs detection
+          if (pricingModel === 'free-zaps' || offerZaps) {
+            console.log(`🎁 Free ZAPs Community Detected:`, {
+              title: data.title,
+              pricingModel,
+              offerZAPsToNewMembers: data.offerZAPsToNewMembers,
+              newMemberZAPsReward: data.newMemberZAPsReward,
+              offerZaps,
+              zapReward
+            });
           }
-        });
-      });
 
-      console.log(`✅ Loaded ${results.length} items for Community Command Center`);
-      return results;
+          // Items from communities collection are ONLY communities
+          // Courses come from courses_community collection
+          let itemType = 'community';
+          let rewardType = 'free';
+
+          // Check itemType field if it exists (for coaching/products)
+          if (data.itemType === 'coaching') {
+            itemType = 'coaching';
+          } else if (data.itemType === 'product') {
+            itemType = 'product';
+          }
+
+          // Determine reward type - check pricingModel first, then fall back to field detection
+          if (pricingModel === 'free-zaps' || (offerZaps && zapReward > 0)) {
+            rewardType = 'free-zaps';
+          } else if (pricingModel === 'zaps-usd' || (zapRequired > 0 && usdCoPay > 0)) {
+            rewardType = 'zaps-usd';
+          } else if (pricingModel === 'zaps' || (zapRequired > 0 && !usdCoPay)) {
+            rewardType = 'paid-zaps';
+          } else if (pricingModel === 'usd' || (usdCoPay > 0 && !zapRequired)) {
+            rewardType = 'paid';
+          } else if (pricingModel === 'crypto') {
+            rewardType = 'crypto';
+          }
+
+          results.push({
+            id: doc.id,
+            ...data,
+            itemType,
+            rewardType,
+            zapRequired,
+            usdCoPay,
+            offerZaps,
+            zapReward,
+            coverMedia: data.coverMedia || [],
+            tags: data.tags || [],
+            modules: data.modules || [],
+            creator: {
+              name: data.creatorName || 'Unknown Creator',
+              avatarUrl: data.creatorAvatar || '/Profile Pics/FERA.jpg',
+              level: data.creatorLevel || 1
+            }
+          });
+        });
+
+        // Process courses - filter out old versions
+        coursesSnapshot.forEach((doc) => {
+          const data = doc.data();
+
+          // Skip old versions - only show latest versions
+          // If isLatestVersion is explicitly false, skip it
+          // If undefined (old courses without version control), include it for backwards compatibility
+          if (data.isLatestVersion === false) {
+            console.log(`⏭️  Skipping old version: ${data.title} (v${data.version})`);
+            return;
+          }
+
+          // Determine item type and reward model
+          const zapRequired = data.zapsRequired || 0;
+          const usdCoPay = data.usdCoPay || 0;
+          const offerZaps = data.offerZAPsToNewMembers || false;
+          const zapReward = data.newMemberZAPsReward || 0;
+
+          const itemType = 'course'; // Courses are always type 'course'
+          let rewardType = 'free';
+
+          // Determine reward type based on pricing model
+          if (offerZaps && zapReward > 0) {
+            rewardType = 'free-zaps';
+          } else if (zapRequired > 0 && usdCoPay > 0) {
+            rewardType = 'zaps-usd';
+          } else if (zapRequired > 0) {
+            rewardType = 'paid-zaps';
+          } else if (usdCoPay > 0) {
+            rewardType = 'paid';
+          }
+
+          results.push({
+            id: doc.id,
+            ...data,
+            itemType,
+            rewardType,
+            zapRequired,
+            usdCoPay,
+            offerZaps,
+            zapReward,
+            coverMedia: data.coverImage ? [{ url: data.coverImage, type: 'image' }] : [],
+            tags: data.tags || [],
+            modules: data.modules || [],
+            creator: {
+              name: data.creatorName || 'Unknown Creator',
+              avatarUrl: data.creatorAvatar || '/Profile Pics/FERA.jpg',
+              level: data.creatorLevel || 1
+            }
+          });
+        });
+
+        console.log(`✅ Loaded ${results.length} items for Community Command Center (${communitiesSnapshot.size} communities, ${coursesSnapshot.size} courses)`);
+        return results.sort((a, b) => {
+          const aTime = a.createdAt?.toMillis?.() || 0;
+          const bTime = b.createdAt?.toMillis?.() || 0;
+          return bTime - aTime; // Sort by newest first
+        });
+      } catch (error) {
+        console.error('❌ Error fetching community data:', error);
+        throw error;
+      }
     }
   });
 

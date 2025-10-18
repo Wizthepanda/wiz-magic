@@ -19,6 +19,7 @@ export const EditProfileTab = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState({
     displayName: '',
@@ -28,6 +29,8 @@ export const EditProfileTab = () => {
   });
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>('');
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string>('');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -50,6 +53,7 @@ export const EditProfileTab = () => {
         });
         
         setAvatarPreview(user.photoURL || '');
+        setBannerPreview(userData?.bannerImage || '');
       } catch (error) {
         console.error('Error loading user data:', error);
       } finally {
@@ -94,6 +98,40 @@ export const EditProfileTab = () => {
     reader.readAsDataURL(file);
   };
 
+  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (10MB max for banner)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image under 10MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file (PNG, JPG, etc.)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setBannerFile(file);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setBannerPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -131,12 +169,20 @@ export const EditProfileTab = () => {
 
     try {
       let photoURL = user.photoURL;
+      let bannerURL = bannerPreview; // Keep existing banner if no new upload
 
       // Upload new avatar if selected
       if (avatarFile) {
         const avatarRef = ref(storage, `avatars/${user.uid}/${Date.now()}_${avatarFile.name}`);
         await uploadBytes(avatarRef, avatarFile);
         photoURL = await getDownloadURL(avatarRef);
+      }
+
+      // Upload new banner if selected
+      if (bannerFile) {
+        const bannerRef = ref(storage, `banners/${user.uid}/${Date.now()}_${bannerFile.name}`);
+        await uploadBytes(bannerRef, bannerFile);
+        bannerURL = await getDownloadURL(bannerRef);
       }
 
       // Update Firebase Auth profile
@@ -151,6 +197,7 @@ export const EditProfileTab = () => {
         username: formData.username,
         bio: formData.bio,
         photoURL: photoURL,
+        bannerImage: bannerURL,
         updatedAt: new Date().toISOString(),
       }, { merge: true });
 
@@ -191,6 +238,8 @@ export const EditProfileTab = () => {
     });
     setAvatarFile(null);
     setAvatarPreview(user?.photoURL || '');
+    setBannerFile(null);
+    // Keep banner preview from database
     setErrors({});
   };
 
@@ -295,6 +344,52 @@ export const EditProfileTab = () => {
                   {avatarFile ? avatarFile.name : 'Click to upload or drag & drop'}
                 </p>
                 <p className="text-xs text-slate-500 mt-1 relative z-10">PNG, JPG up to 5MB</p>
+              </motion.div>
+            </div>
+
+            {/* Banner Upload */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-3">
+                Profile Banner
+              </label>
+              <input
+                ref={bannerInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleBannerChange}
+                className="hidden"
+              />
+              <motion.div
+                whileHover={{ scale: 1.01 }}
+                onClick={() => bannerInputRef.current?.click()}
+                className="relative border-2 border-dashed border-[#8B5CF6]/30 rounded-2xl overflow-hidden cursor-pointer hover:border-[#8B5CF6]/60 transition-colors group"
+              >
+                {bannerPreview ? (
+                  <div className="relative h-32 w-full">
+                    <img
+                      src={bannerPreview}
+                      alt="Banner preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Upload className="w-8 h-8 text-white" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-8 text-center">
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#8B5CF6]/5 to-[#C084FC]/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <Upload className="w-8 h-8 text-[#8B5CF6] mx-auto mb-2 relative z-10" />
+                    <p className="text-sm font-medium text-slate-700 relative z-10">
+                      Click to upload banner image
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1 relative z-10">Recommended: 1200x300px, PNG or JPG up to 10MB</p>
+                  </div>
+                )}
+                {bannerFile && (
+                  <div className="absolute top-2 right-2 bg-[#8B5CF6] text-white text-xs px-2 py-1 rounded-full">
+                    {bannerFile.name}
+                  </div>
+                )}
               </motion.div>
             </div>
 

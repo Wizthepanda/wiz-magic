@@ -40,6 +40,8 @@ export type Community = {
     seats: number | string;
   };
   slug?: string;
+  linkedCourseId?: string;
+  linkedCourseName?: string;
 };
 
 export type Module = {

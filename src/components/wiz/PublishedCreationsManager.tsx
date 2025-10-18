@@ -70,15 +70,17 @@ export const PublishedCreationsManager: React.FC<PublishedCreationsManagerProps>
     if (!user) return;
       try {
         setLoading(true);
+        const fetchedCreations: PublishedCreation[] = [];
+
+        // Fetch communities
         const communitiesQuery = query(
           collection(db, 'communities'),
           where('creatorId', '==', user.uid)
         );
+        const communitiesSnapshot = await getDocs(communitiesQuery);
 
-        const snapshot = await getDocs(communitiesQuery);
-        const fetchedCreations: PublishedCreation[] = [];
-
-        snapshot.forEach((doc) => {
+        // Process communities
+        communitiesSnapshot.forEach((doc) => {
           const data = doc.data();
           const zapsRequired = data.zapsRequired || 0;
           const usdCoPay = data.usdCoPay || 0;
@@ -115,11 +117,76 @@ export const PublishedCreationsManager: React.FC<PublishedCreationsManagerProps>
           fetchedCreations.push(creation);
         });
 
+        // Fetch courses from courses_community collection
+        const coursesQuery = query(
+          collection(db, 'courses_community'),
+          where('creatorId', '==', user.uid)
+        );
+        const coursesSnapshot = await getDocs(coursesQuery);
+
+        // Process courses
+        coursesSnapshot.forEach((doc) => {
+          const data = doc.data();
+          const zapsRequired = data.zapsRequired || 0;
+          const usdCoPay = data.usdCoPay || 0;
+
+          let monetizationType: 'zaps-only' | 'zaps-usd' | 'free' = 'free';
+          if (zapsRequired > 0 && usdCoPay > 0) {
+            monetizationType = 'zaps-usd';
+          } else if (zapsRequired > 0) {
+            monetizationType = 'zaps-only';
+          }
+
+          const creation: PublishedCreation = {
+            id: doc.id,
+            title: data.title || 'Untitled Course',
+            description: data.description || '',
+            type: 'course',
+            thumbnail: data.coverImage || '/api/placeholder/400/300',
+            zapsRequired,
+            usdCoPay: usdCoPay > 0 ? usdCoPay : undefined,
+            monetizationType,
+            status: data.status === 'published' ? 'live' : 'draft',
+            creatorName: data.creatorName || user.displayName || 'Creator',
+            creatorAvatar: data.creatorAvatar || user.photoURL || '/api/placeholder/60/60',
+            stats: {
+              members: data.enrollmentCount || 0,
+              sales: 0,
+              rewards: 0,
+              rating: data.rating || 4.5
+            },
+            tags: data.tags || [],
+            createdAt: data.createdAt
+          };
+
+          fetchedCreations.push(creation);
+        });
+
+        console.log(`📦 Fetched ${communitiesSnapshot.size} communities and ${coursesSnapshot.size} courses`);
+
+        // Helper function to safely get timestamp
+        const getTimestamp = (timestamp: any): number => {
+          if (!timestamp) return 0;
+          if (typeof timestamp.toMillis === 'function') {
+            return timestamp.toMillis();
+          }
+          if (typeof timestamp === 'number') {
+            return timestamp;
+          }
+          if (timestamp.seconds) {
+            return timestamp.seconds * 1000;
+          }
+          return 0;
+        };
+
         // Deduplicate by title - keep only the most recently updated version
         const deduplicatedCreations = Object.values(
           fetchedCreations.reduce((acc, creation) => {
             const existing = acc[creation.title];
-            if (!existing || (creation.createdAt?.toMillis() || 0) > (existing.createdAt?.toMillis() || 0)) {
+            const creationTime = getTimestamp(creation.createdAt);
+            const existingTime = getTimestamp(existing?.createdAt);
+
+            if (!existing || creationTime > existingTime) {
               acc[creation.title] = creation;
             }
             return acc;
@@ -155,7 +222,16 @@ export const PublishedCreationsManager: React.FC<PublishedCreationsManagerProps>
     }
 
     try {
-      await deleteDoc(doc(db, 'communities', creationId));
+      // Find the creation to determine its type
+      const creation = creations.find(c => c.id === creationId);
+      if (!creation) {
+        throw new Error('Creation not found');
+      }
+
+      // Determine the correct collection based on type
+      const collectionName = creation.type === 'course' ? 'courses_community' : 'communities';
+
+      await deleteDoc(doc(db, collectionName, creationId));
       setCreations(prev => prev.filter(c => c.id !== creationId));
       setSelectedCreation(null);
       toast({

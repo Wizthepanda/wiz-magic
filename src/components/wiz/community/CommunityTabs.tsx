@@ -1,13 +1,14 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 import { motion } from "framer-motion";
-import { Loader2, BookOpen } from "lucide-react";
+import { Loader2, BookOpen, GraduationCap, PlayCircle, ChevronRight } from "lucide-react";
 import type { Community } from "@/types/community";
 import { ModulesList } from "./ModulesList";
 import { DiscussionFeed } from "./DiscussionFeed";
 import { MembersGrid } from "./MembersGrid";
 import { RewardsList } from "./RewardsList";
 import { cn } from "@/lib/utils";
+import { CourseService, type Course } from "@/lib/course-service";
 
 interface CommunityTabsProps {
   community: Community;
@@ -130,22 +131,145 @@ function TabTrigger({
 
 function AboutPanel({ community }: { community: Community }) {
   const description = community.longDescription || community.shortDescription || community.description || "No description available.";
-  
+  const [linkedCourse, setLinkedCourse] = useState<Course | null>(null);
+  const [loadingCourse, setLoadingCourse] = useState(false);
+
+  // Fetch linked course if exists
+  useEffect(() => {
+    const fetchLinkedCourse = async () => {
+      if (!community.linkedCourseId) return;
+
+      setLoadingCourse(true);
+      try {
+        const courseService = CourseService.getInstance();
+
+        // Try to get from both collections
+        const [learnSnapshot, claimSnapshot] = await Promise.all([
+          import('firebase/firestore').then(({ getDoc, doc }) =>
+            getDoc(doc(import('@/lib/firebase').then(m => m.db), 'courses_learn', community.linkedCourseId!))
+          ),
+          import('firebase/firestore').then(({ getDoc, doc }) =>
+            getDoc(doc(import('@/lib/firebase').then(m => m.db), 'courses_claim', community.linkedCourseId!))
+          )
+        ]);
+
+        const learnDoc = await learnSnapshot;
+        const claimDoc = await claimSnapshot;
+
+        if (learnDoc.exists()) {
+          setLinkedCourse({ id: learnDoc.id, ...learnDoc.data() } as Course);
+        } else if (claimDoc.exists()) {
+          setLinkedCourse({ id: claimDoc.id, ...claimDoc.data() } as Course);
+        }
+      } catch (error) {
+        console.error('Error fetching linked course:', error);
+      } finally {
+        setLoadingCourse(false);
+      }
+    };
+
+    fetchLinkedCourse();
+  }, [community.linkedCourseId]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="rounded-3xl p-6 md:p-8 bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-xl shadow-xl border border-white/40"
+      className="space-y-6"
     >
-      <h3 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-5">
-        About this community
-      </h3>
-      <div className="prose prose-slate max-w-none">
-        <p className="text-slate-700 leading-relaxed text-base">
-          {description}
-        </p>
-      </div>
+      {/* Featured Course Card */}
+      {community.linkedCourseId && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="rounded-3xl p-6 md:p-8 bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50 backdrop-blur-xl shadow-2xl border-2 border-violet-200 relative overflow-hidden"
+        >
+          {/* Decorative gradient orbs */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-violet-400/20 to-purple-400/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-pink-400/20 to-purple-400/20 rounded-full blur-3xl" />
+
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg">
+                <GraduationCap className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-violet-600 uppercase tracking-wider">Featured Course</h3>
+                <p className="text-xs text-violet-500">Included with membership</p>
+              </div>
+            </div>
+
+            {loadingCourse ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
+              </div>
+            ) : linkedCourse ? (
+              <>
+                <h4 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-3">
+                  {linkedCourse.title}
+                </h4>
+                <p className="text-slate-600 leading-relaxed mb-6">
+                  {linkedCourse.description}
+                </p>
+
+                {/* Course stats */}
+                <div className="flex flex-wrap gap-4 mb-6">
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/80 backdrop-blur-sm border border-violet-200">
+                    <BookOpen className="w-4 h-4 text-violet-600" />
+                    <span className="text-sm font-semibold text-slate-700">
+                      {linkedCourse.modules?.length || 0} Modules
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/80 backdrop-blur-sm border border-violet-200">
+                    <PlayCircle className="w-4 h-4 text-violet-600" />
+                    <span className="text-sm font-semibold text-slate-700">
+                      {linkedCourse.modules?.reduce((acc, mod) => acc + (mod.lessons?.length || 0), 0) || 0} Lessons
+                    </span>
+                  </div>
+                  {linkedCourse.enrollmentCount > 0 && (
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/80 backdrop-blur-sm border border-violet-200">
+                      <GraduationCap className="w-4 h-4 text-violet-600" />
+                      <span className="text-sm font-semibold text-slate-700">
+                        {linkedCourse.enrollmentCount} Students
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 text-white font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 group"
+                >
+                  <PlayCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  Start Learning
+                  <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </motion.button>
+              </>
+            ) : (
+              <p className="text-slate-600">Loading course information...</p>
+            )}
+          </div>
+        </motion.div>
+      )}
+
+      {/* About Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: community.linkedCourseId ? 0.2 : 0 }}
+        className="rounded-3xl p-6 md:p-8 bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-xl shadow-xl border border-white/40"
+      >
+        <h3 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-5">
+          About this community
+        </h3>
+        <div className="prose prose-slate max-w-none">
+          <p className="text-slate-700 leading-relaxed text-base">
+            {description}
+          </p>
+        </div>
 
       {/* Tags */}
       {community.tags && community.tags.length > 0 && (
@@ -174,6 +298,7 @@ function AboutPanel({ community }: { community: Community }) {
         <StatCard label="Duration" value={community.duration || "Lifetime"} />
         <StatCard label="Access" value={community.accessType} />
       </div>
+    </motion.div>
     </motion.div>
   );
 }

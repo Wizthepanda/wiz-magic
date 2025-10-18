@@ -167,15 +167,44 @@ export const EnhancedCommunityCard: React.FC<EnhancedCommunityCardProps> = ({
         <div className="mt-auto pt-3 flex items-center gap-3">
           <button
             onClick={onView}
-            className="flex-1 py-2.5 rounded-xl bg-gradient-to-tr from-purple-500 to-blue-500 text-white font-semibold hover:shadow-lg hover:scale-[1.02] transition-all shadow-sm flex items-center justify-center gap-2"
+            className={cn(
+              "flex-1 py-2.5 rounded-xl font-semibold hover:shadow-lg hover:scale-[1.02] transition-all shadow-sm flex items-center justify-center gap-2",
+              item.rewardType === 'free' || item.rewardType === 'free-zaps'
+                ? "bg-gradient-to-tr from-green-500 to-emerald-500 text-white"
+                : "bg-gradient-to-tr from-purple-500 to-blue-500 text-white"
+            )}
           >
-            <Zap className="w-4 h-4 fill-current" />
-            {item.rewardType === 'free' || item.rewardType === 'free-zaps' ? 'Join' : 'Claim Now'}
+            {item.rewardType === 'free-zaps' ? (
+              <>
+                <Gift className="w-4 h-4" />
+                Join Free & Earn {item.zapReward} ⚡
+              </>
+            ) : item.rewardType === 'free' ? (
+              <>
+                <Gift className="w-4 h-4" />
+                Join Free
+              </>
+            ) : (
+              <>
+                <Zap className="w-4 h-4 fill-current" />
+                Claim Now
+              </>
+            )}
           </button>
-          {(item.zapRequired || item.usdCoPay) && (
+          {/* Only show cost badge for paid communities */}
+          {(item.rewardType === 'paid-zaps' || item.rewardType === 'paid' || item.rewardType === 'zaps-usd') && (
             <div className="text-xs bg-white/40 px-3 py-1.5 rounded-full text-slate-800 font-bold flex items-center gap-1 backdrop-blur-sm">
-              <Zap className="w-3 h-3 fill-current text-zap" />
-              {item.zapRequired || 0}
+              {item.rewardType === 'paid-zaps' || item.rewardType === 'zaps-usd' ? (
+                <>
+                  <Zap className="w-3 h-3 fill-current text-zap" />
+                  {item.zapRequired || 0}
+                </>
+              ) : (
+                <>
+                  <DollarSign className="w-3 h-3" />
+                  {item.usdCoPay || 0}
+                </>
+              )}
             </div>
           )}
         </div>

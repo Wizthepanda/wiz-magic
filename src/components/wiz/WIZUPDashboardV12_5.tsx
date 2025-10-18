@@ -63,7 +63,7 @@ interface VideoData {
   daysAgo: number;
 }
 
-// V16 Premium filter categories with gradient palettes
+// V16 Premium filter categories with gradient palettes and sub-categories
 const FILTER_CATEGORIES = [
   {
     id: 'all',
@@ -81,7 +81,8 @@ const FILTER_CATEGORIES = [
       default: 'linear-gradient(90deg, rgba(0,102,255,0.15), rgba(102,204,255,0.08))',
       hover: 'linear-gradient(90deg, rgba(0,102,255,0.25), rgba(102,204,255,0.12))',
       active: 'linear-gradient(90deg, rgba(0,102,255,0.8), rgba(102,204,255,0.6))'
-    }
+    },
+    subCategories: ['AI', 'Programming', 'Web Dev', 'Web3', 'Data', 'Coding', 'Software', 'Robotics', 'AR']
   },
   {
     id: 'money',
@@ -90,7 +91,8 @@ const FILTER_CATEGORIES = [
       default: 'linear-gradient(90deg, rgba(0,204,102,0.15), rgba(153,255,204,0.08))',
       hover: 'linear-gradient(90deg, rgba(0,204,102,0.25), rgba(153,255,204,0.12))',
       active: 'linear-gradient(90deg, rgba(0,204,102,0.8), rgba(153,255,204,0.6))'
-    }
+    },
+    subCategories: ['Crypto', 'Stocks', 'Real Estate', 'Trading', 'Startup', 'Crowdfunding', 'Marketing', 'E-commerce', 'Freelance']
   },
   {
     id: 'design',
@@ -100,16 +102,17 @@ const FILTER_CATEGORIES = [
       hover: 'linear-gradient(90deg, rgba(140,82,255,0.25), rgba(82,180,255,0.12))',
       active: 'linear-gradient(90deg, rgba(140,82,255,0.8), rgba(82,180,255,0.6))'
     },
-    subCategories: ['Graphic Design', 'UX/UI', 'Art', 'Animation', '3D Design']
+    subCategories: ['Graphic', 'UX/UI', 'Art', 'Animation', 'Video', 'Photography', '3D', 'NFTs']
   },
   {
-    id: 'business',
-    label: 'Business',
+    id: 'entertainment',
+    label: 'Entertainment',
     gradient: {
       default: 'linear-gradient(90deg, rgba(72,61,139,0.15), rgba(147,112,219,0.08))',
       hover: 'linear-gradient(90deg, rgba(72,61,139,0.25), rgba(147,112,219,0.12))',
       active: 'linear-gradient(90deg, rgba(72,61,139,0.8), rgba(147,112,219,0.6))'
-    }
+    },
+    subCategories: ['Anime', 'Animations', 'Music', 'Movies', 'Sports', 'Comedy', 'Podcasting']
   },
   {
     id: 'health',
@@ -118,7 +121,8 @@ const FILTER_CATEGORIES = [
       default: 'linear-gradient(90deg, rgba(46,204,113,0.15), rgba(171,235,198,0.08))',
       hover: 'linear-gradient(90deg, rgba(46,204,113,0.25), rgba(171,235,198,0.12))',
       active: 'linear-gradient(90deg, rgba(46,204,113,0.8), rgba(171,235,198,0.6))'
-    }
+    },
+    subCategories: ['Fitness', 'Longevity', 'Nutrition', 'Wellness', 'Yoga', 'Mental Health', 'Meditation', 'Sleep']
   },
   {
     id: 'self-improvement',
@@ -127,7 +131,8 @@ const FILTER_CATEGORIES = [
       default: 'linear-gradient(90deg, rgba(255,159,67,0.15), rgba(255,204,153,0.08))',
       hover: 'linear-gradient(90deg, rgba(255,159,67,0.25), rgba(255,204,153,0.12))',
       active: 'linear-gradient(90deg, rgba(255,159,67,0.8), rgba(255,204,153,0.6))'
-    }
+    },
+    subCategories: ['Productivity', 'Motivation', 'Mindset', 'Public Speaking', 'Leadership', 'Creativity']
   },
   {
     id: 'education',
@@ -136,7 +141,8 @@ const FILTER_CATEGORIES = [
       default: 'linear-gradient(90deg, rgba(0,128,128,0.15), rgba(102,205,170,0.08))',
       hover: 'linear-gradient(90deg, rgba(0,128,128,0.25), rgba(102,205,170,0.12))',
       active: 'linear-gradient(90deg, rgba(0,128,128,0.8), rgba(102,205,170,0.6))'
-    }
+    },
+    subCategories: ['Languages', 'Online Learning', 'Learning', 'Teaching', 'Research']
   },
   {
     id: 'gaming',
@@ -145,7 +151,8 @@ const FILTER_CATEGORIES = [
       default: 'linear-gradient(90deg, rgba(155,89,182,0.15), rgba(195,155,211,0.08))',
       hover: 'linear-gradient(90deg, rgba(155,89,182,0.25), rgba(195,155,211,0.12))',
       active: 'linear-gradient(90deg, rgba(155,89,182,0.8), rgba(195,155,211,0.6))'
-    }
+    },
+    subCategories: ['Esports', 'Game Dev', 'Streaming', 'VR', 'Mobile']
   },
   {
     id: 'lifestyle',
@@ -154,7 +161,8 @@ const FILTER_CATEGORIES = [
       default: 'linear-gradient(90deg, rgba(255,94,98,0.15), rgba(255,195,113,0.08))',
       hover: 'linear-gradient(90deg, rgba(255,94,98,0.25), rgba(255,195,113,0.12))',
       active: 'linear-gradient(90deg, rgba(255,94,98,0.8), rgba(255,195,113,0.6))'
-    }
+    },
+    subCategories: ['Travel', 'Cooking', 'Fashion', 'Parenting', 'Home']
   },
   {
     id: 'social',
@@ -163,7 +171,8 @@ const FILTER_CATEGORIES = [
       default: 'linear-gradient(90deg, rgba(52,152,219,0.15), rgba(174,214,241,0.08))',
       hover: 'linear-gradient(90deg, rgba(52,152,219,0.25), rgba(174,214,241,0.12))',
       active: 'linear-gradient(90deg, rgba(52,152,219,0.8), rgba(174,214,241,0.6))'
-    }
+    },
+    subCategories: ['Dating', 'Networking', 'Relationships', 'Communication', 'Social Skills', 'Social Media']
   },
   {
     id: 'diy',
@@ -172,13 +181,24 @@ const FILTER_CATEGORIES = [
       default: 'linear-gradient(90deg, rgba(127,140,141,0.15), rgba(189,195,199,0.08))',
       hover: 'linear-gradient(90deg, rgba(127,140,141,0.25), rgba(189,195,199,0.12))',
       active: 'linear-gradient(90deg, rgba(127,140,141,0.8), rgba(189,195,199,0.6))'
-    }
+    },
+    subCategories: ['Crafts', 'Home Improvement', 'Gardening', 'Woodworking', 'Repair', '3D Printing']
   }
 ] as const;
 
-// Sub-category mapping for quick lookups
+// Sub-category mapping for quick lookups - comprehensive data structure
 const SUB_CATEGORY_MAP: Record<string, string[]> = {
-  design: ['Graphic Design', 'UX/UI', 'Art', 'Animation', '3D Design']
+  tech: ['AI', 'Programming', 'Web Dev', 'Web3', 'Data', 'Coding', 'Software', 'Robotics', 'AR'],
+  money: ['Crypto', 'Stocks', 'Real Estate', 'Trading', 'Startup', 'Crowdfunding', 'Marketing', 'E-commerce', 'Freelance'],
+  design: ['Graphic', 'UX/UI', 'Art', 'Animation', 'Video', 'Photography', '3D', 'NFTs'],
+  health: ['Fitness', 'Longevity', 'Nutrition', 'Wellness', 'Yoga', 'Mental Health', 'Meditation', 'Sleep'],
+  'self-improvement': ['Productivity', 'Motivation', 'Mindset', 'Public Speaking', 'Leadership', 'Creativity'],
+  education: ['Languages', 'Online Learning', 'Learning', 'Teaching', 'Research'],
+  gaming: ['Esports', 'Game Dev', 'Streaming', 'VR', 'Mobile'],
+  entertainment: ['Anime', 'Animations', 'Music', 'Movies', 'Sports', 'Comedy', 'Podcasting'],
+  lifestyle: ['Travel', 'Cooking', 'Fashion', 'Parenting', 'Home'],
+  social: ['Dating', 'Networking', 'Relationships', 'Communication', 'Social Skills', 'Social Media'],
+  diy: ['Crafts', 'Home Improvement', 'Gardening', 'Woodworking', 'Repair', '3D Printing']
 };
 
 // Enhanced video data with creator extras
@@ -415,9 +435,9 @@ const deriveCategoryFromTags = (tags?: string[]): string => {
       tagLower.includes('art') || tagLower.includes('graphic')) {
     return 'design';
   }
-  if (tagLower.includes('business') || tagLower.includes('entrepreneur') || tagLower.includes('startup') ||
-      tagLower.includes('marketing')) {
-    return 'business';
+  if (tagLower.includes('entertainment') || tagLower.includes('music') || tagLower.includes('movies') ||
+      tagLower.includes('tv') || tagLower.includes('comedy') || tagLower.includes('film')) {
+    return 'entertainment';
   }
   if (tagLower.includes('health') || tagLower.includes('fitness') || tagLower.includes('wellness') ||
       tagLower.includes('nutrition')) {
@@ -630,7 +650,7 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className={cn(
-          "relative px-4 py-2 h-10 rounded-full text-sm font-medium transition-all duration-150 whitespace-nowrap overflow-hidden border-0 will-change-transform",
+          "relative px-3 md:px-4 py-1.5 md:py-2 h-8 md:h-10 rounded-full text-xs md:text-sm font-medium transition-all duration-150 whitespace-nowrap overflow-hidden border-0 will-change-transform",
           getTextColor()
         )}
         style={{
@@ -765,15 +785,15 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
           </div>
 
           {/* Premium card content */}
-          <div className="p-5 space-y-4">
+          <div className="p-3 md:p-4 lg:p-5 space-y-3 md:space-y-4">
             {/* Title */}
-            <h3 className="font-bold text-gray-900 text-base leading-tight line-clamp-2 font-sans">
+            <h3 className="font-bold text-gray-900 text-sm md:text-base leading-tight line-clamp-2 font-sans">
               {video.title}
             </h3>
 
             {/* Creator row - clickable to visit profile */}
             <div
-              className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 -mx-2 px-2 py-1.5 rounded-lg transition-colors"
+              className="flex items-center gap-2 md:gap-3 cursor-pointer hover:bg-gray-50 -mx-2 px-2 py-1 md:py-1.5 rounded-lg transition-colors"
               onMouseEnter={() => {
                 // Prefetch creator profile on hover
                 const creatorId = video.creatorDetails?.id || video.creatorId || video.channelId;
@@ -793,16 +813,16 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
               <img
                 src={video.creatorDetails?.avatar || video.creatorAvatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
                 alt={video.creatorDetails?.name || video.creator}
-                className="w-8 h-8 rounded-full ring-2 ring-white/60"
+                className="w-6 h-6 md:w-8 md:h-8 rounded-full ring-2 ring-white/60"
               />
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-slate-800 truncate hover:text-purple-600 transition-colors">
+                <div className="flex items-center gap-1.5 md:gap-2">
+                  <span className="text-xs md:text-sm font-semibold text-slate-800 truncate hover:text-purple-600 transition-colors">
                     {video.creatorDetails?.name || video.creator}
                   </span>
                   {(video.creatorDetails?.verified || video.isVerified) && (
-                    <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-white text-xs font-bold">✓</span>
+                    <div className="w-3 h-3 md:w-4 md:h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-[8px] md:text-xs font-bold">✓</span>
                     </div>
                   )}
                 </div>
@@ -810,14 +830,14 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
             </div>
 
             {/* Meta row */}
-            <div className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-4 text-slate-600">
-                <div className="flex items-center gap-1.5">
-                  <Eye className="w-3.5 h-3.5" />
+            <div className="flex items-center justify-between text-[10px] md:text-xs">
+              <div className="flex items-center gap-2 md:gap-4 text-slate-600">
+                <div className="flex items-center gap-1 md:gap-1.5">
+                  <Eye className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   <span className="font-medium">{video.views}</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5" />
+                <div className="flex items-center gap-1 md:gap-1.5">
+                  <Clock className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   <span className="font-medium">{video.daysAgo}d ago</span>
                 </div>
               </div>
@@ -825,14 +845,14 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
               {/* Premium ZAP indicator */}
               {video.zapsReward > 0 && (
                 <div
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
+                  className="flex items-center gap-1 md:gap-1.5 px-2 md:px-3 py-1 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold"
                   style={{
                     background: 'linear-gradient(135deg, rgba(255, 184, 107, 0.3), rgba(245, 158, 11, 0.2))',
                     color: '#D97706',
                     border: '1px solid rgba(245, 158, 11, 0.2)'
                   }}
                 >
-                  <Zap className="w-3.5 h-3.5" fill="currentColor" />
+                  <Zap className="w-3 h-3 md:w-3.5 md:h-3.5" fill="currentColor" />
                   <span>+{video.zapsReward}</span>
                 </div>
               )}
@@ -867,24 +887,24 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
         }}
       >
         <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
+          initial={{ scale: 0.95, opacity: 0, y: isMobile ? 100 : 0 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.95, opacity: 0, y: isMobile ? 100 : 0 }}
           transition={{ duration: 0.4, type: "spring", damping: 25 }}
-          className="w-full max-w-7xl max-h-[95vh] overflow-hidden rounded-2xl mx-4 bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl"
+          className="w-full max-w-7xl max-h-[95vh] overflow-hidden rounded-t-2xl md:rounded-2xl mx-0 md:mx-4 bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex h-full">
+          <div className="flex flex-col md:flex-row h-full">
             {/* Main video section */}
-            <div className="flex-1 p-8 overflow-y-auto">
+            <div className="flex-1 p-3 md:p-6 lg:p-8 overflow-y-auto">
               {/* Header with back button */}
-              <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center justify-between mb-4 md:mb-8">
                 <motion.button
                   onClick={() => {
                     setIsWatchMode(false);
                     setSelectedVideo(null);
                   }}
-                  className="flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:text-slate-900 transition-all duration-200 rounded-full"
+                  className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-2.5 text-slate-600 hover:text-slate-900 transition-all duration-200 rounded-full text-sm md:text-base"
                   style={{
                     background: 'rgba(255, 255, 255, 0.6)',
                     backdropFilter: 'blur(8px)',
@@ -916,7 +936,7 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
               </div>
 
               {/* Video player */}
-              <div className="aspect-video rounded-2xl overflow-hidden bg-slate-900 mb-8 shadow-2xl">
+              <div className="aspect-video rounded-lg md:rounded-2xl overflow-hidden bg-slate-900 mb-4 md:mb-8 shadow-2xl">
                 <iframe
                   src={selectedVideo.videoUrl}
                   title={selectedVideo.title}
@@ -927,11 +947,11 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
               </div>
 
               {/* Creator and actions */}
-              <div className="space-y-6">
+              <div className="space-y-4 md:space-y-6">
                 {/* Creator profile - clickable to visit channel */}
-                <div className="flex items-start justify-between">
+                <div className="flex flex-col md:flex-row items-start md:justify-between gap-4">
                   <div
-                    className="flex items-start gap-5 cursor-pointer hover:bg-gray-50 -mx-3 px-3 py-2 rounded-xl transition-colors group"
+                    className="flex items-start gap-3 md:gap-5 cursor-pointer hover:bg-gray-50 -mx-2 md:-mx-3 px-2 md:px-3 py-2 rounded-xl transition-colors group w-full md:w-auto"
                     onClick={() => {
                       // Try to get creator ID from various possible locations
                       const creatorId = selectedVideo.creatorDetails?.id || selectedVideo.creator?.id || selectedVideo.creatorId || selectedVideo.channelId || selectedVideo.id;
@@ -943,21 +963,21 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
                     <img
                       src={selectedVideo.creator.avatar}
                       alt={selectedVideo.creator.name}
-                      className="w-16 h-16 rounded-full ring-4 ring-white/60 group-hover:ring-purple-200 transition-all"
+                      className="w-12 h-12 md:w-16 md:h-16 rounded-full ring-2 md:ring-4 ring-white/60 group-hover:ring-purple-200 transition-all"
                     />
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3">
-                        <span className="text-xl font-bold text-slate-900 group-hover:text-purple-600 transition-colors">
+                    <div className="space-y-1 md:space-y-2 flex-1 min-w-0">
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <span className="text-base md:text-xl font-bold text-slate-900 group-hover:text-purple-600 transition-colors truncate">
                           {selectedVideo.creator.name}
                         </span>
                         {selectedVideo.creator.verified && (
-                          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                            <span className="text-white text-sm font-bold">✓</span>
+                          <div className="w-4 h-4 md:w-6 md:h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-white text-xs md:text-sm font-bold">✓</span>
                           </div>
                         )}
                       </div>
-                      <p className="text-sm font-medium text-slate-600 group-hover:text-slate-700 transition-colors">
-                        {selectedVideo.creator.subscribers} subscribers • Click to view channel
+                      <p className="text-xs md:text-sm font-medium text-slate-600 group-hover:text-slate-700 transition-colors">
+                        {selectedVideo.creator.subscribers} subscribers{!isMobile && ' • Click to view channel'}
                       </p>
                       {selectedVideo.creator.bio && (
                         <p className="text-sm text-slate-700 max-w-md leading-relaxed">
@@ -968,9 +988,9 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
                   </div>
 
                   {/* Action buttons */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2 md:gap-3 w-full md:w-auto">
                     <motion.button
-                      className="px-6 py-3 text-white rounded-full font-semibold"
+                      className="px-4 md:px-6 py-2 md:py-3 text-white rounded-full font-semibold text-sm md:text-base flex-1 md:flex-none"
                       style={{
                         background: 'linear-gradient(135deg, #7C3AED, #8B5CF6, #6366F1)',
                         boxShadow: '0 8px 32px rgba(124, 58, 237, 0.3)'
@@ -983,7 +1003,7 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
                     </motion.button>
 
                     <motion.button
-                      className="p-3 text-slate-600 hover:text-slate-900 transition-colors rounded-full"
+                      className="p-2 md:p-3 text-slate-600 hover:text-slate-900 transition-colors rounded-full"
                       style={{
                         background: 'rgba(255, 255, 255, 0.20)',
                         backdropFilter: 'blur(16px)',
@@ -992,11 +1012,11 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                     >
-                      <Share className="w-5 h-5" />
+                      <Share className="w-4 h-4 md:w-5 md:h-5" />
                     </motion.button>
 
                     <motion.button
-                      className="p-3 text-slate-600 hover:text-slate-900 transition-colors rounded-full"
+                      className="p-2 md:p-3 text-slate-600 hover:text-slate-900 transition-colors rounded-full"
                       style={{
                         background: 'rgba(255, 255, 255, 0.20)',
                         backdropFilter: 'blur(16px)',
@@ -1005,11 +1025,11 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                     >
-                      <Bookmark className="w-5 h-5" />
+                      <Bookmark className="w-4 h-4 md:w-5 md:h-5" />
                     </motion.button>
 
                     <motion.button
-                      className="px-4 py-3 text-white rounded-full font-semibold"
+                      className="px-3 md:px-4 py-2 md:py-3 text-white rounded-full font-semibold text-sm md:text-base flex-1 md:flex-none"
                       style={{
                         background: 'linear-gradient(135deg, #F59E0B, #D97706)',
                         boxShadow: '0 8px 32px rgba(245, 158, 11, 0.3)'
@@ -1056,10 +1076,10 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
               </div>
             </div>
 
-            {/* Up Next sidebar */}
-            <div className="w-96 overflow-y-auto border-l border-white/10 bg-white/5 backdrop-blur-xl">
-              <div className="p-6">
-                <h3 className="text-lg font-bold text-slate-900 mb-6">Up Next</h3>
+            {/* Up Next sidebar - Hidden on mobile */}
+            <div className="hidden md:block md:w-96 overflow-y-auto border-l border-white/10 bg-white/5 backdrop-blur-xl">
+              <div className="p-4 md:p-6">
+                <h3 className="text-base md:text-lg font-bold text-slate-900 mb-4 md:mb-6">Up Next</h3>
                 <div className="space-y-4">
                   {relatedVideos.map((video) => (
                     <motion.div
@@ -1112,9 +1132,9 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
 
   return (
     <div className={cn("w-full", className)}>
-      {/* Filter Row - Scrollable */}
+      {/* Filter Row - Scrollable with Mobile Responsiveness */}
       <div className="relative w-full bg-white">
-        <div className="flex overflow-x-auto space-x-3 px-6 py-3 scrollbar-hide"
+        <div className="flex overflow-x-auto space-x-2 md:space-x-3 px-3 md:px-6 py-2 md:py-3 scrollbar-hide"
           style={{
             scrollBehavior: 'smooth',
             WebkitOverflowScrolling: 'touch'
@@ -1129,48 +1149,101 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
             ))}
           </div>
 
-          {/* Sub-filter bubbles - appear when main category with sub-categories is selected */}
-          {activeFilter !== 'all' && SUB_CATEGORY_MAP[activeFilter] && (
-            <motion.div
-              key={activeFilter}
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="mt-3"
-            >
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide scroll-smooth">
-                {SUB_CATEGORY_MAP[activeFilter].map((subCat) => (
-                  <button
-                    key={subCat}
-                    onClick={() => {
-                      console.log('🎯 Clicked sub-category:', subCat);
-                      setActiveSubFilter(activeSubFilter === subCat ? null : subCat);
-                    }}
-                    className={cn(
-                      "px-3 py-1.5 h-7 text-xs flex-shrink-0 whitespace-nowrap transition-all duration-200 rounded-full",
-                      activeSubFilter === subCat
-                        ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md font-medium"
-                        : "bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
-                    )}
-                  >
-                    {subCat}
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          )}
+          {/* Premium Sub-filter bubbles - appear when main category with sub-categories is selected */}
+          <AnimatePresence mode="wait">
+            {activeFilter !== 'all' && SUB_CATEGORY_MAP[activeFilter] && (
+              <motion.div
+                key={activeFilter}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{
+                  duration: 0.3,
+                  ease: "easeOut",
+                  type: "spring",
+                  stiffness: 250,
+                  damping: 20
+                }}
+                className="px-3 md:px-6 pb-2 md:pb-3"
+              >
+                <div className="flex gap-1.5 md:gap-2 overflow-x-auto scrollbar-hide scroll-smooth flex-wrap">
+                  {SUB_CATEGORY_MAP[activeFilter].map((subCat, index) => (
+                    <motion.button
+                      key={subCat}
+                      onClick={() => {
+                        console.log('🎯 Clicked sub-category:', subCat);
+                        setActiveSubFilter(activeSubFilter === subCat ? null : subCat);
+                      }}
+                      initial={{ opacity: 0, scale: 0.8, y: -10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{
+                        duration: 0.3,
+                        delay: index * 0.06, // Staggered 60ms animation per bubble
+                        ease: [0.25, 0.46, 0.45, 0.94]
+                      }}
+                      whileHover={{
+                        scale: 1.05,
+                        y: -2,
+                        transition: { duration: 0.2, type: "spring", stiffness: 300 }
+                      }}
+                      whileTap={{
+                        scale: 0.95,
+                        transition: { duration: 0.1 }
+                      }}
+                      className={cn(
+                        "px-3 md:px-4 py-1.5 md:py-2 h-7 md:h-8 text-[10px] md:text-xs font-semibold flex-shrink-0 whitespace-nowrap transition-all duration-200 rounded-full relative overflow-hidden will-change-transform",
+                        activeSubFilter === subCat
+                          ? "text-white shadow-lg"
+                          : "text-gray-700 hover:text-gray-900"
+                      )}
+                      style={
+                        activeSubFilter === subCat
+                          ? {
+                              background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.95), rgba(139, 92, 246, 0.95))',
+                              backdropFilter: 'blur(16px)',
+                              border: '1px solid rgba(255, 255, 255, 0.3)',
+                              boxShadow: '0 4px 20px rgba(99, 102, 241, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                            }
+                          : {
+                              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.15))',
+                              backdropFilter: 'blur(12px)',
+                              border: '1px solid rgba(0, 0, 0, 0.08)',
+                              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
+                            }
+                      }
+                    >
+                      {/* Glow effect for active state */}
+                      {activeSubFilter === subCat && (
+                        <motion.div
+                          className="absolute inset-0 rounded-full bg-gradient-to-r from-white/0 via-white/20 to-white/0"
+                          initial={{ x: '-100%' }}
+                          animate={{ x: '100%' }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            repeatDelay: 2,
+                            ease: 'easeInOut'
+                          }}
+                        />
+                      )}
+                      <span className="relative z-10">{subCat}</span>
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-      {/* Video Grid - 3×4 Layout (12 videos) */}
-      <main className="p-6">
+      {/* Video Grid - Responsive: 1 col (mobile), 2 cols (tablet), 3 cols (desktop) */}
+      <main className="p-3 md:p-4 lg:p-6">
         {/* Show skeleton loaders while initial videos are loading */}
         {loading && convertedVideos.length === 0 ? (
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6">
             <VideoCardSkeleton count={12} />
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6">
             <AnimatePresence mode="sync">
               {filteredVideos.map((video, index) => (
                 <motion.div
@@ -1195,13 +1268,13 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
 
       {/* Empty state - show when filter returns no results but videos are loaded */}
       {!loading && convertedVideos.length > 0 && filteredVideos.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 px-6">
-          <div className="text-center space-y-4 max-w-md">
-            <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center">
-              <Search className="w-10 h-10 text-purple-500" />
+        <div className="flex flex-col items-center justify-center py-12 md:py-20 px-4 md:px-6">
+          <div className="text-center space-y-3 md:space-y-4 max-w-md">
+            <div className="w-16 h-16 md:w-20 md:h-20 mx-auto rounded-full bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center">
+              <Search className="w-8 h-8 md:w-10 md:h-10 text-purple-500" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900">No videos found</h3>
-            <p className="text-gray-600">
+            <h3 className="text-lg md:text-xl font-bold text-gray-900">No videos found</h3>
+            <p className="text-sm md:text-base text-gray-600">
               We couldn't find any videos in the "{FILTER_CATEGORIES.find(c => c.id === activeFilter)?.label}" category.
               Try selecting a different category or check back later!
             </p>

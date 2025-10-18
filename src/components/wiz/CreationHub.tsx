@@ -59,7 +59,9 @@ import { EnhancedBannerUpload } from '@/components/ui/enhanced-banner-upload';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import CourseService from '@/lib/course-service';
+import CourseService, { DuplicateCheckResult } from '@/lib/course-service';
+import { CATEGORIES, getSubcategories } from '@/lib/categories';
+import { DuplicateCourseDialog } from './DuplicateCourseDialog';
 
 interface CreationHubProps {
   isMobile: boolean;
@@ -74,6 +76,7 @@ interface CreationHubProps {
   onToggleVideoSelection?: (video: any) => void;
   onUpdateVideoContentType?: (videoId: string, contentType: 'short' | 'video') => void;
   onUpdateVideoCategory?: (videoId: string, category: string) => void;
+  onUpdateVideoSubcategory?: (videoId: string, subcategory: string) => void;
   onProceedToCategorize?: () => void;
   onPublishToWiz?: () => void;
   toast?: any;
@@ -128,13 +131,42 @@ interface CourseData {
   category: string;
   tags: string[];
   modules: Module[];
-  accessType: 'free' | 'xp' | 'xp-copay' | 'paid';
-  xpRequired: number;
-  price: number;
+
+  // Enhanced Pricing Model
+  pricingModel: 'free' | 'free-zaps' | 'usd' | 'zaps' | 'zaps-usd' | 'crypto';
+  zapsRequired: number;
+  usdCoPay: number;
+  splitPayEnabled: boolean;
+  slotsAvailable: number | null;
+
+  // Crypto payment fields
+  cryptoTypes: ('usdt' | 'btc' | 'usdc' | 'doge')[];
+  cryptoAmount: string;
+
+  // Reward Members
+  offerZAPsToNewMembers: boolean;
+  newMemberZAPsReward: number;
+
+  // Free Trial (for paid models only)
   trialEnabled: boolean;
-  trialDays: number;
+  trialDuration: number;
+  trialUnit: 'days' | 'weeks';
+
+  // Waitlist
+  waitlistEnabled: boolean;
+
+  // Additional Options
+  accessDuration: string; // 'lifetime', '30days', '90days', '1year'
+
+  // Publishing
   publishType: 'draft' | 'publish' | 'schedule';
   publishDate?: Date;
+
+  // Legacy fields (kept for backwards compatibility)
+  accessType?: 'free' | 'xp' | 'xp-copay' | 'paid';
+  xpRequired?: number;
+  price?: number;
+  trialDays?: number;
 }
 
 const categories = [
@@ -598,34 +630,40 @@ const YouTubeConnectFlow = ({
                             <span>{video.publishedAt}</span>
                           </div>
                         </div>
-                        <div className="w-48">
+                        <div className="flex flex-col space-y-2 w-48">
                           <Select
                             value={video.category}
                             onValueChange={(value) => onUpdateVideoCategory?.(video.id, value)}
                           >
                             <SelectTrigger className="w-full">
-                              <SelectValue />
+                              <SelectValue placeholder="Select category" />
                             </SelectTrigger>
                             <SelectContent>
-                              {[
-                                { value: 'tech', label: 'Tech' },
-                                { value: 'business', label: 'Business' },
-                                { value: 'money', label: 'Money' },
-                                { value: 'design', label: 'Design' },
-                                { value: 'health', label: 'Health' },
-                                { value: 'self-improvement', label: 'Self Improvement' },
-                                { value: 'education', label: 'Education' },
-                                { value: 'gaming', label: 'Gaming' },
-                                { value: 'lifestyle', label: 'Lifestyle' },
-                                { value: 'social', label: 'Social' },
-                                { value: 'diy', label: 'DIY' },
-                              ].map(cat => (
+                              {CATEGORIES.map(cat => (
                                 <SelectItem key={cat.value} value={cat.value}>
                                   {cat.label}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
+
+                          {video.category && getSubcategories(video.category).length > 0 && (
+                            <Select
+                              value={video.subcategory || ''}
+                              onValueChange={(value) => onUpdateVideoSubcategory?.(video.id, value)}
+                            >
+                              <SelectTrigger className="w-full text-xs">
+                                <SelectValue placeholder="Subcategory (optional)" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {getSubcategories(video.category).map(sub => (
+                                  <SelectItem key={sub} value={sub}>
+                                    {sub}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
                         </div>
                       </div>
                     </Card>
@@ -820,6 +858,7 @@ export const CreationHub = ({
   onToggleVideoSelection,
   onUpdateVideoContentType,
   onUpdateVideoCategory,
+  onUpdateVideoSubcategory,
   onProceedToCategorize,
   onPublishToWiz,
   toast,
@@ -829,6 +868,10 @@ export const CreationHub = ({
   const [currentStep, setCurrentStep] = useState(1);
   const [showDrafts, setShowDrafts] = useState(false);
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
+
+  // Duplicate detection state
+  const [duplicateCheckResult, setDuplicateCheckResult] = useState<DuplicateCheckResult | null>(null);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
 
   // Handle external edit requests (from PublishedCreationsManager)
   React.useEffect(() => {
@@ -847,6 +890,71 @@ export const CreationHub = ({
       delete (window as any).__creationHubEditHandler;
     };
   }, []);
+
+  // Load course data when editing
+  React.useEffect(() => {
+    if (editingDraftId && selectedType === 'course') {
+      const loadCourseData = async () => {
+        try {
+          console.log('📥 Loading course data for editing:', editingDraftId);
+          const { doc, getDoc } = await import('firebase/firestore');
+          const { db } = await import('@/lib/firebase');
+
+          // Try to find the course in all collections
+          const collections = ['courses_community', 'courses_claim', 'courses_drafts'];
+
+          for (const collectionName of collections) {
+            const courseRef = doc(db, collectionName, editingDraftId);
+            const courseSnap = await getDoc(courseRef);
+
+            if (courseSnap.exists()) {
+              const courseDoc = courseSnap.data();
+              console.log('✅ Found course data:', courseDoc);
+
+              // Map the Firestore document to CourseData format
+              setCourseData({
+                coverImage: courseDoc.coverImage || '',
+                bannerPositioning: courseDoc.bannerPositioning,
+                title: courseDoc.title || '',
+                description: courseDoc.description || '',
+                category: courseDoc.category || '',
+                tags: courseDoc.tags || [],
+                modules: courseDoc.modules || [],
+                pricingModel: courseDoc.pricingModel || 'free',
+                zapsRequired: courseDoc.zapsRequired || 0,
+                usdCoPay: courseDoc.usdCoPay || 0,
+                splitPayEnabled: courseDoc.splitPayEnabled || false,
+                slotsAvailable: courseDoc.slotsAvailable || null,
+                cryptoTypes: courseDoc.cryptoTypes || [],
+                cryptoAmount: courseDoc.cryptoAmount || '',
+                offerZAPsToNewMembers: courseDoc.offerZAPsToNewMembers || false,
+                newMemberZAPsReward: courseDoc.newMemberZAPsReward || 0,
+                trialEnabled: courseDoc.trialEnabled || false,
+                trialDuration: courseDoc.trialDuration || 7,
+                trialUnit: courseDoc.trialUnit || 'days',
+                waitlistEnabled: courseDoc.waitlistEnabled || false,
+                accessDuration: courseDoc.accessDuration || 'lifetime',
+                publishType: 'draft',
+                publishDate: courseDoc.publishDate
+              });
+
+              console.log('✅ Course data loaded into form');
+              break;
+            }
+          }
+        } catch (error) {
+          console.error('❌ Error loading course data:', error);
+          toast?.({
+            title: "Error Loading Course",
+            description: "Failed to load course data for editing.",
+            variant: "destructive"
+          });
+        }
+      };
+
+      loadCourseData();
+    }
+  }, [editingDraftId, selectedType]);
   const [courseData, setCourseData] = useState<CourseData>({
     coverImage: '',
     title: '',
@@ -854,11 +962,34 @@ export const CreationHub = ({
     category: '',
     tags: [],
     modules: [],
-    accessType: 'free',
-    xpRequired: 0,
-    price: 0,
+
+    // Enhanced Pricing Model
+    pricingModel: 'free',
+    zapsRequired: 0,
+    usdCoPay: 0,
+    splitPayEnabled: false,
+    slotsAvailable: null,
+
+    // Crypto payment fields
+    cryptoTypes: [],
+    cryptoAmount: '',
+
+    // Reward Members
+    offerZAPsToNewMembers: false,
+    newMemberZAPsReward: 0,
+
+    // Free Trial
     trialEnabled: false,
-    trialDays: 7,
+    trialDuration: 7,
+    trialUnit: 'days',
+
+    // Waitlist
+    waitlistEnabled: false,
+
+    // Additional Options
+    accessDuration: 'lifetime',
+
+    // Publishing
     publishType: 'draft',
     publishDate: undefined
   });
@@ -875,11 +1006,34 @@ export const CreationHub = ({
       category: '',
       tags: [],
       modules: [],
-      accessType: 'free',
-      xpRequired: 0,
-      price: 0,
+
+      // Enhanced Pricing Model
+      pricingModel: 'free',
+      zapsRequired: 0,
+      usdCoPay: 0,
+      splitPayEnabled: false,
+      slotsAvailable: null,
+
+      // Crypto payment fields
+      cryptoTypes: [],
+      cryptoAmount: '',
+
+      // Reward Members
+      offerZAPsToNewMembers: false,
+      newMemberZAPsReward: 0,
+
+      // Free Trial
       trialEnabled: false,
-      trialDays: 7,
+      trialDuration: 7,
+      trialUnit: 'days',
+
+      // Waitlist
+      waitlistEnabled: false,
+
+      // Additional Options
+      accessDuration: 'lifetime',
+
+      // Publishing
       publishType: 'draft',
       publishDate: undefined
     });
@@ -1630,167 +1784,421 @@ export const CreationHub = ({
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="space-y-8 max-w-4xl mx-auto"
+            className="space-y-8 max-w-6xl mx-auto"
           >
             <div className="text-center space-y-4">
               <h3 className="text-2xl font-bold">💰 Access & Pricing</h3>
-              <p className="text-gray-600">Configure how learners can access your course</p>
+              <p className="text-gray-600">Choose your course monetization model</p>
             </div>
 
-            {/* Access Type Options */}
+            {/* Six Pricing Model Cards */}
             <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <h4 className="text-lg font-semibold">Pricing Model</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[
-                  { id: 'free', title: 'Free', desc: 'Open to all users', icon: Globe },
-                  { id: 'xp', title: 'XP Unlock', desc: 'Requires XP only', icon: Zap },
-                  { id: 'xp-copay', title: 'XP + Co-Pay', desc: 'XP + $ amount', icon: Crown },
-                  { id: 'paid', title: 'Paid Only', desc: '$ amount only', icon: Lock }
-                ].map((option) => (
+                  {
+                    id: 'free',
+                    title: 'Free',
+                    desc: 'Open access for everyone',
+                    icon: Globe,
+                    gradient: 'from-green-400 to-emerald-500'
+                  },
+                  {
+                    id: 'free-zaps',
+                    title: 'Free ZAPs',
+                    desc: 'Reward new members with ZAPs',
+                    icon: Sparkles,
+                    gradient: 'from-yellow-400 to-orange-500'
+                  },
+                  {
+                    id: 'usd',
+                    title: 'USD Pay',
+                    desc: 'One-time payment in dollars',
+                    icon: DollarSign,
+                    gradient: 'from-blue-400 to-blue-600'
+                  },
+                  {
+                    id: 'zaps',
+                    title: 'ZAPs Pay',
+                    desc: 'Pay with ZAPs only',
+                    icon: Zap,
+                    gradient: 'from-purple-400 to-purple-600'
+                  },
+                  {
+                    id: 'zaps-usd',
+                    title: 'ZAPs + USD',
+                    desc: 'Hybrid pricing model',
+                    icon: Crown,
+                    gradient: 'from-indigo-400 to-pink-500'
+                  },
+                  {
+                    id: 'crypto',
+                    title: 'Crypto',
+                    desc: 'USDT, BTC, USDC, DOGE',
+                    icon: Trophy,
+                    gradient: 'from-orange-400 to-red-500'
+                  }
+                ].map((model) => (
                   <motion.div
-                    key={option.id}
+                    key={model.id}
                     className={cn(
-                      "p-4 rounded-xl border-2 cursor-pointer transition-all",
-                      courseData.accessType === option.id
-                        ? "border-orange-400 bg-orange-50"
-                        : "border-gray-200 hover:border-gray-300"
+                      "relative p-6 rounded-2xl border-2 cursor-pointer transition-all overflow-hidden",
+                      courseData.pricingModel === model.id
+                        ? "border-orange-400 shadow-xl ring-4 ring-orange-100"
+                        : "border-gray-200 hover:border-gray-300 hover:shadow-lg"
                     )}
-                    onClick={() => setCourseData(prev => ({ ...prev, accessType: option.id as any }))}
-                    whileHover={{ scale: 1.02 }}
+                    onClick={() => setCourseData(prev => ({ ...prev, pricingModel: model.id as any }))}
+                    whileHover={{ scale: 1.02, y: -4 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <option.icon className="w-8 h-8 mb-3 text-orange-500" />
-                    <h4 className="font-semibold">{option.title}</h4>
-                    <p className="text-sm text-gray-600">{option.desc}</p>
+                    {/* Selected Badge */}
+                    {courseData.pricingModel === model.id && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute top-3 right-3 w-8 h-8 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full flex items-center justify-center"
+                      >
+                        <Check className="w-5 h-5 text-white" />
+                      </motion.div>
+                    )}
+
+                    {/* Icon with Gradient */}
+                    <div className={`w-14 h-14 bg-gradient-to-r ${model.gradient} rounded-xl flex items-center justify-center mb-4`}>
+                      <model.icon className="w-7 h-7 text-white" />
+                    </div>
+
+                    <h5 className="text-lg font-bold mb-2">{model.title}</h5>
+                    <p className="text-sm text-gray-600">{model.desc}</p>
                   </motion.div>
                 ))}
               </div>
 
-              {/* XP Slider */}
-              {(courseData.accessType === 'xp' || courseData.accessType === 'xp-copay') && (
+              {/* Conditional Fields Based on Pricing Model */}
+              <AnimatePresence mode="wait">
+                {/* Free ZAPs - Reward Configuration */}
+                {courseData.pricingModel === 'free-zaps' && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-4"
+                  >
+                    <Card className="p-6 bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200">
+                      <div className="flex items-center space-x-3 mb-4">
+                        <Sparkles className="w-6 h-6 text-orange-500" />
+                        <h5 className="font-semibold">Reward New Members</h5>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <Input
+                          type="number"
+                          value={courseData.newMemberZAPsReward}
+                          onChange={(e) => setCourseData(prev => ({ ...prev, newMemberZAPsReward: parseInt(e.target.value) || 0 }))}
+                          placeholder="100"
+                          className="max-w-xs"
+                        />
+                        <span className="text-sm text-gray-600">ZAPs per new member</span>
+                      </div>
+                    </Card>
+                  </motion.div>
+                )}
+
+                {/* USD Pay - Price Input */}
+                {courseData.pricingModel === 'usd' && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-4"
+                  >
+                    <Card className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+                      <div className="flex items-center space-x-3 mb-4">
+                        <DollarSign className="w-6 h-6 text-blue-500" />
+                        <h5 className="font-semibold">Set Your Price</h5>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-2xl font-bold">$</span>
+                        <Input
+                          type="number"
+                          value={courseData.usdCoPay}
+                          onChange={(e) => setCourseData(prev => ({ ...prev, usdCoPay: parseFloat(e.target.value) || 0 }))}
+                          placeholder="49.99"
+                          className="max-w-xs text-lg"
+                        />
+                        <span className="text-sm text-gray-600">USD</span>
+                      </div>
+                    </Card>
+                  </motion.div>
+                )}
+
+                {/* ZAPs Pay - ZAPs Slider */}
+                {courseData.pricingModel === 'zaps' && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-4"
+                  >
+                    <Card className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+                      <div className="flex items-center space-x-3 mb-4">
+                        <Zap className="w-6 h-6 text-purple-500" />
+                        <h5 className="font-semibold">ZAPs Required</h5>
+                      </div>
+                      <div className="space-y-3">
+                        <input
+                          type="range"
+                          min="0"
+                          max="1000"
+                          step="10"
+                          value={courseData.zapsRequired}
+                          onChange={(e) => setCourseData(prev => ({ ...prev, zapsRequired: parseInt(e.target.value) }))}
+                          className="w-full h-3 bg-gradient-to-r from-purple-200 to-pink-200 rounded-lg appearance-none cursor-pointer"
+                          style={{
+                            accentColor: '#9333ea'
+                          }}
+                        />
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">0 ZAPs</span>
+                          <span className="font-bold text-purple-600 text-xl">⚡ {courseData.zapsRequired} ZAPs</span>
+                          <span className="text-gray-500">1000 ZAPs</span>
+                        </div>
+                      </div>
+                    </Card>
+                  </motion.div>
+                )}
+
+                {/* ZAPs + USD - Hybrid Model */}
+                {courseData.pricingModel === 'zaps-usd' && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-4"
+                  >
+                    <Card className="p-6 bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 border-indigo-200">
+                      <div className="flex items-center space-x-3 mb-4">
+                        <Crown className="w-6 h-6 text-indigo-500" />
+                        <h5 className="font-semibold">Hybrid Pricing</h5>
+                      </div>
+
+                      {/* ZAPs Slider */}
+                      <div className="space-y-3 mb-6">
+                        <label className="text-sm font-medium">ZAPs Required</label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1000"
+                          step="10"
+                          value={courseData.zapsRequired}
+                          onChange={(e) => setCourseData(prev => ({ ...prev, zapsRequired: parseInt(e.target.value) }))}
+                          className="w-full h-3 bg-gradient-to-r from-purple-200 to-pink-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">0 ZAPs</span>
+                          <span className="font-bold text-purple-600">⚡ {courseData.zapsRequired} ZAPs</span>
+                          <span className="text-gray-500">1000 ZAPs</span>
+                        </div>
+                      </div>
+
+                      {/* USD Co-Pay */}
+                      <div className="space-y-3">
+                        <label className="text-sm font-medium">USD Co-Payment</label>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xl font-bold">$</span>
+                          <Input
+                            type="number"
+                            value={courseData.usdCoPay}
+                            onChange={(e) => setCourseData(prev => ({ ...prev, usdCoPay: parseFloat(e.target.value) || 0 }))}
+                            placeholder="29.99"
+                            className="max-w-xs"
+                          />
+                          <span className="text-sm text-gray-600">USD</span>
+                        </div>
+                      </div>
+                    </Card>
+                  </motion.div>
+                )}
+
+                {/* Crypto - Currency Selection */}
+                {courseData.pricingModel === 'crypto' && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-4"
+                  >
+                    <Card className="p-6 bg-gradient-to-r from-orange-50 to-red-50 border-orange-200">
+                      <div className="flex items-center space-x-3 mb-4">
+                        <Trophy className="w-6 h-6 text-orange-500" />
+                        <h5 className="font-semibold">Crypto Payment</h5>
+                      </div>
+
+                      {/* Crypto Types */}
+                      <div className="space-y-3 mb-4">
+                        <label className="text-sm font-medium">Select Cryptocurrencies</label>
+                        <div className="grid grid-cols-2 gap-3">
+                          {['usdt', 'btc', 'usdc', 'doge'].map((crypto) => (
+                            <div
+                              key={crypto}
+                              className={cn(
+                                "p-3 border-2 rounded-lg cursor-pointer transition-all",
+                                courseData.cryptoTypes.includes(crypto as any)
+                                  ? "border-orange-400 bg-orange-50"
+                                  : "border-gray-200 hover:border-gray-300"
+                              )}
+                              onClick={() => {
+                                const types = courseData.cryptoTypes.includes(crypto as any)
+                                  ? courseData.cryptoTypes.filter(t => t !== crypto)
+                                  : [...courseData.cryptoTypes, crypto as any];
+                                setCourseData(prev => ({ ...prev, cryptoTypes: types }));
+                              }}
+                            >
+                              <div className="flex items-center space-x-2">
+                                {courseData.cryptoTypes.includes(crypto as any) && (
+                                  <Check className="w-4 h-4 text-orange-600" />
+                                )}
+                                <span className="font-medium uppercase">{crypto}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Amount */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Amount</label>
+                        <Input
+                          type="text"
+                          value={courseData.cryptoAmount}
+                          onChange={(e) => setCourseData(prev => ({ ...prev, cryptoAmount: e.target.value }))}
+                          placeholder="0.001"
+                          className="max-w-xs"
+                        />
+                      </div>
+                    </Card>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Free Trial Section - Only for paid models */}
+              {(courseData.pricingModel === 'usd' || courseData.pricingModel === 'zaps' ||
+                courseData.pricingModel === 'zaps-usd' || courseData.pricingModel === 'crypto') && (
+                <Card className="p-6 bg-gradient-to-r from-cyan-50 to-blue-50 border-cyan-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <Timer className="w-6 h-6 text-cyan-600" />
+                      <div>
+                        <h5 className="font-semibold">Free Trial</h5>
+                        <p className="text-sm text-gray-600">Let learners try before they buy</p>
+                      </div>
+                    </div>
+                    <Button
+                      variant={courseData.trialEnabled ? "default" : "outline"}
+                      onClick={() => setCourseData(prev => ({ ...prev, trialEnabled: !prev.trialEnabled }))}
+                      className={courseData.trialEnabled ? "bg-cyan-600" : ""}
+                    >
+                      {courseData.trialEnabled ? "Enabled" : "Disabled"}
+                    </Button>
+                  </div>
+
+                  {courseData.trialEnabled && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="space-y-4"
+                    >
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Duration</label>
+                          <Input
+                            type="number"
+                            value={courseData.trialDuration}
+                            onChange={(e) => setCourseData(prev => ({ ...prev, trialDuration: parseInt(e.target.value) || 7 }))}
+                            placeholder="7"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Unit</label>
+                          <Select
+                            value={courseData.trialUnit}
+                            onValueChange={(value: 'days' | 'weeks') => setCourseData(prev => ({ ...prev, trialUnit: value }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="days">Days</SelectItem>
+                              <SelectItem value="weeks">Weeks</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </Card>
+              )}
+
+              {/* Waitlist Section */}
+              <Card className="p-6 bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <Clock className="w-6 h-6 text-amber-600" />
+                    <div>
+                      <h5 className="font-semibold">Join Waitlist</h5>
+                      <p className="text-sm text-gray-600">Collect interest before launch (disables pricing)</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant={courseData.waitlistEnabled ? "default" : "outline"}
+                    onClick={() => setCourseData(prev => ({ ...prev, waitlistEnabled: !prev.waitlistEnabled }))}
+                    className={courseData.waitlistEnabled ? "bg-amber-600" : ""}
+                  >
+                    {courseData.waitlistEnabled ? "Enabled" : "Disabled"}
+                  </Button>
+                </div>
+              </Card>
+
+              {/* Additional Options */}
+              <Card className="p-6 bg-gradient-to-r from-slate-50 to-gray-50 border-slate-200">
+                <div className="flex items-center space-x-3 mb-4">
+                  <Settings className="w-6 h-6 text-slate-600" />
+                  <h5 className="font-semibold">Additional Options</h5>
+                </div>
+
                 <div className="space-y-4">
-                  <label className="block text-sm font-semibold text-gray-700">XP Required</label>
+                  {/* Access Duration */}
                   <div className="space-y-2">
-                    <input
-                      type="range"
-                      min="0"
-                      max="1000"
-                      step="10"
-                      value={courseData.xpRequired}
-                      onChange={(e) => setCourseData(prev => ({ ...prev, xpRequired: parseInt(e.target.value) }))}
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                    <label className="text-sm font-medium">Access Duration</label>
+                    <Select
+                      value={courseData.accessDuration}
+                      onValueChange={(value) => setCourseData(prev => ({ ...prev, accessDuration: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="lifetime">Lifetime Access</SelectItem>
+                        <SelectItem value="30days">30 Days</SelectItem>
+                        <SelectItem value="90days">90 Days</SelectItem>
+                        <SelectItem value="1year">1 Year</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Enrollment Slots */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Enrollment Slots (Optional)</label>
+                    <Input
+                      type="number"
+                      value={courseData.slotsAvailable || ''}
+                      onChange={(e) => setCourseData(prev => ({
+                        ...prev,
+                        slotsAvailable: e.target.value ? parseInt(e.target.value) : null
+                      }))}
+                      placeholder="Unlimited"
                     />
-                    <div className="flex justify-between text-sm text-gray-500">
-                      <span>0 XP</span>
-                      <span className="font-semibold text-orange-600">💎 {courseData.xpRequired} XP</span>
-                      <span>1000 XP</span>
-                    </div>
                   </div>
                 </div>
-              )}
-
-              {/* Price Input */}
-              {(courseData.accessType === 'paid' || courseData.accessType === 'xp-copay') && (
-                <div className="space-y-4">
-                  <label className="block text-sm font-semibold text-gray-700">Price (USD)</label>
-                  <Input
-                    type="number"
-                    value={courseData.price}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      setCourseData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }));
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    onFocus={(e) => e.stopPropagation()}
-                    placeholder="49.99"
-                    className="bg-white/80 backdrop-blur-sm border-gray-200"
-                  />
-                </div>
-              )}
-
-              {/* Trial Toggle */}
-              <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl">
-                <div>
-                  <h4 className="font-semibold">Free Trial</h4>
-                  <p className="text-sm text-gray-600">Allow users to try before they commit</p>
-                </div>
-                <Button
-                  variant={courseData.trialEnabled ? "default" : "outline"}
-                  onClick={() => setCourseData(prev => ({ ...prev, trialEnabled: !prev.trialEnabled }))}
-                >
-                  {courseData.trialEnabled ? "Enabled" : "Disabled"}
-                </Button>
-              </div>
-
-              {courseData.trialEnabled && (
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">Trial Duration (Days)</label>
-                  <Input
-                    type="number"
-                    value={courseData.trialDays}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      setCourseData(prev => ({ ...prev, trialDays: parseInt(e.target.value) || 7 }));
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    onFocus={(e) => e.stopPropagation()}
-                    placeholder="7"
-                    className="bg-white/80 backdrop-blur-sm border-gray-200"
-                  />
-                </div>
-              )}
-
-              {/* Live Preview */}
-              <div className="p-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
-                <h4 className="font-semibold mb-4">Live Preview & Publishing Target</h4>
-                <div className="space-y-4">
-                  <div className="p-4 bg-white rounded-lg shadow-sm">
-                    {courseData.accessType === 'free' && (
-                      <p className="text-green-600 font-medium">✅ This course is free for all learners</p>
-                    )}
-                    {courseData.accessType === 'xp' && (
-                      <p className="text-blue-600 font-medium">💎 Learners need {courseData.xpRequired} XP to unlock</p>
-                    )}
-                    {courseData.accessType === 'xp-copay' && (
-                      <p className="text-purple-600 font-medium">
-                        💎 Learners need {courseData.xpRequired} XP + ${courseData.price} to unlock
-                      </p>
-                    )}
-                    {courseData.accessType === 'paid' && (
-                      <p className="text-orange-600 font-medium">💰 Learners need ${courseData.price} to unlock</p>
-                    )}
-                    {courseData.trialEnabled && (
-                      <p className="text-sm text-gray-600 mt-2">🎁 {courseData.trialDays}-day free trial included</p>
-                    )}
-                  </div>
-
-                  {/* Publishing Target */}
-                  <div className={`p-4 rounded-lg border-2 ${
-                    courseData.accessType === 'free' || courseData.accessType === 'paid'
-                      ? 'bg-green-50 border-green-200'
-                      : 'bg-blue-50 border-blue-200'
-                  }`}>
-                    <div className="flex items-center space-x-2">
-                      {courseData.accessType === 'free' || courseData.accessType === 'paid' ? (
-                        <>
-                          <BookOpen className="w-5 h-5 text-green-600" />
-                          <span className="font-medium text-green-800">Will be published to Learn Tab</span>
-                        </>
-                      ) : (
-                        <>
-                          <Crown className="w-5 h-5 text-blue-600" />
-                          <span className="font-medium text-blue-800">Will be published to Claim Tab (XP Marketplace)</span>
-                        </>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {courseData.accessType === 'free' || courseData.accessType === 'paid'
-                        ? 'This course will appear in the Learn section alongside other educational content.'
-                        : 'This course will appear in the Claim section as part of the XP rewards marketplace.'
-                      }
-                    </p>
-                  </div>
-                </div>
-              </div>
+              </Card>
             </div>
 
             {/* Navigation */}
@@ -1879,25 +2287,89 @@ export const CreationHub = ({
                 <h4 className="font-semibold mb-4">Access & Pricing</h4>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span>Access Type:</span>
-                    <span className="font-medium capitalize">{courseData.accessType.replace('-', ' + ')}</span>
+                    <span>Pricing Model:</span>
+                    <span className="font-medium capitalize">
+                      {courseData.pricingModel === 'free' && '🌍 Free'}
+                      {courseData.pricingModel === 'free-zaps' && '✨ Free ZAPs'}
+                      {courseData.pricingModel === 'usd' && '💵 USD Pay'}
+                      {courseData.pricingModel === 'zaps' && '⚡ ZAPs Pay'}
+                      {courseData.pricingModel === 'zaps-usd' && '👑 ZAPs + USD'}
+                      {courseData.pricingModel === 'crypto' && '🏆 Crypto'}
+                    </span>
                   </div>
-                  {courseData.xpRequired > 0 && (
+
+                  {/* Free ZAPs Reward */}
+                  {courseData.pricingModel === 'free-zaps' && courseData.newMemberZAPsReward > 0 && (
                     <div className="flex justify-between">
-                      <span>XP Required:</span>
-                      <span className="font-medium">💎 {courseData.xpRequired}</span>
+                      <span>New Member Reward:</span>
+                      <span className="font-medium">⚡ {courseData.newMemberZAPsReward} ZAPs</span>
                     </div>
                   )}
-                  {courseData.price > 0 && (
+
+                  {/* USD Price */}
+                  {(courseData.pricingModel === 'usd' || courseData.pricingModel === 'zaps-usd') && courseData.usdCoPay > 0 && (
                     <div className="flex justify-between">
-                      <span>Price:</span>
-                      <span className="font-medium">${courseData.price}</span>
+                      <span>Price (USD):</span>
+                      <span className="font-medium">${courseData.usdCoPay}</span>
                     </div>
                   )}
+
+                  {/* ZAPs Required */}
+                  {(courseData.pricingModel === 'zaps' || courseData.pricingModel === 'zaps-usd') && courseData.zapsRequired > 0 && (
+                    <div className="flex justify-between">
+                      <span>ZAPs Required:</span>
+                      <span className="font-medium">⚡ {courseData.zapsRequired} ZAPs</span>
+                    </div>
+                  )}
+
+                  {/* Crypto */}
+                  {courseData.pricingModel === 'crypto' && (
+                    <>
+                      <div className="flex justify-between">
+                        <span>Cryptocurrencies:</span>
+                        <span className="font-medium">{courseData.cryptoTypes.map(c => c.toUpperCase()).join(', ')}</span>
+                      </div>
+                      {courseData.cryptoAmount && (
+                        <div className="flex justify-between">
+                          <span>Amount:</span>
+                          <span className="font-medium">{courseData.cryptoAmount}</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Free Trial */}
                   {courseData.trialEnabled && (
                     <div className="flex justify-between">
                       <span>Free Trial:</span>
-                      <span className="font-medium">{courseData.trialDays} days</span>
+                      <span className="font-medium">⏱️ {courseData.trialDuration} {courseData.trialUnit}</span>
+                    </div>
+                  )}
+
+                  {/* Waitlist */}
+                  {courseData.waitlistEnabled && (
+                    <div className="flex justify-between">
+                      <span>Waitlist:</span>
+                      <span className="font-medium">✅ Enabled</span>
+                    </div>
+                  )}
+
+                  {/* Access Duration */}
+                  <div className="flex justify-between">
+                    <span>Access Duration:</span>
+                    <span className="font-medium capitalize">
+                      {courseData.accessDuration === 'lifetime' && '♾️ Lifetime'}
+                      {courseData.accessDuration === '30days' && '📅 30 Days'}
+                      {courseData.accessDuration === '90days' && '📅 90 Days'}
+                      {courseData.accessDuration === '1year' && '📅 1 Year'}
+                    </span>
+                  </div>
+
+                  {/* Slots */}
+                  {courseData.slotsAvailable !== null && (
+                    <div className="flex justify-between">
+                      <span>Available Slots:</span>
+                      <span className="font-medium">{courseData.slotsAvailable}</span>
                     </div>
                   )}
                 </div>
@@ -1978,6 +2450,56 @@ export const CreationHub = ({
                       user.photoURL || undefined
                     );
 
+                    // If editing existing course, update in-place (no versioning, no duplicate check)
+                    if (editingDraftId) {
+                      console.log('📝 Updating existing course in-place:', editingDraftId);
+
+                      // Find which collection the course is in
+                      const { doc, getDoc } = await import('firebase/firestore');
+                      const { db } = await import('@/lib/firebase');
+                      const collections: Array<'courses_community' | 'courses_claim' | 'courses_drafts'> =
+                        ['courses_community', 'courses_claim', 'courses_drafts'];
+
+                      let foundCollection: 'courses_community' | 'courses_claim' | 'courses_drafts' | null = null;
+
+                      for (const collectionName of collections) {
+                        const courseRef = doc(db, collectionName, editingDraftId);
+                        const courseSnap = await getDoc(courseRef);
+                        if (courseSnap.exists()) {
+                          foundCollection = collectionName;
+                          break;
+                        }
+                      }
+
+                      if (foundCollection) {
+                        await courseService.updateCourseInPlace(editingDraftId, course, foundCollection);
+
+                        toast?.({
+                          title: "Course Updated!",
+                          description: "Your course has been successfully updated.",
+                        });
+
+                        // Clear editing state and go back
+                        setEditingDraftId(null);
+                        handleBackToSelection();
+                        return;
+                      } else {
+                        throw new Error('Could not find course to update');
+                      }
+                    }
+
+                    // Check for duplicates before publishing (only for NEW courses)
+                    if (courseData.publishType === 'publish') {
+                      const duplicateCheck = await courseService.checkForDuplicates(course, user.uid);
+
+                      if (duplicateCheck.isDuplicate) {
+                        // Show duplicate dialog
+                        setDuplicateCheckResult(duplicateCheck);
+                        setShowDuplicateDialog(true);
+                        return; // Stop here and let user decide
+                      }
+                    }
+
                     let courseId: string;
                     let targetTab: string;
 
@@ -1990,9 +2512,9 @@ export const CreationHub = ({
                       courseId = await courseService.saveDraft(course);
                       targetTab = 'scheduled';
                     } else {
-                      // Publish to appropriate tab based on access type
+                      // Publish to Community tab (all courses go to Community tab)
                       courseId = await courseService.publishCourse(course);
-                      targetTab = course.accessType === 'free' || course.accessType === 'paid' ? 'Learn' : 'Claim';
+                      targetTab = 'Community';
                     }
 
                     // Show success message with tab information
@@ -2008,7 +2530,7 @@ export const CreationHub = ({
                     if (courseData.publishType === 'publish') {
                       console.log(`🎉 Course published to ${targetTab} tab!`, {
                         courseId,
-                        accessType: course.accessType,
+                        pricingModel: course.pricingModel,
                         targetTab
                       });
                     }
@@ -2183,6 +2705,93 @@ export const CreationHub = ({
           )}
         </CardContent>
       </Card>
+
+      {/* Duplicate Course Dialog */}
+      {duplicateCheckResult && (
+        <DuplicateCourseDialog
+          open={showDuplicateDialog}
+          onClose={() => {
+            setShowDuplicateDialog(false);
+            setDuplicateCheckResult(null);
+          }}
+          duplicateResult={duplicateCheckResult}
+          onUpdate={async () => {
+            // User chose to update existing course
+            if (!user || !duplicateCheckResult.existingCourse) return;
+
+            try {
+              const course = CourseService.convertCourseData(
+                courseData,
+                user.uid,
+                user.displayName || 'Anonymous Creator',
+                user.photoURL || undefined
+              );
+
+              // Determine which collection the existing course is in
+              const existingCollection = duplicateCheckResult.existingCourse.publishedTo === 'community'
+                ? 'courses_community'
+                : 'courses_claim';
+
+              // Update the course (creates new version)
+              const courseId = await courseService.updateCourse(
+                duplicateCheckResult.existingCourse.id!,
+                course,
+                existingCollection
+              );
+
+              toast?.({
+                title: "Course Updated!",
+                description: `Your course has been updated to version ${(duplicateCheckResult.existingCourse.version || 1) + 1}.`,
+              });
+
+              // Close dialog and reset
+              setShowDuplicateDialog(false);
+              setDuplicateCheckResult(null);
+              handleBackToSelection();
+            } catch (error) {
+              console.error('❌ Error updating course:', error);
+              toast?.({
+                title: "Update Failed",
+                description: "There was an error updating your course. Please try again.",
+                variant: "destructive"
+              });
+            }
+          }}
+          onPublishNew={async () => {
+            // User chose to publish as new course anyway
+            if (!user) return;
+
+            try {
+              const course = CourseService.convertCourseData(
+                courseData,
+                user.uid,
+                user.displayName || 'Anonymous Creator',
+                user.photoURL || undefined
+              );
+
+              // Publish as new course
+              const courseId = await courseService.publishCourse(course);
+
+              toast?.({
+                title: "Course Published!",
+                description: "Your course is now live! Note: Duplicate courses do not earn additional ZAPs.",
+              });
+
+              // Close dialog and reset
+              setShowDuplicateDialog(false);
+              setDuplicateCheckResult(null);
+              handleBackToSelection();
+            } catch (error) {
+              console.error('❌ Error publishing course:', error);
+              toast?.({
+                title: "Publishing Failed",
+                description: "There was an error publishing your course. Please try again.",
+                variant: "destructive"
+              });
+            }
+          }}
+        />
+      )}
     </motion.div>
   );
 };
