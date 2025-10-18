@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { WizSidebar } from '../wiz/wiz-sidebar';
+import { WizSidebarV2 } from '../wiz/WizSidebarV2';
 import { FloatingParticles } from '@/components/ui/floating-particles';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Plus } from 'lucide-react';
@@ -78,16 +78,14 @@ export const MainLayout = () => {
       <FloatingParticles />
 
       <div className="flex h-full min-h-screen">
-        {/* Persistent Sidebar - Never unmounts */}
-        {!isMobile && (
-          <WizSidebar
-            activeSection={getActiveSection()}
-            onSectionChange={handleSectionChange}
-          />
-        )}
+        {/* Persistent Sidebar V2 - Never unmounts */}
+        <WizSidebarV2 onNavigate={handleSectionChange} />
 
         {/* Main Content Area - Routes render here */}
-        <main className="flex-1 min-w-0 transition-all duration-300 ease-out">
+        <main className={cn(
+          "flex-1 min-w-0 transition-all duration-300 ease-out",
+          !isMobile && "ml-[280px]" // Account for expanded sidebar width
+        )}>
           <motion.div
             key={location.pathname}
             initial={{ opacity: 0, y: 10 }}
@@ -100,23 +98,7 @@ export const MainLayout = () => {
         </main>
       </div>
 
-      {/* Mobile Floating Create Button */}
-      {isMobile && (
-        <div className="fixed bottom-6 right-6 z-40">
-          <Button
-            onClick={() => navigate('/create')}
-            className={cn(
-              "w-14 h-14 rounded-full shadow-lg transition-all duration-200",
-              "bg-gradient-to-r from-green-500 to-teal-600",
-              "hover:from-green-600 hover:to-teal-700",
-              "hover:shadow-xl hover:scale-110",
-              location.pathname === '/create' && "ring-4 ring-green-400/50"
-            )}
-          >
-            <Plus className="w-6 h-6 text-white" />
-          </Button>
-        </div>
-      )}
+      {/* Mobile bottom nav is now handled by WizSidebarV2 */}
     </motion.div>
   );
 };

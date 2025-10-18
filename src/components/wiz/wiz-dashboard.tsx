@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { WizSidebar } from './wiz-sidebar';
+import { WizSidebarV2 } from './WizSidebarV2';
 import { WizMobileMenu } from './WizMobileMenu';
 import { WizUserProfile } from './wiz-user-profile';
 import { ApplePremiumDashboard } from './ApplePremiumDashboard';
@@ -96,37 +96,17 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
       <FloatingParticles />
 
       <div className="flex h-full">
-        {/* Desktop Sidebar with Dynamic Width */}
-        {!isMobile && (
-          <WizSidebar
-            activeSection={activeSection}
-            onSectionChange={setActiveSection}
-          />
-        )}
+        {/* New WizSidebarV2 - Handles both desktop and mobile */}
+        <WizSidebarV2 onNavigate={setActiveSection} />
 
         {/* Main Content - Seamless Expansion */}
-        <main className="flex-1 transition-all duration-300 ease-out">
+        <main className={cn(
+          "flex-1 transition-all duration-300 ease-out",
+          !isMobile && "ml-[280px]" // Account for expanded sidebar width
+        )}>
           {renderActiveSection()}
         </main>
       </div>
-      
-      {/* Mobile Floating Create Button */}
-      {isMobile && (
-        <div className="fixed bottom-6 right-6 z-40">
-          <Button
-            onClick={() => setActiveSection('create')}
-            className={cn(
-              "w-14 h-14 rounded-full shadow-lg transition-all duration-200",
-              "bg-gradient-to-r from-green-500 to-teal-600",
-              "hover:from-green-600 hover:to-teal-700",
-              "hover:shadow-xl hover:scale-110",
-              activeSection === 'create' && "ring-4 ring-green-400/50"
-            )}
-          >
-            <Plus className="w-6 h-6 text-white" />
-          </Button>
-        </div>
-      )}
       
       {/* Admin Test Panel - Available on all dashboard pages */}
       <AdminTestPanel />
