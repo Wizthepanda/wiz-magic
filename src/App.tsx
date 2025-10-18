@@ -22,6 +22,8 @@ import CommunityDashboardPage from "./pages/CommunityDashboardPage";
 import CommunityWelcomeDemo from "./pages/CommunityWelcomeDemo";
 import { AntiCheatDashboard } from "./components/admin/AntiCheatDashboard";
 import { WizCreatePage } from "./components/wiz/WizCreatePage";
+import { WizCreatePageV2 } from "./components/wiz/WizCreatePageV2";
+import { WizCreatePageV3 } from "./components/wiz/WizCreatePageV3";
 import './lib/firebase'; // Initialize Firebase
 import { useEffect } from 'react';
 import authSingleton from './lib/authSingleton';
@@ -94,7 +96,9 @@ const App = () => {
                   <Route path="/leaderboard" element={<div className="p-8 text-center"><h2 className="text-2xl font-bold">Leaderboard Coming Soon</h2></div>} />
                   <Route path="/premiere" element={<div className="p-8 text-center"><h2 className="text-2xl font-bold">WIZ Premiere Coming Soon</h2></div>} />
                   <Route path="/profile" element={<div className="p-8 text-center"><h2 className="text-2xl font-bold">Profile Coming Soon</h2></div>} />
-                  <Route path="/create" element={<WizCreatePage />} />
+                  <Route path="/create" element={<WizCreatePageV3 />} />
+                  <Route path="/create-v2" element={<WizCreatePageV2 />} />
+                  <Route path="/create-old" element={<WizCreatePage />} />
                 </Route>
 
                 {/* Catch-all 404 */}

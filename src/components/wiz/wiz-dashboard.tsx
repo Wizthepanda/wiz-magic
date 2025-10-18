@@ -10,7 +10,7 @@ import { WizLeaderboard } from './wiz-leaderboard';
 import { WizPremierePage } from './wiz-premiere-page';
 import { WizLeaderboardPage } from './wiz-leaderboard-page';
 import { DynamicProfilePage } from './DynamicProfilePage';
-import { WizCreatePage } from './WizCreatePage';
+import { WizCreatePageV3 } from './WizCreatePageV3';
 import { WizCommunityPage } from './wiz-community-page';
 import { FloatingParticles } from '@/components/ui/floating-particles';
 import { AdminTestPanel } from '@/components/admin/AdminTestPanel';
@@ -65,7 +65,7 @@ export const WizDashboard = ({ onBackToHomepage }: WizDashboardProps) => {
       case 'discover':
         return <ApplePremiumDashboard onSectionChange={setActiveSection} />;
       case 'create':
-        return <WizCreatePage />;
+        return <WizCreatePageV3 />;
       case 'community':
         return <WizCommunityPage onSectionChange={setActiveSection} />;
       case 'leaderboard':
