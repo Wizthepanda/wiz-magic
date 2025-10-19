@@ -24,6 +24,7 @@ import { AntiCheatDashboard } from "./components/admin/AntiCheatDashboard";
 import { WizCreatePage } from "./components/wiz/WizCreatePage";
 import { WizCreatePageV2 } from "./components/wiz/WizCreatePageV2";
 import { WizCreatePageV3 } from "./components/wiz/WizCreatePageV3";
+import MessagesPage from "./pages/MessagesPage";
 import './lib/firebase'; // Initialize Firebase
 import { useEffect } from 'react';
 import authSingleton from './lib/authSingleton';
@@ -89,6 +90,9 @@ const App = () => {
                   {/* Community */}
                   <Route path="/community" element={<CommunityPage />} />
                   <Route path="/community/:id" element={<CommunityDashboardPage />} />
+
+                  {/* Messages */}
+                  <Route path="/messages" element={<MessagesPage />} />
 
                   {/* Other main app pages */}
                   <Route path="/claim" element={<Claim />} />
