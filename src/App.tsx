@@ -33,6 +33,7 @@ const AntiCheatDashboard = lazy(() => import("./components/admin/AntiCheatDashbo
 const DiscoverPage = lazy(() => import("./pages/DiscoverPage"));
 const CommunityPage = lazy(() => import("./pages/CommunityPage"));
 const CommunityDashboardPage = lazy(() => import("./pages/CommunityDashboardPage"));
+const CommunityDashboardPageV2 = lazy(() => import("./pages/CommunityDashboardPageV2"));
 const MessagesPage = lazy(() => import("./pages/MessagesPage"));
 const LeaderboardPage = lazy(() => import("./pages/LeaderboardPage"));
 const PremierePage = lazy(() => import("./pages/PremierePage"));
@@ -163,6 +164,7 @@ const App = () => {
                     {/* Communities */}
                     <Route path="/community" element={<CommunityPage />} />
                     <Route path="/community/:id" element={<CommunityDashboardPage />} />
+                    <Route path="/community/:id/v2" element={<CommunityDashboardPageV2 />} />
 
                     {/* Messages - Real-time chat */}
                     <Route path="/messages" element={<MessagesPage />} />
