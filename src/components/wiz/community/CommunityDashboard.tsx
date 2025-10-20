@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCommunity } from '@/hooks/useCommunity';
+import { useJoinedCommunities } from '@/hooks/useJoinedCommunities';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
@@ -17,38 +18,13 @@ export const CommunityDashboard = ({ communityId }: Props) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data: community, isLoading } = useCommunity(communityId);
-  const [isMember, setIsMember] = useState<boolean | null>(null);
+  const { data: joinedCommunities = [], isLoading: isLoadingJoined } = useJoinedCommunities();
 
-  useEffect(() => {
-    if (!user || !communityId) return;
-    const check = async () => {
-      // Check both members subcollection AND members array in main document
-      const memberRef = doc(db, 'communities', communityId, 'members', user.uid);
-      const memberSnap = await getDoc(memberRef);
-      
-      if (memberSnap.exists()) {
-        console.log('✅ User found in members subcollection');
-        setIsMember(true);
-        return;
-      }
+  // Check if user is a member using the joinedCommunities query
+  // This automatically updates when we invalidate the query after joining
+  const isMember = joinedCommunities.some(c => c.id === communityId);
 
-      // Also check members array in community document
-      const communityRef = doc(db, 'communities', communityId);
-      const communitySnap = await getDoc(communityRef);
-      
-      if (communitySnap.exists()) {
-        const members = communitySnap.data().members || [];
-        const isMemberInArray = members.includes(user.uid);
-        console.log(`📊 Checking members array: ${isMemberInArray ? 'FOUND' : 'NOT FOUND'}`);
-        setIsMember(isMemberInArray);
-      } else {
-        setIsMember(false);
-      }
-    };
-    check();
-  }, [user, communityId]);
-
-  if (isLoading || isMember === null) {
+  if (isLoading || isLoadingJoined) {
     return (
       <div className="flex items-center justify-center h-screen bg-[linear-gradient(180deg,#ffffff,#f7f9fc)]">
         <Loader2 className="w-8 h-8 animate-spin text-[#8B5CF6]" />

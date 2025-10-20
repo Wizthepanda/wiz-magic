@@ -13,14 +13,21 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  ArrowRight
+  ArrowRight,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { useConversations } from '@/hooks/useMessages';
+import { useJoinedCommunities } from '@/hooks/useJoinedCommunities';
+import { useCommunityNotifications } from '@/hooks/useCommunityNotifications';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { toast } from 'sonner';
+import { NotificationBadge } from './NotificationBadge';
 
 interface NavItem {
   id: string;
@@ -37,14 +44,14 @@ const primaryNav: NavItem[] = [
     id: 'discover',
     label: 'Discover',
     icon: Compass,
-    route: '/?section=discover',
+    route: '/discover',
     tooltip: 'Explore trending content'
   },
   {
     id: 'communities',
     label: 'Communities',
     icon: Users,
-    route: '/?section=community',
+    route: '/community',
     badge: 3,
     tooltip: 'Your communities and groups'
   },
@@ -60,7 +67,7 @@ const primaryNav: NavItem[] = [
     id: 'leaderboard',
     label: 'Leaderboard',
     icon: Trophy,
-    route: '/?section=leaderboard',
+    route: '/leaderboard',
     tooltip: 'Top creators and earners'
   },
   {
@@ -78,7 +85,7 @@ const bottomNav: NavItem[] = [
     id: 'premiere',
     label: 'WIZ Premiere',
     icon: Crown,
-    route: '/?section=premiere',
+    route: '/premiere',
     tooltip: 'Discover top-tier creators and trending launches'
   },
   {
@@ -138,8 +145,23 @@ export const WizSidebarV2 = ({ onNavigate }: WizSidebarV2Props) => {
   const [showCommunitiesExpanded, setShowCommunitiesExpanded] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
+  const { totalUnreadCount } = useConversations();
+  const { data: joinedCommunities = [], isLoading: communitiesLoading } = useJoinedCommunities();
+  const { getUnreadCount, getTotalUnreadCount, clearCommunityNotifications } = useCommunityNotifications();
   const isMobile = useIsMobile();
+
+  // Update messages badge dynamically
+  const primaryNavWithBadges = primaryNav.map((item) => {
+    if (item.id === 'messages') {
+      return { ...item, badge: totalUnreadCount > 0 ? totalUnreadCount : undefined };
+    }
+    if (item.id === 'communities') {
+      const totalCommunityNotifications = getTotalUnreadCount();
+      return { ...item, badge: totalCommunityNotifications > 0 ? totalCommunityNotifications : undefined };
+    }
+    return item;
+  });
 
   const handleNavClick = (item: NavItem) => {
     if (item.comingSoon) return;
@@ -160,8 +182,28 @@ export const WizSidebarV2 = ({ onNavigate }: WizSidebarV2Props) => {
   };
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/');
+    try {
+      // Show logging out toast
+      toast.loading('Logging out...', { id: 'logout' });
+
+      // Clear any local storage/session data
+      localStorage.removeItem('youtube_access_token');
+      localStorage.removeItem('wizxp_redirect_url');
+      localStorage.removeItem('wizxp_youtube_connect');
+      localStorage.removeItem('wizxp_youtube_reauth');
+
+      // Sign out from Firebase
+      await signOut();
+
+      // Success toast
+      toast.success('Logged out successfully', { id: 'logout' });
+
+      // Navigate to home
+      navigate('/', { replace: true });
+    } catch (error) {
+      console.error('❌ Logout error:', error);
+      toast.error('Failed to logout. Please try again.', { id: 'logout' });
+    }
   };
 
   // Mobile bottom nav bar
@@ -226,7 +268,7 @@ export const WizSidebarV2 = ({ onNavigate }: WizSidebarV2Props) => {
 
         {/* Primary Navigation */}
         <nav className="flex-1 space-y-2">
-          {primaryNav.map((item) => (
+          {primaryNavWithBadges.map((item) => (
             <NavButton
               key={item.id}
               item={item}
@@ -277,9 +319,13 @@ export const WizSidebarV2 = ({ onNavigate }: WizSidebarV2Props) => {
           <div className="py-4">
             <YourCommunitiesSection
               isExpanded={isExpanded}
-              communities={mockCommunities}
+              communities={joinedCommunities}
+              isLoading={communitiesLoading}
               showExpanded={showCommunitiesExpanded}
               onToggleExpanded={() => setShowCommunitiesExpanded(!showCommunitiesExpanded)}
+              onNavigate={navigate}
+              getUnreadCount={getUnreadCount}
+              clearCommunityNotifications={clearCommunityNotifications}
             />
           </div>
         </nav>
@@ -388,43 +434,109 @@ const NavButton = ({ item, isActive, isExpanded, onClick, isAccent }: NavButtonP
 };
 
 // ========================================
-// YOUR COMMUNITIES SECTION
+// YOUR COMMUNITIES SECTION - LIVE DATA
 // ========================================
 interface YourCommunitiesSectionProps {
   isExpanded: boolean;
-  communities: typeof mockCommunities;
+  communities: any[];
+  isLoading: boolean;
   showExpanded: boolean;
   onToggleExpanded: () => void;
+  onNavigate: (path: string) => void;
+  getUnreadCount: (communityId: string) => number;
+  clearCommunityNotifications: (communityId: string) => Promise<void>;
 }
 
 const YourCommunitiesSection = ({
   isExpanded,
   communities,
+  isLoading,
   showExpanded,
-  onToggleExpanded
+  onToggleExpanded,
+  onNavigate,
+  getUnreadCount,
+  clearCommunityNotifications
 }: YourCommunitiesSectionProps) => {
-  const navigate = useNavigate();
-  const visibleCommunities = showExpanded ? communities : communities.slice(0, 4);
+  const MAX_VISIBLE = 5;
 
+  const handleCommunityClick = async (communityId: string) => {
+    // Clear notifications for this community
+    await clearCommunityNotifications(communityId);
+
+    // Navigate to community page
+    onNavigate(`/community/${communityId}`);
+  };
+
+  const handleViewAll = () => {
+    onNavigate('/community');
+  };
+
+  // Helper function to get community name from various possible fields
+  const getCommunityName = (community: any): string => {
+    return community.name || community.title || community.communityName || 'Unnamed Community';
+  };
+
+  // Helper function to get community avatar from various possible fields
+  const getCommunityAvatar = (community: any): string | undefined => {
+    return community.banner || community.avatar || community.thumbnail || community.image || community.profileImage;
+  };
+
+  // Helper function to get member count
+  const getMemberCount = (community: any): number => {
+    return community.members?.length || community.memberCount || 0;
+  };
+
+  // Debug log to see community data structure (only in development)
+  if (communities.length > 0 && import.meta.env.DEV) {
+    console.log('🏘️ Communities data sample:', communities[0]);
+  }
+
+  // Show first 5 communities by default, all when expanded
+  const visibleCommunities = showExpanded ? communities : communities.slice(0, MAX_VISIBLE);
+  const hasMore = communities.length > MAX_VISIBLE;
+
+  // Collapsed sidebar view
   if (!isExpanded) {
-    // Compact view: 3 avatars + "+2" badge
+    if (isLoading) {
+      return (
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-purple-100 animate-pulse" />
+          <div className="w-8 h-8 rounded-full bg-purple-100 animate-pulse" />
+        </div>
+      );
+    }
+
+    if (communities.length === 0) {
+      return (
+        <div className="flex items-center justify-center">
+          <button
+            onClick={() => onNavigate('/community')}
+            className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center hover:scale-110 transition-transform"
+          >
+            <Users className="w-4 h-4 text-purple-600" />
+          </button>
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col items-center gap-2">
-        {communities.slice(0, 3).map((community) => (
-          <div key={community.id} className="relative">
-            <Avatar className="w-8 h-8 border-2 border-white/20">
-              <AvatarImage src={community.avatar} />
-              <AvatarFallback className={cn("bg-gradient-to-br", community.color)}>
-                {community.name[0]}
-              </AvatarFallback>
-            </Avatar>
-            {community.online && (
-              <div className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-white" />
-            )}
-          </div>
-        ))}
+        {communities.slice(0, 3).map((community) => {
+          const unreadCount = getUnreadCount(community.id);
+          return (
+            <div key={community.id} className="relative">
+              <Avatar className="w-8 h-8 border-2 border-white/20 cursor-pointer hover:scale-110 transition-transform" onClick={() => handleCommunityClick(community.id)}>
+                <AvatarImage src={getCommunityAvatar(community)} />
+                <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs">
+                  {getCommunityName(community)[0]?.toUpperCase() || 'C'}
+                </AvatarFallback>
+              </Avatar>
+              <NotificationBadge count={unreadCount} />
+            </div>
+          );
+        })}
         {communities.length > 3 && (
-          <Badge className="w-8 h-8 rounded-full bg-purple-500 text-white text-xs flex items-center justify-center">
+          <Badge className="w-8 h-8 rounded-full bg-purple-500 text-white text-xs flex items-center justify-center cursor-pointer hover:scale-110 transition-transform" onClick={handleViewAll}>
             +{communities.length - 3}
           </Badge>
         )}
@@ -432,69 +544,128 @@ const YourCommunitiesSection = ({
     );
   }
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+        <div className="flex items-center justify-between px-2">
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Your Communities</span>
+        </div>
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="w-full flex items-center gap-3 px-3 py-2">
+              <div className="w-7 h-7 rounded-lg bg-purple-100 animate-pulse" />
+              <div className="flex-1 h-4 bg-purple-100 rounded animate-pulse" />
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    );
+  }
+
+  // Empty state
+  if (communities.length === 0) {
+    return (
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+        <div className="flex items-center justify-between px-2">
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Your Communities</span>
+        </div>
+        <div className="px-3 py-6 text-center space-y-3">
+          <div className="w-12 h-12 mx-auto rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+            <Users className="w-6 h-6 text-purple-600" />
+          </div>
+          <p className="text-xs text-gray-600">You haven't joined any communities yet.</p>
+          <button onClick={handleViewAll} className="text-xs font-medium text-purple-600 hover:text-purple-700 flex items-center justify-center gap-1 mx-auto group">
+            Explore and join one
+            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // Communities list
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-3"
-    >
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
       {/* Section Header */}
       <div className="flex items-center justify-between px-2">
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-          Your Communities
-        </span>
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Your Communities</span>
+        <span className="text-xs text-gray-400">{communities.length}</span>
       </div>
 
       {/* Communities List */}
-      <div className="space-y-2 max-h-[240px] overflow-y-auto scrollbar-hide">
-        {visibleCommunities.map((community, index) => (
-          <motion.button
-            key={community.id}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.05 }}
-            whileHover={{ scale: 1.02, x: 4 }}
-            onClick={() => navigate(`/community/${community.id}`)}
-            className={cn(
-              "w-full flex items-center gap-3 px-3 py-2 rounded-lg",
-              "hover:bg-white/5 transition-all duration-200 group"
-            )}
-          >
-            <div className="relative">
-              <Avatar className="w-7 h-7 border border-white/20">
-                <AvatarImage src={community.avatar} />
-                <AvatarFallback className={cn("bg-gradient-to-br text-white text-xs", community.color)}>
-                  {community.name[0]}
-                </AvatarFallback>
-              </Avatar>
-              {community.online && (
-                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" />
-              )}
-            </div>
-            <span className="text-sm text-gray-700 truncate group-hover:text-gray-900">
-              {community.name}
-            </span>
-          </motion.button>
-        ))}
-      </div>
+      <AnimatePresence mode="sync">
+        <motion.div
+          key={showExpanded ? 'expanded' : 'collapsed'}
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.2 }}
+          className={cn("space-y-2 overflow-hidden", showExpanded ? "max-h-[350px] overflow-y-auto scrollbar-hide" : "")}
+        >
+          {visibleCommunities.map((community, index) => {
+            const memberCount = getMemberCount(community);
+            const unreadCount = getUnreadCount(community.id);
+            return (
+              <motion.button
+                key={community.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.02 }}
+                whileHover={{ scale: 1.02, x: 4 }}
+                onClick={() => handleCommunityClick(community.id)}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 transition-all duration-200 group"
+              >
+                <div className="relative">
+                  <Avatar className="w-7 h-7 border border-white/20">
+                    <AvatarImage src={getCommunityAvatar(community)} />
+                    <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs">
+                      {getCommunityName(community)[0]?.toUpperCase() || 'C'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <NotificationBadge count={unreadCount} className="scale-90" />
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <span className="block text-sm text-gray-700 truncate group-hover:text-gray-900 font-medium">
+                    {getCommunityName(community)}
+                  </span>
+                  {memberCount > 0 && (
+                    <span className="block text-xs text-gray-500">
+                      {memberCount} {memberCount === 1 ? 'member' : 'members'}
+                    </span>
+                  )}
+                </div>
+                <ArrowRight className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </motion.button>
+            );
+          })}
+        </motion.div>
+      </AnimatePresence>
 
-      {/* Show All / Show Less */}
-      <button
-        onClick={onToggleExpanded}
-        className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-purple-600 hover:text-purple-700 transition-colors"
-      >
-        {showExpanded ? (
-          <>
-            <span>Show Less</span>
-            <ChevronLeft className="w-4 h-4" />
-          </>
-        ) : (
-          <>
-            <span>Show All</span>
-            <ArrowRight className="w-4 h-4" />
-          </>
+      {/* Actions */}
+      <div className="space-y-2">
+        {hasMore && (
+          <button onClick={onToggleExpanded} className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50/30 rounded-lg transition-all">
+            {showExpanded ? (
+              <>
+                <span>Show Less</span>
+                <ChevronUp className="w-3 h-3" />
+              </>
+            ) : (
+              <>
+                <span>Show All ({communities.length})</span>
+                <ChevronDown className="w-3 h-3" />
+              </>
+            )}
+          </button>
         )}
-      </button>
+        {showExpanded && communities.length > MAX_VISIBLE && (
+          <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={handleViewAll} className="w-full px-3 py-2 text-xs font-medium text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg transition-all flex items-center justify-center gap-2 group">
+            All Communities
+            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+          </motion.button>
+        )}
+      </div>
     </motion.div>
   );
 };
@@ -511,10 +682,10 @@ const MobileBottomNav = ({ onNavigate }: MobileBottomNavProps) => {
   const location = useLocation();
 
   const mobileNavItems = [
-    { id: 'discover', icon: Compass, route: '/?section=discover' },
-    { id: 'communities', icon: Users, route: '/?section=community' },
+    { id: 'discover', icon: Compass, route: '/discover' },
+    { id: 'communities', icon: Users, route: '/community' },
     { id: 'create', icon: PlusCircle, route: '/create' },
-    { id: 'profile', icon: User, route: '/?section=profile' }
+    { id: 'profile', icon: User, route: '/profile' }
   ];
 
   const handleNavClick = (item: any) => {

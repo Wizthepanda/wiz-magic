@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delete User Accounts - WizXP Admin</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 600px;
+      width: 100%;
+      padding: 40px;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+
+    .warning {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #856404;
+    }
+
+    .input-group {
+      margin: 20px 0;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+      font-family: inherit;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      margin-top: 20px;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .results {
+      margin-top: 30px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .results.show {
+      display: block;
+    }
+
+    .result-item {
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .result-item.success {
+      background: #d4edda;
+      border-left: 4px solid #28a745;
+      color: #155724;
+    }
+
+    .result-item.error {
+      background: #f8d7da;
+      border-left: 4px solid #dc3545;
+      color: #721c24;
+    }
+
+    .result-item.info {
+      background: #d1ecf1;
+      border-left: 4px solid #17a2b8;
+      color: #0c5460;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .stat-item {
+      background: white;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    .stat-label {
+      color: #666;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #667eea;
+    }
+
+    .loader {
+      display: none;
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .loader.show {
+      display: block;
+    }
+
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .helper-text {
+      font-size: 12px;
+      color: #888;
+      margin-top: 6px;
+    }
+
+    pre {
+      background: #f4f4f4;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🗑️ Delete User Accounts</h1>
+    <p style="color: #666; margin-top: 10px;">Permanently delete user accounts and all associated data from WizXP</p>
+
+    <div class="warning">
+      ⚠️ <strong>Warning:</strong> This action is irreversible! All user data including XP, ZAPs, watch history, communities, and videos will be permanently deleted.
+    </div>
+
+    <div class="input-group">
+      <label for="adminSecret">Admin Secret</label>
+      <input
+        type="password"
+        id="adminSecret"
+        placeholder="Enter admin secret"
+        value="DELETE_USERS_SECRET_2024"
+      >
+      <p class="helper-text">Required to authorize deletion</p>
+    </div>
+
+    <div class="input-group">
+      <label for="emails">Email Addresses (one per line)</label>
+      <textarea
+        id="emails"
+        placeholder="user1@gmail.com&#10;user2@gmail.com&#10;user3@gmail.com"
+      >beacontags@gmail.com
+wiztym@gmail.com
+wizsparkles@gmail.com</textarea>
+      <p class="helper-text">Enter email addresses to delete, one per line</p>
+    </div>
+
+    <button id="deleteBtn" onclick="deleteAccounts()">
+      Delete Accounts
+    </button>
+
+    <div class="loader" id="loader">
+      <div class="spinner"></div>
+      <p style="margin-top: 15px; color: #666;">Deleting accounts...</p>
+    </div>
+
+    <div class="results" id="results"></div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
+
+    // Your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBFyIR6JWWbwOmM5RSx5hbjCkgQajZ8xHE",
+      authDomain: "wizxp.com",
+      projectId: "wiz-magic-platform",
+      storageBucket: "wiz-magic-platform.firebasestorage.app",
+      messagingSenderId: "485151111726",
+      appId: "1:485151111726:web:9d65ec8a6accfa69e23dbf"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const functions = getFunctions(app);
+
+    window.deleteAccounts = async function() {
+      const adminSecret = document.getElementById('adminSecret').value.trim();
+      const emailsText = document.getElementById('emails').value.trim();
+      const resultsDiv = document.getElementById('results');
+      const loader = document.getElementById('loader');
+      const deleteBtn = document.getElementById('deleteBtn');
+
+      if (!adminSecret) {
+        alert('Please enter the admin secret');
+        return;
+      }
+
+      if (!emailsText) {
+        alert('Please enter at least one email address');
+        return;
+      }
+
+      const emails = emailsText.split('\n').map(e => e.trim()).filter(e => e);
+
+      if (emails.length === 0) {
+        alert('No valid email addresses found');
+        return;
+      }
+
+      // Confirm deletion
+      const confirmed = confirm(
+        `⚠️ WARNING ⚠️\n\nYou are about to PERMANENTLY DELETE ${emails.length} account(s):\n\n${emails.join('\n')}\n\nThis action CANNOT be undone!\n\nAre you absolutely sure?`
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      // Show loader, hide results
+      loader.classList.add('show');
+      resultsDiv.classList.remove('show');
+      resultsDiv.innerHTML = '';
+      deleteBtn.disabled = true;
+
+      const results = [];
+      const deleteUserAccount = httpsCallable(functions, 'deleteUserAccount');
+
+      for (const email of emails) {
+        try {
+          console.log(`Deleting: ${email}`);
+          const result = await deleteUserAccount({
+            email: email,
+            adminSecret: adminSecret
+          });
+
+          results.push({
+            email,
+            success: true,
+            data: result.data
+          });
+
+        } catch (error) {
+          console.error(`Error deleting ${email}:`, error);
+          results.push({
+            email,
+            success: false,
+            error: error.message
+          });
+        }
+      }
+
+      // Hide loader
+      loader.classList.remove('show');
+      deleteBtn.disabled = false;
+
+      // Display results
+      resultsDiv.classList.add('show');
+      let html = '<h3 style="margin-bottom: 15px; color: #333;">Deletion Results</h3>';
+
+      results.forEach(result => {
+        if (result.success) {
+          const details = result.data.details || {};
+          html += `
+            <div class="result-item success">
+              <strong>✅ ${result.email}</strong>
+              <p style="margin: 8px 0;">${result.data.message}</p>
+              ${details.authDeleted !== undefined ? `
+                <div class="stats">
+                  <div class="stat-item">
+                    <div class="stat-label">Auth Account</div>
+                    <div class="stat-value">${details.authDeleted ? '✓ Deleted' : '✗ Failed'}</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-label">Watch History</div>
+                    <div class="stat-value">${details.watchHistoryDeleted || 0}</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-label">Communities Left</div>
+                    <div class="stat-value">${details.communitiesLeft || 0}</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-label">Videos Deleted</div>
+                    <div class="stat-value">${details.videosDeleted || 0}</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-label">Transactions</div>
+                    <div class="stat-value">${details.transactionsDeleted || 0}</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-label">Collections</div>
+                    <div class="stat-value">${Object.keys(details.firestoreCollections || {}).length}</div>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        } else {
+          html += `
+            <div class="result-item error">
+              <strong>❌ ${result.email}</strong>
+              <p style="margin: 8px 0;">${result.error}</p>
+            </div>
+          `;
+        }
+      });
+
+      // Summary
+      const successCount = results.filter(r => r.success).length;
+      const failCount = results.length - successCount;
+
+      html += `
+        <div class="result-item info" style="margin-top: 20px;">
+          <strong>Summary</strong>
+          <p style="margin-top: 8px;">
+            ✅ Successfully deleted: ${successCount} account(s)<br>
+            ${failCount > 0 ? `❌ Failed: ${failCount} account(s)` : ''}
+          </p>
+          <p style="margin-top: 12px; font-size: 13px;">
+            ${successCount > 0 ? 'Deleted accounts can now sign up fresh with new user IDs and zero data.' : ''}
+          </p>
+        </div>
+      `;
+
+      resultsDiv.innerHTML = html;
+    };
+  </script>
+</body>
+</html>

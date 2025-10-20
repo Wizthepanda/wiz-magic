@@ -4,7 +4,7 @@
  * Production XP System with YouTube API Integration
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.purchaseCommunityAccess = exports.closeWatchSession = exports.sendWatchEvents = exports.startWatchSession = exports.nowPaymentsTipWebhook = exports.getNowPaymentsStatus = exports.createNowPaymentsPayment = exports.getNowPaymentsEstimate = exports.getNowPaymentsMinAmount = exports.getNowPaymentsCurrencies = exports.getWizLeaderboard = exports.wizDailyReset = exports.getWizXPData = exports.awardWizSubscriptionXP = exports.awardWizReferralXP = exports.awardWizShareXP = exports.awardWatchXP = exports.awardWizXP = exports.checkYouTubeStatus = exports.fetchYouTubeVideos = exports.exchangeYouTubeCode = exports.initializeYouTubeOAuth = exports.exchangeYouTubeToken = exports.initializeYouTubeTracking = exports.dailyYouTubeProfileSync = exports.dailyYouTubeSync = exports.syncYouTubeHistory = exports.dailyReset = exports.awardReferralXP = exports.awardShareXP = exports.awardXP = void 0;
+exports.purchaseCommunityAccess = exports.closeWatchSession = exports.sendWatchEvents = exports.startWatchSession = exports.nowPaymentsTipWebhook = exports.getNowPaymentsStatus = exports.createNowPaymentsPayment = exports.getNowPaymentsEstimate = exports.getNowPaymentsMinAmount = exports.getNowPaymentsCurrencies = exports.deleteUserAccount = exports.getWizLeaderboard = exports.wizDailyReset = exports.getWizXPData = exports.awardWizSubscriptionXP = exports.awardWizReferralXP = exports.awardWizShareXP = exports.awardWatchXP = exports.awardWizXP = exports.checkYouTubeStatus = exports.fetchYouTubeVideos = exports.exchangeYouTubeCode = exports.initializeYouTubeOAuth = exports.exchangeYouTubeToken = exports.initializeYouTubeTracking = exports.dailyYouTubeProfileSync = exports.dailyYouTubeSync = exports.syncYouTubeHistory = exports.dailyReset = exports.awardReferralXP = exports.awardShareXP = exports.awardXP = void 0;
 const app_1 = require("firebase-admin/app");
 // Initialize Firebase Admin SDK
 if ((0, app_1.getApps)().length === 0) {
@@ -41,6 +41,9 @@ Object.defineProperty(exports, "awardWizSubscriptionXP", { enumerable: true, get
 Object.defineProperty(exports, "getWizXPData", { enumerable: true, get: function () { return wiz_xp_functions_1.getWizXPData; } });
 Object.defineProperty(exports, "wizDailyReset", { enumerable: true, get: function () { return wiz_xp_functions_1.wizDailyReset; } });
 Object.defineProperty(exports, "getWizLeaderboard", { enumerable: true, get: function () { return wiz_xp_functions_1.getWizLeaderboard; } });
+// Export user account deletion function
+var deleteUserAccount_1 = require("./deleteUserAccount");
+Object.defineProperty(exports, "deleteUserAccount", { enumerable: true, get: function () { return deleteUserAccount_1.deleteUserAccount; } });
 // Export NowPayments tipping functions
 var nowpayments_functions_1 = require("./nowpayments-functions");
 Object.defineProperty(exports, "getNowPaymentsCurrencies", { enumerable: true, get: function () { return nowpayments_functions_1.getNowPaymentsCurrencies; } });

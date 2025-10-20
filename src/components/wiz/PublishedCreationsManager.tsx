@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
   Users,
   GraduationCap,
@@ -12,7 +13,8 @@ import {
   X,
   Eye,
   Star,
-  BadgeCheck
+  BadgeCheck,
+  ExternalLink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -60,6 +62,7 @@ interface PublishedCreationsManagerProps {
 export const PublishedCreationsManager: React.FC<PublishedCreationsManagerProps> = ({ onEditDraft }) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState('all');
   const [creations, setCreations] = useState<PublishedCreation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -326,6 +329,21 @@ export const PublishedCreationsManager: React.FC<PublishedCreationsManagerProps>
     }
   };
 
+  const handleView = (creation: PublishedCreation) => {
+    console.log('👁️ View clicked for:', creation.title, creation.id, creation.type);
+
+    // Navigate to the public page based on creation type
+    if (creation.type === 'community') {
+      navigate(`/community/${creation.id}`);
+    } else if (creation.type === 'course') {
+      navigate(`/course/${creation.id}`);
+    } else if (creation.type === 'coaching') {
+      navigate(`/coaching/${creation.id}`);
+    } else if (creation.type === 'product') {
+      navigate(`/product/${creation.id}`);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -427,6 +445,7 @@ export const PublishedCreationsManager: React.FC<PublishedCreationsManagerProps>
               key={creation.id}
               creation={creation}
               index={index}
+              onView={handleView}
               onEdit={handleEdit}
               onDelete={handleDelete}
               onPreview={() => setSelectedCreation(creation)}
@@ -441,6 +460,7 @@ export const PublishedCreationsManager: React.FC<PublishedCreationsManagerProps>
           <PreviewModal
             creation={selectedCreation}
             onClose={() => setSelectedCreation(null)}
+            onView={handleView}
             onEdit={handleEdit}
             onDelete={handleDelete}
           />
@@ -454,10 +474,11 @@ export const PublishedCreationsManager: React.FC<PublishedCreationsManagerProps>
 const CreationCard: React.FC<{
   creation: PublishedCreation;
   index: number;
+  onView: (creation: PublishedCreation) => void;
   onEdit: (creation: PublishedCreation) => void;
   onDelete: (id: string) => void;
   onPreview: () => void;
-}> = ({ creation, index, onEdit, onDelete, onPreview }) => {
+}> = ({ creation, index, onView, onEdit, onDelete, onPreview }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const typeConfig = {
@@ -594,30 +615,43 @@ const CreationCard: React.FC<{
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-2">
+            <div className="space-y-2">
               <Button
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onEdit(creation);
+                  onView(creation);
                 }}
-                className="flex-1 h-9 bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-sm"
+                className="w-full h-9 bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white shadow-md"
               >
-                <Edit3 className="w-3.5 h-3.5 mr-1.5" />
-                Edit
+                <Eye className="w-3.5 h-3.5 mr-1.5" />
+                View Public Page
               </Button>
-              <Button
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(creation.id);
-                }}
-                variant="outline"
-                className="flex-1 h-9 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
-              >
-                <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                Delete
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(creation);
+                  }}
+                  className="flex-1 h-9 bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-sm"
+                >
+                  <Edit3 className="w-3.5 h-3.5 mr-1.5" />
+                  Edit
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(creation.id);
+                  }}
+                  variant="outline"
+                  className="flex-1 h-9 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                  Delete
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -630,9 +664,10 @@ const CreationCard: React.FC<{
 const PreviewModal: React.FC<{
   creation: PublishedCreation;
   onClose: () => void;
+  onView: (creation: PublishedCreation) => void;
   onEdit: (creation: PublishedCreation) => void;
   onDelete: (id: string) => void;
-}> = ({ creation, onClose, onEdit, onDelete }) => {
+}> = ({ creation, onClose, onView, onEdit, onDelete }) => {
   const typeConfig = {
     community: { icon: Users },
     course: { icon: GraduationCap },
@@ -773,35 +808,41 @@ const PreviewModal: React.FC<{
             )}
 
             {/* Bottom CTA Row */}
-            <div className="flex items-center gap-3 pt-6 border-t border-gray-200">
+            <div className="space-y-3 pt-6 border-t border-gray-200">
               <Button
                 onClick={() => {
-                  onEdit(creation);
+                  onView(creation);
                   onClose();
                 }}
-                className="flex-1 h-12 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold rounded-xl shadow-lg"
+                className="w-full h-12 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold rounded-xl shadow-lg"
               >
-                <Edit3 className="w-4 h-4 mr-2" />
-                Edit Creation
+                <Eye className="w-4 h-4 mr-2" />
+                View Public Page
               </Button>
-              <Button
-                onClick={() => {
-                  onDelete(creation.id);
-                  onClose();
-                }}
-                variant="outline"
-                className="flex-1 h-12 border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 font-bold rounded-xl"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
-              </Button>
-              <Button
-                onClick={onClose}
-                variant="outline"
-                className="h-12 px-6 border-2 border-gray-300 hover:bg-gray-100 font-bold rounded-xl"
-              >
-                Close
-              </Button>
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={() => {
+                    onEdit(creation);
+                    onClose();
+                  }}
+                  variant="outline"
+                  className="flex-1 h-12 border-2 border-gray-300 hover:bg-gray-100 font-bold rounded-xl"
+                >
+                  <Edit3 className="w-4 h-4 mr-2" />
+                  Edit
+                </Button>
+                <Button
+                  onClick={() => {
+                    onDelete(creation.id);
+                    onClose();
+                  }}
+                  variant="outline"
+                  className="flex-1 h-12 border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 font-bold rounded-xl"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </Button>
+              </div>
             </div>
           </div>
         </motion.div>

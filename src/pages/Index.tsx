@@ -1,51 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { WizHomepage } from '@/components/wiz/wiz-homepage';
-import { WizDashboard } from '@/components/wiz/wiz-dashboard';
 import { useAuth } from '@/hooks/useAuth';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 
 const Index = () => {
   const { user, loading } = useAuth();
-  // Initialize showDashboard based on current auth state to avoid flicker
-  const [showDashboard, setShowDashboard] = useState(!!user && !loading);
+  const navigate = useNavigate();
 
-  // ChatGPT-style: Auto-navigate to dashboard when user is authenticated
+  // Auto-redirect authenticated users to /discover
   useEffect(() => {
-    if (!loading) {
-      const shouldShowDashboard = !!user;
-      if (shouldShowDashboard !== showDashboard) {
-        console.log(shouldShowDashboard ? '✅ User authenticated - auto-redirecting to dashboard' : '🏠 No user - showing homepage');
-        setShowDashboard(shouldShowDashboard);
-      }
+    if (!loading && user) {
+      console.log('✅ User authenticated - redirecting to /discover');
+      navigate('/discover', { replace: true });
     }
-  }, [user, loading, showDashboard]);
+  }, [user, loading, navigate]);
 
-  // Add keyboard listener for testing - press 'H' to go back to homepage
-  useEffect(() => {
-    const handleKeyPress = (event: KeyboardEvent) => {
-      // Only trigger if user is not typing in an input field, textarea, or any editable element
-      const target = event.target as HTMLElement;
-      const isTyping = target && (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable ||
-        target.closest('[contenteditable="true"]') ||
-        target.closest('input') ||
-        target.closest('textarea')
-      );
-
-      if ((event.key === 'h' || event.key === 'H') && !isTyping) {
-        console.log('🏠 Going back to homepage for testing...');
-        setShowDashboard(false);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, []);
-
-  // Premium loading state during initial auth check - ChatGPT style
+  // Loading state while checking auth
   if (loading) {
     return (
       <motion.div
@@ -62,7 +34,6 @@ const Index = () => {
           transition={{ duration: 0.3 }}
           className="flex flex-col items-center gap-6"
         >
-          {/* Premium Spinner */}
           <div className="relative">
             <motion.div
               animate={{ rotate: 360 }}
@@ -95,33 +66,17 @@ const Index = () => {
     );
   }
 
+  // Show homepage for non-authenticated users
   return (
-    <div className="min-h-screen">
-      {/* Smooth transition between homepage and dashboard - no page reload */}
-      <AnimatePresence mode="wait">
-        {showDashboard ? (
-          <motion.div
-            key="dashboard"
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.3 }}
-          >
-            <WizDashboard onBackToHomepage={() => setShowDashboard(false)} />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="homepage"
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.3 }}
-          >
-            <WizHomepage onEnterPlatform={() => setShowDashboard(true)} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      className="min-h-screen"
+    >
+      <WizHomepage onEnterPlatform={() => navigate('/discover')} />
+    </motion.div>
   );
 };
 

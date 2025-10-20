@@ -12,7 +12,7 @@ interface ProfileZAPDropdownProps {
 
 export const ProfileXPDropdown: React.FC<ProfileZAPDropdownProps> = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { zapData, zapProgress, loading } = useZAPSystem();
 
   // Use actual ZAP system data with enhanced metrics
@@ -41,6 +41,15 @@ export const ProfileXPDropdown: React.FC<ProfileZAPDropdownProps> = () => {
   const dailyZapsCap = 360;
   const dailyProgress = (userData.dailyZAPs / dailyZapsCap) * 100;
   const watchGoalRemaining = Math.max(0, 3 - userData.dailyVideosWatched);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      setIsOpen(false);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   // Show loading state
   if (loading || !user) {
@@ -299,7 +308,10 @@ export const ProfileXPDropdown: React.FC<ProfileZAPDropdownProps> = () => {
                   </div>
                   <span className="text-sm font-medium">Preferences</span>
                 </button>
-                <button className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-red-500/10 rounded-xl transition-all duration-200 text-red-400 group">
+                <button
+                  onClick={handleSignOut}
+                  className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-red-500/10 rounded-xl transition-all duration-200 text-red-400 group"
+                >
                   <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center group-hover:bg-red-500/20 transition-colors">
                     <LogOut className="w-4 h-4 text-red-400" />
                   </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { collection, query, where, getDocs, orderBy, limit, doc, getDoc, runTransaction, updateDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import { db, functions } from '@/lib/firebase';
 import { httpsCallable } from 'firebase/functions';
@@ -51,6 +51,7 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
   const { zapData, zapProgress } = useZAPSystem();
   const { data: joinedCommunities = [] } = useJoinedCommunities();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // Fetch all communities and ZAP rewards
   const { data: allItems = [], isLoading } = useQuery({
@@ -360,6 +361,10 @@ export const CommunityCommandCenter: React.FC<CommunityCommandCenterProps> = ({ 
       const data = result.data as { success: boolean; message: string };
 
       if (data.success) {
+        // Invalidate queries to refresh membership status immediately
+        await queryClient.invalidateQueries({ queryKey: ['joinedCommunities', user.uid] });
+        await queryClient.invalidateQueries({ queryKey: ['community-command-center'] });
+
         // Success feedback
         toast({
           title: "🎉 Success!",

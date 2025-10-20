@@ -8,27 +8,92 @@ import { XpProvider } from "@/context/XpContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ServiceBlockedAlert } from "@/components/ui/ServiceBlockedAlert";
 import { MainLayout } from "./components/layouts/MainLayout";
-import Index from "./pages/Index";
-import About from "./pages/About";
-import CreatorProfile from "./pages/CreatorProfile";
-import Watch from "./pages/Watch";
-import Shorts from "./pages/Shorts";
-import Claim from "./pages/Claim";
-import ZapRewardsHub from "./pages/ZapRewardsHub";
-import NotFound from "./pages/NotFound";
-import AntiCheatTest from "./pages/AntiCheatTest";
-import CommunityPage from "./pages/CommunityPage";
-import CommunityDashboardPage from "./pages/CommunityDashboardPage";
-import CommunityWelcomeDemo from "./pages/CommunityWelcomeDemo";
-import { AntiCheatDashboard } from "./components/admin/AntiCheatDashboard";
-import { WizCreatePage } from "./components/wiz/WizCreatePage";
-import { WizCreatePageV2 } from "./components/wiz/WizCreatePageV2";
-import { WizCreatePageV3 } from "./components/wiz/WizCreatePageV3";
-import MessagesPage from "./pages/MessagesPage";
-import './lib/firebase'; // Initialize Firebase
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import authSingleton from './lib/authSingleton';
-import { useAuth } from './hooks/useAuth';
+import { motion } from 'framer-motion';
+import { Sparkles } from 'lucide-react';
+import './lib/firebase'; // Initialize Firebase
+
+// ========================================
+// LAZY LOADED PAGES (Code Splitting)
+// ========================================
+
+// Public pages (no sidebar)
+const Index = lazy(() => import("./pages/Index"));
+const About = lazy(() => import("./pages/About"));
+const CreatorProfile = lazy(() => import("./pages/CreatorProfile"));
+const Watch = lazy(() => import("./pages/Watch"));
+const Shorts = lazy(() => import("./pages/Shorts"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const AntiCheatTest = lazy(() => import("./pages/AntiCheatTest"));
+const CommunityWelcomeDemo = lazy(() => import("./pages/CommunityWelcomeDemo"));
+const AntiCheatDashboard = lazy(() => import("./components/admin/AntiCheatDashboard").then(m => ({ default: m.AntiCheatDashboard })));
+
+// Dashboard pages (with persistent sidebar)
+const DiscoverPage = lazy(() => import("./pages/DiscoverPage"));
+const CommunityPage = lazy(() => import("./pages/CommunityPage"));
+const CommunityDashboardPage = lazy(() => import("./pages/CommunityDashboardPage"));
+const MessagesPage = lazy(() => import("./pages/MessagesPage"));
+const LeaderboardPage = lazy(() => import("./pages/LeaderboardPage"));
+const PremierePage = lazy(() => import("./pages/PremierePage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const Claim = lazy(() => import("./pages/Claim"));
+const ZapRewardsHub = lazy(() => import("./pages/ZapRewardsHub"));
+
+// Create pages
+const WizCreatePageV3 = lazy(() => import("./components/wiz/WizCreatePageV3").then(m => ({ default: m.WizCreatePageV3 })));
+const WizCreatePageV2 = lazy(() => import("./components/wiz/WizCreatePageV2").then(m => ({ default: m.WizCreatePageV2 })));
+const WizCreatePage = lazy(() => import("./components/wiz/WizCreatePage").then(m => ({ default: m.WizCreatePage })));
+
+// ========================================
+// LOADING FALLBACK COMPONENT
+// ========================================
+
+const LoadingFallback = () => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    className="min-h-screen flex items-center justify-center"
+    style={{
+      background: 'linear-gradient(135deg, #F6F0FF 0%, #FFFFFF 100%)',
+    }}
+  >
+    <motion.div
+      initial={{ scale: 0.9, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="flex flex-col items-center gap-6"
+    >
+      <div className="relative">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+          className="w-16 h-16 rounded-full border-4 border-transparent"
+          style={{
+            borderTopColor: '#C29FFF',
+            borderRightColor: '#A78BFA',
+            borderBottomColor: '#8B5CF6',
+          }}
+        />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <motion.div
+            animate={{ rotate: -360 }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+          >
+            <Sparkles className="w-6 h-6 text-purple-600" />
+          </motion.div>
+        </div>
+      </div>
+      <motion.p
+        animate={{ opacity: [0.5, 1, 0.5] }}
+        transition={{ duration: 1.5, repeat: Infinity }}
+        className="text-lg font-medium text-gray-700"
+      >
+        Loading...
+      </motion.p>
+    </motion.div>
+  </motion.div>
+);
 
 // Configure React Query for optimal performance
 const queryClient = new QueryClient({
@@ -65,49 +130,69 @@ const App = () => {
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <Routes>
-                {/* Routes WITHOUT persistent sidebar (public/standalone pages) */}
-                <Route path="/about" element={<About />} />
-                <Route path="/watch/:videoId" element={<Watch />} />
-                <Route path="/shorts" element={<Shorts />} />
-                <Route path="/shorts/:shortId" element={<Shorts />} />
-                <Route path="/admin/anti-cheat" element={<AntiCheatDashboard />} />
-                <Route path="/test/anti-cheat" element={<AntiCheatTest />} />
-                <Route path="/demo/community-welcome" element={<CommunityWelcomeDemo />} />
+              <Suspense fallback={<LoadingFallback />}>
+                <Routes>
+                  {/* ========================================
+                      PUBLIC ROUTES (No Sidebar)
+                      ======================================== */}
 
-                {/* Homepage - No sidebar (handles auth state internally) */}
-                <Route path="/" element={<Index />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/watch/:videoId" element={<Watch />} />
+                  <Route path="/shorts" element={<Shorts />} />
+                  <Route path="/shorts/:shortId" element={<Shorts />} />
+                  <Route path="/admin/anti-cheat" element={<AntiCheatDashboard />} />
+                  <Route path="/test/anti-cheat" element={<AntiCheatTest />} />
+                  <Route path="/demo/community-welcome" element={<CommunityWelcomeDemo />} />
 
-                {/* Creator Profile - Standalone with Back to Discover button */}
-                <Route path="/creator/:username" element={<CreatorProfile />} />
-                <Route path="/c/:username" element={<CreatorProfile />} />
-                <Route path="/creator/id/:creatorId" element={<CreatorProfile />} />
+                  {/* Homepage - No sidebar (handles auth state internally) */}
+                  <Route path="/" element={<Index />} />
 
-                {/* Routes WITH persistent sidebar (main app - authenticated only) */}
-                <Route element={<MainLayout />}>
-                  {/* Dashboard routes moved here if needed */}
+                  {/* Creator Profile - Standalone */}
+                  <Route path="/creator/:username" element={<CreatorProfile />} />
+                  <Route path="/c/:username" element={<CreatorProfile />} />
+                  <Route path="/creator/id/:creatorId" element={<CreatorProfile />} />
 
-                  {/* Community */}
-                  <Route path="/community" element={<CommunityPage />} />
-                  <Route path="/community/:id" element={<CommunityDashboardPage />} />
+                  {/* ========================================
+                      DASHBOARD ROUTES (Persistent Sidebar)
+                      ======================================== */}
 
-                  {/* Messages */}
-                  <Route path="/messages" element={<MessagesPage />} />
+                  <Route element={<MainLayout />}>
+                    {/* Discover - Main feed */}
+                    <Route path="/discover" element={<DiscoverPage />} />
 
-                  {/* Other main app pages */}
-                  <Route path="/claim" element={<Claim />} />
-                  <Route path="/rewards" element={<ZapRewardsHub />} />
-                  <Route path="/leaderboard" element={<div className="p-8 text-center"><h2 className="text-2xl font-bold">Leaderboard Coming Soon</h2></div>} />
-                  <Route path="/premiere" element={<div className="p-8 text-center"><h2 className="text-2xl font-bold">WIZ Premiere Coming Soon</h2></div>} />
-                  <Route path="/profile" element={<div className="p-8 text-center"><h2 className="text-2xl font-bold">Profile Coming Soon</h2></div>} />
-                  <Route path="/create" element={<WizCreatePageV3 />} />
-                  <Route path="/create-v2" element={<WizCreatePageV2 />} />
-                  <Route path="/create-old" element={<WizCreatePage />} />
-                </Route>
+                    {/* Communities */}
+                    <Route path="/community" element={<CommunityPage />} />
+                    <Route path="/community/:id" element={<CommunityDashboardPage />} />
 
-                {/* Catch-all 404 */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+                    {/* Messages - Real-time chat */}
+                    <Route path="/messages" element={<MessagesPage />} />
+
+                    {/* Leaderboard - Top creators */}
+                    <Route path="/leaderboard" element={<LeaderboardPage />} />
+
+                    {/* Premiere - Premium content */}
+                    <Route path="/premiere" element={<PremierePage />} />
+
+                    {/* Profile - User profile & settings */}
+                    <Route path="/profile" element={<ProfilePage />} />
+
+                    {/* Create - Content creation hub */}
+                    <Route path="/create" element={<WizCreatePageV3 />} />
+                    <Route path="/create-v2" element={<WizCreatePageV2 />} />
+                    <Route path="/create-old" element={<WizCreatePage />} />
+
+                    {/* Rewards & Claiming */}
+                    <Route path="/claim" element={<Claim />} />
+                    <Route path="/rewards" element={<ZapRewardsHub />} />
+                  </Route>
+
+                  {/* ========================================
+                      404 NOT FOUND
+                      ======================================== */}
+
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
             </BrowserRouter>
           </TooltipProvider>
         </XpProvider>

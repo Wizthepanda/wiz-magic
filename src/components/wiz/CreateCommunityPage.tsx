@@ -51,6 +51,7 @@ import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import CommunityPreview from './CommunityPreview';
+import { CommunityIconUpload } from './CommunityIconUpload';
 import {
   createCommunitySchema,
   communityCategories,
@@ -100,6 +101,7 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
       title: '',
       tagline: '',
       category: '',
+      profileIcon: '',
       coverMedia: [],
       shortDescription: '',
       longDescription: '',
@@ -145,6 +147,7 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
         title: draftData.title || '',
         tagline: draftData.tagline || '',
         category: draftData.category || '',
+        profileIcon: draftData.profileIcon || '',
         coverMedia: draftData.coverMedia || [],
         shortDescription: draftData.shortDescription || '',
         longDescription: draftData.longDescription || '',
@@ -448,6 +451,7 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
                     onAddCoverMedia={handleAddCoverMedia}
                     onRemoveCoverMedia={handleRemoveCoverMedia}
                     onReorderCoverMedia={handleReorderCoverMedia}
+                    communityId={communityId}
                   />}
                   {currentStep === 2 && <Step2Content
                     modules={modules}
@@ -635,7 +639,8 @@ const Step1Content: React.FC<{
   onAddCoverMedia: (media: { type: 'image' | 'youtube'; url: string; thumbnail?: string }) => void;
   onRemoveCoverMedia: (index: number) => void;
   onReorderCoverMedia: (newOrder: Array<{ type: 'image' | 'youtube'; url: string; thumbnail?: string }>) => void;
-}> = ({ tags, newTag, onNewTagChange, onAddTag, onRemoveTag, coverMedia, onAddCoverMedia, onRemoveCoverMedia, onReorderCoverMedia }) => {
+  communityId?: string | null;
+}> = ({ tags, newTag, onNewTagChange, onAddTag, onRemoveTag, coverMedia, onAddCoverMedia, onRemoveCoverMedia, onReorderCoverMedia, communityId }) => {
   const { register, control, formState: { errors } } = useFormContext<CreateCommunityForm>();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showVideoDialog, setShowVideoDialog] = useState(false);
@@ -902,9 +907,24 @@ const Step1Content: React.FC<{
           </div>
         </div>
 
-        {/* Cover Media */}
-        <div className="space-y-4">
-          <Label>Cover Media (up to 5) - Drag to reorder</Label>
+        {/* Profile Icon & Cover Media - Responsive 2-column layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
+          {/* Community Profile Icon */}
+          <Controller
+            name="profileIcon"
+            control={control}
+            render={({ field }) => (
+              <CommunityIconUpload
+                value={field.value}
+                onChange={field.onChange}
+                communityId={communityId || undefined}
+              />
+            )}
+          />
+
+          {/* Cover Media */}
+          <div className="space-y-4">
+            <Label>Cover Media (up to 5) - Drag to reorder</Label>
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -960,10 +980,9 @@ const Step1Content: React.FC<{
               </div>
             </SortableContext>
           </DndContext>
-        </div>
 
-        {/* Video URL Dialog */}
-        <Dialog open={showVideoDialog} onOpenChange={setShowVideoDialog}>
+          {/* Video URL Dialog */}
+          <Dialog open={showVideoDialog} onOpenChange={setShowVideoDialog}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add Video URL</DialogTitle>
@@ -1009,10 +1028,12 @@ const Step1Content: React.FC<{
               </Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
+      </div>
 
-        {/* Short Description */}
-        <div className="space-y-2">
+      {/* Short Description */}
+      <div className="space-y-2">
           <Label>Short Description *</Label>
           <Textarea
             {...register('shortDescription')}

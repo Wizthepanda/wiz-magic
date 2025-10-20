@@ -271,6 +271,10 @@ export default {
 					'50%': { transform: 'scale(1) rotate(180deg)', opacity: '1' },
 					'100%': { transform: 'scale(0) rotate(360deg)', opacity: '0' },
 				},
+				'notification-pulse': {
+					'0%, 100%': { transform: 'scale(1)', opacity: '0.9' },
+					'50%': { transform: 'scale(1.1)', opacity: '1' },
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -285,6 +289,7 @@ export default {
 				'glass-shimmer': 'glass-shimmer 2s ease-in-out infinite',
 				'float-up': 'float-up 4s ease-in-out infinite',
 				'sparkle-burst': 'sparkle-burst 1.5s ease-out infinite',
+				'notification-pulse': 'notification-pulse 2s ease-in-out infinite',
 			}
 		}
 	},

@@ -44,6 +44,9 @@ export {
   getWizLeaderboard
 } from './wiz-xp-functions';
 
+// Export user account deletion function
+export { deleteUserAccount } from './deleteUserAccount';
+
 // Export NowPayments tipping functions
 export {
   getNowPaymentsCurrencies,

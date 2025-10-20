@@ -21,32 +21,20 @@ export const MainLayout = () => {
   const location = useLocation();
   const isMobile = useIsMobile();
 
-  // Determine active section based on current route
-  const getActiveSection = () => {
-    const path = location.pathname;
-
-    if (path === '/' || path.startsWith('/discover')) return 'discover';
-    if (path.startsWith('/community')) return 'community';
-    if (path.startsWith('/leaderboard')) return 'leaderboard';
-    if (path.startsWith('/premiere')) return 'premiere';
-    if (path.startsWith('/profile')) return 'profile';
-    if (path.startsWith('/create')) return 'create';
-    if (path.startsWith('/creator') || path.startsWith('/c/')) return 'discover';
-    if (path.startsWith('/rewards')) return 'rewards';
-
-    return 'discover';
-  };
-
   // Handle sidebar navigation
   const handleSectionChange = (section: string) => {
     console.log('🧭 Navigating to section:', section);
 
     switch (section) {
       case 'discover':
-        navigate('/');
+        navigate('/discover');
         break;
+      case 'communities':
       case 'community':
         navigate('/community');
+        break;
+      case 'messages':
+        navigate('/messages');
         break;
       case 'leaderboard':
         navigate('/leaderboard');
@@ -60,11 +48,15 @@ export const MainLayout = () => {
       case 'create':
         navigate('/create');
         break;
+      case 'influencers':
+        // Coming soon
+        console.log('✨ Influencers coming soon!');
+        break;
       case 'rewards':
         navigate('/rewards');
         break;
       default:
-        navigate('/');
+        navigate('/discover');
     }
   };
 
