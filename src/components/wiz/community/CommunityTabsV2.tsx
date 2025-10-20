@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 
 interface CommunityTabsV2Props {
   community: Community;
+  feedComponent?: React.ReactNode;
 }
 
 const tabs = [
@@ -22,7 +23,7 @@ const tabs = [
   { value: "rewards", label: "Rewards", icon: Gift },
 ];
 
-export function CommunityTabsV2({ community }: CommunityTabsV2Props) {
+export function CommunityTabsV2({ community, feedComponent }: CommunityTabsV2Props) {
   const [activeTab, setActiveTab] = useState("community");
   const [notificationCount, setNotificationCount] = useState({ community: 3, rewards: 1 });
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -124,7 +125,7 @@ export function CommunityTabsV2({ community }: CommunityTabsV2Props) {
         >
           <Tabs.Content value="community" className="mt-0">
             <Suspense fallback={<LoadingSpinner />}>
-              <DiscussionFeed communityId={community.id} />
+              {feedComponent || <DiscussionFeed communityId={community.id} />}
             </Suspense>
           </Tabs.Content>
 

@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { XpProvider } from "@/context/XpContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { LayoutProvider } from "@/contexts/LayoutContext";
 import { ServiceBlockedAlert } from "@/components/ui/ServiceBlockedAlert";
 import { MainLayout } from "./components/layouts/MainLayout";
 import { lazy, Suspense, useEffect } from 'react';
@@ -32,7 +33,6 @@ const AntiCheatDashboard = lazy(() => import("./components/admin/AntiCheatDashbo
 // Dashboard pages (with persistent sidebar)
 const DiscoverPage = lazy(() => import("./pages/DiscoverPage"));
 const CommunityPage = lazy(() => import("./pages/CommunityPage"));
-const CommunityDashboardPage = lazy(() => import("./pages/CommunityDashboardPage"));
 const CommunityDashboardPageV2 = lazy(() => import("./pages/CommunityDashboardPageV2"));
 const MessagesPage = lazy(() => import("./pages/MessagesPage"));
 const LeaderboardPage = lazy(() => import("./pages/LeaderboardPage"));
@@ -126,13 +126,14 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <XpProvider>
-          <TooltipProvider>
-            <ServiceBlockedAlert />
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Suspense fallback={<LoadingFallback />}>
-                <Routes>
+          <LayoutProvider>
+            <TooltipProvider>
+              <ServiceBlockedAlert />
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Suspense fallback={<LoadingFallback />}>
+                  <Routes>
                   {/* ========================================
                       PUBLIC ROUTES (No Sidebar)
                       ======================================== */}
@@ -163,8 +164,7 @@ const App = () => {
 
                     {/* Communities */}
                     <Route path="/community" element={<CommunityPage />} />
-                    <Route path="/community/:id" element={<CommunityDashboardPage />} />
-                    <Route path="/community/:id/v2" element={<CommunityDashboardPageV2 />} />
+                    <Route path="/community/:id" element={<CommunityDashboardPageV2 />} />
 
                     {/* Messages - Real-time chat */}
                     <Route path="/messages" element={<MessagesPage />} />
@@ -197,9 +197,10 @@ const App = () => {
               </Suspense>
             </BrowserRouter>
           </TooltipProvider>
-        </XpProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+        </LayoutProvider>
+      </XpProvider>
+    </ThemeProvider>
+  </QueryClientProvider>
   );
 };
 

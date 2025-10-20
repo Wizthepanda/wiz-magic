@@ -7,6 +7,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useLayout } from '@/contexts/LayoutContext';
 
 /**
  * MainLayout - Persistent layout wrapper with sidebar
@@ -20,6 +21,7 @@ export const MainLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
+  const { sidebarWidth } = useLayout();
 
   // Handle sidebar navigation
   const handleSectionChange = (section: string) => {
@@ -74,10 +76,21 @@ export const MainLayout = () => {
         <WizSidebarV2 onNavigate={handleSectionChange} />
 
         {/* Main Content Area - Routes render here */}
-        <main className={cn(
-          "flex-1 min-w-0 transition-all duration-300 ease-out",
-          !isMobile && "ml-[280px]" // Account for expanded sidebar width
-        )}>
+        <motion.main
+          className="flex-1 min-w-0"
+          style={{
+            marginLeft: !isMobile ? `${sidebarWidth}px` : 0
+          }}
+          animate={{
+            marginLeft: !isMobile ? sidebarWidth : 0
+          }}
+          transition={{
+            type: 'spring',
+            stiffness: 300,
+            damping: 30,
+            duration: 0.4
+          }}
+        >
           <motion.div
             key={location.pathname}
             initial={{ opacity: 0, y: 10 }}
@@ -87,7 +100,7 @@ export const MainLayout = () => {
           >
             <Outlet />
           </motion.div>
-        </main>
+        </motion.main>
       </div>
 
       {/* Mobile bottom nav is now handled by WizSidebarV2 */}

@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { CommunityDashboardV2 } from '@/components/wiz/community/CommunityDashboardV2';
+import { CommunityDashboardV3 } from '@/components/wiz/community/CommunityDashboardV3';
 
 export default function CommunityDashboardPageV2() {
   const { id } = useParams();
@@ -12,5 +12,5 @@ export default function CommunityDashboardPageV2() {
     );
   }
 
-  return <CommunityDashboardV2 communityId={id} />;
+  return <CommunityDashboardV3 communityId={id} />;
 }

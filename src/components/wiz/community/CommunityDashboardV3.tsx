@@ -2,9 +2,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCommunity } from '@/hooks/useCommunity';
 import { useJoinedCommunities } from '@/hooks/useJoinedCommunities';
 import { Loader2 } from 'lucide-react';
-import { HeroBannerV2 } from './HeroBannerV2';
+import { HeroBannerV3 } from './HeroBannerV3';
 import { CommunityTabsV2 } from './CommunityTabsV2';
-import { EnhancedCreatorSidebar } from './EnhancedCreatorSidebar';
+import { EnhancedCreatorSidebarV3 } from './EnhancedCreatorSidebarV3';
+import { CommunityFeedV3 } from './CommunityFeedV3';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -12,15 +13,17 @@ interface Props {
   communityId: string;
 }
 
-export const CommunityDashboardV2 = ({ communityId }: Props) => {
+export const CommunityDashboardV3 = ({ communityId }: Props) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data: community, isLoading } = useCommunity(communityId);
   const { data: joinedCommunities = [], isLoading: isLoadingJoined } = useJoinedCommunities();
 
-  // Check if user is a member using the joinedCommunities query
-  // This automatically updates when we invalidate the query after joining
+  // Check if user is a member
   const isMember = joinedCommunities.some(c => c.id === communityId);
+
+  // Check if user is the creator
+  const isCreator = user?.uid === community?.creatorId;
 
   if (isLoading || isLoadingJoined) {
     return (
@@ -90,28 +93,37 @@ export const CommunityDashboardV2 = ({ communityId }: Props) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 relative overflow-hidden w-full">
-      {/* Decorative Background Orbs - Use absolute instead of fixed to respect parent container */}
+      {/* Decorative Background Orbs - Use absolute to respect parent container */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-400/5 rounded-full blur-3xl -z-10 pointer-events-none" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-400/5 rounded-full blur-3xl -z-10 pointer-events-none" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-indigo-400/3 to-purple-400/3 rounded-full blur-3xl -z-10 pointer-events-none" />
 
-      <div className="relative w-full mx-auto px-4 md:px-6 py-8 max-w-7xl">
-        {/* Hero Banner with Community Icon */}
-        <HeroBannerV2
+      {/* Responsive Container - Adjusts with sidebar */}
+      <div className="relative w-full mx-auto px-4 md:px-6 py-8 transition-all duration-300 ease-in-out" style={{ maxWidth: 'min(1280px, 100vw - 2rem)' }}>
+        {/* Hero Banner V3 (no creator card) */}
+        <HeroBannerV3
           community={community}
           isJoined={true}
         />
 
-        {/* Main Content Grid */}
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-[1fr,380px] gap-8">
+        {/* Main Content Grid - Responsive flex layout */}
+        <div className="mt-8 flex flex-col lg:flex-row gap-6 lg:gap-8 w-full">
           {/* Main Content Column */}
-          <main className="space-y-6">
-            <CommunityTabsV2 community={community} />
+          <main className="flex-1 min-w-0 space-y-6">
+            <CommunityTabsV2
+              community={community}
+              feedComponent={
+                <CommunityFeedV3
+                  communityId={communityId}
+                  isCreator={isCreator}
+                />
+              }
+            />
           </main>
 
-          {/* Enhanced Right Sidebar */}
-          <aside className="hidden lg:block">
-            <EnhancedCreatorSidebar
+          {/* Enhanced Right Sidebar V3 - Fixed width on desktop */}
+          <aside className="w-full lg:w-[320px] flex-shrink-0 hidden lg:block">
+            <EnhancedCreatorSidebarV3
               community={community}
               isJoined={true}
             />

@@ -26,9 +26,9 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { PublishedCreationsManager } from './PublishedCreationsManager';
+import { PublishedCreationsManagerV2 } from './PublishedCreationsManagerV2';
 import { ConnectYouTubeButton } from './ConnectYouTubeButton';
-import CreateCommunityPage from './CreateCommunityPage';
+import { CreationHub } from './CreationHub';
 
 type FilterType = 'creation' | 'youtube' | 'published';
 type CreationType = 'community' | 'course' | 'coaching' | 'product';
@@ -98,7 +98,6 @@ export const WizCreatePageV3 = () => {
 
   const [activeFilter, setActiveFilter] = useState<FilterType>('creation');
   const [activePublishedFilter, setActivePublishedFilter] = useState('all');
-  const [showCommunityCreate, setShowCommunityCreate] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Animation variants
@@ -118,23 +117,6 @@ export const WizCreatePageV3 = () => {
       transition: { duration: 0.2 }
     }
   };
-
-  const handleCreateClick = (type: CreationType) => {
-    if (type === 'community') {
-      setShowCommunityCreate(true);
-    } else {
-      // TODO: Handle other creation types
-      console.log(`Creating ${type}...`);
-    }
-  };
-
-  if (showCommunityCreate) {
-    return (
-      <CreateCommunityPage
-        onBack={() => setShowCommunityCreate(false)}
-      />
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30">
@@ -183,9 +165,7 @@ export const WizCreatePageV3 = () => {
               animate="visible"
               exit="exit"
             >
-              <CreationHubSection
-                creationTypes={creationTypes}
-                onCreateClick={handleCreateClick}
+              <CreationHub
                 isMobile={isMobile}
               />
             </motion.div>
@@ -211,7 +191,7 @@ export const WizCreatePageV3 = () => {
               animate="visible"
               exit="exit"
             >
-              <PublishedCreationsManager />
+              <PublishedCreationsManagerV2 />
             </motion.div>
           )}
         </AnimatePresence>

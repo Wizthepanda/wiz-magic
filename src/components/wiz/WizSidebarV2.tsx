@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { NotificationBadge } from './NotificationBadge';
+import { useLayout } from '@/contexts/LayoutContext';
 
 interface NavItem {
   id: string;
@@ -141,7 +142,7 @@ interface WizSidebarV2Props {
 }
 
 export const WizSidebarV2 = ({ onNavigate }: WizSidebarV2Props) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const { isSidebarExpanded, setSidebarExpanded } = useLayout();
   const [showCommunitiesExpanded, setShowCommunitiesExpanded] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -213,7 +214,7 @@ export const WizSidebarV2 = ({ onNavigate }: WizSidebarV2Props) => {
 
   return (
     <motion.div
-      animate={{ width: isExpanded ? 280 : 80 }}
+      animate={{ width: isSidebarExpanded ? 280 : 80 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       className={cn(
         "fixed left-0 top-0 h-screen",
@@ -226,7 +227,7 @@ export const WizSidebarV2 = ({ onNavigate }: WizSidebarV2Props) => {
         {/* Logo & Toggle */}
         <div className="flex items-center justify-between mb-8">
           <AnimatePresence mode="wait">
-            {isExpanded ? (
+            {isSidebarExpanded ? (
               <motion.div
                 key="logo"
                 initial={{ opacity: 0, x: -10 }}
@@ -255,10 +256,10 @@ export const WizSidebarV2 = ({ onNavigate }: WizSidebarV2Props) => {
           </AnimatePresence>
 
           <button
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={() => setSidebarExpanded(!isSidebarExpanded)}
             className="p-2 rounded-lg hover:bg-white/10 transition-colors"
           >
-            {isExpanded ? (
+            {isSidebarExpanded ? (
               <ChevronLeft className="w-5 h-5 text-gray-600" />
             ) : (
               <ChevronRight className="w-5 h-5 text-gray-600" />
@@ -273,7 +274,7 @@ export const WizSidebarV2 = ({ onNavigate }: WizSidebarV2Props) => {
               key={item.id}
               item={item}
               isActive={isActive(item)}
-              isExpanded={isExpanded}
+              isExpanded={isSidebarExpanded}
               onClick={() => handleNavClick(item)}
             />
           ))}
@@ -289,13 +290,13 @@ export const WizSidebarV2 = ({ onNavigate }: WizSidebarV2Props) => {
                 tooltip: 'Your profile and settings'
               }}
               isActive={isActive({ id: 'profile', label: 'Profile', icon: User, route: '/?section=profile' })}
-              isExpanded={isExpanded}
+              isExpanded={isSidebarExpanded}
               onClick={() => handleNavClick({ id: 'profile', label: 'Profile', icon: User, route: '/?section=profile' })}
             />
 
             {/* Logout Button (embedded in Profile) */}
             <AnimatePresence>
-              {isExpanded && (
+              {isSidebarExpanded && (
                 <motion.button
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
@@ -318,7 +319,7 @@ export const WizSidebarV2 = ({ onNavigate }: WizSidebarV2Props) => {
           {/* Your Communities Section */}
           <div className="py-4">
             <YourCommunitiesSection
-              isExpanded={isExpanded}
+              isExpanded={isSidebarExpanded}
               communities={joinedCommunities}
               isLoading={communitiesLoading}
               showExpanded={showCommunitiesExpanded}
@@ -337,7 +338,7 @@ export const WizSidebarV2 = ({ onNavigate }: WizSidebarV2Props) => {
               key={item.id}
               item={item}
               isActive={isActive(item)}
-              isExpanded={isExpanded}
+              isExpanded={isSidebarExpanded}
               onClick={() => handleNavClick(item)}
               isAccent
             />
@@ -477,8 +478,21 @@ const YourCommunitiesSection = ({
   };
 
   // Helper function to get community avatar from various possible fields
+  // Priority: profileIcon (uploaded icon) > iconUrl > avatarUrl > banner > coverMedia thumbnail
   const getCommunityAvatar = (community: any): string | undefined => {
-    return community.banner || community.avatar || community.thumbnail || community.image || community.profileImage;
+    return (
+      community.profileIcon ||
+      community.iconUrl ||
+      community.avatarUrl ||
+      community.icon ||
+      community.avatar ||
+      community.banner ||
+      community.coverMedia?.[0]?.thumbnail ||
+      community.coverMedia?.[0]?.url ||
+      community.thumbnail ||
+      community.image ||
+      community.profileImage
+    );
   };
 
   // Helper function to get member count
@@ -525,9 +539,9 @@ const YourCommunitiesSection = ({
           const unreadCount = getUnreadCount(community.id);
           return (
             <div key={community.id} className="relative">
-              <Avatar className="w-8 h-8 border-2 border-white/20 cursor-pointer hover:scale-110 transition-transform" onClick={() => handleCommunityClick(community.id)}>
-                <AvatarImage src={getCommunityAvatar(community)} />
-                <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs">
+              <Avatar className="w-8 h-8 rounded-xl border-2 border-white/20 cursor-pointer hover:scale-110 transition-transform" onClick={() => handleCommunityClick(community.id)}>
+                <AvatarImage src={getCommunityAvatar(community)} className="object-cover" />
+                <AvatarFallback className="rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs font-bold uppercase">
                   {getCommunityName(community)[0]?.toUpperCase() || 'C'}
                 </AvatarFallback>
               </Avatar>
@@ -617,9 +631,9 @@ const YourCommunitiesSection = ({
                 className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 transition-all duration-200 group"
               >
                 <div className="relative">
-                  <Avatar className="w-7 h-7 border border-white/20">
-                    <AvatarImage src={getCommunityAvatar(community)} />
-                    <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs">
+                  <Avatar className="w-8 h-8 rounded-xl border border-white/20">
+                    <AvatarImage src={getCommunityAvatar(community)} className="object-cover" />
+                    <AvatarFallback className="rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs font-bold uppercase">
                       {getCommunityName(community)[0]?.toUpperCase() || 'C'}
                     </AvatarFallback>
                   </Avatar>
