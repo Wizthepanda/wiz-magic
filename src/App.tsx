@@ -28,6 +28,7 @@ const Shorts = lazy(() => import("./pages/Shorts"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AntiCheatTest = lazy(() => import("./pages/AntiCheatTest"));
 const CommunityWelcomeDemo = lazy(() => import("./pages/CommunityWelcomeDemo"));
+const CommunityProfileDemoPage = lazy(() => import("./pages/CommunityProfileDemoPage"));
 const AntiCheatDashboard = lazy(() => import("./components/admin/AntiCheatDashboard").then(m => ({ default: m.AntiCheatDashboard })));
 
 // Dashboard pages (with persistent sidebar)
@@ -40,6 +41,7 @@ const PremierePage = lazy(() => import("./pages/PremierePage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const Claim = lazy(() => import("./pages/Claim"));
 const ZapRewardsHub = lazy(() => import("./pages/ZapRewardsHub"));
+const RewardsPage = lazy(() => import("./pages/rewards/RewardsPage").then(m => ({ default: m.RewardsPage })));
 
 // Create pages
 const WizCreatePageV3 = lazy(() => import("./components/wiz/WizCreatePageV3").then(m => ({ default: m.WizCreatePageV3 })));
@@ -145,6 +147,7 @@ const App = () => {
                   <Route path="/admin/anti-cheat" element={<AntiCheatDashboard />} />
                   <Route path="/test/anti-cheat" element={<AntiCheatTest />} />
                   <Route path="/demo/community-welcome" element={<CommunityWelcomeDemo />} />
+                  <Route path="/demo/community-v4" element={<CommunityProfileDemoPage />} />
 
                   {/* Homepage - No sidebar (handles auth state internally) */}
                   <Route path="/" element={<Index />} />
@@ -186,6 +189,7 @@ const App = () => {
                     {/* Rewards & Claiming */}
                     <Route path="/claim" element={<Claim />} />
                     <Route path="/rewards" element={<ZapRewardsHub />} />
+                    <Route path="/community-rewards" element={<RewardsPage />} />
                   </Route>
 
                   {/* ========================================

@@ -1,16 +1,9 @@
-import { useParams } from 'react-router-dom';
-import { CommunityDashboardV3 } from '@/components/wiz/community/CommunityDashboardV3';
+import { CommunityPage } from '@/components/community/CommunityPage';
 
+/**
+ * Community Dashboard Page V2 (Phase 1)
+ * Uses the new Phase 1 foundation components with proper sidebar integration
+ */
 export default function CommunityDashboardPageV2() {
-  const { id } = useParams();
-
-  if (!id) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-muted-foreground">Community not found</p>
-      </div>
-    );
-  }
-
-  return <CommunityDashboardV3 communityId={id} />;
+  return <CommunityPage />;
 }
