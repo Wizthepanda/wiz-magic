@@ -4,6 +4,7 @@ import { Trophy, Clock, Calendar, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { LeaderboardCard } from './LeaderboardCard';
+import { ProfileModal } from './ProfileModal';
 import type { LeaderboardEntry } from './Placeholders';
 
 interface LeaderboardTabProps {
@@ -15,12 +16,12 @@ interface LeaderboardTabProps {
 type TimeFilter = 'all-time' | 'monthly' | 'weekly';
 
 /**
- * LeaderboardTab Component
- * - Displays community leaderboard
- * - Top 3 podium design with special styling
+ * LeaderboardTab Component (Phase 9 Enhanced)
+ * - Displays community leaderboard ranked by XP
+ * - Top 3 podium design with crown glows
  * - Time-based filtering (All-Time, Monthly, Weekly)
- * - Smooth animations with Framer Motion
- * - Live ZAPs updates simulation
+ * - Profile modal for member details
+ * - Live XP updates simulation
  */
 export const LeaderboardTab: React.FC<LeaderboardTabProps> = ({
   leaderboard: initialLeaderboard,
@@ -30,15 +31,17 @@ export const LeaderboardTab: React.FC<LeaderboardTabProps> = ({
   const [leaderboard, setLeaderboard] = useState(initialLeaderboard);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all-time');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<LeaderboardEntry | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Simulate live ZAPs updates every 10 seconds
+  // Simulate live XP updates every 10 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       setIsUpdating(true);
       setLeaderboard((prev) =>
         prev.map((entry) => ({
           ...entry,
-          zaps: entry.zaps + Math.floor(Math.random() * 50),
+          xp: entry.xp + Math.floor(Math.random() * 50),
         }))
       );
       setTimeout(() => setIsUpdating(false), 1000);
@@ -47,8 +50,18 @@ export const LeaderboardTab: React.FC<LeaderboardTabProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // Filter and sort leaderboard
-  const filteredLeaderboard = [...leaderboard].sort((a, b) => b.zaps - a.zaps);
+  // Handle profile click
+  const handleProfileClick = (userId: string) => {
+    const member = leaderboard.find((entry) => entry.userId === userId);
+    if (member) {
+      setSelectedMember(member);
+      setIsModalOpen(true);
+    }
+    onProfileClick?.(userId);
+  };
+
+  // Filter and sort leaderboard by XP
+  const filteredLeaderboard = [...leaderboard].sort((a, b) => b.xp - a.xp);
 
   const topThree = filteredLeaderboard.slice(0, 3);
   const rest = filteredLeaderboard.slice(3);
@@ -66,10 +79,10 @@ export const LeaderboardTab: React.FC<LeaderboardTabProps> = ({
         <div>
           <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Trophy className="w-6 h-6 text-amber-500" />
-            Community Leaderboard
+            🏆 Top Wizards of the Community
           </h2>
           <p className="text-sm text-gray-600 mt-1">
-            Compete with {leaderboard.length} members for the top spot
+            Ranked by total XP earned through posts, replies, and engagement
           </p>
         </div>
 
@@ -155,7 +168,7 @@ export const LeaderboardTab: React.FC<LeaderboardTabProps> = ({
                   {...entry}
                   rank={index + 1}
                   isCurrentUser={entry.userId === currentUserId}
-                  onProfileClick={onProfileClick}
+                  onProfileClick={handleProfileClick}
                 />
               </motion.div>
             ))}
@@ -187,7 +200,7 @@ export const LeaderboardTab: React.FC<LeaderboardTabProps> = ({
                   {...entry}
                   rank={index + 4}
                   isCurrentUser={entry.userId === currentUserId}
-                  onProfileClick={onProfileClick}
+                  onProfileClick={handleProfileClick}
                 />
               </motion.div>
             ))}
@@ -207,7 +220,7 @@ export const LeaderboardTab: React.FC<LeaderboardTabProps> = ({
             No rankings yet
           </p>
           <p className="text-gray-600">
-            Be the first to earn ZAPs and claim the top spot!
+            Be the first to earn XP and claim the top spot!
           </p>
         </motion.div>
       )}
@@ -224,7 +237,7 @@ export const LeaderboardTab: React.FC<LeaderboardTabProps> = ({
         </div>
       )}
 
-      {/* How ZAPs Works Info Box */}
+      {/* How to Earn XP Info Box */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -233,35 +246,56 @@ export const LeaderboardTab: React.FC<LeaderboardTabProps> = ({
       >
         <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-purple-600" />
-          How to Earn ZAPs
+          How to Earn XP
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
           <div>
             <span className="font-semibold text-gray-700">📝 Create Posts:</span>
-            <span className="text-gray-600 ml-2">+50 ZAPs</span>
+            <span className="text-gray-600 ml-2">+50 XP</span>
           </div>
           <div>
             <span className="font-semibold text-gray-700">💬 Comment:</span>
-            <span className="text-gray-600 ml-2">+10 ZAPs</span>
+            <span className="text-gray-600 ml-2">+10 XP</span>
           </div>
           <div>
             <span className="font-semibold text-gray-700">📚 Complete Courses:</span>
-            <span className="text-gray-600 ml-2">+500 ZAPs</span>
+            <span className="text-gray-600 ml-2">+500 XP</span>
           </div>
           <div>
             <span className="font-semibold text-gray-700">⬆️ Receive Upvotes:</span>
-            <span className="text-gray-600 ml-2">+5 ZAPs</span>
+            <span className="text-gray-600 ml-2">+5 XP</span>
           </div>
           <div>
             <span className="font-semibold text-gray-700">🎯 Daily Login:</span>
-            <span className="text-gray-600 ml-2">+25 ZAPs</span>
+            <span className="text-gray-600 ml-2">+25 XP</span>
           </div>
           <div>
             <span className="font-semibold text-gray-700">🏆 Win Challenges:</span>
-            <span className="text-gray-600 ml-2">+1000 ZAPs</span>
+            <span className="text-gray-600 ml-2">+1000 XP</span>
           </div>
         </div>
       </motion.div>
+
+      {/* Profile Modal */}
+      {selectedMember && (
+        <ProfileModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          user={{
+            userId: selectedMember.userId,
+            name: selectedMember.name,
+            avatar: selectedMember.avatar,
+            bio: selectedMember.bio,
+            xp: selectedMember.xp,
+            level: selectedMember.level,
+            rank: selectedMember.rank,
+            badges: selectedMember.badges,
+            postCount: selectedMember.postCount,
+            commentCount: selectedMember.commentCount,
+            joinedDate: selectedMember.joinedDate,
+          }}
+        />
+      )}
     </motion.div>
   );
 };

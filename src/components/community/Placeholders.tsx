@@ -119,13 +119,15 @@ export interface LeaderboardEntry {
   userId: string;
   name: string;
   avatar: string;
-  zaps: number;
-  xp?: number; // Backward compatibility
+  xp: number; // Primary XP field for Phase 9
+  zaps?: number; // Backward compatibility
   level: number;
   badges: string[];
-  postCount: number; // New field
-  commentCount: number; // New field
-  trend?: 'up' | 'down' | 'same'; // New field
+  postCount: number;
+  commentCount: number;
+  trend?: 'up' | 'down' | 'same';
+  bio?: string; // For ProfileModal
+  joinedDate?: string; // For ProfileModal
 }
 
 // Sample community data
@@ -617,120 +619,140 @@ export const placeholderLeaderboard: LeaderboardEntry[] = [
     userId: 'creator-1',
     name: 'Irfan Dean',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=irfan',
-    zaps: 15670,
+    xp: 45670,
     level: 45,
     badges: ['Creator', '👑', '🏆'],
     postCount: 87,
     commentCount: 234,
-    trend: 'up'
+    trend: 'up',
+    bio: 'NFT artist & community builder. Founder of SoulScapes. Helping creators monetize their passion.',
+    joinedDate: '2024-01-15'
   },
   {
     rank: 2,
     userId: 'user-3',
     name: 'Luna Park',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=luna',
-    zaps: 13420,
+    xp: 41420,
     level: 41,
     badges: ['Moderator', '🎨', '⭐'],
     postCount: 64,
     commentCount: 189,
-    trend: 'up'
+    trend: 'up',
+    bio: 'Digital artist and Web3 enthusiast. Love helping the community grow!',
+    joinedDate: '2024-02-20'
   },
   {
     rank: 3,
     userId: 'user-7',
     name: 'Sophia Lee',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=sophia',
-    zaps: 11980,
+    xp: 38980,
     level: 38,
     badges: ['Member', '🎓', '💯'],
     postCount: 52,
     commentCount: 167,
-    trend: 'same'
+    trend: 'same',
+    bio: 'NFT collector & community advocate. Always here to share knowledge.',
+    joinedDate: '2024-03-10'
   },
   {
     rank: 4,
     userId: 'user-4',
     name: 'Alex Rivera',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=alex',
-    zaps: 10890,
+    xp: 36890,
     level: 36,
     badges: ['Member', '💡'],
     postCount: 45,
     commentCount: 143,
-    trend: 'down'
+    trend: 'down',
+    bio: 'Tech enthusiast exploring the NFT space. Building connections one post at a time.',
+    joinedDate: '2024-04-05'
   },
   {
     rank: 5,
     userId: 'user-1',
     name: 'Sarah Mitchell',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=sarah',
-    zaps: 9240,
+    xp: 32240,
     level: 32,
     badges: ['Member', '🛡️'],
     postCount: 38,
     commentCount: 124,
-    trend: 'up'
+    trend: 'up',
+    bio: 'Community supporter and NFT investor. Let\'s grow together!',
+    joinedDate: '2024-05-12'
   },
   {
     rank: 6,
     userId: 'user-8',
     name: 'Ryan Martinez',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ryan',
-    zaps: 8340,
+    xp: 29340,
     level: 29,
     badges: ['Member', '💻'],
     postCount: 31,
     commentCount: 98,
-    trend: 'same'
+    trend: 'same',
+    bio: 'Developer and NFT creator. Coding my way through Web3.',
+    joinedDate: '2024-06-18'
   },
   {
     rank: 7,
     userId: 'user-2',
     name: 'Marcus Chen',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=marcus',
-    zaps: 7890,
+    xp: 27890,
     level: 28,
     badges: ['Member'],
     postCount: 27,
     commentCount: 86,
-    trend: 'down'
+    trend: 'down',
+    bio: 'NFT enthusiast learning the ropes. Happy to be part of this community!',
+    joinedDate: '2024-07-22'
   },
   {
     rank: 8,
     userId: 'user-10',
     name: 'Noah Wilson',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=noah',
-    zaps: 7120,
+    xp: 26120,
     level: 26,
     badges: ['Member'],
     postCount: 24,
     commentCount: 71,
-    trend: 'up'
+    trend: 'up',
+    bio: 'Artist and collector. Exploring the intersection of art and technology.',
+    joinedDate: '2024-08-30'
   },
   {
     rank: 9,
     userId: 'user-5',
     name: 'Emma Davis',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=emma',
-    zaps: 6120,
+    xp: 24120,
     level: 24,
     badges: ['Member', '🎉'],
     postCount: 19,
     commentCount: 56,
-    trend: 'same'
+    trend: 'same',
+    bio: 'Creative mind with a passion for NFTs. Let\'s create something amazing!',
+    joinedDate: '2024-09-15'
   },
   {
     rank: 10,
     userId: 'user-9',
     name: 'Olivia Brown',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=olivia',
-    zaps: 5670,
+    xp: 22670,
     level: 22,
     badges: ['Member'],
     postCount: 16,
     commentCount: 43,
-    trend: 'up'
+    trend: 'up',
+    bio: 'New to NFTs but loving the journey. Excited to learn from this community!',
+    joinedDate: '2024-10-01'
   }
 ];
 
