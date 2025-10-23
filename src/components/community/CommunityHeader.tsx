@@ -169,7 +169,7 @@ export const CommunityHeader: React.FC<CommunityHeaderProps> = ({ community }) =
       </div>
 
       {/* Bottom spacer for rating stars */}
-      <div className="h-8 bg-white" />
+      <div className="h-8 bg-gradient-to-br from-purple-50 via-white to-indigo-50" />
     </motion.div>
   );
 };

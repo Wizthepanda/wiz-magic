@@ -38,8 +38,8 @@ export const CommunityPage: React.FC = () => {
   const creator = placeholderData.creator || {
     id: community?.creatorId || 'unknown',
     name: community?.creatorName || 'Community Creator',
-    avatar: community?.profileIconUrl || community?.icon || 'https://api.dicebear.com/7.x/avataaars/svg?seed=creator',
-    tagline: 'Community Builder',
+    avatar: community?.creatorAvatar || community?.profileIconUrl || community?.icon || 'https://api.dicebear.com/7.x/avataaars/svg?seed=creator',
+    tagline: community?.category || 'Community Builder',
     bio: community?.description || 'Welcome to our community!',
     isFollowing: false,
   };
@@ -88,7 +88,7 @@ export const CommunityPage: React.FC = () => {
         <CommunityHeader community={community} />
 
         {/* Navigation Tabs */}
-        <div className="sticky top-0 z-40 bg-gradient-to-br from-purple-50 via-white to-indigo-50 pt-6 pb-4">
+        <div className="sticky top-0 z-40 bg-transparent pt-4 pb-4">
           <CommunityTabs
             activeTab={activeTab}
             onTabChange={setActiveTab}
@@ -108,6 +108,8 @@ export const CommunityPage: React.FC = () => {
             <CommunityFeed
               posts={posts || []}
               communityId={id || ''}
+              currentUserId="current-user"
+              isCreatorOrMod={true}
             />
           )}
 

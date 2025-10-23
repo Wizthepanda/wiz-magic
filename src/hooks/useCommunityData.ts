@@ -9,11 +9,17 @@ interface CommunityData {
   description?: string;
   bannerUrl?: string;
   profileIconUrl?: string;
+  icon?: string;
   coverMedia?: Array<{ url: string; thumbnail?: string }>;
   modules?: any[];
   memberCount?: number;
   creatorId?: string;
   creatorName?: string;
+  creatorAvatar?: string;
+  category?: string;
+  tags?: string[];
+  createdAt?: string;
+  updatedAt?: string;
   [key: string]: any;
 }
 

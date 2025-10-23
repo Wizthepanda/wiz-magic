@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { PostComposer } from './PostComposer';
 import { PinnedPostBar } from './PinnedPostBar';
-import { PostCard } from './PostCard';
-import type { Post } from './Placeholders';
+import { PostCardEnhanced } from './PostCardEnhanced';
+import type { Post, Reply } from './Placeholders';
 
 interface CommunityFeedProps {
   posts: Post[];
   communityId: string;
+  currentUserId?: string;
+  isCreatorOrMod?: boolean;
 }
 
 type SortType = 'recent' | 'top' | 'pinned';
@@ -26,6 +28,8 @@ type SortType = 'recent' | 'top' | 'pinned';
 export const CommunityFeed: React.FC<CommunityFeedProps> = ({
   posts: initialPosts,
   communityId,
+  currentUserId,
+  isCreatorOrMod = false,
 }) => {
   const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [sortType, setSortType] = useState<SortType>('pinned');
@@ -171,6 +175,98 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({
     );
   };
 
+  const handlePin = (postId: string) => {
+    setPosts((prevPosts) => {
+      const pinnedCount = prevPosts.filter((p) => p.isPinned).length;
+
+      return prevPosts.map((post) => {
+        if (post.id !== postId) return post;
+
+        // If trying to pin and already at max (3), don't pin
+        if (!post.isPinned && pinnedCount >= 3) {
+          return post;
+        }
+
+        return {
+          ...post,
+          isPinned: !post.isPinned,
+        };
+      });
+    });
+  };
+
+  const handleReply = (postId: string, content: string) => {
+    setPosts((prevPosts) =>
+      prevPosts.map((post) => {
+        if (post.id !== postId) return post;
+
+        const newReply: Reply = {
+          id: `reply-${Date.now()}`,
+          authorId: currentUserId || 'current-user',
+          authorName: 'You',
+          authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user',
+          authorLevel: 12,
+          content,
+          upvotes: 0,
+          downvotes: 0,
+          userVote: null,
+          createdAt: new Date().toISOString(),
+        };
+
+        return {
+          ...post,
+          replies: [...(post.replies || []), newReply],
+          commentCount: (post.replies?.length || 0) + 1,
+        };
+      })
+    );
+  };
+
+  const handleReplyVote = (postId: string, replyId: string, voteType: 'up' | 'down') => {
+    setPosts((prevPosts) =>
+      prevPosts.map((post) => {
+        if (post.id !== postId) return post;
+
+        return {
+          ...post,
+          replies: post.replies?.map((reply) => {
+            if (reply.id !== replyId) return reply;
+
+            const currentVote = reply.userVote;
+            let newUpvotes = reply.upvotes;
+            let newDownvotes = reply.downvotes;
+            let newUserVote: 'up' | 'down' | null = voteType;
+
+            // Toggle vote or switch vote
+            if (currentVote === voteType) {
+              // Remove vote
+              newUserVote = null;
+              if (voteType === 'up') newUpvotes--;
+              else newDownvotes--;
+            } else if (currentVote) {
+              // Switch vote
+              if (currentVote === 'up') newUpvotes--;
+              else newDownvotes--;
+              if (voteType === 'up') newUpvotes++;
+              else newDownvotes++;
+            } else {
+              // New vote
+              if (voteType === 'up') newUpvotes++;
+              else newDownvotes++;
+            }
+
+            return {
+              ...reply,
+              upvotes: newUpvotes,
+              downvotes: newDownvotes,
+              userVote: newUserVote,
+            };
+          }),
+        };
+      })
+    );
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       {/* Post Composer (Phase 2) */}
@@ -265,10 +361,15 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               >
-                <PostCard
+                <PostCardEnhanced
                   post={post}
                   onVote={handleVote}
                   onReact={handleReact}
+                  onPin={handlePin}
+                  onReply={handleReply}
+                  onReplyVote={handleReplyVote}
+                  currentUserId={currentUserId}
+                  isCreatorOrMod={isCreatorOrMod}
                 />
               </motion.div>
             ))

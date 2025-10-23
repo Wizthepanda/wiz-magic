@@ -31,6 +31,20 @@ export interface CommunityData {
   memberCount: number;
 }
 
+export interface Reply {
+  id: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar: string;
+  authorLevel: number;
+  content: string;
+  embedUrl?: string;
+  upvotes: number;
+  downvotes: number;
+  userVote?: 'up' | 'down' | null;
+  createdAt: string;
+}
+
 export interface Post {
   id: string;
   authorId: string;
@@ -56,6 +70,7 @@ export interface Post {
   userVote?: 'up' | 'down' | null;
   reactions: Record<string, number>; // emoji -> count
   userReactions: string[]; // emojis user has reacted with
+  replies?: Reply[];
   commentCount: number;
   createdAt: string;
 }

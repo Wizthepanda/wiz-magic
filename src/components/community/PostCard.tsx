@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import type { Post } from './Placeholders';
 
@@ -70,11 +71,12 @@ export const PostCard: React.FC<PostCardProps> = ({
       <div className="p-6">
         {/* Post Header - Author Info */}
         <div className="flex items-start gap-4 mb-4">
-          <img
-            src={post.authorAvatar}
-            alt={post.authorName}
-            className="w-12 h-12 rounded-xl"
-          />
+          <Avatar className="w-12 h-12 rounded-xl ring-2 ring-white shadow-md">
+            <AvatarImage src={post.authorAvatar} alt={post.authorName} />
+            <AvatarFallback className="rounded-xl bg-gradient-to-br from-purple-400 to-indigo-400 text-white font-bold text-lg">
+              {post.authorName[0]?.toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
 
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">

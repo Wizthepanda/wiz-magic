@@ -118,11 +118,11 @@ export const PostComposer: React.FC<PostComposerProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        'bg-white/60 backdrop-blur-xl rounded-2xl p-4 md:p-5 shadow-lg border border-white/20',
+        'bg-white/60 backdrop-blur-xl rounded-2xl p-4 md:p-5 shadow-lg border border-white/20 overflow-visible',
         className
       )}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-3 overflow-visible">
         {/* User Avatar */}
         <Avatar className="w-10 h-10 md:w-12 md:h-12 rounded-xl ring-2 ring-white shadow-md">
           <AvatarImage src={userAvatar} alt={userName} />
@@ -132,7 +132,7 @@ export const PostComposer: React.FC<PostComposerProps> = ({
         </Avatar>
 
         {/* Input Area */}
-        <div className="flex-1">
+        <div className="flex-1 overflow-visible">
           <Textarea
             ref={textareaRef}
             value={content}
@@ -207,10 +207,10 @@ export const PostComposer: React.FC<PostComposerProps> = ({
           </AnimatePresence>
 
           {/* Action Bar */}
-          <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200 overflow-visible">
+            <div className="flex items-center gap-2 overflow-visible">
               {/* Emoji Picker */}
-              <div className="relative">
+              <div className="relative overflow-visible">
                 <Button
                   variant="ghost"
                   size="sm"
