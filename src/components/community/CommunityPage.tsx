@@ -131,10 +131,22 @@ export const CommunityPage: React.FC = () => {
 
           {activeTab === 'about' && (
             <AboutTab
+              community={{
+                id: community.id,
+                name: community.name || community.title,
+                description: community.description || '',
+                bannerUrl: community.bannerUrl || community.banner,
+                profileIconUrl: community.profileIconUrl || community.icon,
+                tags: community.tags || [],
+                createdDate: community.publishedAt || community.createdAt,
+                rating: community.rating,
+                isFollowing: false,
+              }}
               creator={creator}
               milestones={milestones}
               stats={communityStats}
               onFollowCreator={(creatorId) => console.log('Follow creator:', creatorId)}
+              onFollowProject={(communityId) => console.log('Follow project:', communityId)}
             />
           )}
 

@@ -6,7 +6,20 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
 interface AboutTabProps {
-  creator: {
+  // Community/Project data
+  community?: {
+    id: string;
+    name: string;
+    description: string;
+    bannerUrl?: string;
+    profileIconUrl?: string;
+    tags?: string[];
+    createdDate?: string;
+    rating?: number;
+    isFollowing?: boolean;
+  };
+  // Legacy creator data (optional for backward compatibility)
+  creator?: {
     id: string;
     name: string;
     avatar: string;
@@ -28,30 +41,57 @@ interface AboutTabProps {
     postsCount: number;
   };
   onFollowCreator?: (creatorId: string) => void;
+  onFollowProject?: (communityId: string) => void;
 }
 
 /**
- * AboutTab Component (Phase 4)
- * - Immersive creator story section
- * - Hero with glowing avatar and CTA
- * - Two-column layout: Bio + Milestones timeline
+ * AboutTab Component (Phase 4 Enhanced)
+ * - Displays "About the Project" section with community details
+ * - Auto-syncs with community creation/edit data
+ * - Hero with community banner/icon and Follow Project CTA
+ * - Two-column layout: Project Description + Milestones timeline
  * - Community stats footer
  * - Parallax scroll effects
+ * - Backward compatible with creator mode
  */
 export const AboutTab: React.FC<AboutTabProps> = ({
+  community,
   creator,
   milestones,
   stats,
   onFollowCreator,
+  onFollowProject,
 }) => {
-  const [isFollowing, setIsFollowing] = useState(creator.isFollowing || false);
+  // Use community data if available, fallback to creator data
+  const isProjectMode = !!community;
+  const displayData = isProjectMode ? {
+    id: community!.id,
+    name: community!.name,
+    tagline: community!.description?.split('\n')[0] || 'Learn more about this amazing project',
+    bio: community!.description || 'This project\'s story is being written. Stay tuned as the creator updates their description!',
+    avatar: community!.profileIconUrl || community!.bannerUrl || '',
+    isFollowing: community!.isFollowing,
+  } : {
+    id: creator!.id,
+    name: creator!.name,
+    tagline: creator!.tagline,
+    bio: creator!.bio,
+    avatar: creator!.avatar,
+    isFollowing: creator!.isFollowing,
+  };
+
+  const [isFollowing, setIsFollowing] = useState(displayData.isFollowing || false);
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 300], [0, -50]);
   const heroOpacity = useTransform(scrollY, [0, 300], [1, 0.8]);
 
   const handleFollowClick = () => {
     setIsFollowing((prev) => !prev);
-    onFollowCreator?.(creator.id);
+    if (isProjectMode) {
+      onFollowProject?.(community!.id);
+    } else {
+      onFollowCreator?.(creator!.id);
+    }
   };
 
   return (
@@ -85,7 +125,7 @@ export const AboutTab: React.FC<AboutTabProps> = ({
 
         {/* Content */}
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-          {/* Avatar with Glowing Ring */}
+          {/* Avatar/Profile Icon with Glowing Ring */}
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -104,26 +144,39 @@ export const AboutTab: React.FC<AboutTabProps> = ({
               className="w-32 h-32 md:w-40 md:h-40 rounded-full p-1 bg-gradient-to-r from-white via-purple-200 to-white"
             >
               <Avatar className="w-full h-full border-4 border-white shadow-2xl">
-                <AvatarImage src={creator.avatar} alt={creator.name} />
+                <AvatarImage src={displayData.avatar} alt={displayData.name} />
                 <AvatarFallback className="bg-gradient-to-br from-purple-400 to-indigo-400 text-white font-bold text-4xl">
-                  {creator.name[0]?.toUpperCase()}
+                  {displayData.name[0]?.toUpperCase()}
                 </AvatarFallback>
               </Avatar>
             </motion.div>
 
-            {/* Floating Badge */}
-            <motion.div
-              animate={{ y: [0, -5, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="absolute -bottom-2 -right-2 bg-white rounded-full px-3 py-1.5 shadow-lg border-2 border-purple-400"
-            >
-              <span className="text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                Creator
-              </span>
-            </motion.div>
+            {/* Floating Badge - Community Rating */}
+            {isProjectMode && community?.rating ? (
+              <motion.div
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute -bottom-2 -right-2 bg-white rounded-full px-3 py-1.5 shadow-lg border-2 border-amber-400"
+              >
+                <div className="flex items-center gap-1">
+                  <span className="text-amber-500">⭐</span>
+                  <span className="text-xs font-bold text-gray-900">{community.rating.toFixed(1)}</span>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute -bottom-2 -right-2 bg-white rounded-full px-3 py-1.5 shadow-lg border-2 border-purple-400"
+              >
+                <span className="text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                  {isProjectMode ? 'Project' : 'Creator'}
+                </span>
+              </motion.div>
+            )}
           </motion.div>
 
-          {/* Creator Info */}
+          {/* Project/Creator Info */}
           <div className="flex-1 text-center md:text-left">
             <motion.h1
               initial={{ opacity: 0, x: -20 }}
@@ -131,7 +184,7 @@ export const AboutTab: React.FC<AboutTabProps> = ({
               transition={{ delay: 0.3 }}
               className="text-3xl md:text-5xl font-bold text-white mb-2"
             >
-              {creator.name}
+              {displayData.name}
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, x: -20 }}
@@ -139,8 +192,26 @@ export const AboutTab: React.FC<AboutTabProps> = ({
               transition={{ delay: 0.4 }}
               className="text-lg md:text-xl text-purple-100 mb-6"
             >
-              {creator.tagline}
+              {displayData.tagline}
             </motion.p>
+            {/* Tags for Project Mode */}
+            {isProjectMode && community?.tags && community.tags.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.45 }}
+                className="flex flex-wrap gap-2 justify-center md:justify-start mb-6"
+              >
+                {community.tags.slice(0, 4).map((tag, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium text-white border border-white/30"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </motion.div>
+            )}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -157,7 +228,7 @@ export const AboutTab: React.FC<AboutTabProps> = ({
                 )}
               >
                 <UserPlus className="w-5 h-5 mr-2" />
-                {isFollowing ? 'Following' : 'Follow Creator'}
+                {isFollowing ? 'Following' : `Follow ${isProjectMode ? 'Project' : 'Creator'}`}
               </Button>
             </motion.div>
           </div>
@@ -166,7 +237,7 @@ export const AboutTab: React.FC<AboutTabProps> = ({
 
       {/* Two-Column Layout: Bio + Milestones */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Left: About Creator */}
+        {/* Left: About the Project/Creator */}
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
@@ -175,13 +246,24 @@ export const AboutTab: React.FC<AboutTabProps> = ({
         >
           <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
             <Rocket className="w-6 h-6 text-purple-600" />
-            About this Creator
+            {isProjectMode ? 'About the Project' : 'About this Creator'}
           </h2>
+          {isProjectMode && community?.createdDate && (
+            <p className="text-xs text-gray-500 mb-4 flex items-center gap-1">
+              <Calendar className="w-3 h-3" />
+              Created {new Date(community.createdDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            </p>
+          )}
           <div className="prose prose-purple max-w-none">
             <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-              {creator.bio}
+              {displayData.bio}
             </p>
           </div>
+          {isProjectMode && (
+            <p className="text-sm text-gray-500 italic mt-4">
+              Learn more about the mission, goals, and story behind this community.
+            </p>
+          )}
         </motion.div>
 
         {/* Right: Milestones Timeline */}
@@ -262,7 +344,7 @@ export const AboutTab: React.FC<AboutTabProps> = ({
             <p className="text-sm text-purple-200">Members</p>
           </motion.div>
 
-          {/* Total XP */}
+          {/* Total ZAPs */}
           <motion.div
             whileHover={{ scale: 1.05, y: -5 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
@@ -270,9 +352,9 @@ export const AboutTab: React.FC<AboutTabProps> = ({
           >
             <Zap className="w-8 h-8 text-amber-400 mx-auto mb-3" />
             <p className="text-3xl font-bold text-white mb-1">
-              {(stats.totalXP / 1000).toFixed(1)}K
+              {(stats.totalXP / 1000).toFixed(1)}K⚡
             </p>
-            <p className="text-sm text-purple-200">Total XP Earned</p>
+            <p className="text-sm text-purple-200">Total ZAPs Earned</p>
           </motion.div>
 
           {/* Courses Launched */}
