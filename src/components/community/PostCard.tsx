@@ -51,7 +51,7 @@ export const PostCard: React.FC<PostCardProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        'bg-white/80 backdrop-blur-xl rounded-2xl border shadow-lg hover:shadow-xl transition-shadow',
+        'bg-white/80 backdrop-blur-xl rounded-2xl border shadow-lg hover:shadow-xl transition-shadow overflow-visible',
         post.isPinned
           ? 'border-2 border-amber-300 bg-gradient-to-br from-amber-50/50 to-yellow-50/50'
           : 'border-white/20'
@@ -171,8 +171,8 @@ export const PostCard: React.FC<PostCardProps> = ({
         )}
 
         {/* Action Bar - Upvote, Comment, Share */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between overflow-visible">
+          <div className="flex items-center gap-4 overflow-visible">
             {/* Upvote/Downvote */}
             <div className="flex items-center gap-2 bg-gray-100 rounded-full px-2 py-1">
               <button
@@ -214,7 +214,7 @@ export const PostCard: React.FC<PostCardProps> = ({
             </Button>
 
             {/* Add Reaction */}
-            <div className="relative">
+            <div className="relative overflow-visible">
               <Button
                 variant="ghost"
                 size="sm"
@@ -229,7 +229,7 @@ export const PostCard: React.FC<PostCardProps> = ({
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9, y: -10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  className="absolute bottom-full mb-2 left-0 bg-white rounded-xl shadow-2xl border border-gray-200 p-2 flex gap-1 z-50"
+                  className="absolute bottom-full mb-2 left-0 bg-white rounded-xl shadow-2xl border border-gray-200 p-2 flex gap-1 z-[9999]"
                 >
                   {quickEmojis.map((emoji) => (
                     <button

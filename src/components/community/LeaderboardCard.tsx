@@ -25,7 +25,7 @@ interface LeaderboardCardProps {
  * - Displays user ranking in community
  * - Special podium design for top 3
  * - Hover effects with pulse animation
- * - Badge and XP display
+ * - Badge and ZAPs display
  * - Trend indicators
  */
 export const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
@@ -137,7 +137,7 @@ export const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
 
       {/* Content */}
       <div className={cn('flex items-center gap-4', isTopThree && 'pl-12')}>
-        {/* Avatar with XP Ring */}
+        {/* Avatar with ZAP Ring */}
         <div className="relative">
           <motion.div
             animate={isHovered ? { rotate: 360 } : {}}
@@ -196,16 +196,16 @@ export const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
             )}
           </div>
 
-          {/* XP & Level */}
+          {/* ZAPs & ZAP Tier */}
           <div className="flex items-center gap-3 mb-2">
             <div className="flex items-center gap-1">
               <Zap className={cn('w-4 h-4', isTopThree ? 'text-amber-600' : 'text-amber-500')} />
               <span className={cn('font-bold', isTopThree ? 'text-lg' : 'text-sm')}>
-                {xp.toLocaleString()} XP
+                {xp.toLocaleString()}⚡ ZAPs
               </span>
             </div>
             <div className={cn('text-xs font-medium', isTopThree ? 'text-gray-700' : 'text-gray-600')}>
-              Level {level}
+              ZAP Tier {level}
             </div>
           </div>
 

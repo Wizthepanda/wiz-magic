@@ -26,11 +26,11 @@ interface RewardsTabProps {
 
 /**
  * RewardsTab Component (Phase 4)
- * - XP Progress Summary with animated progress bar
+ * - ZAPs Progress Summary with animated progress bar
  * - Reward tiers grid (Bronze/Silver/Gold/Diamond)
  * - Earn Actions section with bounce hover effects
  * - Locked/unlocked reward states
- * - Gamification elements with live XP updates
+ * - Gamification elements with live ZAPs updates
  */
 export const RewardsTab: React.FC<RewardsTabProps> = ({
   currentXP,
@@ -42,7 +42,7 @@ export const RewardsTab: React.FC<RewardsTabProps> = ({
   const [displayXP, setDisplayXP] = useState(currentXP);
   const progressPercentage = (currentXP / nextLevelXP) * 100;
 
-  // Animate XP counter
+  // Animate ZAPs counter
   useEffect(() => {
     const duration = 1500;
     const steps = 60;
@@ -72,7 +72,7 @@ export const RewardsTab: React.FC<RewardsTabProps> = ({
       transition={{ duration: 0.3 }}
       className="space-y-8"
     >
-      {/* XP Progress Summary */}
+      {/* ZAPs Progress Summary */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -102,21 +102,21 @@ export const RewardsTab: React.FC<RewardsTabProps> = ({
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
                 Your Progress
               </h2>
-              <p className="text-purple-200">Keep earning XP to unlock exclusive rewards!</p>
+              <p className="text-purple-200">Keep earning ZAPs⚡ to unlock exclusive rewards!</p>
             </div>
 
-            {/* Level Badge */}
+            {/* ZAP Tier Badge */}
             <motion.div
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 3, repeat: Infinity }}
               className="bg-white/10 backdrop-blur-xl border-2 border-white/30 rounded-2xl px-6 py-4 text-center shadow-xl"
             >
-              <div className="text-sm text-purple-200 mb-1">Level</div>
+              <div className="text-sm text-purple-200 mb-1">ZAP Tier</div>
               <div className="text-4xl font-bold text-white">{currentLevel}</div>
             </motion.div>
           </div>
 
-          {/* XP Counter */}
+          {/* ZAPs Counter */}
           <div className="flex items-baseline gap-3 mb-4">
             <Zap className="w-8 h-8 text-amber-400" />
             <div>
@@ -129,7 +129,7 @@ export const RewardsTab: React.FC<RewardsTabProps> = ({
                 {displayXP.toLocaleString()}
               </motion.span>
               <span className="text-2xl text-purple-200 ml-2">
-                / {nextLevelXP.toLocaleString()} XP
+                / {nextLevelXP.toLocaleString()} ZAPs⚡
               </span>
             </div>
           </div>
@@ -165,7 +165,7 @@ export const RewardsTab: React.FC<RewardsTabProps> = ({
           </div>
 
           <p className="text-sm text-purple-200 text-center mt-3">
-            {(nextLevelXP - currentXP).toLocaleString()} XP until Level {currentLevel + 1}
+            {(nextLevelXP - currentXP).toLocaleString()} ZAPs⚡ until ZAP Tier {currentLevel + 1}
           </p>
         </div>
       </motion.div>
@@ -180,10 +180,10 @@ export const RewardsTab: React.FC<RewardsTabProps> = ({
         >
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-3 mb-2">
             <Trophy className="w-8 h-8 text-amber-500" />
-            Reward Tiers
+            ZAP Reward Tiers
           </h2>
           <p className="text-gray-600">
-            Unlock exclusive perks and benefits as you level up
+            Unlock exclusive perks and benefits as your ZAP Tier rises
           </p>
         </motion.div>
 
@@ -219,10 +219,10 @@ export const RewardsTab: React.FC<RewardsTabProps> = ({
         >
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-3 mb-2">
             <Target className="w-8 h-8 text-purple-600" />
-            How to Earn XP
+            How to Earn ZAPs
           </h2>
           <p className="text-gray-600">
-            Complete these actions to boost your XP and climb the leaderboard
+            Complete these actions to boost your ZAPs⚡ and climb the leaderboard
           </p>
         </motion.div>
 
@@ -256,7 +256,7 @@ export const RewardsTab: React.FC<RewardsTabProps> = ({
       >
         <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
           <TrendingUp className="w-6 h-6 text-purple-600" />
-          Pro Tips for Maximum XP
+          Pro Tips for Maximum ZAPs
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div className="flex items-start gap-3">
@@ -273,7 +273,7 @@ export const RewardsTab: React.FC<RewardsTabProps> = ({
             <div>
               <p className="font-semibold text-gray-800 mb-1">Quality Over Quantity</p>
               <p className="text-gray-600">
-                High-quality posts and helpful comments earn bonus XP from upvotes
+                High-quality posts and helpful comments earn bonus ZAPs from upvotes
               </p>
             </div>
           </div>
@@ -282,7 +282,7 @@ export const RewardsTab: React.FC<RewardsTabProps> = ({
             <div>
               <p className="font-semibold text-gray-800 mb-1">Complete Courses</p>
               <p className="text-gray-600">
-                Finishing courses gives massive XP rewards (500-1000 XP per course)
+                Finishing courses gives massive ZAP rewards (500-1000⚡ ZAPs per course)
               </p>
             </div>
           </div>
@@ -291,7 +291,7 @@ export const RewardsTab: React.FC<RewardsTabProps> = ({
             <div>
               <p className="font-semibold text-gray-800 mb-1">Engage with Others</p>
               <p className="text-gray-600">
-                React, comment, and share posts to earn XP while building connections
+                React, comment, and share posts to earn ZAPs⚡ while building connections
               </p>
             </div>
           </div>

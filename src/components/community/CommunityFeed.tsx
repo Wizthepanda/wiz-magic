@@ -268,7 +268,7 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto overflow-visible">
       {/* Post Composer (Phase 2) */}
       <PostComposer
         onPost={handleNewPost}
@@ -333,7 +333,7 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({
       </div>
 
       {/* Posts Feed with Layout Animations */}
-      <motion.div layout className="space-y-6">
+      <motion.div layout className="space-y-6 overflow-visible">
         <AnimatePresence mode="popLayout">
           {sortedPosts.length === 0 ? (
             <motion.div
@@ -341,7 +341,7 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="text-center py-16 bg-white/60 backdrop-blur-xl rounded-2xl border border-white/20"
+              className="relative z-[1] text-center py-16 bg-white/60 backdrop-blur-xl rounded-2xl border border-white/20"
             >
               <div className="text-6xl mb-4">📝</div>
               <p className="text-xl font-semibold text-gray-700 mb-2">

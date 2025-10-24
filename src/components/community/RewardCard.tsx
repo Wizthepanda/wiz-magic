@@ -15,7 +15,7 @@ interface RewardCardProps {
 /**
  * RewardCard Component (Phase 4)
  * - Display individual reward tier information
- * - Icon, title, XP requirement, rewards list
+ * - Icon, title, ZAP requirement, rewards list
  * - Tier-specific styling (amber/slate/yellow/gradient)
  * - Locked/unlocked states with animations
  */
@@ -140,7 +140,7 @@ export const RewardCard: React.FC<RewardCardProps> = ({
           <div className="flex items-center justify-center gap-1 text-white/90">
             <Zap className="w-4 h-4" />
             <span className="text-sm font-medium">
-              {xpRequired.toLocaleString()} XP Required
+              {xpRequired.toLocaleString()}⚡ ZAPs Required
             </span>
           </div>
         </div>
@@ -158,7 +158,7 @@ export const RewardCard: React.FC<RewardCardProps> = ({
             />
           </div>
           <p className="text-xs text-gray-600 text-center mt-2">
-            {currentXP.toLocaleString()} / {xpRequired.toLocaleString()} XP ({progress.toFixed(0)}
+            {currentXP.toLocaleString()} / {xpRequired.toLocaleString()} ZAPs⚡ ({progress.toFixed(0)}
             %)
           </p>
         </div>
@@ -168,7 +168,7 @@ export const RewardCard: React.FC<RewardCardProps> = ({
       <div className="p-6">
         <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
           <Trophy className={cn('w-5 h-5', locked ? 'text-gray-500' : style.textColor)} />
-          <span>Rewards</span>
+          <span>ZAP Rewards</span>
         </h4>
         <ul className="space-y-2">
           {rewards.map((reward, index) => (
@@ -198,7 +198,7 @@ export const RewardCard: React.FC<RewardCardProps> = ({
           >
             <p className="text-sm font-bold text-gray-700 flex items-center gap-2">
               <Lock className="w-4 h-4" />
-              Earn {(xpRequired - currentXP).toLocaleString()} more XP to unlock
+              Earn {(xpRequired - currentXP).toLocaleString()}⚡ more ZAPs to unlock
             </p>
           </motion.div>
         </div>

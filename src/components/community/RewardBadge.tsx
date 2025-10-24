@@ -14,7 +14,7 @@ interface RewardBadgeProps {
 /**
  * RewardBadge Component (Phase 4)
  * - Display earn action cards
- * - Icon, action name, XP amount
+ * - Icon, action name, ZAPs amount
  * - Hover bounce + glow effects
  */
 export const RewardBadge: React.FC<RewardBadgeProps> = ({
@@ -96,12 +96,12 @@ export const RewardBadge: React.FC<RewardBadgeProps> = ({
         {action}
       </h3>
 
-      {/* XP Amount */}
+      {/* ZAPs Amount */}
       <div className={cn('text-center py-2 px-4 rounded-xl', colors.lightBg)}>
         <span className={cn('text-2xl font-bold', colors.text)}>
-          +{xpAmount}
+          +{xpAmount}⚡
         </span>
-        <span className="text-sm text-gray-600 ml-2">XP</span>
+        <span className="text-sm text-gray-600 ml-2">ZAPs</span>
       </div>
 
       {/* Hover Glow Effect */}
