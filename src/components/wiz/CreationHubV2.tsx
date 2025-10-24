@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, BookOpen, User, Package, Plus, ArrowRight, Sparkles, Zap } from 'lucide-react';
+import { Users, BookOpen, User, Package, Plus, ArrowRight, Sparkles, Zap, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import CreateCommunityPage from './CreateCommunityPage';
 
-type CreationType = 'community' | 'course' | 'coaching' | 'product';
+type CreationType = 'community' | 'course' | 'coaching' | 'product' | null;
 
 interface CreationCard {
   id: CreationType;
@@ -74,11 +75,37 @@ const creationCards: CreationCard[] = [
  */
 export const CreationHubV2: React.FC = () => {
   const navigate = useNavigate();
+  const [activeCreationType, setActiveCreationType] = useState<CreationType>(null);
 
-  const handleCreateClick = (route: string) => {
-    navigate(route);
+  const handleCreateClick = (type: CreationType) => {
+    setActiveCreationType(type);
   };
 
+  const handleBackToGrid = () => {
+    setActiveCreationType(null);
+  };
+
+  // Show Community creation flow
+  if (activeCreationType === 'community') {
+    return (
+      <div className="space-y-6">
+        {/* Back Button */}
+        <Button
+          onClick={handleBackToGrid}
+          variant="ghost"
+          className="gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Creation Hub
+        </Button>
+
+        {/* Community Creation Page */}
+        <CreateCommunityPage onBack={handleBackToGrid} />
+      </div>
+    );
+  }
+
+  // Show creation grid
   return (
     <div className="space-y-8">
       {/* Section Header */}
@@ -102,7 +129,7 @@ export const CreationHubV2: React.FC = () => {
             key={card.id}
             card={card}
             index={index}
-            onClick={() => handleCreateClick(card.route)}
+            onClick={() => handleCreateClick(card.id as CreationType)}
           />
         ))}
       </div>
