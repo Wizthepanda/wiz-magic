@@ -183,10 +183,11 @@ const App = () => {
                     <Route path="/profile" element={<ProfilePage />} />
 
                     {/* Create - Content creation hub */}
+                    <Route path="/create" element={<CreatorStudio />} />
                     <Route path="/creator-studio" element={<CreatorStudio />} />
-                    <Route path="/create" element={<WizCreatePageV3 />} />
+                    <Route path="/create-v3" element={<WizCreatePageV3 />} />
                     <Route path="/create-v2" element={<WizCreatePageV2 />} />
-                    <Route path="/create-old" element={<WizCreatePage />} />
+                    <Route path="/create-v1" element={<WizCreatePage />} />
 
                     {/* Rewards & Claiming */}
                     <Route path="/claim" element={<Claim />} />
