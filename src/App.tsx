@@ -44,6 +44,7 @@ const ZapRewardsHub = lazy(() => import("./pages/ZapRewardsHub"));
 const RewardsPage = lazy(() => import("./pages/rewards/RewardsPage").then(m => ({ default: m.RewardsPage })));
 
 // Create pages
+const CreatorStudio = lazy(() => import("./components/wiz/CreatorStudio").then(m => ({ default: m.CreatorStudio })));
 const WizCreatePageV3 = lazy(() => import("./components/wiz/WizCreatePageV3").then(m => ({ default: m.WizCreatePageV3 })));
 const WizCreatePageV2 = lazy(() => import("./components/wiz/WizCreatePageV2").then(m => ({ default: m.WizCreatePageV2 })));
 const WizCreatePage = lazy(() => import("./components/wiz/WizCreatePage").then(m => ({ default: m.WizCreatePage })));
@@ -182,6 +183,7 @@ const App = () => {
                     <Route path="/profile" element={<ProfilePage />} />
 
                     {/* Create - Content creation hub */}
+                    <Route path="/creator-studio" element={<CreatorStudio />} />
                     <Route path="/create" element={<WizCreatePageV3 />} />
                     <Route path="/create-v2" element={<WizCreatePageV2 />} />
                     <Route path="/create-old" element={<WizCreatePage />} />
