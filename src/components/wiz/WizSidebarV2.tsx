@@ -93,7 +93,7 @@ const bottomNav: NavItem[] = [
     id: 'create',
     label: 'Create',
     icon: PlusCircle,
-    route: '/create',
+    route: '/creator-studio',
     tooltip: 'Create communities, courses, and products'
   }
 ];
@@ -698,7 +698,7 @@ const MobileBottomNav = ({ onNavigate }: MobileBottomNavProps) => {
   const mobileNavItems = [
     { id: 'discover', icon: Compass, route: '/discover' },
     { id: 'communities', icon: Users, route: '/community' },
-    { id: 'create', icon: PlusCircle, route: '/create' },
+    { id: 'create', icon: PlusCircle, route: '/creator-studio' },
     { id: 'profile', icon: User, route: '/profile' }
   ];
 
@@ -763,7 +763,7 @@ const MobileBottomNav = ({ onNavigate }: MobileBottomNavProps) => {
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        onClick={() => navigate('/create')}
+        onClick={() => navigate('/creator-studio')}
         className={cn(
           "absolute -top-8 left-1/2 -translate-x-1/2",
           "w-16 h-16 rounded-full",
