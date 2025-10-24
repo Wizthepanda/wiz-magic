@@ -118,7 +118,7 @@ export const PostComposer: React.FC<PostComposerProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        'bg-white/60 backdrop-blur-xl rounded-2xl p-4 md:p-5 shadow-lg border border-white/20 overflow-visible',
+        'relative z-[10] bg-white/60 backdrop-blur-xl rounded-2xl p-4 md:p-5 shadow-lg border border-white/20 overflow-visible',
         className
       )}
     >
