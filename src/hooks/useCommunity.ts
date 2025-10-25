@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { doc, setDoc, updateDoc, getDoc, collection, addDoc, serverTimestamp, query, where, orderBy, getDocs, limit } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, getDoc, collection, addDoc, serverTimestamp, query, where, orderBy, getDocs, limit, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from './useAuth';
 import type { CreateCommunityForm } from '@/lib/schemas/community';
@@ -332,8 +332,8 @@ const deepClean = (obj: any): any => {
     return cleaned;
   }
 
-  // Return primitives and dates as-is
-  if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean' || obj instanceof Date) {
+  // Return primitives, dates, and Firestore Timestamps as-is
+  if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean' || obj instanceof Date || obj instanceof Timestamp) {
     return obj;
   }
 

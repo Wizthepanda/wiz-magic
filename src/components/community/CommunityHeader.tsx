@@ -84,7 +84,7 @@ export const CommunityHeader: React.FC<CommunityHeaderProps> = ({ community }) =
           >
             <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl overflow-hidden ring-4 ring-white shadow-2xl bg-white">
               <img
-                src={community.profileIconUrl || community.icon || 'https://images.unsplash.com/photo-1618556450991-2f1af64e8191?w=200&h=200&fit=crop'}
+                src={community.profileIcon || community.profileIconUrl || community.icon || 'https://images.unsplash.com/photo-1618556450991-2f1af64e8191?w=200&h=200&fit=crop'}
                 alt={`${community.name} icon`}
                 className="w-full h-full object-cover"
               />

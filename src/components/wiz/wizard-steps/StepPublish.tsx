@@ -23,6 +23,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
+import { Timestamp } from 'firebase/firestore';
 
 interface StepPublishProps {
   onBack: () => void;
@@ -118,7 +119,7 @@ export const StepPublish: React.FC<StepPublishProps> = ({ onBack }) => {
       }
 
       // Convert store data to community format
-      const communityData = {
+      const communityData: any = {
         title: store.title,
         tagline: store.tagline,
         category: store.category,
@@ -128,10 +129,6 @@ export const StepPublish: React.FC<StepPublishProps> = ({ onBack }) => {
         longDescription: store.longDescription || '',
         tags: store.tags,
         privacy: store.visibility === 'public' ? 'public' : store.visibility === 'private' ? 'private' : 'invite',
-
-        // Content
-        linkedCourseId: store.linkedCourses[0]?.id,
-        linkedCourseName: store.linkedCourses[0]?.name,
 
         // Monetization
         pricingModel: store.pricingModel,
@@ -151,6 +148,12 @@ export const StepPublish: React.FC<StepPublishProps> = ({ onBack }) => {
         creatorName: user?.displayName || '',
         creatorPhoto: user?.photoURL || ''
       };
+
+      // Only add linked course fields if they exist
+      if (store.linkedCourses[0]?.id) {
+        communityData.linkedCourseId = store.linkedCourses[0].id;
+        communityData.linkedCourseName = store.linkedCourses[0].name;
+      }
 
       await createCommunity.mutateAsync(communityData as any);
       toast.success('Draft saved successfully!');
@@ -181,7 +184,7 @@ export const StepPublish: React.FC<StepPublishProps> = ({ onBack }) => {
       }
 
       // Convert store data to community format
-      const communityData = {
+      const communityData: any = {
         title: store.title,
         tagline: store.tagline,
         category: store.category,
@@ -191,10 +194,6 @@ export const StepPublish: React.FC<StepPublishProps> = ({ onBack }) => {
         longDescription: store.longDescription || '',
         tags: store.tags,
         privacy: store.visibility === 'public' ? 'public' : store.visibility === 'private' ? 'private' : 'invite',
-
-        // Content
-        linkedCourseId: store.linkedCourses[0]?.id,
-        linkedCourseName: store.linkedCourses[0]?.name,
 
         // Monetization
         pricingModel: store.pricingModel,
@@ -216,7 +215,7 @@ export const StepPublish: React.FC<StepPublishProps> = ({ onBack }) => {
 
         // Status
         status: 'published' as const,
-        publishDate: new Date(),
+        publishDate: Timestamp.now(),
 
         // Creator
         creatorId: user?.uid,
@@ -227,17 +226,35 @@ export const StepPublish: React.FC<StepPublishProps> = ({ onBack }) => {
         memberCount: 0
       };
 
+      // Only add linked course fields if they exist
+      if (store.linkedCourses[0]?.id) {
+        communityData.linkedCourseId = store.linkedCourses[0].id;
+        communityData.linkedCourseName = store.linkedCourses[0].name;
+      }
+
+      // Debug: Log complete data structure
+      console.log('📤 PUBLISHING COMMUNITY DATA:');
+      console.log('Community ID:', store.communityId);
+      console.log('Full data object:', communityData);
+      console.log('Field analysis:');
+      Object.entries(communityData).forEach(([key, value]) => {
+        const type = value === null ? 'null' : value === undefined ? 'undefined' : typeof value;
+        const extra = Array.isArray(value) ? `(array, length: ${value.length})` : '';
+        console.log(`  ${key}: ${type} ${extra}`, value);
+      });
+
       let resultId: string | undefined;
 
       // Check if updating existing draft or creating new
       if (store.communityId) {
         // Update existing community
+        console.log('🔄 Updating existing community:', store.communityId);
         await updateCommunity.mutateAsync({
           id: store.communityId,
           data: communityData
         });
         resultId = store.communityId;
-        console.log('✏️ Updated existing community:', store.communityId);
+        console.log('✅ Updated existing community:', store.communityId);
       } else {
         // Create new community
         const result = await createCommunity.mutateAsync(communityData as any);

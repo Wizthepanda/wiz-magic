@@ -339,7 +339,18 @@ function validateDraftCommunity(communityData) {
          ('waitlistEnabled' in communityData ? communityData.waitlistEnabled is bool : true) &&
          ('freeTrialEnabled' in communityData ? communityData.freeTrialEnabled is bool : true) &&
          ('freeTrialDays' in communityData ? communityData.freeTrialDays is number : true) &&
-         ('cryptoTypes' in communityData ? communityData.cryptoTypes is list : true);
+         ('cryptoTypes' in communityData ? communityData.cryptoTypes is list : true) &&
+         ('cryptoAmount' in communityData ? communityData.cryptoAmount is string : true) &&
+         ('linkedCourseName' in communityData ? communityData.linkedCourseName is string : true) &&
+         ('accessWindow' in communityData ? communityData.accessWindow is string : true) &&
+         ('memberCount' in communityData ? communityData.memberCount is number : true) &&
+         ('membersCount' in communityData ? communityData.membersCount is number : true) &&
+         ('creatorAvatar' in communityData ? communityData.creatorAvatar is string : true) &&
+         ('publishDate' in communityData ? true : true) &&
+         // Allow timestamp fields that are automatically added
+         ('createdAt' in communityData ? true : true) &&
+         ('updatedAt' in communityData ? true : true) &&
+         ('publishedAt' in communityData ? true : true);
 }
 
 // Validation for published/scheduled communities (strict - requires all fields)
@@ -374,7 +385,11 @@ function validatePublishedCommunity(communityData) {
          ('freeTrialEnabled' in communityData ? communityData.freeTrialEnabled is bool : true) &&
          ('freeTrialDays' in communityData ? communityData.freeTrialDays is number : true) &&
          ('cryptoTypes' in communityData ? communityData.cryptoTypes is list : true) &&
-         ('cryptoAmount' in communityData ? communityData.cryptoAmount is string : true);
+         ('cryptoAmount' in communityData ? communityData.cryptoAmount is string : true) &&
+         // Allow timestamp fields that are automatically added
+         ('createdAt' in communityData ? true : true) &&
+         ('updatedAt' in communityData ? true : true) &&
+         ('publishedAt' in communityData ? true : true);
 }
 
 // Legacy validation function - kept for backwards compatibility but not used

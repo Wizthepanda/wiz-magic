@@ -8,27 +8,30 @@ import { Eye, MessageCircle, Share2, Users, Trophy, Target } from 'lucide-react'
 export interface CommunityData {
   id: string;
   name: string;
-  bannerUrl: string;
-  profileIconUrl: string;
+  bannerUrl?: string;
+  profileIconUrl?: string;
+  profileIcon?: string; // New field for uploaded profile icons
+  icon?: string; // Legacy field
+  coverMedia?: Array<{ url: string; type?: string; thumbnail?: string }>; // New field for uploaded cover images
   tags: string[];
-  rating: number;
-  ratingCount: number;
+  rating?: number;
+  ratingCount?: number;
   accessType: 'Free' | 'Free ZAPs' | 'ZAPs' | 'ZAPs+USD' | 'USD';
   zapsCost?: number;
   usdCost?: number;
-  slots: {
+  slots?: {
     claimed: number;
     total: number;
   };
-  progress: number;
-  publishedAt: string;
-  description: string;
+  progress?: number;
+  publishedAt?: string;
+  description?: string;
   creatorId: string;
-  creatorName: string;
-  creatorAvatar: string;
-  creatorBio: string;
-  creatorLevel: number;
-  memberCount: number;
+  creatorName?: string;
+  creatorAvatar?: string;
+  creatorBio?: string;
+  creatorLevel?: number;
+  memberCount?: number;
 }
 
 export interface Reply {

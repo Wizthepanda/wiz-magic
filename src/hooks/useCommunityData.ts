@@ -9,8 +9,9 @@ interface CommunityData {
   description?: string;
   bannerUrl?: string;
   profileIconUrl?: string;
+  profileIcon?: string; // New field for uploaded profile icons
   icon?: string;
-  coverMedia?: Array<{ url: string; thumbnail?: string }>;
+  coverMedia?: Array<{ url: string; thumbnail?: string; type?: string }>;
   modules?: any[];
   memberCount?: number;
   creatorId?: string;
