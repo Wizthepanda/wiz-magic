@@ -60,10 +60,13 @@ export const StepDetails: React.FC = () => {
   const { user } = useAuth();
   const [tagInput, setTagInput] = useState('');
   const [showMediaDialog, setShowMediaDialog] = useState(false);
-  const [mediaType, setMediaType] = useState<'image' | 'youtube'>('image');
+  const [mediaType, setMediaType] = useState<'image' | 'youtube' | 'upload'>('upload');
   const [mediaUrl, setMediaUrl] = useState('');
   const [zapPulse, setZapPulse] = useState(false);
   const [isUploadingIcon, setIsUploadingIcon] = useState(false);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [uploadedImagePreview, setUploadedImagePreview] = useState<string>('');
+  const [uploadError, setUploadError] = useState<string>('');
 
   // Character limits
   const TITLE_MAX = 120;
@@ -94,14 +97,75 @@ export const StepDetails: React.FC = () => {
     store.setTags(store.tags.filter(t => t !== tag));
   };
 
-  const handleAddMedia = () => {
-    if (!mediaUrl.trim()) {
-      toast.error('Please enter a valid URL');
+  const handleCoverImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Clear previous errors
+    setUploadError('');
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setUploadError('Please upload JPG, PNG, or WEBP images only');
       return;
     }
 
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError('Image must be less than 5MB');
+      return;
+    }
+
+    setIsUploadingCover(true);
+    try {
+      // Generate unique filename
+      const filename = generateUniqueFilename(file.name);
+      const storagePath = `communities/covers/${user?.uid || 'anonymous'}/${filename}`;
+
+      // Upload to Firebase Storage
+      const downloadURL = await uploadImage(file, storagePath);
+
+      // Set preview
+      setUploadedImagePreview(downloadURL);
+      toast.success('Image uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading cover image:', error);
+      setUploadError('Failed to upload image. Please try again.');
+    } finally {
+      setIsUploadingCover(false);
+    }
+  };
+
+  const handleAddMedia = () => {
     if (store.coverMedia.length >= 5) {
       toast.error('Maximum 5 media items allowed');
+      return;
+    }
+
+    // Handle upload type
+    if (mediaType === 'upload') {
+      if (!uploadedImagePreview) {
+        toast.error('Please upload an image first');
+        return;
+      }
+
+      const newMedia = {
+        type: 'image',
+        url: uploadedImagePreview,
+        thumbnail: uploadedImagePreview
+      };
+
+      store.setCoverMedia([...store.coverMedia, newMedia]);
+      setUploadedImagePreview('');
+      setShowMediaDialog(false);
+      toast.success('Cover image added successfully');
+      return;
+    }
+
+    // Handle URL types (image/youtube)
+    if (!mediaUrl.trim()) {
+      toast.error('Please enter a valid URL');
       return;
     }
 
@@ -476,42 +540,101 @@ export const StepDetails: React.FC = () => {
           </DialogHeader>
           <div className="space-y-4">
             <RadioGroup value={mediaType} onValueChange={(val) => setMediaType(val as any)}>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-3">
                 <label className={cn(
-                  "flex items-center space-x-3 p-4 rounded-lg border-2 cursor-pointer",
-                  mediaType === 'image' ? "border-purple-500 bg-purple-50" : "border-gray-200"
+                  "flex flex-col items-center justify-center p-4 rounded-lg border-2 cursor-pointer transition-all",
+                  mediaType === 'upload' ? "border-purple-500 bg-purple-50" : "border-gray-200 hover:border-purple-300"
                 )}>
-                  <RadioGroupItem value="image" />
-                  <ImageIcon className="w-5 h-5" />
-                  <span className="font-medium">Image URL</span>
+                  <RadioGroupItem value="upload" className="mb-2" />
+                  <Upload className="w-5 h-5 mb-1" />
+                  <span className="font-medium text-sm text-center">Upload Image</span>
                 </label>
                 <label className={cn(
-                  "flex items-center space-x-3 p-4 rounded-lg border-2 cursor-pointer",
-                  mediaType === 'youtube' ? "border-purple-500 bg-purple-50" : "border-gray-200"
+                  "flex flex-col items-center justify-center p-4 rounded-lg border-2 cursor-pointer transition-all",
+                  mediaType === 'image' ? "border-purple-500 bg-purple-50" : "border-gray-200 hover:border-purple-300"
                 )}>
-                  <RadioGroupItem value="youtube" />
-                  <Youtube className="w-5 h-5" />
-                  <span className="font-medium">YouTube</span>
+                  <RadioGroupItem value="image" className="mb-2" />
+                  <ImageIcon className="w-5 h-5 mb-1" />
+                  <span className="font-medium text-sm text-center">Image URL</span>
+                </label>
+                <label className={cn(
+                  "flex flex-col items-center justify-center p-4 rounded-lg border-2 cursor-pointer transition-all",
+                  mediaType === 'youtube' ? "border-purple-500 bg-purple-50" : "border-gray-200 hover:border-purple-300"
+                )}>
+                  <RadioGroupItem value="youtube" className="mb-2" />
+                  <Youtube className="w-5 h-5 mb-1" />
+                  <span className="font-medium text-sm text-center">YouTube</span>
                 </label>
               </div>
             </RadioGroup>
 
-            <div className="space-y-2">
-              <Label>
-                {mediaType === 'image' ? 'Image URL' : 'YouTube URL'}
-              </Label>
-              <Input
-                placeholder={mediaType === 'image' ? 'https://...' : 'https://youtube.com/watch?v=...'}
-                value={mediaUrl}
-                onChange={(e) => setMediaUrl(e.target.value)}
-              />
-            </div>
+            {/* Upload Image Section */}
+            {mediaType === 'upload' && (
+              <div className="space-y-2">
+                <Label>Upload Cover Image</Label>
+                <div className={cn(
+                  "relative flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-xl transition-all cursor-pointer",
+                  uploadedImagePreview
+                    ? "border-green-400 bg-green-50"
+                    : "border-gray-300 hover:border-purple-400 bg-white/50",
+                  isUploadingCover && "opacity-50 pointer-events-none"
+                )}>
+                  {uploadedImagePreview ? (
+                    <div className="relative w-full h-full">
+                      <img
+                        src={uploadedImagePreview}
+                        alt="Cover Preview"
+                        className="rounded-xl w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-xl opacity-0 hover:opacity-100 transition-opacity">
+                        <p className="text-white text-sm font-medium">Click to change image</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-600 font-medium">
+                        {isUploadingCover ? 'Uploading...' : 'Click or drag image to upload'}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">JPG, PNG, or WEBP • Max 5MB</p>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={handleCoverImageUpload}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    disabled={isUploadingCover}
+                  />
+                </div>
+                {uploadError && (
+                  <p className="text-xs text-red-500 mt-1">{uploadError}</p>
+                )}
+              </div>
+            )}
+
+            {/* URL Input Section */}
+            {(mediaType === 'image' || mediaType === 'youtube') && (
+              <div className="space-y-2">
+                <Label>
+                  {mediaType === 'image' ? 'Image URL' : 'YouTube URL'}
+                </Label>
+                <Input
+                  placeholder={mediaType === 'image' ? 'https://...' : 'https://youtube.com/watch?v=...'}
+                  value={mediaUrl}
+                  onChange={(e) => setMediaUrl(e.target.value)}
+                />
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowMediaDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleAddMedia}>
+            <Button
+              onClick={handleAddMedia}
+              disabled={isUploadingCover || (mediaType === 'upload' && !uploadedImagePreview)}
+            >
               Add Media
             </Button>
           </DialogFooter>
