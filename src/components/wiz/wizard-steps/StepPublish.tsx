@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { useCommunityCreateStore } from '@/store/communityCreateStore';
-import { useCreateCommunity } from '@/hooks/useCommunity';
+import { useCreateCommunity, useUpdateCommunity } from '@/hooks/useCommunity';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -33,6 +33,7 @@ export const StepPublish: React.FC<StepPublishProps> = ({ onBack }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const createCommunity = useCreateCommunity();
+  const updateCommunity = useUpdateCommunity();
 
   const [isPublishing, setIsPublishing] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
@@ -210,22 +211,38 @@ export const StepPublish: React.FC<StepPublishProps> = ({ onBack }) => {
         memberCount: 0
       };
 
-      const result = await createCommunity.mutateAsync(communityData as any);
+      let resultId: string | undefined;
+
+      // Check if updating existing draft or creating new
+      if (store.communityId) {
+        // Update existing community
+        await updateCommunity.mutateAsync({
+          id: store.communityId,
+          data: communityData
+        });
+        resultId = store.communityId;
+        console.log('✏️ Updated existing community:', store.communityId);
+      } else {
+        // Create new community
+        const result = await createCommunity.mutateAsync(communityData as any);
+        resultId = result?.id;
+        console.log('✨ Created new community:', resultId);
+      }
 
       // Trigger confetti
       triggerConfetti();
 
       // Show success message
-      toast.success('Community published successfully! 🎉');
+      toast.success(store.communityId ? 'Community updated successfully! 🎉' : 'Community published successfully! 🎉');
 
       // Wait a bit for confetti then redirect
       setTimeout(() => {
         // Reset store
         store.resetStore();
 
-        // Navigate to the new community (you can customize this)
-        if (result?.id) {
-          navigate(`/community/${result.id}`);
+        // Navigate to the community
+        if (resultId) {
+          navigate(`/community/${resultId}`);
         } else {
           onBack();
         }

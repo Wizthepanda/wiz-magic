@@ -285,14 +285,33 @@ export const PublishedCreationsManagerV2: React.FC<PublishedCreationsManagerV2Pr
       if (!creation) throw new Error('Creation not found');
 
       const collectionName = creation.type === 'course' ? 'courses_community' : 'communities';
+
+      // Delete the specific document
       await deleteDoc(doc(db, collectionName, creationId));
 
-      setCreations(prev => prev.filter(c => c.id !== creationId));
+      // Also find and delete any duplicates with the same title (to prevent re-appearing)
+      if (user) {
+        const duplicatesQuery = query(
+          collection(db, collectionName),
+          where('creatorId', '==', user.uid),
+          where('title', '==', creation.title)
+        );
+        const duplicatesSnapshot = await getDocs(duplicatesQuery);
+
+        // Delete all duplicates
+        const deletePromises = duplicatesSnapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
+
+        console.log(`🗑️ Deleted ${duplicatesSnapshot.docs.length + 1} total documents (including duplicates)`);
+      }
+
+      // Remove from local state
+      setCreations(prev => prev.filter(c => c.title !== creation.title));
       setSelectedCreation(null);
 
       toast({
         title: '🗑️ Deleted',
-        description: 'Your creation has been removed'
+        description: 'Your creation has been permanently removed'
       });
     } catch (error) {
       console.error('Error deleting creation:', error);
@@ -305,8 +324,21 @@ export const PublishedCreationsManagerV2: React.FC<PublishedCreationsManagerV2Pr
   };
 
   const handleEdit = (creation: PublishedCreation) => {
-    console.log('🖊️ Edit clicked for:', creation.title);
+    console.log('🖊️ Edit clicked for:', creation.title, 'Status:', creation.status);
 
+    // For communities, navigate to the new wizard with draft ID
+    if (creation.type === 'community') {
+      toast({
+        title: 'Opening Editor',
+        description: `Loading ${creation.title} for editing...`
+      });
+
+      // Navigate to create page with community type and draft ID as query params
+      navigate(`/create?type=community&draftId=${creation.id}`);
+      return;
+    }
+
+    // For other types, use the old handler
     toast({
       title: 'Opening Editor',
       description: `Loading ${creation.title} for editing...`

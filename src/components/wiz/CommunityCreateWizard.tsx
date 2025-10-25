@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileText,
@@ -16,6 +16,8 @@ import { cn } from '@/lib/utils';
 import { useCommunityCreateStore } from '@/store/communityCreateStore';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 // Import step components (we'll create these next)
 import { StepDetails } from './wizard-steps/StepDetails';
@@ -66,9 +68,76 @@ export const CommunityCreateWizard: React.FC<CommunityCreateWizardProps> = ({
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingDraft, setIsLoadingDraft] = useState(false);
   const isMobile = useIsMobile();
 
   const store = useCommunityCreateStore();
+
+  // Load draft data if draftId is provided
+  useEffect(() => {
+    const loadDraft = async () => {
+      if (!draftId) return;
+
+      setIsLoadingDraft(true);
+      try {
+        const draftDoc = await getDoc(doc(db, 'communities', draftId));
+
+        if (!draftDoc.exists()) {
+          toast.error('Draft not found');
+          return;
+        }
+
+        const data = draftDoc.data();
+        console.log('📥 Loading draft data:', data);
+
+        // Populate store with draft data
+        store.setTitle(data.title || '');
+        store.setTagline(data.tagline || '');
+        store.setCategory(data.category || '');
+        store.setDescription(data.shortDescription || '');
+        store.setLongDescription(data.longDescription || '');
+        store.setProfileIcon(data.profileIcon || '');
+        store.setCoverMedia(data.coverMedia || []);
+        store.setTags(data.tags || []);
+        store.setVisibility(data.privacy === 'public' ? 'public' : data.privacy === 'private' ? 'private' : 'token-gated');
+
+        // Content
+        if (data.linkedCourseId) {
+          store.setLinkedCourses([{
+            id: data.linkedCourseId,
+            name: data.linkedCourseName || 'Linked Course'
+          }]);
+        }
+
+        // ZAP Reward Tiers
+        if (data.zapRewardTiers) {
+          store.setZapRewardTiers(data.zapRewardTiers);
+        }
+
+        // Monetization
+        store.setPricingModel(data.pricingModel || 'free');
+        store.setZapsRequired(data.zapsRequired || 0);
+        store.setUsdAmount(data.usdCoPay || 0);
+        store.setCryptoTypes(data.cryptoTypes || []);
+        store.setCryptoAmount(data.cryptoAmount || '');
+        store.setFreeTrialEnabled(data.freeTrialEnabled || false);
+        store.setFreeTrialDays(data.freeTrialDays || 7);
+        store.setAccessType(data.accessType || 'open');
+
+        // Store the community ID for updates
+        store.setCommunityId(draftId);
+
+        toast.success('Draft loaded successfully');
+      } catch (error) {
+        console.error('Error loading draft:', error);
+        toast.error('Failed to load draft');
+      } finally {
+        setIsLoadingDraft(false);
+      }
+    };
+
+    loadDraft();
+  }, [draftId]);
 
   const handleNext = () => {
     if (currentStep < 4) {

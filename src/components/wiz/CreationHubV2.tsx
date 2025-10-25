@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Users, BookOpen, User, Package, Plus, ArrowRight, Sparkles, Zap, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -76,19 +76,36 @@ const creationCards: CreationCard[] = [
  */
 export const CreationHubV2: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeCreationType, setActiveCreationType] = useState<CreationType>(null);
+  const [draftId, setDraftId] = useState<string | undefined>(undefined);
+
+  // Check for query params on mount (for editing drafts)
+  useEffect(() => {
+    const type = searchParams.get('type') as CreationType;
+    const draft = searchParams.get('draftId');
+
+    if (type && draft) {
+      setActiveCreationType(type);
+      setDraftId(draft);
+      // Clear query params after reading
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams]);
 
   const handleCreateClick = (type: CreationType) => {
     setActiveCreationType(type);
+    setDraftId(undefined); // Clear draft ID when creating new
   };
 
   const handleBackToGrid = () => {
     setActiveCreationType(null);
+    setDraftId(undefined);
   };
 
   // Show Community creation flow (NEW WIZARD v2.0)
   if (activeCreationType === 'community') {
-    return <CommunityCreateWizard onBack={handleBackToGrid} />;
+    return <CommunityCreateWizard onBack={handleBackToGrid} draftId={draftId} />;
   }
 
   // Show creation grid
