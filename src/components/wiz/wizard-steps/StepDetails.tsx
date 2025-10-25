@@ -31,6 +31,8 @@ import { cn } from '@/lib/utils';
 import { useCommunityCreateStore } from '@/store/communityCreateStore';
 import { communityCategories } from '@/lib/schemas/community';
 import { toast } from 'sonner';
+import { uploadImage, generateUniqueFilename } from '@/lib/storage-utils';
+import { useAuth } from '@/hooks/useAuth';
 
 const visibilityOptions = [
   {
@@ -55,11 +57,13 @@ const visibilityOptions = [
 
 export const StepDetails: React.FC = () => {
   const store = useCommunityCreateStore();
+  const { user } = useAuth();
   const [tagInput, setTagInput] = useState('');
   const [showMediaDialog, setShowMediaDialog] = useState(false);
   const [mediaType, setMediaType] = useState<'image' | 'youtube'>('image');
   const [mediaUrl, setMediaUrl] = useState('');
   const [zapPulse, setZapPulse] = useState(false);
+  const [isUploadingIcon, setIsUploadingIcon] = useState(false);
 
   // Character limits
   const TITLE_MAX = 120;
@@ -135,15 +139,39 @@ export const StepDetails: React.FC = () => {
     return null;
   };
 
-  const handleProfileIconUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfileIconUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        store.setProfileIcon(reader.result as string);
-        toast.success('Profile icon uploaded');
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+
+    setIsUploadingIcon(true);
+    try {
+      // Generate unique filename
+      const filename = generateUniqueFilename(file.name);
+      const storagePath = `communities/icons/${user?.uid || 'anonymous'}/${filename}`;
+
+      // Upload to Firebase Storage
+      const downloadURL = await uploadImage(file, storagePath);
+
+      // Store only the URL in the store
+      store.setProfileIcon(downloadURL);
+      toast.success('Profile icon uploaded');
+    } catch (error) {
+      console.error('Error uploading profile icon:', error);
+      toast.error('Failed to upload icon. Please try again.');
+    } finally {
+      setIsUploadingIcon(false);
     }
   };
 
@@ -327,10 +355,12 @@ export const StepDetails: React.FC = () => {
               )}
             </div>
             <div className="flex-1">
-              <label htmlFor="profileIcon" className="cursor-pointer">
+              <label htmlFor="profileIcon" className={cn("cursor-pointer", isUploadingIcon && "opacity-50 pointer-events-none")}>
                 <div className="flex items-center space-x-2 px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:border-purple-500 transition-colors">
                   <Upload className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm text-gray-700">Upload Icon</span>
+                  <span className="text-sm text-gray-700">
+                    {isUploadingIcon ? 'Uploading...' : 'Upload Icon'}
+                  </span>
                 </div>
                 <input
                   id="profileIcon"
@@ -338,9 +368,10 @@ export const StepDetails: React.FC = () => {
                   accept="image/*"
                   onChange={handleProfileIconUpload}
                   className="hidden"
+                  disabled={isUploadingIcon}
                 />
               </label>
-              <p className="text-xs text-gray-500 mt-2">Recommended: 256x256px</p>
+              <p className="text-xs text-gray-500 mt-2">Recommended: 256x256px, max 5MB</p>
             </div>
           </div>
         </div>
