@@ -90,13 +90,21 @@ export const CommunityCreateWizard: React.FC<CommunityCreateWizardProps> = ({
         const data = draftDoc.data();
         console.log('📥 Loading draft data:', data);
 
+        // Sanitize profileIcon - strip base64 data if present
+        let profileIconUrl = data.profileIcon || '';
+        if (profileIconUrl && profileIconUrl.startsWith('data:')) {
+          console.warn('⚠️ Draft contains base64 profileIcon, skipping (too large for Firestore)');
+          profileIconUrl = ''; // Clear base64 data - user will need to re-upload
+          toast.warning('Profile icon needs to be re-uploaded (old format detected)');
+        }
+
         // Populate store with draft data
         store.setTitle(data.title || '');
         store.setTagline(data.tagline || '');
         store.setCategory(data.category || '');
         store.setDescription(data.shortDescription || '');
         store.setLongDescription(data.longDescription || '');
-        store.setProfileIcon(data.profileIcon || '');
+        store.setProfileIcon(profileIconUrl);
         store.setCoverMedia(data.coverMedia || []);
         store.setTags(data.tags || []);
         store.setVisibility(data.privacy === 'public' ? 'public' : data.privacy === 'private' ? 'private' : 'token-gated');

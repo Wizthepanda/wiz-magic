@@ -110,12 +110,19 @@ export const StepPublish: React.FC<StepPublishProps> = ({ onBack }) => {
   const handleSaveDraft = async () => {
     setIsSavingDraft(true);
     try {
+      // Sanitize profileIcon - strip base64 data before saving
+      let profileIconUrl = store.profileIcon || '';
+      if (profileIconUrl && profileIconUrl.startsWith('data:')) {
+        console.warn('⚠️ Stripping base64 profileIcon from draft');
+        profileIconUrl = ''; // Don't save base64 data
+      }
+
       // Convert store data to community format
       const communityData = {
         title: store.title,
         tagline: store.tagline,
         category: store.category,
-        profileIcon: store.profileIcon || '',
+        profileIcon: profileIconUrl,
         coverMedia: store.coverMedia,
         shortDescription: store.description,
         longDescription: store.longDescription || '',
@@ -164,12 +171,21 @@ export const StepPublish: React.FC<StepPublishProps> = ({ onBack }) => {
     setIsPublishing(true);
 
     try {
+      // Sanitize profileIcon - prevent base64 data from being saved
+      let profileIconUrl = store.profileIcon || '';
+      if (profileIconUrl && profileIconUrl.startsWith('data:')) {
+        console.error('❌ Cannot publish: profileIcon contains base64 data');
+        toast.error('Please re-upload your profile icon before publishing');
+        setIsPublishing(false);
+        return;
+      }
+
       // Convert store data to community format
       const communityData = {
         title: store.title,
         tagline: store.tagline,
         category: store.category,
-        profileIcon: store.profileIcon || '',
+        profileIcon: profileIconUrl,
         coverMedia: store.coverMedia,
         shortDescription: store.description,
         longDescription: store.longDescription || '',
