@@ -323,22 +323,58 @@ function validateDraftCommunity(communityData) {
          ('category' in communityData ? communityData.category is string : true) &&
          ('shortDescription' in communityData ? communityData.shortDescription is string : true) &&
          ('privacy' in communityData ? communityData.privacy in ['public', 'private', 'invite'] : true) &&
-         ('pricingModel' in communityData ? communityData.pricingModel in ['free', 'free-zaps', 'usd', 'zaps', 'zaps-usd', 'crypto'] : true) &&
+         ('pricingModel' in communityData ? communityData.pricingModel in ['free', 'free-zaps', 'usd', 'zaps', 'zaps-usd', 'crypto', 'waitlist'] : true) &&
          ('zapsRequired' in communityData ? (communityData.zapsRequired is number && communityData.zapsRequired >= 0) : true) &&
-         ('usdCoPay' in communityData ? (communityData.usdCoPay is number && communityData.usdCoPay >= 0) : true);
+         ('usdCoPay' in communityData ? (communityData.usdCoPay is number && communityData.usdCoPay >= 0) : true) &&
+         // Allow all other fields that Creator Studio 2.0 uses
+         ('tagline' in communityData ? communityData.tagline is string : true) &&
+         ('profileIcon' in communityData ? communityData.profileIcon is string : true) &&
+         ('coverMedia' in communityData ? communityData.coverMedia is list : true) &&
+         ('longDescription' in communityData ? communityData.longDescription is string : true) &&
+         ('tags' in communityData ? communityData.tags is list : true) &&
+         ('creatorName' in communityData ? communityData.creatorName is string : true) &&
+         ('creatorPhoto' in communityData ? communityData.creatorPhoto is string : true) &&
+         ('zapRewardTiers' in communityData ? communityData.zapRewardTiers is list : true) &&
+         ('linkedCourseId' in communityData ? communityData.linkedCourseId is string : true) &&
+         ('waitlistEnabled' in communityData ? communityData.waitlistEnabled is bool : true) &&
+         ('freeTrialEnabled' in communityData ? communityData.freeTrialEnabled is bool : true) &&
+         ('freeTrialDays' in communityData ? communityData.freeTrialDays is number : true) &&
+         ('cryptoTypes' in communityData ? communityData.cryptoTypes is list : true);
 }
 
 // Validation for published/scheduled communities (strict - requires all fields)
 function validatePublishedCommunity(communityData) {
   return 'creatorId' in communityData && communityData.creatorId is string &&
-         'status' in communityData && communityData.status in ['published', 'scheduled'] &&
+         'status' in communityData && communityData.status in ['published', 'scheduled', 'live'] &&
          'title' in communityData && communityData.title is string && communityData.title.size() >= 5 &&
          'category' in communityData && communityData.category is string &&
          'shortDescription' in communityData && communityData.shortDescription is string &&
          'privacy' in communityData && communityData.privacy in ['public', 'private', 'invite'] &&
-         ('pricingModel' in communityData ? communityData.pricingModel in ['free', 'free-zaps', 'usd', 'zaps', 'zaps-usd', 'crypto'] : true) &&
+         // Allow all pricingModel types including waitlist
+         ('pricingModel' in communityData ? communityData.pricingModel in ['free', 'free-zaps', 'usd', 'zaps', 'zaps-usd', 'crypto', 'waitlist'] : true) &&
          ('zapsRequired' in communityData ? (communityData.zapsRequired is number && communityData.zapsRequired >= 0) : true) &&
-         ('usdCoPay' in communityData ? (communityData.usdCoPay is number && communityData.usdCoPay >= 0) : true);
+         ('usdCoPay' in communityData ? (communityData.usdCoPay is number && communityData.usdCoPay >= 0) : true) &&
+         // Allow optional fields used by Creator Studio 2.0
+         ('tagline' in communityData ? communityData.tagline is string : true) &&
+         ('profileIcon' in communityData ? communityData.profileIcon is string : true) &&
+         ('coverMedia' in communityData ? communityData.coverMedia is list : true) &&
+         ('longDescription' in communityData ? communityData.longDescription is string : true) &&
+         ('tags' in communityData ? communityData.tags is list : true) &&
+         ('creatorName' in communityData ? communityData.creatorName is string : true) &&
+         ('creatorPhoto' in communityData ? communityData.creatorPhoto is string : true) &&
+         ('creatorAvatar' in communityData ? communityData.creatorAvatar is string : true) &&
+         ('memberCount' in communityData ? communityData.memberCount is number : true) &&
+         ('membersCount' in communityData ? communityData.membersCount is number : true) &&
+         ('publishDate' in communityData ? true : true) &&
+         ('zapRewardTiers' in communityData ? communityData.zapRewardTiers is list : true) &&
+         ('linkedCourseId' in communityData ? communityData.linkedCourseId is string : true) &&
+         ('linkedCourseName' in communityData ? communityData.linkedCourseName is string : true) &&
+         ('waitlistEnabled' in communityData ? communityData.waitlistEnabled is bool : true) &&
+         ('accessWindow' in communityData ? communityData.accessWindow is string : true) &&
+         ('freeTrialEnabled' in communityData ? communityData.freeTrialEnabled is bool : true) &&
+         ('freeTrialDays' in communityData ? communityData.freeTrialDays is number : true) &&
+         ('cryptoTypes' in communityData ? communityData.cryptoTypes is list : true) &&
+         ('cryptoAmount' in communityData ? communityData.cryptoAmount is string : true);
 }
 
 // Legacy validation function - kept for backwards compatibility but not used
