@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import CreateCommunityPage from './CreateCommunityPage';
+import { CommunityCreateWizard } from './CommunityCreateWizard';
 
 type CreationType = 'community' | 'course' | 'coaching' | 'product' | null;
 
@@ -85,24 +86,9 @@ export const CreationHubV2: React.FC = () => {
     setActiveCreationType(null);
   };
 
-  // Show Community creation flow
+  // Show Community creation flow (NEW WIZARD v2.0)
   if (activeCreationType === 'community') {
-    return (
-      <div className="space-y-6">
-        {/* Back Button */}
-        <Button
-          onClick={handleBackToGrid}
-          variant="ghost"
-          className="gap-2"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Creation Hub
-        </Button>
-
-        {/* Community Creation Page */}
-        <CreateCommunityPage onBack={handleBackToGrid} />
-      </div>
-    );
+    return <CommunityCreateWizard onBack={handleBackToGrid} />;
   }
 
   // Show creation grid
