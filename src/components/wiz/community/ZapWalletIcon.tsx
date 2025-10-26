@@ -12,6 +12,7 @@ import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useDropdown } from "@/contexts/DropdownContext";
+import * as Portal from "@radix-ui/react-portal";
 import { dropdownMotion } from "@/lib/dropdown-animations";
 
 interface ZapWalletIconProps {
@@ -57,6 +58,7 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
+  const [position, setPosition] = useState({ top: 0, right: 0 });
 
   // Generate referral link
   const referralLink = user ? `${window.location.origin}?ref=${user.uid}` : "";
@@ -210,6 +212,17 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
     }
   };
 
+  // Calculate dropdown position based on trigger
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + 12,
+        right: window.innerWidth - rect.right,
+      });
+    }
+  }, [isOpen]);
+
   // Handle clicks outside dropdown and Esc key
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -244,26 +257,50 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
     <div className={cn("relative", className)}>
       <button
         ref={buttonRef}
-        onClick={handleToggle}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handleToggle();
+        }}
         aria-label="ZAP Wallet"
         className="relative w-10 h-10 rounded-full bg-gradient-to-br from-[#6B4EFF] to-[#4BC0FF] hover:from-[#7C5FFF] hover:to-[#5DD1FF] transition-all duration-200 flex items-center justify-center group shadow-sm hover:shadow-md"
       >
         <Wallet size={20} strokeWidth={2} className="text-white" />
       </button>
 
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            {...dropdownMotion}
-            className="absolute right-0 mt-3 w-[320px] rounded-2xl p-0 border-0 overflow-hidden z-[9999]"
-            style={{
-              background: "rgba(30, 32, 46, 0.9)",
-              backdropFilter: "blur(10px)",
-              border: "1px solid rgba(255, 255, 255, 0.15)",
-              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
-            }}
-          >
-        <div className="p-5" ref={dropdownRef}>
+      {/* Dropdown - Portal Rendered */}
+      <Portal.Root>
+        <AnimatePresence>
+          {isOpen && (
+            <>
+              {/* Pointer Triangle */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed w-3 h-3 bg-[#1E202E]/90 rotate-45 border-t border-l border-white/15"
+                style={{
+                  top: position.top - 6,
+                  right: position.right + 12,
+                  zIndex: 9998,
+                }}
+              />
+
+              {/* Dropdown Content */}
+              <motion.div
+                {...dropdownMotion}
+                className="fixed w-[320px] rounded-2xl p-0 border-0 overflow-hidden"
+                style={{
+                  background: "rgba(30, 32, 46, 0.9)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 255, 255, 0.15)",
+                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+                  top: position.top,
+                  right: position.right,
+                  zIndex: 9999,
+                }}
+              >
+            <div className="p-5" ref={dropdownRef}>
               {/* Header */}
               <div className="mb-4 flex items-center gap-2">
                 <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#7F5AF0] to-[#4CC9F0] flex items-center justify-center">
@@ -487,9 +524,11 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
                 )}
               </AnimatePresence>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </Portal.Root>
     </div>
   );
 };

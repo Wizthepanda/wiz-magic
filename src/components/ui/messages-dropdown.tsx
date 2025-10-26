@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDropdown } from '@/contexts/DropdownContext';
+import * as Portal from '@radix-ui/react-portal';
 import {
   dropdownMotion,
   glassDropdownClasses,
@@ -39,6 +40,9 @@ export const MessagesDropdown: React.FC<MessagesDropdownProps> = ({
 }) => {
   const { activeDropdown, setActiveDropdown } = useDropdown();
   const isOpen = activeDropdown === 'messages';
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ top: 0, right: 0 });
 
   // Mock messages if none provided
   const mockMessages: Message[] = [
@@ -92,11 +96,58 @@ export const MessagesDropdown: React.FC<MessagesDropdownProps> = ({
     onMessageClick?.(messageId);
   };
 
+  // Calculate dropdown position based on trigger
+  useEffect(() => {
+    if (isOpen && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + 12,
+        right: window.innerWidth - rect.right,
+      });
+    }
+  }, [isOpen]);
+
+  // Click outside handler
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isOpen &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        triggerRef.current &&
+        !triggerRef.current.contains(event.target as Node)
+      ) {
+        setActiveDropdown(null);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        setActiveDropdown(null);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, setActiveDropdown]);
+
   return (
     <div className={cn("relative", className)}>
       {/* Trigger Button */}
       <button
-        onClick={handleToggle}
+        ref={triggerRef}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handleToggle();
+        }}
         aria-label="Messages"
         className="relative w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 flex items-center justify-center group"
       >
@@ -116,17 +167,39 @@ export const MessagesDropdown: React.FC<MessagesDropdownProps> = ({
         )}
       </button>
 
-      {/* Dropdown */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            {...dropdownMotion}
-            className={cn(
-              "absolute right-0 mt-3 w-80 max-w-[calc(100vw-2rem)]",
-              glassDropdownClasses.container
-            )}
-            style={glassDropdownClasses.style}
-          >
+      {/* Dropdown - Portal Rendered */}
+      <Portal.Root>
+        <AnimatePresence>
+          {isOpen && (
+            <>
+              {/* Pointer Triangle */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed w-3 h-3 bg-[#1E202E]/90 rotate-45 border-t border-l border-white/15"
+                style={{
+                  top: position.top - 6,
+                  right: position.right + 12,
+                  zIndex: 9998,
+                }}
+              />
+
+              {/* Dropdown Content */}
+              <motion.div
+                ref={dropdownRef}
+                {...dropdownMotion}
+                className={cn(
+                  "fixed w-80 max-w-[calc(100vw-2rem)]",
+                  glassDropdownClasses.container
+                )}
+                style={{
+                  ...glassDropdownClasses.style,
+                  top: position.top,
+                  right: position.right,
+                  zIndex: 9999,
+                }}
+              >
             {/* Header */}
             <div className={dropdownContentStyles.header}>
               <div className="flex items-center gap-2">
@@ -229,9 +302,11 @@ export const MessagesDropdown: React.FC<MessagesDropdownProps> = ({
                 </button>
               </div>
             )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </Portal.Root>
     </div>
   );
 };

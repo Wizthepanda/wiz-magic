@@ -650,7 +650,11 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
               ref={xpRingRef}
               whileHover={{ scale: 1.02 }}
               className="relative cursor-pointer group"
-              onClick={() => setShowXpProfileDropdown(!showXpProfileDropdown)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowXpProfileDropdown(!showXpProfileDropdown);
+              }}
             >
               {/* Circular XP Progress Ring */}
               <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">

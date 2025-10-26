@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useZAPSystem } from '@/hooks/useZAPSystem';
 import { useDropdown } from '@/contexts/DropdownContext';
+import * as Portal from '@radix-ui/react-portal';
 import { dropdownMotion } from '@/lib/dropdown-animations';
 
 interface XPProfileDropdownProps {
@@ -43,6 +44,7 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
   const { zapData, zapProgress, loading } = useZAPSystem();
   const [linkCopied, setLinkCopied] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ top: 0, right: 0 });
 
   // Use ZAP system data with fallbacks
   const userData = {
@@ -97,6 +99,17 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
     }
   };
 
+  // Calculate dropdown position based on trigger
+  useEffect(() => {
+    if (isOpen && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + 12,
+        right: window.innerWidth - rect.right,
+      });
+    }
+  }, [isOpen, triggerRef]);
+
   // Handle clicks outside dropdown and Esc key
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -127,48 +140,42 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
     };
   }, [isOpen, triggerRef]);
 
-  // Calculate dropdown position with mobile support
-  const getDropdownPosition = () => {
-    if (!triggerRef.current) return { top: 0, right: 0, left: 'auto' };
-
-    const rect = triggerRef.current.getBoundingClientRect();
-    const isMobile = window.innerWidth < 768;
-
-    if (isMobile) {
-      return {
-        top: rect.bottom + 12,
-        left: Math.max(16, Math.min(rect.left, window.innerWidth - 380 - 16)),
-        right: 'auto'
-      };
-    }
-
-    return {
-      top: rect.bottom + 12,
-      right: window.innerWidth - rect.right,
-      left: 'auto'
-    };
-  };
-
-  const position = getDropdownPosition();
-
   // Show loading state
   if (loading || !user) {
     return null;
   }
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          ref={dropdownRef}
-          {...dropdownMotion}
-          className="fixed z-50 w-[380px] max-w-[calc(100vw-32px)]"
-          style={{
-            top: position.top,
-            right: position.right,
-            left: position.left
-          }}
-        >
+    <Portal.Root>
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Pointer Triangle */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed w-3 h-3 rotate-45 border-t border-l"
+              style={{
+                top: position.top - 6,
+                right: position.right + 12,
+                zIndex: 9998,
+                background: "linear-gradient(135deg, #2d3748 0%, #1a202c 100%)",
+                borderColor: "rgba(255, 255, 255, 0.1)",
+              }}
+            />
+
+            {/* Dropdown Content */}
+            <motion.div
+              ref={dropdownRef}
+              {...dropdownMotion}
+              className="fixed w-[380px] max-w-[calc(100vw-32px)]"
+              style={{
+                top: position.top,
+                right: position.right,
+                zIndex: 9999,
+              }}
+            >
           <div
             className="overflow-hidden rounded-2xl shadow-lg"
             style={{
@@ -312,8 +319,10 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
               </button>
             </div>
           </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </Portal.Root>
   );
 };
