@@ -4,10 +4,10 @@ import { Flame, Share2, Settings, LogOut, Copy, Check, Link, Zap, Youtube, User,
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useZAPSystem } from '@/hooks/useZAPSystem';
+import { useDropdown } from '@/contexts/DropdownContext';
+import { dropdownMotion } from '@/lib/dropdown-animations';
 
 interface XPProfileDropdownProps {
-  isOpen: boolean;
-  onClose: () => void;
   triggerRef: React.RefObject<HTMLDivElement>;
   userXP?: number; // Legacy prop, will be overridden by ZAP system
   nextLevelXP?: number; // Legacy prop
@@ -17,15 +17,28 @@ interface XPProfileDropdownProps {
   userEmail?: string;
   dailyXP?: number; // Legacy prop
   isYouTubeConnected?: boolean;
+  // Legacy controlled state props (for backward compatibility)
+  isOpen?: boolean;
+  onClose?: () => void;
+  userZAPS?: number;
+  nextLevelZAPS?: number;
 }
 
 export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
-  isOpen,
-  onClose,
   triggerRef,
   userEmail,
-  isYouTubeConnected = true
+  isYouTubeConnected = true,
+  isOpen: controlledIsOpen,
+  onClose,
+  userZAPS,
+  nextLevelZAPS
 }) => {
+  const dropdownContext = useDropdown?.();
+
+  // Support both controlled (legacy) and context-based state
+  const isOpen = controlledIsOpen !== undefined
+    ? controlledIsOpen
+    : (dropdownContext?.activeDropdown === 'profile');
   const { user } = useAuth();
   const { zapData, zapProgress, loading } = useZAPSystem();
   const [linkCopied, setLinkCopied] = useState(false);
@@ -73,6 +86,17 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
     }
   };
 
+  // Handle dropdown close
+  const handleClose = () => {
+    if (onClose) {
+      // Legacy controlled mode
+      onClose();
+    } else if (dropdownContext) {
+      // Context-based mode
+      dropdownContext.setActiveDropdown(null);
+    }
+  };
+
   // Handle clicks outside dropdown and Esc key
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -82,13 +106,13 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
         triggerRef.current &&
         !triggerRef.current.contains(event.target as Node)
       ) {
-        onClose();
+        handleClose();
       }
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        onClose();
+        handleClose();
       }
     };
 
@@ -101,7 +125,7 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onClose, triggerRef]);
+  }, [isOpen, triggerRef]);
 
   // Calculate dropdown position with mobile support
   const getDropdownPosition = () => {
@@ -137,13 +161,7 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
       {isOpen && (
         <motion.div
           ref={dropdownRef}
-          initial={{ opacity: 0, y: 27 }} // 8% of 340px ≈ 27px
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 27 }}
-          transition={{
-            duration: 0.3,
-            ease: [0.25, 0.46, 0.45, 0.94] // Smooth premium easing
-          }}
+          {...dropdownMotion}
           className="fixed z-50 w-[380px] max-w-[calc(100vw-32px)]"
           style={{
             top: position.top,

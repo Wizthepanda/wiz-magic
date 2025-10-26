@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { XpProvider } from "@/context/XpContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { LayoutProvider } from "@/contexts/LayoutContext";
+import { DropdownProvider } from "@/contexts/DropdownContext";
 import { ServiceBlockedAlert } from "@/components/ui/ServiceBlockedAlert";
 import { MainLayout } from "./components/layouts/MainLayout";
 import { lazy, Suspense, useEffect } from 'react';
@@ -130,11 +131,12 @@ const App = () => {
       <ThemeProvider>
         <XpProvider>
           <LayoutProvider>
-            <TooltipProvider>
-              <ServiceBlockedAlert />
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
+            <DropdownProvider>
+              <TooltipProvider>
+                <ServiceBlockedAlert />
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
                 <Suspense fallback={<LoadingFallback />}>
                   <Routes>
                   {/* ========================================
@@ -204,10 +206,11 @@ const App = () => {
               </Suspense>
             </BrowserRouter>
           </TooltipProvider>
-        </LayoutProvider>
-      </XpProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
+        </DropdownProvider>
+      </LayoutProvider>
+    </XpProvider>
+  </ThemeProvider>
+</QueryClientProvider>
   );
 };
 

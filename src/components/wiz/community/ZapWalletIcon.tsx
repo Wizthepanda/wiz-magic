@@ -11,7 +11,8 @@ import { collection, query, where, getDocs, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useDropdown } from "@/contexts/DropdownContext";
+import { dropdownMotion } from "@/lib/dropdown-animations";
 
 interface ZapWalletIconProps {
   balance: number;
@@ -36,7 +37,13 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
   onSendZaps,
   className,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const dropdownContext = useDropdown();
+
+  // Support both context-based and standalone state
+  const [standaloneIsOpen, setStandaloneIsOpen] = useState(false);
+  const isOpen = dropdownContext
+    ? dropdownContext.activeDropdown === 'wallet'
+    : standaloneIsOpen;
   const [isSendMode, setIsSendMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [zapAmount, setZapAmount] = useState("");
@@ -185,29 +192,77 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
     }
   };
 
-  return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuTrigger asChild>
-        <button
-          ref={buttonRef}
-          aria-label="ZAP Wallet"
-          className="relative w-10 h-10 rounded-full bg-gradient-to-br from-[#6B4EFF] to-[#4BC0FF] hover:from-[#7C5FFF] hover:to-[#5DD1FF] transition-all duration-200 flex items-center justify-center group shadow-sm hover:shadow-md"
-        >
-          <Wallet size={20} strokeWidth={2} className="text-white" />
-        </button>
-      </DropdownMenuTrigger>
+  const handleToggle = () => {
+    if (dropdownContext) {
+      // Context-based mode
+      dropdownContext.setActiveDropdown(isOpen ? null : 'wallet');
+    } else {
+      // Standalone mode
+      setStandaloneIsOpen(!isOpen);
+    }
+  };
 
-      <DropdownMenuContent
-        align="end"
-        sideOffset={12}
-        className="w-[320px] rounded-2xl p-0 border-0 overflow-hidden z-[9999]"
-        style={{
-          background: "rgba(30, 32, 46, 0.9)",
-          backdropFilter: "blur(10px)",
-          border: "1px solid rgba(255, 255, 255, 0.15)",
-          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
-        }}
+  const handleClose = () => {
+    if (dropdownContext) {
+      dropdownContext.setActiveDropdown(null);
+    } else {
+      setStandaloneIsOpen(false);
+    }
+  };
+
+  // Handle clicks outside dropdown and Esc key
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
+        handleClose();
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        handleClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
+
+  return (
+    <div className={cn("relative", className)}>
+      <button
+        ref={buttonRef}
+        onClick={handleToggle}
+        aria-label="ZAP Wallet"
+        className="relative w-10 h-10 rounded-full bg-gradient-to-br from-[#6B4EFF] to-[#4BC0FF] hover:from-[#7C5FFF] hover:to-[#5DD1FF] transition-all duration-200 flex items-center justify-center group shadow-sm hover:shadow-md"
       >
+        <Wallet size={20} strokeWidth={2} className="text-white" />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            {...dropdownMotion}
+            className="absolute right-0 mt-3 w-[320px] rounded-2xl p-0 border-0 overflow-hidden z-[9999]"
+            style={{
+              background: "rgba(30, 32, 46, 0.9)",
+              backdropFilter: "blur(10px)",
+              border: "1px solid rgba(255, 255, 255, 0.15)",
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+            }}
+          >
         <div className="p-5" ref={dropdownRef}>
               {/* Header */}
               <div className="mb-4 flex items-center gap-2">
@@ -432,8 +487,10 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
                 )}
               </AnimatePresence>
             </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
 
