@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Youtube, CheckCircle2, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useSearchParams } from 'react-router-dom';
 import { CreationHubV2 } from './CreationHubV2';
 import { PublishedCreationsManagerV2 } from './PublishedCreationsManagerV2';
 
@@ -17,10 +18,23 @@ type StudioTab = 'creation' | 'youtube' | 'published';
  * - Smooth tab transitions with AnimatePresence
  * - Responsive layout optimized for all devices
  * - Maintains WIZUP brand palette (purples, pinks, whites)
+ * - Auto-switches to creation tab when editing drafts
  */
 export const CreatorStudio: React.FC = () => {
   const isMobile = useIsMobile();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<StudioTab>('creation');
+
+  // Auto-switch to creation tab when type param is present (for editing drafts)
+  useEffect(() => {
+    const type = searchParams.get('type');
+    const draftId = searchParams.get('draftId');
+
+    // If we have type and draftId params, switch to creation tab to open the editor
+    if (type && draftId) {
+      setActiveTab('creation');
+    }
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50">
