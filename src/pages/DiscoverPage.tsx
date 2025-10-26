@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { ApplePremiumDashboard } from '@/components/wiz/ApplePremiumDashboard';
+import { DiscoverDashboardV2 } from '@/components/wiz/DiscoverDashboardV2';
 import { useNavigate } from 'react-router-dom';
 
 /**
@@ -34,6 +35,9 @@ const DiscoverPage = () => {
     }
   };
 
+  // Switch to V2 dashboard (3-column grid with infinite scroll)
+  const USE_V2_DASHBOARD = true;
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -42,7 +46,11 @@ const DiscoverPage = () => {
       transition={{ duration: 0.2 }}
       className="h-full"
     >
-      <ApplePremiumDashboard onSectionChange={handleSectionChange} />
+      {USE_V2_DASHBOARD ? (
+        <DiscoverDashboardV2 />
+      ) : (
+        <ApplePremiumDashboard onSectionChange={handleSectionChange} />
+      )}
     </motion.div>
   );
 };
