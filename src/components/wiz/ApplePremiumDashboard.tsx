@@ -647,7 +647,7 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
               type="notifications"
               items={notifications}
               onItemClick={(id) => console.log('Notification clicked:', id)}
-              onViewAll={() => console.log('View all notifications')}
+              onMarkAllAsRead={() => console.log('Mark all notifications as read')}
             />
 
             {/* Messages */}
