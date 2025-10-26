@@ -28,6 +28,11 @@ export function TopNavDropdown({
   const Icon = type === "notifications" ? Bell : MessageSquare;
   const unreadCount = items.filter(i => i.unread).length;
 
+  // Empty state messages
+  const emptyStateMessage = type === "notifications"
+    ? "No notifications yet 👀"
+    : "No messages yet — start a new chat ✨";
+
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
@@ -46,7 +51,10 @@ export function TopNavDropdown({
             className="text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors"
           />
           {unreadCount > 0 && (
-            <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-gradient-to-br from-[#6B4EFF] to-[#4BC0FF] ring-2 ring-white dark:ring-gray-900" />
+            <span
+              className="absolute right-1 top-1 h-2 w-2 rounded-full bg-gradient-to-br from-[#6B4EFF] to-[#4BC0FF] ring-2 ring-white dark:ring-gray-900 animate-pulse"
+              style={{ animationDuration: '2s' }}
+            />
           )}
         </button>
       </DropdownMenu.Trigger>
@@ -58,26 +66,35 @@ export function TopNavDropdown({
           sideOffset={10}
           collisionPadding={10}
           className={cn(
-            "z-[9999] w-80 rounded-2xl border bg-popover shadow-2xl backdrop-blur-xl",
-            "border-white/15 dark:border-gray-800",
-            "bg-[#1E202E]/90 dark:bg-[#1E202E]/90",
+            "z-[9999] w-80 rounded-2xl border backdrop-blur-xl shadow-2xl",
+            "border-border/40 dark:border-border/40",
+            "bg-popover/95 dark:bg-popover/95",
+            // Animation classes with Radix states
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
-            "data-[state=open]:slide-in-from-top-2 data-[state=closed]:slide-out-to-top-2"
+            "data-[state=open]:slide-in-from-top-2 data-[state=closed]:slide-out-to-top-2",
+            // Custom animation timing
+            "animate-duration-150 animate-ease-smooth"
           )}
+          style={{
+            // Override animation duration and easing for perfect consistency
+            animationDuration: '150ms',
+            animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-white/10">
-            <h4 className="text-sm font-semibold text-white">
+          <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-border/50">
+            <h4 className="text-sm font-semibold text-foreground/90">
               {type === "notifications" ? "Notifications" : "Messages"}
             </h4>
             {items.length > 0 && (
               <button
                 onClick={(e) => {
                   e.preventDefault();
+                  e.stopPropagation();
                   type === "notifications" ? onMarkAllAsRead?.() : onViewAll?.();
                 }}
-                className="text-xs text-[#6B4EFF] hover:text-[#7C5FFF] hover:underline transition-colors"
+                className="text-xs text-primary hover:text-primary/80 hover:underline transition-colors"
               >
                 {type === "notifications" ? "Mark all as read" : "View all"}
               </button>
@@ -85,43 +102,49 @@ export function TopNavDropdown({
           </div>
 
           {/* Items List */}
-          <div className="max-h-[320px] overflow-y-auto scrollbar-none p-2">
+          <div className="max-h-[320px] overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent hover:scrollbar-thumb-muted/80 p-2">
             {items.length === 0 ? (
-              <div className="flex h-24 items-center justify-center text-sm text-gray-400">
-                No {type} yet
+              <div className="flex flex-col h-24 items-center justify-center text-center px-4">
+                <p className="text-sm text-muted-foreground">
+                  {emptyStateMessage}
+                </p>
               </div>
             ) : (
               items.map((item) => (
                 <DropdownMenu.Item
                   key={item.id}
                   className={cn(
-                    "flex flex-col gap-0.5 rounded-xl px-3 py-2.5 text-sm cursor-pointer select-none transition-colors",
-                    "hover:bg-white/10 dark:hover:bg-white/10",
-                    "focus:bg-white/10 focus:outline-none",
-                    item.unread && "bg-gradient-to-r from-[#6B4EFF]/10 to-[#4BC0FF]/10"
+                    "flex flex-col gap-0.5 rounded-xl px-3 py-2.5 text-sm cursor-pointer select-none",
+                    "transition-all duration-150",
+                    "hover:bg-muted/70 dark:hover:bg-muted/70",
+                    "focus:bg-muted/70 focus:outline-none",
+                    item.unread && "bg-primary/5 ring-2 ring-primary/20"
                   )}
                   onClick={() => onItemClick?.(item.id)}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <div className={cn(
-                        "font-medium text-white",
+                        "font-medium text-foreground",
                         item.unread && "font-semibold"
                       )}>
                         {item.title}
                       </div>
                       {item.description && (
-                        <p className="text-xs text-gray-400 truncate mt-0.5">
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">
                           {item.description}
                         </p>
                       )}
                     </div>
                     {item.unread && (
-                      <span className="flex-shrink-0 h-2 w-2 rounded-full bg-gradient-to-br from-[#6B4EFF] to-[#4BC0FF] mt-1" />
+                      <span
+                        className="flex-shrink-0 h-2 w-2 rounded-full bg-gradient-to-br from-[#6B4EFF] to-[#4BC0FF] mt-1 ring-2 ring-primary/20 animate-pulse"
+                        style={{ animationDuration: '2s' }}
+                      />
                     )}
                   </div>
                   {item.time && (
-                    <p className="text-[11px] text-gray-500 mt-0.5">
+                    <p className="text-[11px] text-muted-foreground/70 mt-0.5">
                       {item.time}
                     </p>
                   )}
