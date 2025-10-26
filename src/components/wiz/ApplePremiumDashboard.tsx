@@ -20,6 +20,7 @@ import { XPRewardsDropdown } from '@/components/ui/xp-rewards-dropdown';
 import { EnhancedProfileDropdown } from '@/components/ui/enhanced-profile-dropdown';
 import { XPProfileDropdown } from '@/components/ui/xp-profile-dropdown';
 import { ZapWalletIcon } from './community/ZapWalletIcon';
+import { TopNavDropdown } from '@/components/ui/TopNavDropdown';
 import { Button } from '@/components/ui/button';
 import { doc, runTransaction, serverTimestamp, collection as firestoreCollection } from 'firebase/firestore';
 import CommunityVideoHubV6 from './CommunityVideoHubV6';
@@ -137,6 +138,65 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
   const userZAPS = zapData?.totalZAPs || 0;
   const nextLevelZAPS = zapProgress?.zapsForNextLevel || 100;
   const dailyStreak = zapData?.currentStreak || 0;
+
+  // Mock notifications and messages data
+  const notifications = [
+    {
+      id: "1",
+      title: "New follower!",
+      description: "WizMaster started following you",
+      time: "2m ago",
+      unread: true
+    },
+    {
+      id: "2",
+      title: "XP Milestone Reached!",
+      description: "You've reached level 5 and earned 100 ZAPs",
+      time: "1h ago",
+      unread: true
+    },
+    {
+      id: "3",
+      title: "Post approved",
+      description: "Your video 'Advanced React Patterns' was approved",
+      time: "3h ago"
+    },
+    {
+      id: "4",
+      title: "Daily streak bonus!",
+      description: "You're on a 7-day streak! Keep it up!",
+      time: "1d ago"
+    },
+  ];
+
+  const messages = [
+    {
+      id: "1",
+      title: "Wiz Panda",
+      description: "Hey! Check out the new XP challenge in the community",
+      time: "5m ago",
+      unread: true
+    },
+    {
+      id: "2",
+      title: "Irfan Duan",
+      description: "Thanks for the collaboration on the Metaverse Hunter video!",
+      time: "45m ago",
+      unread: true
+    },
+    {
+      id: "3",
+      title: "Team WIZUP",
+      description: "New features are live! Check them out in the dashboard",
+      time: "2h ago"
+    },
+    {
+      id: "4",
+      title: "Play Me",
+      description: "Your gameplay submission is under review",
+      time: "5h ago"
+    },
+  ];
 
   // Real-time video loading from Firestore
   useEffect(() => {
@@ -583,20 +643,20 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
           <div className="flex items-center gap-x-5 relative" style={{ flexShrink: 0, marginLeft: 'auto', paddingRight: '28px' }}>
 
             {/* Notification Bell */}
-            <NotificationsDropdown
-              onMarkAsRead={(id) => console.log('Mark notification as read:', id)}
-              onMarkAllAsRead={() => console.log('Mark all notifications as read')}
+            <TopNavDropdown
+              type="notifications"
+              items={notifications}
+              onItemClick={(id) => console.log('Notification clicked:', id)}
               onViewAll={() => console.log('View all notifications')}
             />
 
-            {/* Chat Icon */}
-            <button
-              aria-label="Messages"
-              className="relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 transition-all duration-200 flex items-center justify-center group"
-              onClick={() => console.log('Messages clicked')}
-            >
-              <MessageCircle size={20} strokeWidth={2} className="text-gray-700 group-hover:text-gray-900 transition-colors" />
-            </button>
+            {/* Messages */}
+            <TopNavDropdown
+              type="messages"
+              items={messages}
+              onItemClick={(id) => console.log('Message clicked:', id)}
+              onViewAll={() => console.log('View all messages')}
+            />
 
             {/* ZAP Wallet - Enhanced Visibility */}
             <ZapWalletIcon
