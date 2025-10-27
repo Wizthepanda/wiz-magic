@@ -8,6 +8,7 @@ import { XpProvider } from "@/context/XpContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { LayoutProvider } from "@/contexts/LayoutContext";
 import { DropdownProvider } from "@/contexts/DropdownContext";
+import { ChatProvider } from "@/contexts/ChatContext";
 import { ServiceBlockedAlert } from "@/components/ui/ServiceBlockedAlert";
 import { MainLayout } from "./components/layouts/MainLayout";
 import { lazy, Suspense, useEffect } from 'react';
@@ -132,7 +133,8 @@ const App = () => {
         <XpProvider>
           <LayoutProvider>
             <DropdownProvider>
-              <TooltipProvider>
+              <ChatProvider>
+                <TooltipProvider>
                 <ServiceBlockedAlert />
                 <Toaster />
                 <Sonner />
@@ -206,7 +208,8 @@ const App = () => {
               </Suspense>
             </BrowserRouter>
           </TooltipProvider>
-        </DropdownProvider>
+        </ChatProvider>
+      </DropdownProvider>
       </LayoutProvider>
     </XpProvider>
   </ThemeProvider>

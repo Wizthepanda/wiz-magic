@@ -21,6 +21,8 @@ import { XPProfileDropdown } from '@/components/ui/xp-profile-dropdown';
 import { ZapWalletIcon } from './community/ZapWalletIcon';
 import { NotificationsDropdown } from '@/components/ui/NotificationsDropdown';
 import { MessagesDropdown } from '@/components/ui/MessagesDropdown';
+import { useChat } from '@/contexts/ChatContext';
+import QuickChatPopups from '@/components/chat/QuickChatPopups';
 import { Button } from '@/components/ui/button';
 import { doc, runTransaction, serverTimestamp, collection as firestoreCollection } from 'firebase/firestore';
 import CommunityVideoHubV6 from './CommunityVideoHubV6';
@@ -131,6 +133,7 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
   const { addXp } = useXp();
   const { theme } = useTheme();
   const isDarkMode = theme === 'dark';
+  const { openChat } = useChat();
 
   // Use ZAP System for user level and progress
   const { zapData, zapProgress, loading: zapLoading } = useZAPSystem();
@@ -665,7 +668,15 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
             {/* Messages */}
             <MessagesDropdown
               messages={messages}
-              onMessageClick={(id) => console.log('Message clicked:', id)}
+              onMessageClick={(message) => {
+                openChat({
+                  id: message.id,
+                  name: message.title,
+                  avatar: message.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${message.title}`,
+                  lastMessage: message.description,
+                  verified: message.verified
+                });
+              }}
               onViewAll={() => console.log('View all messages')}
             />
 
@@ -1234,6 +1245,9 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
       >
         {isDarkMode ? '🌞' : '🌙'}
       </motion.button>
+
+      {/* Quick Chat Popups */}
+      <QuickChatPopups />
     </div>
   );
 };

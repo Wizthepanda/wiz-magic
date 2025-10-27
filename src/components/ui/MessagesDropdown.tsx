@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, CheckCircle2, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDropdown } from "@/contexts/DropdownContext";
+import { useNavigate } from "react-router-dom";
 import * as Portal from "@radix-ui/react-portal";
 import {
   dropdownMotion,
@@ -30,7 +31,7 @@ interface Message {
 
 interface MessagesDropdownProps {
   messages?: Message[];
-  onMessageClick?: (id: string) => void;
+  onMessageClick?: (message: Message) => void;
   onViewAll?: () => void;
   className?: string;
 }
@@ -42,6 +43,7 @@ export const MessagesDropdown: React.FC<MessagesDropdownProps> = ({
   className,
 }) => {
   const dropdownContext = useDropdown();
+  const navigate = useNavigate();
 
   // Support both context-based and standalone state
   const [standaloneIsOpen, setStandaloneIsOpen] = useState(false);
@@ -213,7 +215,7 @@ export const MessagesDropdown: React.FC<MessagesDropdownProps> = ({
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
                         onClick={() => {
-                          onMessageClick?.(message.id);
+                          onMessageClick?.(message);
                           handleClose();
                         }}
                         className={cn(
@@ -284,14 +286,15 @@ export const MessagesDropdown: React.FC<MessagesDropdownProps> = ({
                 </div>
 
                 {/* Footer - View All Button */}
-                {messages.length > 0 && onViewAll && (
+                {messages.length > 0 && (
                   <div className="px-4 py-3 border-t border-white/10">
                     <button
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        onViewAll();
                         handleClose();
+                        navigate("/messages");
+                        onViewAll?.();
                       }}
                       className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm text-white transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                       style={{
@@ -300,7 +303,7 @@ export const MessagesDropdown: React.FC<MessagesDropdownProps> = ({
                       }}
                     >
                       <Send className="w-4 h-4" strokeWidth={2} />
-                      Open Messages
+                      View All Messages
                     </button>
                   </div>
                 )}
