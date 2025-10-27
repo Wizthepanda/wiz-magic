@@ -15,12 +15,12 @@ import { cn } from '@/lib/utils';
 import { LuxuryCircularIcon } from '@/components/ui/luxury-circular-icon';
 import { LeaderboardDropdownV2 } from '@/components/ui/leaderboard-dropdown-v2';
 import { ZAPRewardsDropdown } from '@/components/ui/zap-rewards-dropdown';
-import { NotificationsDropdown } from '@/components/ui/notifications-dropdown';
 import { XPRewardsDropdown } from '@/components/ui/xp-rewards-dropdown';
 import { EnhancedProfileDropdown } from '@/components/ui/enhanced-profile-dropdown';
 import { XPProfileDropdown } from '@/components/ui/xp-profile-dropdown';
 import { ZapWalletIcon } from './community/ZapWalletIcon';
-import { TopNavDropdown } from '@/components/ui/TopNavDropdown';
+import { NotificationsDropdown } from '@/components/ui/NotificationsDropdown';
+import { MessagesDropdown } from '@/components/ui/MessagesDropdown';
 import { Button } from '@/components/ui/button';
 import { doc, runTransaction, serverTimestamp, collection as firestoreCollection } from 'firebase/firestore';
 import CommunityVideoHubV6 from './CommunityVideoHubV6';
@@ -139,33 +139,35 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
   const nextLevelZAPS = zapProgress?.zapsForNextLevel || 100;
   const dailyStreak = zapData?.currentStreak || 0;
 
-  // Mock notifications and messages data
+  // Mock notifications and messages data with rich metadata
   const notifications = [
     {
       id: "1",
       title: "New follower!",
       description: "WizMaster started following you",
-      time: "2m ago",
+      timestamp: new Date(Date.now() - 2 * 60 * 1000), // 2 minutes ago
       unread: true
     },
     {
       id: "2",
       title: "XP Milestone Reached!",
       description: "You've reached level 5 and earned 100 ZAPs",
-      time: "1h ago",
+      timestamp: new Date(Date.now() - 60 * 60 * 1000), // 1 hour ago
       unread: true
     },
     {
       id: "3",
       title: "Post approved",
       description: "Your video 'Advanced React Patterns' was approved",
-      time: "3h ago"
+      timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000), // 3 hours ago
+      unread: false
     },
     {
       id: "4",
       title: "Daily streak bonus!",
       description: "You're on a 7-day streak! Keep it up!",
-      time: "1d ago"
+      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
+      unread: false
     },
   ];
 
@@ -174,27 +176,37 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
       id: "1",
       title: "Wiz Panda",
       description: "Hey! Check out the new XP challenge in the community",
-      time: "5m ago",
-      unread: true
+      timestamp: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes ago
+      unread: true,
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=WizPanda",
+      verified: true
     },
     {
       id: "2",
       title: "Irfan Duan",
       description: "Thanks for the collaboration on the Metaverse Hunter video!",
-      time: "45m ago",
-      unread: true
+      timestamp: new Date(Date.now() - 45 * 60 * 1000), // 45 minutes ago
+      unread: true,
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=IrfanDuan",
+      verified: true
     },
     {
       id: "3",
       title: "Team WIZUP",
       description: "New features are live! Check them out in the dashboard",
-      time: "2h ago"
+      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+      unread: false,
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=TeamWIZUP",
+      verified: true
     },
     {
       id: "4",
       title: "Play Me",
       description: "Your gameplay submission is under review",
-      time: "5h ago"
+      timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
+      unread: false,
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=PlayMe",
+      verified: false
     },
   ];
 
@@ -643,18 +655,17 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
           <div className="flex items-center gap-x-5 relative" style={{ flexShrink: 0, marginLeft: 'auto', paddingRight: '28px' }}>
 
             {/* Notification Bell */}
-            <TopNavDropdown
-              type="notifications"
-              items={notifications}
+            <NotificationsDropdown
+              notifications={notifications}
               onItemClick={(id) => console.log('Notification clicked:', id)}
               onMarkAllAsRead={() => console.log('Mark all notifications as read')}
+              onViewAll={() => console.log('View all notifications')}
             />
 
             {/* Messages */}
-            <TopNavDropdown
-              type="messages"
-              items={messages}
-              onItemClick={(id) => console.log('Message clicked:', id)}
+            <MessagesDropdown
+              messages={messages}
+              onMessageClick={(id) => console.log('Message clicked:', id)}
               onViewAll={() => console.log('View all messages')}
             />
 
