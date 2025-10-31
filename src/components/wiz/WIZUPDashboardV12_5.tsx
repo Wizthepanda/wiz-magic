@@ -791,70 +791,99 @@ const WIZUPDashboardV12_5: React.FC<WIZUPDashboardV12_5Props> = ({ className, on
               {video.title}
             </h3>
 
-            {/* Creator row - clickable to visit profile */}
-            <div
-              className="flex items-center gap-2 md:gap-3 cursor-pointer hover:bg-gray-50 -mx-2 px-2 py-1 md:py-1.5 rounded-lg transition-colors"
-              onMouseEnter={() => {
-                // Prefetch creator profile on hover
-                const creatorId = video.creatorDetails?.id || video.creatorId || video.channelId;
-                if (creatorId && creatorId.length > 15) {
-                  prefetchCreatorProfile(creatorId);
-                }
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                // Try to get creator ID from various possible locations
-                const creatorId = video.creatorDetails?.id || video.creator?.id || video.creatorId || video.channelId || video.id;
-                if (creatorId) {
-                  navigate(`/creator/${creatorId}`);
-                }
-              }}
-            >
-              <img
-                src={video.creatorDetails?.avatar || video.creatorAvatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
-                alt={video.creatorDetails?.name || video.creator}
-                className="w-6 h-6 md:w-8 md:h-8 rounded-full ring-2 ring-white/60"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 md:gap-2">
-                  <span className="text-xs md:text-sm font-semibold text-slate-800 truncate hover:text-purple-600 transition-colors">
-                    {video.creatorDetails?.name || video.creator}
-                  </span>
-                  {(video.creatorDetails?.verified || video.isVerified) && (
-                    <div className="w-3 h-3 md:w-4 md:h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-white text-[8px] md:text-xs font-bold">✓</span>
-                    </div>
-                  )}
+            {/* Redesigned 3-column flex layout: Profile | Meta Info | ZAP Reward */}
+            <div className="flex items-center justify-between gap-2 md:gap-3 flex-wrap">
+              {/* Left: Creator profile section */}
+              <div
+                className="flex items-center gap-2 md:gap-2.5 cursor-pointer group/creator min-w-0 flex-1"
+                onMouseEnter={() => {
+                  // Prefetch creator profile on hover
+                  const creatorId = video.creatorDetails?.id || video.creatorId || video.channelId;
+                  if (creatorId && creatorId.length > 15) {
+                    prefetchCreatorProfile(creatorId);
+                  }
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Try to get creator ID from various possible locations
+                  const creatorId = video.creatorDetails?.id || video.creator?.id || video.creatorId || video.channelId || video.id;
+                  if (creatorId) {
+                    navigate(`/creator/${creatorId}`);
+                  }
+                }}
+                title="View Creator Profile"
+              >
+                {/* Profile icon with purple glow ring */}
+                <div className="relative flex-shrink-0">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#A259FF] to-[#7C3AED] opacity-0 group-hover/creator:opacity-30 blur-sm transition-opacity duration-300" />
+                  <img
+                    src={video.creatorDetails?.avatar || video.creatorAvatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
+                    alt={video.creatorDetails?.name || video.creator}
+                    className="relative w-7 h-7 md:w-9 md:h-9 rounded-full object-cover ring-2 ring-[#A259FF]/30 group-hover/creator:ring-[#A259FF]/60 transition-all duration-300"
+                    style={{
+                      boxShadow: '0 2px 8px rgba(162, 89, 255, 0.15)'
+                    }}
+                  />
+                </div>
+
+                {/* Creator name */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm md:text-[14px] font-medium text-gray-900 truncate group-hover/creator:text-[#A259FF] transition-colors duration-200">
+                      {video.creatorDetails?.name || video.creator}
+                    </span>
+                    {(video.creatorDetails?.verified || video.isVerified) && (
+                      <div className="w-3.5 h-3.5 md:w-4 md:h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-white text-[9px] md:text-[10px] font-bold">✓</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Meta row */}
-            <div className="flex items-center justify-between text-[10px] md:text-xs">
-              <div className="flex items-center gap-2 md:gap-4 text-slate-600">
-                <div className="flex items-center gap-1 md:gap-1.5">
-                  <Eye className="w-3 h-3 md:w-3.5 md:h-3.5" />
+              {/* Center: Meta info (views + date) */}
+              <div className="flex items-center gap-2 md:gap-2.5 text-xs text-[#7A7A7A]">
+                <div className="flex items-center gap-1">
+                  <Eye className="w-3 h-3 md:w-3.5 md:h-3.5 opacity-70" strokeWidth={2} />
                   <span className="font-medium">{video.views}</span>
                 </div>
-                <div className="flex items-center gap-1 md:gap-1.5">
-                  <Clock className="w-3 h-3 md:w-3.5 md:h-3.5" />
+
+                {/* Divider dot */}
+                <span className="text-[#7A7A7A]/50">·</span>
+
+                <div className="flex items-center gap-1">
+                  <Clock className="w-3 h-3 md:w-3.5 md:h-3.5 opacity-70" strokeWidth={2} />
                   <span className="font-medium">{video.daysAgo}d ago</span>
                 </div>
               </div>
 
-              {/* Premium ZAP indicator */}
+              {/* Right: ZAP reward badge */}
               {video.zapsReward > 0 && (
-                <div
-                  className="flex items-center gap-1 md:gap-1.5 px-2 md:px-3 py-1 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold"
+                <motion.div
+                  className="group/zap relative flex items-center gap-1 md:gap-1.5 px-2.5 md:px-3 py-1 md:py-1.5 rounded-[10px] text-xs font-semibold cursor-pointer flex-shrink-0"
                   style={{
-                    background: 'linear-gradient(135deg, rgba(255, 184, 107, 0.3), rgba(245, 158, 11, 0.2))',
-                    color: '#D97706',
-                    border: '1px solid rgba(245, 158, 11, 0.2)'
+                    background: 'rgba(162, 89, 255, 0.1)',
+                    color: '#A259FF',
+                    boxShadow: '0 1px 4px rgba(162, 89, 255, 0.2)',
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                  title="Earned by engagement!"
+                  animate={{
+                    boxShadow: [
+                      '0 1px 4px rgba(162, 89, 255, 0.2)',
+                      '0 2px 8px rgba(162, 89, 255, 0.3)',
+                      '0 1px 4px rgba(162, 89, 255, 0.2)',
+                    ]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
                   }}
                 >
-                  <Zap className="w-3 h-3 md:w-3.5 md:h-3.5" fill="currentColor" />
+                  <Zap className="w-3 h-3 md:w-3.5 md:h-3.5 group-hover/zap:animate-pulse" fill="currentColor" />
                   <span>+{video.zapsReward}</span>
-                </div>
+                </motion.div>
               )}
             </div>
           </div>
