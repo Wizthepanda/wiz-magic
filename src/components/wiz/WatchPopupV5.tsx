@@ -207,18 +207,42 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
           const videos: any[] = [];
           snapshot.forEach((doc) => {
             const data = doc.data();
+
+            // Skip the currently playing video
+            if (doc.id === currentVideo.id || data.videoId === currentVideo.videoId) {
+              return;
+            }
+
+            // Properly format views with commas
+            const formatViews = (views: any): string => {
+              if (!views || isNaN(Number(views))) return '0 views';
+              const numViews = Number(views);
+              return `${numViews.toLocaleString()} views`;
+            };
+
+            // Ensure proper creator object structure
+            const creatorName = data.channelName || data.creatorName || data.creator?.name || 'Unknown Creator';
+            const creatorAvatar = data.channelAvatar || data.creatorAvatar || data.creator?.avatar ||
+              `https://api.dicebear.com/7.x/avataaars/svg?seed=${creatorName}`;
+
             videos.push({
               id: doc.id,
-              videoId: data.videoId,
+              videoId: data.videoId || doc.id,
               title: data.title || 'Untitled Video',
-              creator: data.channelName || data.creatorName || 'Unknown Creator',
-              views: data.views ? `${Math.floor(data.views / 1000)}K views` : '0 views',
+              creator: {
+                name: creatorName,
+                avatar: creatorAvatar
+              },
+              views: formatViews(data.views),
               duration: data.duration ? formatDuration(data.duration) : '0:00',
-              zaps: calculateZAPsReward(data.duration || 0),
+              xpReward: calculateZAPsReward(data.duration || 0), // Changed from 'zaps' to 'xpReward'
               thumbnail: data.thumbnail || `https://img.youtube.com/vi/${data.videoId}/maxresdefault.jpg`
             });
           });
-          setUpNextVideos(videos);
+
+          // Limit to 4 videos and filter out any null/undefined entries
+          const filteredVideos = videos.filter(Boolean).slice(0, 4);
+          setUpNextVideos(filteredVideos);
         }
       } catch (error) {
         console.error('Error loading featured videos:', error);
@@ -599,6 +623,13 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
                   <div
                     key={relatedVideo.id}
                     className="flex items-center gap-3 p-3 rounded-xl bg-white/60 backdrop-blur-sm shadow hover:shadow-md transition-all duration-200 cursor-pointer hover:bg-white/70"
+                    onClick={() => {
+                      // Navigate to the new video by updating the URL
+                      // This will trigger the parent component to re-render with the new video
+                      if (relatedVideo.videoId) {
+                        window.location.href = `/watch?v=${relatedVideo.videoId}`;
+                      }
+                    }}
                   >
                     <div className="relative w-20 h-14 bg-gradient-to-br from-gray-200 to-gray-300 rounded-md overflow-hidden flex-shrink-0">
                       <img
@@ -621,10 +652,10 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
                       <span className="text-sm font-medium text-neutral-900 line-clamp-2 mb-1">
                         {relatedVideo.title}
                       </span>
-                      <span className="text-xs text-neutral-500 mb-1">{relatedVideo.creator}</span>
+                      <span className="text-xs text-neutral-500 mb-1">{relatedVideo.creator?.name || relatedVideo.creator || 'Unknown Creator'}</span>
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-neutral-500">{relatedVideo.views}</span>
-                        <span className="text-xs font-medium text-indigo-600">+{relatedVideo.zaps} ⚡</span>
+                        <span className="text-xs font-medium" style={{ color: '#A259FF' }}>+{relatedVideo.xpReward || relatedVideo.zaps || 0} ⚡</span>
                       </div>
                     </div>
                   </div>
