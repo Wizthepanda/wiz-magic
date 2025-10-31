@@ -191,9 +191,15 @@ service cloud.firestore {
         allow read: if true; // Public read for all posts
         allow create: if request.auth != null &&
                      request.auth.uid == request.resource.data.authorId;
+        // Allow updates for:
+        // 1. Author/creator for all fields
+        // 2. Any authenticated user for voting/reaction fields only
         allow update: if request.auth != null && (
-                       request.auth.uid == resource.data.authorId ||
-                       request.auth.uid == get(/databases/$(database)/documents/communities/$(communityId)).data.creatorId
+                       // Post author or community creator can update anything
+                       (request.auth.uid == resource.data.authorId ||
+                        request.auth.uid == get(/databases/$(database)/documents/communities/$(communityId)).data.creatorId) ||
+                       // Any authenticated user can update voting/reaction counts
+                       (isVotingUpdate(request.resource.data, resource.data))
                      );
         allow delete: if request.auth != null && (
                        request.auth.uid == resource.data.authorId ||
@@ -217,9 +223,15 @@ service cloud.firestore {
           allow read: if true; // Public read for all replies
           allow create: if request.auth != null &&
                        request.auth.uid == request.resource.data.authorId;
+          // Allow updates for:
+          // 1. Author/creator for all fields
+          // 2. Any authenticated user for voting fields only
           allow update: if request.auth != null && (
-                         request.auth.uid == resource.data.authorId ||
-                         request.auth.uid == get(/databases/$(database)/documents/communities/$(communityId)).data.creatorId
+                         // Reply author or community creator can update anything
+                         (request.auth.uid == resource.data.authorId ||
+                          request.auth.uid == get(/databases/$(database)/documents/communities/$(communityId)).data.creatorId) ||
+                         // Any authenticated user can update voting counts
+                         (isReplyVotingUpdate(request.resource.data, resource.data))
                        );
           allow delete: if request.auth != null && (
                          request.auth.uid == resource.data.authorId ||
@@ -452,4 +464,22 @@ function validateCommunityMemberUpdate(newData, existingData) {
   // So we just check if memberCount is being updated and increases by 1
   return 'memberCount' in newData &&
          newData.memberCount == existingData.memberCount + 1;
+}
+
+// Helper function to check if update is only modifying voting/reaction fields
+function isVotingUpdate(newData, existingData) {
+  // Get the keys that are different between new and existing data
+  let changedKeys = newData.diff(existingData).affectedKeys();
+
+  // Only allow changes to voting/reaction fields
+  return changedKeys.hasOnly(['upvotes', 'downvotes', 'reactions', 'commentCount', 'updatedAt']);
+}
+
+// Helper function to check if reply update is only modifying voting fields
+function isReplyVotingUpdate(newData, existingData) {
+  // Get the keys that are different between new and existing data
+  let changedKeys = newData.diff(existingData).affectedKeys();
+
+  // Only allow changes to voting fields for replies
+  return changedKeys.hasOnly(['upvotes', 'downvotes', 'updatedAt']);
 }
