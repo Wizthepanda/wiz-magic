@@ -5,8 +5,18 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { CommunityData } from './Placeholders';
 
+interface MemberData {
+  id: string;
+  profilePic?: string;
+  photoURL?: string;
+  avatar?: string;
+  displayName?: string;
+  username?: string;
+}
+
 interface CommunityHeaderProps {
   community: CommunityData;
+  members?: MemberData[];
 }
 
 /**
@@ -16,7 +26,7 @@ interface CommunityHeaderProps {
  * - Progress percentage
  * - Responsive container prevents overflow when sidebar expands
  */
-export const CommunityHeader: React.FC<CommunityHeaderProps> = ({ community }) => {
+export const CommunityHeader: React.FC<CommunityHeaderProps> = ({ community, members = [] }) => {
   const renderStars = (rating: number) => {
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 >= 0.5;
@@ -158,12 +168,40 @@ export const CommunityHeader: React.FC<CommunityHeaderProps> = ({ community }) =
             </div>
           )}
 
-          {/* Member Count */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-xl px-4 py-2 shadow-lg flex items-center gap-2">
-            <Users className="w-4 h-4 text-purple-600" />
-            <span className="text-sm font-bold text-gray-700">
-              {community.slots?.claimed || community.memberCount || 0} {community.slots?.total ? `/ ${community.slots.total}` : 'members'}
-            </span>
+          {/* Member Count with Avatars */}
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl px-4 py-2 shadow-lg">
+            <div className="flex items-center gap-3">
+              {/* Member Avatars */}
+              {members.length > 0 && (
+                <div className="flex -space-x-2">
+                  {members.slice(0, 3).map((member, idx) => (
+                    <motion.img
+                      key={member.id}
+                      src={member.profilePic || member.photoURL || member.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.id}`}
+                      alt={member.displayName || member.username || 'Member'}
+                      className="w-6 h-6 rounded-full border-2 border-white shadow-md hover:scale-110 transition-transform"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: idx * 0.1 }}
+                      title={member.displayName || member.username}
+                    />
+                  ))}
+                  {members.length > 3 && (
+                    <div className="w-6 h-6 rounded-full border-2 border-white bg-purple-100 flex items-center justify-center shadow-md">
+                      <span className="text-xs font-bold text-purple-600">+{members.length - 3}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Member Count Text */}
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-purple-600" />
+                <span className="text-sm font-bold text-gray-700">
+                  {members.length || community.memberCount || 0} {community.slots?.total ? `/ ${community.slots.total}` : 'members'}
+                </span>
+              </div>
+            </div>
           </div>
         </motion.div>
       </div>

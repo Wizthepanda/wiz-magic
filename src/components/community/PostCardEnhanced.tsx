@@ -9,11 +9,15 @@ import {
   Play,
   Send,
   X,
+  MoreVertical,
+  Trash2,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
+import { ImageModal } from '@/components/ui/ImageModal';
+import { DeletePostModal } from './DeletePostModal';
 import { cn } from '@/lib/utils';
 import type { Post, Reply } from './Placeholders';
 
@@ -24,6 +28,7 @@ interface PostCardEnhancedProps {
   onPin?: (postId: string) => void;
   onReply?: (postId: string, content: string) => void;
   onReplyVote?: (postId: string, replyId: string, voteType: 'up' | 'down') => void;
+  onDelete?: (postId: string) => void;
   currentUserId?: string;
   isCreatorOrMod?: boolean;
 }
@@ -45,6 +50,7 @@ export const PostCardEnhanced: React.FC<PostCardEnhancedProps> = ({
   onPin,
   onReply,
   onReplyVote,
+  onDelete,
   currentUserId,
   isCreatorOrMod = false,
 }) => {
@@ -52,6 +58,12 @@ export const PostCardEnhanced: React.FC<PostCardEnhancedProps> = ({
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [replyContent, setReplyContent] = useState('');
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
 
   const handleVote = (voteType: 'up' | 'down') => {
     if (onVote) {
@@ -76,7 +88,38 @@ export const PostCardEnhanced: React.FC<PostCardEnhancedProps> = ({
     setIsSubmittingReply(false);
   };
 
+  // Image modal handlers
+  const handleImageClick = (index: number) => {
+    setSelectedImageIndex(index);
+    setIsImageModalOpen(true);
+  };
+
+  const handleImageNavigate = (direction: 'prev' | 'next') => {
+    const imageAttachments = post.attachments?.filter(a => a.type === 'image') || [];
+    if (direction === 'prev' && selectedImageIndex > 0) {
+      setSelectedImageIndex(selectedImageIndex - 1);
+    } else if (direction === 'next' && selectedImageIndex < imageAttachments.length - 1) {
+      setSelectedImageIndex(selectedImageIndex + 1);
+    }
+  };
+
+  // Delete handler
+  const handleDeleteConfirm = async () => {
+    if (!onDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await onDelete(post.id);
+      setShowDeleteModal(false);
+    } catch (error) {
+      console.error('Error deleting post:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const netVotes = post.upvotes - post.downvotes;
+  const isPostAuthor = currentUserId && currentUserId === post.authorId;
 
   // Common emoji reactions
   const quickEmojis = ['❤️', '🔥', '👍', '🎉', '💯', '🚀'];
@@ -155,23 +198,73 @@ export const PostCardEnhanced: React.FC<PostCardEnhancedProps> = ({
             </div>
           </div>
 
-          {/* Pin Button (Creator/Mod only) */}
-          {isCreatorOrMod && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onPin?.(post.id)}
-              className={cn(
-                'gap-2',
-                post.isPinned
-                  ? 'text-amber-600 hover:text-amber-700 hover:bg-amber-50'
-                  : 'text-gray-500 hover:text-gray-700'
-              )}
-            >
-              <Pin className={cn('w-4 h-4', post.isPinned && 'fill-amber-600')} />
-              {post.isPinned ? 'Unpin' : 'Pin'}
-            </Button>
-          )}
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2">
+            {/* Pin Button (Creator/Mod only) */}
+            {isCreatorOrMod && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onPin?.(post.id)}
+                className={cn(
+                  'gap-2',
+                  post.isPinned
+                    ? 'text-amber-600 hover:text-amber-700 hover:bg-amber-50'
+                    : 'text-gray-500 hover:text-gray-700'
+                )}
+              >
+                <Pin className={cn('w-4 h-4', post.isPinned && 'fill-amber-600')} />
+                {post.isPinned ? 'Unpin' : 'Pin'}
+              </Button>
+            )}
+
+            {/* Delete Button (Post Author only) */}
+            {isPostAuthor && onDelete && (
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowOptionsMenu(!showOptionsMenu)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+
+                {/* Options Menu */}
+                <AnimatePresence>
+                  {showOptionsMenu && (
+                    <>
+                      {/* Backdrop to close menu */}
+                      <div
+                        className="fixed inset-0 z-[100]"
+                        onClick={() => setShowOptionsMenu(false)}
+                      />
+
+                      {/* Menu */}
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 top-full mt-2 z-[101] bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden min-w-[160px]"
+                      >
+                        <button
+                          onClick={() => {
+                            setShowOptionsMenu(false);
+                            setShowDeleteModal(true);
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          <span className="font-medium text-sm">Delete Post</span>
+                        </button>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Post Content */}
@@ -180,6 +273,19 @@ export const PostCardEnhanced: React.FC<PostCardEnhancedProps> = ({
             {post.content}
           </p>
         </div>
+
+        {/* Firebase Storage Image */}
+        {post.imageUrl && (
+          <div className="mb-4 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+            <img
+              src={post.imageUrl}
+              alt="Community post image"
+              className="w-full h-auto object-cover transition-transform duration-300 hover:scale-[1.02] cursor-pointer"
+              onClick={() => setExpandedImage(post.imageUrl || null)}
+              loading="lazy"
+            />
+          </div>
+        )}
 
         {/* Attachments - Images */}
         {post.attachments && post.attachments.length > 0 && (
@@ -193,7 +299,16 @@ export const PostCardEnhanced: React.FC<PostCardEnhancedProps> = ({
                   <img
                     src={attachment.url}
                     alt={`Attachment ${index + 1}`}
-                    className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
+                    className="w-full h-64 object-cover hover:scale-[1.02] transition-all duration-300 cursor-pointer hover:brightness-95"
+                    onClick={() => handleImageClick(index)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleImageClick(index);
+                      }
+                    }}
                   />
                 ) : (
                   <video
@@ -480,6 +595,67 @@ export const PostCardEnhanced: React.FC<PostCardEnhancedProps> = ({
           </motion.div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <DeletePostModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteConfirm}
+        isDeleting={isDeleting}
+      />
+
+      {/* Image Modal */}
+      <ImageModal
+        images={(post.attachments?.filter(a => a.type === 'image') || []).map(a => a.url)}
+        currentIndex={selectedImageIndex}
+        isOpen={isImageModalOpen}
+        onClose={() => setIsImageModalOpen(false)}
+        onNavigate={handleImageNavigate}
+      />
+
+      {/* Expanded Image Modal */}
+      <AnimatePresence>
+        {expandedImage && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-[9998] bg-black/80 backdrop-blur-lg"
+              onClick={() => setExpandedImage(null)}
+            />
+
+            {/* Image */}
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.2 }}
+                className="relative max-w-5xl max-h-[90vh]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <img
+                  src={expandedImage}
+                  alt="Expanded post image"
+                  className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl"
+                />
+
+                {/* Close Button */}
+                <button
+                  onClick={() => setExpandedImage(null)}
+                  className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors"
+                  aria-label="Close image"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </motion.div>
+            </div>
+          </>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

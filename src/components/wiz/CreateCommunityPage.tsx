@@ -121,6 +121,32 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
       accessWindow: 'lifetime',
       offerZAPsToNewMembers: false,
       newMemberZAPsReward: 0,
+      rewardTiers: [
+        {
+          tier: 'Bronze',
+          xpRequired: 1000,
+          rewards: ['Bronze tier badge on profile', 'Access to exclusive Bronze channels', '10% discount on all courses', 'Early access to new content'],
+          icon: '🥉'
+        },
+        {
+          tier: 'Silver',
+          xpRequired: 5000,
+          rewards: ['Silver tier badge on profile', 'Priority support in community', '20% discount on all courses', 'Monthly exclusive webinars', 'Custom profile themes'],
+          icon: '🥈'
+        },
+        {
+          tier: 'Gold',
+          xpRequired: 15000,
+          rewards: ['Gold tier badge with special effects', '1-on-1 consultation', '40% discount on all courses', 'Exclusive Gold member events', 'Featured in community spotlight', 'Early access to new drops'],
+          icon: '🥇'
+        },
+        {
+          tier: 'Diamond',
+          xpRequired: 50000,
+          rewards: ['Diamond tier badge with animations', 'Free access to all courses (lifetime)', 'Monthly 1-on-1 mentorship sessions', 'Co-create content opportunities', 'Exclusive Diamond retreat invite', 'Revenue share opportunities', 'Custom NFT airdrop'],
+          icon: '💎'
+        }
+      ],
       cryptoTypes: [],
       cryptoAmount: '',
       status: 'draft'
@@ -167,6 +193,34 @@ const CreateCommunityPage: React.FC<CreateCommunityPageProps> = ({ onBack, draft
         accessWindow: draftData.accessWindow || 'lifetime',
         offerZAPsToNewMembers: draftData.offerZAPsToNewMembers || false,
         newMemberZAPsReward: draftData.newMemberZAPsReward || 0,
+        rewardTiers: draftData.rewardTiers || [
+          {
+            tier: 'Bronze',
+            xpRequired: 1000,
+            rewards: ['Bronze tier badge on profile', 'Access to exclusive Bronze channels', '10% discount on all courses', 'Early access to new content'],
+            icon: '🥉'
+          },
+          {
+            tier: 'Silver',
+            xpRequired: 5000,
+            rewards: ['Silver tier badge on profile', 'Priority support in community', '20% discount on all courses', 'Monthly exclusive webinars', 'Custom profile themes'],
+            icon: '🥈'
+          },
+          {
+            tier: 'Gold',
+            xpRequired: 15000,
+            rewards: ['Gold tier badge with special effects', '1-on-1 consultation', '40% discount on all courses', 'Exclusive Gold member events', 'Featured in community spotlight', 'Early access to new drops'],
+            icon: '🥇'
+          },
+          {
+            tier: 'Diamond',
+            xpRequired: 50000,
+            rewards: ['Diamond tier badge with animations', 'Free access to all courses (lifetime)', 'Monthly 1-on-1 mentorship sessions', 'Co-create content opportunities', 'Exclusive Diamond retreat invite', 'Revenue share opportunities', 'Custom NFT airdrop'],
+            icon: '💎'
+          }
+        ],
+        cryptoTypes: draftData.cryptoTypes || [],
+        cryptoAmount: draftData.cryptoAmount || '',
         status: 'draft'
       });
 

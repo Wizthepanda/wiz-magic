@@ -11,6 +11,8 @@ import { AboutTab } from './AboutTab';
 import { RewardsTab } from './RewardsTab';
 import { usePlaceholderData } from './Placeholders';
 import { useCommunityData } from '@/hooks/useCommunityData';
+import { useCommunityMembers } from '@/hooks/useCommunityMembers';
+import { useAuth } from '@/hooks/useAuth';
 
 type TabType = 'community' | 'courses' | 'leaderboard' | 'about' | 'rewards';
 
@@ -22,9 +24,13 @@ type TabType = 'community' | 'courses' | 'leaderboard' | 'about' | 'rewards';
 export const CommunityPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState<TabType>('community');
+  const { user } = useAuth();
 
   // Fetch real community data from Firestore
   const { community: firestoreCommunity, loading, error } = useCommunityData(id);
+
+  // Fetch real member data from Firestore
+  const { members: firestoreMembers, loading: membersLoading } = useCommunityMembers(id, 12);
 
   // Load placeholder data for other sections (posts, courses, etc.)
   const placeholderData = usePlaceholderData();
@@ -32,7 +38,11 @@ export const CommunityPage: React.FC = () => {
   // Use Firestore data if available, otherwise fall back to placeholder data
   const community = firestoreCommunity || placeholderData.community;
   const posts = placeholderData.posts || [];
-  const members = placeholderData.members || [];
+  // Use real members if available, otherwise use placeholder
+  const members = firestoreMembers && firestoreMembers.length > 0
+    ? firestoreMembers
+    : placeholderData.members || [];
+
   const courses = placeholderData.courses || [];
   const leaderboard = placeholderData.leaderboard || [];
   const creator = placeholderData.creator || {
@@ -40,7 +50,7 @@ export const CommunityPage: React.FC = () => {
     name: community?.creatorName || 'Community Creator',
     avatar: community?.creatorAvatar || community?.profileIconUrl || community?.icon || 'https://api.dicebear.com/7.x/avataaars/svg?seed=creator',
     tagline: community?.category || 'Community Builder',
-    bio: community?.description || 'Welcome to our community!',
+    bio: community?.longDescription || community?.description || 'Welcome to our community!',
     isFollowing: false,
   };
   const milestones = placeholderData.milestones || [];
@@ -50,8 +60,45 @@ export const CommunityPage: React.FC = () => {
     coursesLaunched: 0,
     postsCount: 0,
   };
-  const rewardTiers = placeholderData.rewardTiers || [];
+
+  // Map zapRewardTiers from Firestore to display format
+  // zapRewardTiers are action-based rewards (e.g., "Complete Module 5" → 50 ZAPs)
+  const zapRewardTiers = community?.zapRewardTiers || [];
+
+  // Standard tier names that the RewardCard component expects
+  const standardTierNames: ('Bronze' | 'Silver' | 'Gold' | 'Diamond')[] = ['Bronze', 'Silver', 'Gold', 'Diamond'];
+
+  // Convert zapRewardTiers to rewardTiers format for RewardsTab display
+  const rewardTiers = zapRewardTiers.length > 0
+    ? zapRewardTiers.map((tier: any, index: number) => ({
+        tier: standardTierNames[index % standardTierNames.length], // Map to Bronze/Silver/Gold/Diamond
+        xpRequired: tier.zapAmount || tier.xpRequired || 0,
+        rewards: [
+          tier.name || tier.tierName || `Tier ${index + 1}`,
+          ...(tier.rewards || []),
+          tier.description || tier.benefit || ''
+        ].filter(Boolean), // Remove empty strings
+        icon: tier.emoji || tier.icon || '⚡',
+        isUnlocked: false,
+      }))
+    : (community?.rewardTiers && community.rewardTiers.length > 0
+        ? community.rewardTiers
+        : placeholderData.rewardTiers || []);
+
   const earnActions = placeholderData.earnActions || [];
+
+  // Debug logging
+  console.log('🔍 Community Page Debug:', {
+    communityId: id,
+    hasCommunity: !!firestoreCommunity,
+    communityName: community?.name || community?.title,
+    hasZapRewardTiers: !!community?.zapRewardTiers,
+    zapRewardTiersCount: zapRewardTiers.length,
+    zapRewardTiersData: zapRewardTiers,
+    convertedRewardTiers: rewardTiers,
+    membersCount: members.length,
+    firestoreMembersCount: firestoreMembers?.length || 0,
+  });
   const userProgress = placeholderData.userProgress || {
     currentXP: 0,
     currentLevel: 1,
@@ -85,7 +132,7 @@ export const CommunityPage: React.FC = () => {
         }}
       >
         {/* Community Header */}
-        <CommunityHeader community={community} />
+        <CommunityHeader community={community} members={members} />
 
         {/* Navigation Tabs */}
         <div className="sticky top-0 z-40 bg-transparent pt-4 pb-4">
@@ -106,10 +153,9 @@ export const CommunityPage: React.FC = () => {
         >
           {activeTab === 'community' && (
             <CommunityFeed
-              posts={posts || []}
               communityId={id || ''}
-              currentUserId="current-user"
-              isCreatorOrMod={true}
+              currentUserId={user?.uid}
+              isCreatorOrMod={user?.uid === community?.creatorId}
             />
           )}
 
@@ -124,7 +170,7 @@ export const CommunityPage: React.FC = () => {
           {activeTab === 'leaderboard' && (
             <LeaderboardTab
               leaderboard={leaderboard || []}
-              currentUserId="current-user"
+              currentUserId={user?.uid || 'guest'}
               onProfileClick={(userId) => console.log('View profile:', userId)}
             />
           )}
@@ -134,7 +180,7 @@ export const CommunityPage: React.FC = () => {
               community={{
                 id: community.id,
                 name: community.name || community.title,
-                description: community.description || '',
+                description: community.longDescription || community.description || '',
                 bannerUrl: community.bannerUrl || community.banner,
                 profileIconUrl: community.profileIconUrl || community.icon,
                 tags: community.tags || [],

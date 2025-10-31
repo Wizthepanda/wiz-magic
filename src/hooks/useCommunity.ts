@@ -59,6 +59,7 @@ export const useCreateCommunity = () => {
 export const useUpdateCommunity = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<CreateCommunityForm> }) => {
@@ -73,6 +74,49 @@ export const useUpdateCommunity = () => {
       };
 
       await updateDoc(communityRef, updateData);
+
+      // If updating a published community, ensure creator is a member
+      if (data.status === 'published' && user) {
+        try {
+          const memberDoc = await getDoc(doc(db, 'communities', id, 'members', user.uid));
+
+          if (!memberDoc.exists()) {
+            console.log('➕ Adding creator as member during update...');
+
+            await setDoc(doc(db, 'communities', id, 'members', user.uid), {
+              joinedAt: serverTimestamp(),
+              role: 'creator',
+              displayName: user.displayName || 'Creator',
+              username: user.displayName || 'Creator',
+              profilePic: user.photoURL || '',
+              photoURL: user.photoURL || '',
+              avatarUrl: user.photoURL || '',
+              level: 1,
+              xp: 0
+            });
+
+            // Get current community data to update members array
+            const communityDoc = await getDoc(communityRef);
+            if (communityDoc.exists()) {
+              const currentMembers = communityDoc.data().members || [];
+              if (!currentMembers.includes(user.uid)) {
+                await updateDoc(communityRef, {
+                  members: [...currentMembers, user.uid],
+                  memberCount: (currentMembers.length || 0) + 1,
+                  membersCount: (currentMembers.length || 0) + 1
+                });
+              }
+            }
+
+            console.log('✅ Creator added as member during update');
+          } else {
+            console.log('ℹ️ Creator is already a member');
+          }
+        } catch (error) {
+          console.error('❌ Error adding creator as member during update:', error);
+        }
+      }
+
       return { id, ...updateData };
     },
     onSuccess: (data) => {
@@ -94,6 +138,7 @@ export const useUpdateCommunity = () => {
 export const usePublishCommunity = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, publishDate }: { id: string; publishDate?: Date }) => {
@@ -116,6 +161,47 @@ export const usePublishCommunity = () => {
       };
 
       await updateDoc(communityRef, updateData);
+
+      // Always ensure creator is added as a member (first publish or re-publish)
+      if (!isScheduled && user) {
+        try {
+          // Check if creator is already a member
+          const memberDoc = await getDoc(doc(db, 'communities', id, 'members', user.uid));
+
+          if (!memberDoc.exists()) {
+            console.log('➕ Adding creator as first member...');
+
+            // Add creator to members subcollection
+            await setDoc(doc(db, 'communities', id, 'members', user.uid), {
+              joinedAt: serverTimestamp(),
+              role: 'creator',
+              displayName: user.displayName || 'Creator',
+              username: user.displayName || 'Creator',
+              profilePic: user.photoURL || '',
+              photoURL: user.photoURL || '',
+              avatarUrl: user.photoURL || '',
+              level: 1,
+              xp: 0
+            });
+
+            // Update members array and count if not already there
+            const currentMembers = communityData.members || [];
+            if (!currentMembers.includes(user.uid)) {
+              await updateDoc(communityRef, {
+                members: [...currentMembers, user.uid],
+                memberCount: (currentMembers.length || 0) + 1,
+                membersCount: (currentMembers.length || 0) + 1
+              });
+            }
+
+            console.log('✅ Creator added as first member');
+          } else {
+            console.log('ℹ️ Creator is already a member');
+          }
+        } catch (error) {
+          console.error('❌ Error adding creator as member:', error);
+        }
+      }
 
       // Call existing backend endpoints based on pricing model
       // DO NOT CHANGE ROUTING LOGIC - use existing backend paths

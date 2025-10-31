@@ -43,6 +43,14 @@ export const createCommunitySchema = z.object({
   offerZAPsToNewMembers: z.boolean().optional(),
   newMemberZAPsReward: z.number().int().nonnegative().optional(),
 
+  // Reward Tiers for community (Bronze/Silver/Gold/Diamond)
+  rewardTiers: z.array(z.object({
+    tier: z.enum(["Bronze", "Silver", "Gold", "Diamond"]),
+    xpRequired: z.number().int().nonnegative(),
+    rewards: z.array(z.string()),
+    icon: z.string()
+  })).optional(),
+
   // Crypto payment fields
   cryptoTypes: z.array(z.enum(["usdt", "btc", "usdc", "doge"])).optional(),
   cryptoAmount: z.string().optional(),
@@ -106,6 +114,12 @@ export const step3Schema = z.object({
   accessWindow: z.string().optional(),
   offerZAPsToNewMembers: z.boolean().optional(),
   newMemberZAPsReward: z.number().int().nonnegative().optional(),
+  rewardTiers: z.array(z.object({
+    tier: z.enum(["Bronze", "Silver", "Gold", "Diamond"]),
+    xpRequired: z.number().int().nonnegative(),
+    rewards: z.array(z.string()),
+    icon: z.string()
+  })).optional(),
   cryptoTypes: z.array(z.enum(["usdt", "btc", "usdc", "doge"])).optional(),
   cryptoAmount: z.string().optional()
 });

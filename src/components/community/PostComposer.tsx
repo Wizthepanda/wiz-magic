@@ -113,6 +113,15 @@ export const PostComposer: React.FC<PostComposerProps> = ({
 
   const canPost = content.trim().length > 0 || attachments.length > 0;
 
+  // Generate user initials (e.g., "Irfan Dean" → "ID", "John" → "J")
+  const getUserInitials = (name: string): string => {
+    const nameParts = name.trim().split(' ').filter(Boolean);
+    if (nameParts.length === 0) return '?';
+    if (nameParts.length === 1) return nameParts[0][0].toUpperCase();
+    // First letter of first name + first letter of last name
+    return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -123,11 +132,15 @@ export const PostComposer: React.FC<PostComposerProps> = ({
       )}
     >
       <div className="flex items-start gap-3 overflow-visible">
-        {/* User Avatar */}
-        <Avatar className="w-10 h-10 md:w-12 md:h-12 rounded-xl ring-2 ring-white shadow-md">
-          <AvatarImage src={userAvatar} alt={userName} />
-          <AvatarFallback className="rounded-xl bg-gradient-to-br from-purple-400 to-indigo-400 text-white font-bold">
-            {userName[0]?.toUpperCase()}
+        {/* User Avatar - Displays real profile picture or initials fallback */}
+        <Avatar className="w-10 h-10 md:w-12 md:h-12 rounded-xl ring-2 ring-white shadow-md hover:scale-105 transition-transform cursor-pointer">
+          <AvatarImage
+            src={userAvatar}
+            alt={userName}
+            className="object-cover"
+          />
+          <AvatarFallback className="rounded-xl bg-gradient-to-br from-purple-400 to-indigo-400 text-white font-bold text-sm">
+            {getUserInitials(userName)}
           </AvatarFallback>
         </Avatar>
 

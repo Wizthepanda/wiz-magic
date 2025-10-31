@@ -36,3 +36,57 @@ export const generateUniqueFilename = (originalName: string): string => {
   const extension = originalName.split('.').pop();
   return `${timestamp}_${randomStr}.${extension}`;
 };
+
+/**
+ * Upload image to Firebase Storage for community posts with validation
+ * @param file - The image file to upload
+ * @param userId - The user's Firebase UID
+ * @returns The download URL of the uploaded image
+ */
+export const uploadPostImage = async (file: File, userId: string): Promise<string> => {
+  // Validate file type
+  const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+  if (!validTypes.includes(file.type)) {
+    throw new Error('Invalid file type. Please upload a JPG, PNG, GIF, or WEBP image.');
+  }
+
+  // Validate file size (max 5MB)
+  const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+  if (file.size > maxSize) {
+    throw new Error('File size too large. Maximum size is 5MB.');
+  }
+
+  try {
+    // Create a unique file path
+    const uniqueFilename = generateUniqueFilename(file.name);
+    const filePath = `community_posts/${userId}/${uniqueFilename}`;
+
+    // Upload using the generic uploadImage function
+    const downloadURL = await uploadImage(file, filePath);
+
+    return downloadURL;
+  } catch (error) {
+    console.error('Error uploading post image:', error);
+    throw new Error('Failed to upload image. Please try again.');
+  }
+};
+
+/**
+ * Validate image file before upload
+ * @param file - The file to validate
+ * @returns Error message if invalid, null if valid
+ */
+export const validateImageFile = (file: File): string | null => {
+  const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+
+  if (!validTypes.includes(file.type)) {
+    return 'Invalid file type. Please upload a JPG, PNG, GIF, or WEBP image.';
+  }
+
+  const maxSize = 5 * 1024 * 1024; // 5MB
+  if (file.size > maxSize) {
+    return 'File size too large. Maximum size is 5MB.';
+  }
+
+  return null;
+};

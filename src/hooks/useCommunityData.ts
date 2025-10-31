@@ -5,9 +5,13 @@ import { db } from '@/lib/firebase';
 interface CommunityData {
   id: string;
   name: string;
+  title?: string;
   slug?: string;
   description?: string;
+  longDescription?: string; // Full description for About tab
+  shortDescription?: string; // Short description for preview
   bannerUrl?: string;
+  banner?: string;
   profileIconUrl?: string;
   profileIcon?: string; // New field for uploaded profile icons
   icon?: string;
@@ -19,8 +23,31 @@ interface CommunityData {
   creatorAvatar?: string;
   category?: string;
   tags?: string[];
+  publishedAt?: string;
   createdAt?: string;
   updatedAt?: string;
+  rating?: number;
+  // Reward Tiers (Bronze/Silver/Gold/Diamond) - Level-based
+  rewardTiers?: Array<{
+    tier: 'Bronze' | 'Silver' | 'Gold' | 'Diamond';
+    xpRequired: number;
+    rewards: string[];
+    icon: string;
+  }>;
+  // ZAP Reward Tiers - Action-based rewards from community creation
+  zapRewardTiers?: Array<{
+    name?: string;
+    tierName?: string;
+    zapAmount?: number;
+    xpRequired?: number;
+    rewards?: string[];
+    description?: string;
+    benefit?: string;
+    emoji?: string;
+    icon?: string;
+    badgeColor?: string;
+    triggerType?: string;
+  }>;
   [key: string]: any;
 }
 

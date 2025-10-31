@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUpDown, Clock, TrendingUp } from 'lucide-react';
+import { ArrowUpDown, Clock, TrendingUp, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { PostComposer } from './PostComposer';
 import { PinnedPostBar } from './PinnedPostBar';
 import { PostCardEnhanced } from './PostCardEnhanced';
 import type { Post, Reply } from './Placeholders';
+import { useAuth } from '@/hooks/useAuth';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { useCommunityPosts } from '@/hooks/useCommunityPosts';
+import { uploadPostImage, validateImageFile } from '@/lib/storage-utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface CommunityFeedProps {
-  posts: Post[];
   communityId: string;
   currentUserId?: string;
   isCreatorOrMod?: boolean;
@@ -26,59 +30,106 @@ type SortType = 'recent' | 'top' | 'pinned';
  * - Smooth animations with Framer Motion
  */
 export const CommunityFeed: React.FC<CommunityFeedProps> = ({
-  posts: initialPosts,
   communityId,
   currentUserId,
   isCreatorOrMod = false,
 }) => {
-  const [posts, setPosts] = useState<Post[]>(initialPosts);
+  const { user } = useAuth();
+  const { profile } = useUserProfile(); // Get fresh cached profile data
+  const { toast } = useToast();
   const [sortType, setSortType] = useState<SortType>('pinned');
 
-  // Handle new post submission
-  const handleNewPost = (content: string, embedUrl?: string, attachments?: File[]) => {
-    const newPost: Post = {
-      id: `post-${Date.now()}`,
-      authorId: 'current-user',
-      authorName: 'You',
-      authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user',
-      authorLevel: 12,
-      content,
-      embedUrl,
-      embedPreview: embedUrl
-        ? {
-            title: 'Video Preview',
-            thumbnail: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&h=250&fit=crop',
-            provider: 'YouTube',
-          }
-        : undefined,
-      attachments: attachments?.map((file) => ({
-        type: file.type.startsWith('image/') ? 'image' : 'video',
-        url: URL.createObjectURL(file),
-        name: file.name,
-      })),
-      isPinned: false,
-      upvotes: 1,
-      downvotes: 0,
-      userVote: 'up',
-      reactions: {},
-      userReactions: [],
-      commentCount: 0,
-      createdAt: new Date().toISOString(),
-    };
+  // Use the community posts hook for persistence
+  const {
+    posts,
+    pinnedPosts: hookPinnedPosts,
+    unpinnedPosts: hookUnpinnedPosts,
+    loading,
+    createPost,
+    togglePinPost,
+    votePost,
+    reactToPost,
+    addReply,
+    voteReply,
+    deletePost,
+  } = useCommunityPosts({ communityId, enableCache: true });
 
-    setPosts((prev) => [newPost, ...prev]);
+  // Handle new post submission with image upload
+  const handleNewPost = async (content: string, embedUrl?: string, attachments?: File[]) => {
+    if (!user) {
+      toast({
+        title: 'Authentication required',
+        description: 'Please log in to create a post.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      let imageUrl: string | undefined;
+
+      // Handle single image upload to Firebase Storage
+      if (attachments && attachments.length > 0) {
+        const imageFile = attachments.find(file => file.type.startsWith('image/'));
+
+        if (imageFile) {
+          // Validate image before upload
+          const validationError = validateImageFile(imageFile);
+          if (validationError) {
+            toast({
+              title: 'Invalid image',
+              description: validationError,
+              variant: 'destructive',
+            });
+            return;
+          }
+
+          // Upload to Firebase Storage
+          try {
+            imageUrl = await uploadPostImage(imageFile, user.uid);
+          } catch (error) {
+            console.error('Error uploading image:', error);
+            toast({
+              title: 'Upload failed',
+              description: error instanceof Error ? error.message : 'Failed to upload image. Please try again.',
+              variant: 'destructive',
+            });
+            return;
+          }
+        }
+      }
+
+      // Create post with imageUrl
+      await createPost({
+        content,
+        imageUrl,
+        embedUrl,
+      });
+
+    } catch (error) {
+      console.error('Error creating post:', error);
+      toast({
+        title: 'Failed to create post',
+        description: 'There was an error creating your post. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   // Filter and sort posts
-  const pinnedPosts = posts.filter((p) => p.isPinned);
-  const regularPosts = posts.filter((p) => !p.isPinned);
+  const pinnedPosts = hookPinnedPosts;
+  const regularPosts = hookUnpinnedPosts;
 
   const getSortedPosts = () => {
     let sorted = [...regularPosts];
 
     switch (sortType) {
       case 'recent':
-        sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        sorted.sort((a, b) => {
+          const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime();
+          const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime();
+          return timeB - timeA;
+        });
         break;
       case 'top':
         sorted.sort((a, b) => (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes));
@@ -86,7 +137,11 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({
       case 'pinned':
       default:
         // Keep pinned first (already separated), then recent
-        sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        sorted.sort((a, b) => {
+          const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime();
+          const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime();
+          return timeB - timeA;
+        });
         break;
     }
 
@@ -107,171 +162,59 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({
     }
   };
 
+  // Use hook methods for all operations
   const handleVote = (postId: string, voteType: 'up' | 'down') => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) => {
-        if (post.id !== postId) return post;
-
-        const currentVote = post.userVote;
-        let newUpvotes = post.upvotes;
-        let newDownvotes = post.downvotes;
-        let newUserVote: 'up' | 'down' | null = voteType;
-
-        // Toggle vote or switch vote
-        if (currentVote === voteType) {
-          // Remove vote
-          newUserVote = null;
-          if (voteType === 'up') newUpvotes--;
-          else newDownvotes--;
-        } else if (currentVote) {
-          // Switch vote
-          if (currentVote === 'up') newUpvotes--;
-          else newDownvotes--;
-          if (voteType === 'up') newUpvotes++;
-          else newDownvotes++;
-        } else {
-          // New vote
-          if (voteType === 'up') newUpvotes++;
-          else newDownvotes++;
-        }
-
-        return {
-          ...post,
-          upvotes: newUpvotes,
-          downvotes: newDownvotes,
-          userVote: newUserVote,
-        };
-      })
-    );
+    votePost(postId, voteType);
   };
 
   const handleReact = (postId: string, emoji: string) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) => {
-        if (post.id !== postId) return post;
-
-        const hasReacted = post.userReactions.includes(emoji);
-        const newReactions = { ...post.reactions };
-        const newUserReactions = [...post.userReactions];
-
-        if (hasReacted) {
-          // Remove reaction
-          newReactions[emoji] = (newReactions[emoji] || 1) - 1;
-          if (newReactions[emoji] <= 0) delete newReactions[emoji];
-          const index = newUserReactions.indexOf(emoji);
-          if (index > -1) newUserReactions.splice(index, 1);
-        } else {
-          // Add reaction
-          newReactions[emoji] = (newReactions[emoji] || 0) + 1;
-          newUserReactions.push(emoji);
-        }
-
-        return {
-          ...post,
-          reactions: newReactions,
-          userReactions: newUserReactions,
-        };
-      })
-    );
+    reactToPost(postId, emoji);
   };
 
   const handlePin = (postId: string) => {
-    setPosts((prevPosts) => {
-      const pinnedCount = prevPosts.filter((p) => p.isPinned).length;
-
-      return prevPosts.map((post) => {
-        if (post.id !== postId) return post;
-
-        // If trying to pin and already at max (3), don't pin
-        if (!post.isPinned && pinnedCount >= 3) {
-          return post;
-        }
-
-        return {
-          ...post,
-          isPinned: !post.isPinned,
-        };
-      });
-    });
+    togglePinPost(postId);
   };
 
   const handleReply = (postId: string, content: string) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) => {
-        if (post.id !== postId) return post;
-
-        const newReply: Reply = {
-          id: `reply-${Date.now()}`,
-          authorId: currentUserId || 'current-user',
-          authorName: 'You',
-          authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user',
-          authorLevel: 12,
-          content,
-          upvotes: 0,
-          downvotes: 0,
-          userVote: null,
-          createdAt: new Date().toISOString(),
-        };
-
-        return {
-          ...post,
-          replies: [...(post.replies || []), newReply],
-          commentCount: (post.replies?.length || 0) + 1,
-        };
-      })
-    );
+    addReply(postId, content);
   };
 
   const handleReplyVote = (postId: string, replyId: string, voteType: 'up' | 'down') => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) => {
-        if (post.id !== postId) return post;
-
-        return {
-          ...post,
-          replies: post.replies?.map((reply) => {
-            if (reply.id !== replyId) return reply;
-
-            const currentVote = reply.userVote;
-            let newUpvotes = reply.upvotes;
-            let newDownvotes = reply.downvotes;
-            let newUserVote: 'up' | 'down' | null = voteType;
-
-            // Toggle vote or switch vote
-            if (currentVote === voteType) {
-              // Remove vote
-              newUserVote = null;
-              if (voteType === 'up') newUpvotes--;
-              else newDownvotes--;
-            } else if (currentVote) {
-              // Switch vote
-              if (currentVote === 'up') newUpvotes--;
-              else newDownvotes--;
-              if (voteType === 'up') newUpvotes++;
-              else newDownvotes++;
-            } else {
-              // New vote
-              if (voteType === 'up') newUpvotes++;
-              else newDownvotes++;
-            }
-
-            return {
-              ...reply,
-              upvotes: newUpvotes,
-              downvotes: newDownvotes,
-              userVote: newUserVote,
-            };
-          }),
-        };
-      })
-    );
+    voteReply(postId, replyId, voteType);
   };
+
+  const handleDelete = (postId: string) => {
+    deletePost(postId);
+  };
+
+  // Show loading state on initial load
+  if (loading && posts.length === 0) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <PostComposer
+          onPost={handleNewPost}
+          userAvatar={profile?.photoURL || user?.photoURL || undefined}
+          userName={profile?.displayName || user?.displayName || 'You'}
+          placeholder="Share your thoughts with the community..."
+        />
+
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-4" />
+            <p className="text-gray-600">Loading community posts...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto overflow-visible">
       {/* Post Composer (Phase 2) */}
       <PostComposer
         onPost={handleNewPost}
+        userAvatar={profile?.photoURL || user?.photoURL || undefined}
+        userName={profile?.displayName || user?.displayName || 'You'}
         placeholder="Share your thoughts with the community..."
       />
 
@@ -368,6 +311,7 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({
                   onPin={handlePin}
                   onReply={handleReply}
                   onReplyVote={handleReplyVote}
+                  onDelete={handleDelete}
                   currentUserId={currentUserId}
                   isCreatorOrMod={isCreatorOrMod}
                 />
