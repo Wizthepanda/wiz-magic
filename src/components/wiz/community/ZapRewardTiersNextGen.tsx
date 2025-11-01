@@ -1,14 +1,14 @@
 /**
- * Next-Generation ZAP Reward Tiers UI
- * Ultra-premium, visually immersive, responsive, and gamified
- * AAA platform polish with interactive motion and glow effects
+ * Liquid Glass ZAP Reward Tiers UI
+ * Matches WIZUP dashboard aesthetic with soft translucent surfaces
+ * Glassy blur, purple energy glow, minimal gradients
  */
 
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Zap, Flame, Star, Trophy, Sparkles } from "lucide-react";
+import { Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ZapReward {
@@ -17,35 +17,13 @@ interface ZapReward {
   description: string;
   type: string;
   zapAmount: number;
-  tier?: number; // Optional: 1 = Bronze, 2 = Silver, 3 = Gold, etc.
 }
 
 interface ZapRewardTiersNextGenProps {
   communityId: string;
 }
 
-const tierStyles = [
-  {
-    bg: "from-amber-50/80 via-yellow-50/70 to-orange-50/80",
-    ring: "ring-amber-200",
-    glow: "shadow-[0_0_40px_-10px_rgba(251,191,36,0.6)]",
-    icon: <Trophy className="text-amber-500 h-6 w-6" />,
-  },
-  {
-    bg: "from-indigo-50/80 via-blue-50/70 to-purple-50/80",
-    ring: "ring-indigo-200",
-    glow: "shadow-[0_0_40px_-10px_rgba(99,102,241,0.6)]",
-    icon: <Star className="text-indigo-500 h-6 w-6" />,
-  },
-  {
-    bg: "from-rose-50/80 via-pink-50/70 to-fuchsia-50/80",
-    ring: "ring-pink-200",
-    glow: "shadow-[0_0_40px_-10px_rgba(236,72,153,0.6)]",
-    icon: <Sparkles className="text-pink-500 h-6 w-6" />,
-  },
-];
-
-// Default fallback rewards matching premium design
+// Default fallback rewards matching liquid glass design
 const defaultRewards: ZapReward[] = [
   {
     id: "welcome-bonus",
@@ -53,7 +31,6 @@ const defaultRewards: ZapReward[] = [
     description: "Join the community and get instant rewards to kickstart your journey",
     type: "Join Bonus",
     zapAmount: 50,
-    tier: 1,
   },
   {
     id: "milestone-reward",
@@ -61,7 +38,6 @@ const defaultRewards: ZapReward[] = [
     description: "Complete your first course module and unlock exclusive content access",
     type: "Milestone",
     zapAmount: 100,
-    tier: 2,
   },
   {
     id: "community-champion",
@@ -69,7 +45,6 @@ const defaultRewards: ZapReward[] = [
     description: "Reach level 30 and become a recognized leader in the community",
     type: "Achievement",
     zapAmount: 250,
-    tier: 3,
   },
 ];
 
@@ -107,130 +82,115 @@ export const ZapRewardTiersNextGen: React.FC<ZapRewardTiersNextGenProps> = ({ co
     }
   }, [communityId]);
 
+  // Loading skeleton - liquid glass style
   if (loading) {
     return (
-      <div className="grid gap-6 mt-6 animate-pulse">
-        {[1, 2, 3].map((i) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse mt-6">
+        {[...Array(3)].map((_, i) => (
           <div
             key={i}
-            className="h-40 rounded-2xl bg-gradient-to-r from-gray-100 to-gray-50"
+            className="h-40 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20"
           />
         ))}
       </div>
     );
   }
 
+  // Empty state - liquid glass style
   if (rewards.length === 0) {
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
-        className="flex flex-col items-center justify-center text-center py-16 rounded-2xl border border-dashed border-gray-200 bg-white/50 backdrop-blur-sm"
+        className="flex flex-col items-center justify-center text-center py-20 rounded-2xl border border-white/20 bg-white/5 backdrop-blur-lg"
       >
-        <Zap className="text-purple-500 h-8 w-8 mb-3" />
-        <p className="text-gray-700 font-medium">No reward tiers added yet</p>
-        <Button className="mt-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 rounded-xl shadow-lg">
+        <Zap className="h-7 w-7 text-purple-400 mb-3" />
+        <p className="text-gray-200 font-medium">No reward tiers added yet</p>
+        <Button className="mt-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg hover:opacity-90 transition-all rounded-xl">
           + Add Reward Tier
         </Button>
       </motion.div>
     );
   }
 
+  // Main render - liquid glass cards
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="space-y-8"
-    >
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg">
-            <Zap className="h-5 w-5 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900">ZAP Reward Tiers</h2>
-        </div>
-        <span className="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+        <h2 className="text-2xl font-bold text-white">ZAP Reward Tiers</h2>
+        <span className="text-sm text-gray-400">
           {rewards.length} {rewards.length === 1 ? "Tier" : "Tiers"}
         </span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        {rewards.map((reward, idx) => {
-          const style = tierStyles[idx % tierStyles.length];
-          return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {rewards.map((reward, idx) => (
+          <motion.div
+            key={reward.id}
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            whileHover={{
+              scale: 1.03,
+              y: -3,
+              boxShadow: "0 0 25px rgba(168,85,247,0.4)",
+            }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="
+              relative overflow-hidden rounded-2xl p-6
+              bg-white/[0.05] border border-white/[0.1]
+              backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.2)]
+            "
+          >
+            {/* Subtle gradient light sweep */}
             <motion.div
-              key={reward.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              whileHover={{ scale: 1.03, y: -4 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-              className={`relative rounded-2xl p-6 bg-gradient-to-br ${style.bg}
-                ring-1 ${style.ring} ${style.glow} shadow-md backdrop-blur-md overflow-hidden`}
-            >
-              {/* Animated gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.08] to-transparent"
+              animate={{
+                backgroundPosition: ["0% 0%", "200% 0%"],
+              }}
+              transition={{
+                duration: 5,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+              style={{
+                backgroundSize: "200% 100%",
+              }}
+            />
 
-              <div className="relative z-10">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-2">
-                    {style.icon}
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {reward.title}
-                    </h3>
-                  </div>
-                  <motion.div
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                    transition={{ duration: 0.2 }}
-                    className="rounded-full bg-white/70 backdrop-blur-sm p-2 shadow-sm"
-                  >
-                    <Zap className="h-5 w-5 text-yellow-500" />
-                  </motion.div>
-                </div>
-
-                <p className="text-gray-600 text-sm mb-5 line-clamp-3 leading-relaxed">
+            <div className="relative z-10 flex items-center justify-between">
+              <div className="flex flex-col">
+                <h3 className="text-lg font-semibold text-white mb-1">
+                  {reward.title}
+                </h3>
+                <p className="text-gray-300 text-sm line-clamp-2">
                   {reward.description}
                 </p>
-
-                <div className="flex items-center justify-between">
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.98 }}
-                    transition={{ duration: 0.15 }}
-                    className="px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-medium shadow-md hover:shadow-lg transition-shadow"
-                  >
-                    +{reward.zapAmount} ZAPs
-                  </motion.div>
-                  <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {reward.type}
-                  </div>
-                </div>
-
-                {/* Bottom accent bar */}
-                <div className="absolute bottom-0 left-0 w-full h-[4px] rounded-b-2xl bg-gradient-to-r from-purple-500 to-pink-500" />
               </div>
-            </motion.div>
-          );
-        })}
-      </div>
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-500/20 to-pink-500/20 border border-purple-400/30 shadow-inner">
+                <Zap className="h-5 w-5 text-purple-400" />
+              </div>
+            </div>
 
-      {/* Add more tiers CTA */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="flex justify-center pt-4"
-      >
-        <Button
-          variant="outline"
-          className="border-2 border-dashed border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400 rounded-xl transition-all duration-200"
-        >
-          <Sparkles className="w-4 h-4 mr-2" />
-          Add More Tiers
-        </Button>
-      </motion.div>
-    </motion.div>
+            <div className="relative z-10 flex items-center justify-between mt-6">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
+                className="px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-medium shadow-md"
+              >
+                +{reward.zapAmount} ZAPs
+              </motion.div>
+              <span className="text-xs uppercase tracking-wide text-gray-400">
+                {reward.type}
+              </span>
+            </div>
+
+            {/* Subtle glass ring glow at bottom */}
+            <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-purple-500 via-pink-500 to-purple-400 opacity-60 rounded-b-2xl" />
+          </motion.div>
+        ))}
+      </div>
+    </div>
   );
 };
 
