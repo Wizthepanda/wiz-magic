@@ -8,7 +8,7 @@ import { CommunityFeed } from './CommunityFeed';
 import { CoursesTab } from './CoursesTab';
 import { LeaderboardTab } from './LeaderboardTab';
 import { AboutTab } from './AboutTab';
-import { RewardsTab } from './RewardsTab';
+import { ZapRewardTiersNextGen } from '../wiz/community/ZapRewardTiersNextGen';
 import { usePlaceholderData } from './Placeholders';
 import { useCommunityData } from '@/hooks/useCommunityData';
 import { useCommunityMembers } from '@/hooks/useCommunityMembers';
@@ -197,13 +197,7 @@ export const CommunityPage: React.FC = () => {
           )}
 
           {activeTab === 'rewards' && (
-            <RewardsTab
-              currentXP={userProgress.currentXP}
-              currentLevel={userProgress.currentLevel}
-              nextLevelXP={userProgress.nextLevelXP}
-              rewardTiers={rewardTiers}
-              earnActions={earnActions}
-            />
+            <ZapRewardTiersNextGen communityId={id || ''} />
           )}
         </motion.div>
       </div>
