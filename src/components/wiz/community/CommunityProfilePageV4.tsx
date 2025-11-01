@@ -26,7 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { ZapRewardTiersDisplay, ZAPTier, ZAPReward } from './ZapRewardTiersDisplay';
+import { ZapRewardTiersContainer } from './ZapRewardTiersContainer';
 
 interface CommunityProfilePageV4Props {
   communityId: string;
@@ -148,69 +148,6 @@ export const CommunityProfilePageV4: React.FC<CommunityProfilePageV4Props> = ({ 
     { rank: 4, id: '6', name: 'Emma Davis', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=emma', xp: 7400, level: 27 },
     { rank: 5, id: '3', name: 'Marcus Stone', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=marcus', xp: 6800, level: 24 },
     { rank: 6, id: '5', name: 'Jordan Lee', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=jordan', xp: 5200, level: 19 },
-  ];
-
-  const zapTiers: ZAPTier[] = [
-    {
-      id: '1',
-      tier: 'Bronze',
-      icon: '⚡',
-      zapsRequired: 9,
-      currentZAPs: 7,
-      userName: 'Alex Rivera',
-      rewards: [
-        { id: 'b1', name: 'Module 3', completed: false },
-        { id: 'b2', name: 'Complete Module 2 Building', completed: false },
-      ],
-    },
-    {
-      id: '2',
-      tier: 'Silver',
-      icon: '🔥',
-      zapsRequired: 25,
-      currentZAPs: 0,
-      rewards: [
-        { id: 's1', name: 'Welcome Bonus', description: '50 ZAPs for joining', completed: false },
-        { id: 's2', name: 'VIP Discord Badge', description: 'Exclusive role in server', completed: false },
-      ],
-    },
-    {
-      id: '3',
-      tier: 'Gold',
-      icon: '👑',
-      zapsRequired: 50,
-      currentZAPs: 0,
-      rewards: [
-        { id: 'g1', name: 'Premium Content Access', description: 'Unlock exclusive courses', completed: false },
-        { id: 'g2', name: 'Monthly Bonus ZAPs', description: '100 ZAPs every month', completed: false },
-        { id: 'g3', name: 'Creator Spotlight', description: 'Featured in newsletter', completed: false },
-      ],
-    },
-    {
-      id: '4',
-      tier: 'Diamond',
-      icon: '💎',
-      zapsRequired: 100,
-      currentZAPs: 0,
-      rewards: [
-        { id: 'd1', name: '1-on-1 Mentorship', description: 'Private session with creator', completed: false },
-        { id: 'd2', name: 'Custom Profile Badge', description: 'Unique diamond status', completed: false },
-        { id: 'd3', name: 'Early Access Features', description: 'Beta test new releases', completed: false },
-      ],
-    },
-    {
-      id: '5',
-      tier: 'Platinum',
-      icon: '🌟',
-      zapsRequired: 250,
-      currentZAPs: 0,
-      rewards: [
-        { id: 'p1', name: 'Lifetime Premium', description: 'Forever access to all content', completed: false },
-        { id: 'p2', name: 'Co-Creation Rights', description: 'Help shape future content', completed: false },
-        { id: 'p3', name: 'Revenue Share', description: '5% of community earnings', completed: false },
-        { id: 'p4', name: 'Hall of Fame Entry', description: 'Permanent recognition', completed: false },
-      ],
-    },
   ];
 
   const tabs = [
@@ -435,7 +372,7 @@ export const CommunityProfilePageV4: React.FC<CommunityProfilePageV4Props> = ({ 
                 <AboutTab key="about" communityData={communityData} members={members} />
               )}
               {activeTab === 'reward' && (
-                <RewardTab key="reward" zapTiers={zapTiers} />
+                <RewardTab key="reward" communityId={communityId} />
               )}
             </AnimatePresence>
           </div>
@@ -720,14 +657,14 @@ const AboutTab: React.FC<{ communityData: any; members: Member[] }> = ({ communi
 };
 
 // Reward Tab Component
-const RewardTab: React.FC<{ zapTiers: ZAPTier[] }> = ({ zapTiers }) => {
+const RewardTab: React.FC<{ communityId: string }> = ({ communityId }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
     >
-      <ZapRewardTiersDisplay tiers={zapTiers} showEmptyState={true} />
+      <ZapRewardTiersContainer communityId={communityId} />
     </motion.div>
   );
 };
