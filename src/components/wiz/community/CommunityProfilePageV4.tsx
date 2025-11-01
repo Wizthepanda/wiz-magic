@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import { ZapRewardTiersDisplay, ZAPTier, ZAPReward } from './ZapRewardTiersDisplay';
 
 interface CommunityProfilePageV4Props {
   communityId: string;
@@ -74,15 +75,6 @@ interface LeaderboardEntry {
   avatar: string;
   xp: number;
   level: number;
-}
-
-interface Reward {
-  id: string;
-  name: string;
-  description: string;
-  xpRequired: number;
-  claimed: boolean;
-  icon: string;
 }
 
 export const CommunityProfilePageV4: React.FC<CommunityProfilePageV4Props> = ({ communityId }) => {
@@ -158,11 +150,67 @@ export const CommunityProfilePageV4: React.FC<CommunityProfilePageV4Props> = ({ 
     { rank: 6, id: '5', name: 'Jordan Lee', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=jordan', xp: 5200, level: 19 },
   ];
 
-  const rewards: Reward[] = [
-    { id: '1', name: 'Early Adopter Badge', description: 'Awarded to founding members', xpRequired: 0, claimed: true, icon: '🏆' },
-    { id: '2', name: 'Knowledge Seeker', description: 'Complete 5 courses', xpRequired: 2500, claimed: false, icon: '📚' },
-    { id: '3', name: 'Community Champion', description: 'Reach level 30', xpRequired: 5000, claimed: false, icon: '⭐' },
-    { id: '4', name: 'Master Wizard', description: 'Reach level 50', xpRequired: 10000, claimed: false, icon: '🧙' },
+  const zapTiers: ZAPTier[] = [
+    {
+      id: '1',
+      tier: 'Bronze',
+      icon: '⚡',
+      zapsRequired: 9,
+      currentZAPs: 7,
+      userName: 'Alex Rivera',
+      rewards: [
+        { id: 'b1', name: 'Module 3', completed: false },
+        { id: 'b2', name: 'Complete Module 2 Building', completed: false },
+      ],
+    },
+    {
+      id: '2',
+      tier: 'Silver',
+      icon: '🔥',
+      zapsRequired: 25,
+      currentZAPs: 0,
+      rewards: [
+        { id: 's1', name: 'Welcome Bonus', description: '50 ZAPs for joining', completed: false },
+        { id: 's2', name: 'VIP Discord Badge', description: 'Exclusive role in server', completed: false },
+      ],
+    },
+    {
+      id: '3',
+      tier: 'Gold',
+      icon: '👑',
+      zapsRequired: 50,
+      currentZAPs: 0,
+      rewards: [
+        { id: 'g1', name: 'Premium Content Access', description: 'Unlock exclusive courses', completed: false },
+        { id: 'g2', name: 'Monthly Bonus ZAPs', description: '100 ZAPs every month', completed: false },
+        { id: 'g3', name: 'Creator Spotlight', description: 'Featured in newsletter', completed: false },
+      ],
+    },
+    {
+      id: '4',
+      tier: 'Diamond',
+      icon: '💎',
+      zapsRequired: 100,
+      currentZAPs: 0,
+      rewards: [
+        { id: 'd1', name: '1-on-1 Mentorship', description: 'Private session with creator', completed: false },
+        { id: 'd2', name: 'Custom Profile Badge', description: 'Unique diamond status', completed: false },
+        { id: 'd3', name: 'Early Access Features', description: 'Beta test new releases', completed: false },
+      ],
+    },
+    {
+      id: '5',
+      tier: 'Platinum',
+      icon: '🌟',
+      zapsRequired: 250,
+      currentZAPs: 0,
+      rewards: [
+        { id: 'p1', name: 'Lifetime Premium', description: 'Forever access to all content', completed: false },
+        { id: 'p2', name: 'Co-Creation Rights', description: 'Help shape future content', completed: false },
+        { id: 'p3', name: 'Revenue Share', description: '5% of community earnings', completed: false },
+        { id: 'p4', name: 'Hall of Fame Entry', description: 'Permanent recognition', completed: false },
+      ],
+    },
   ];
 
   const tabs = [
@@ -387,7 +435,7 @@ export const CommunityProfilePageV4: React.FC<CommunityProfilePageV4Props> = ({ 
                 <AboutTab key="about" communityData={communityData} members={members} />
               )}
               {activeTab === 'reward' && (
-                <RewardTab key="reward" rewards={rewards} />
+                <RewardTab key="reward" zapTiers={zapTiers} />
               )}
             </AnimatePresence>
           </div>
@@ -672,65 +720,14 @@ const AboutTab: React.FC<{ communityData: any; members: Member[] }> = ({ communi
 };
 
 // Reward Tab Component
-const RewardTab: React.FC<{ rewards: Reward[] }> = ({ rewards }) => {
+const RewardTab: React.FC<{ zapTiers: ZAPTier[] }> = ({ zapTiers }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="grid grid-cols-1 md:grid-cols-2 gap-6"
     >
-      {rewards.map((reward, index) => (
-        <motion.div
-          key={reward.id}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: index * 0.1 }}
-        >
-          <Card className={cn(
-            'bg-white/60 backdrop-blur-xl shadow-xl rounded-2xl overflow-hidden transition-all hover:scale-105',
-            reward.claimed
-              ? 'border-2 border-green-300'
-              : 'border-2 border-purple-300 shadow-purple-500/30'
-          )}>
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <div className={cn(
-                  'text-4xl p-4 rounded-2xl',
-                  reward.claimed
-                    ? 'bg-green-100'
-                    : 'bg-gradient-to-br from-purple-500/20 to-indigo-500/20'
-                )}>
-                  {reward.icon}
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg text-gray-900 mb-1">{reward.name}</h3>
-                  <p className="text-sm text-gray-600 mb-3">{reward.description}</p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1 text-amber-500 font-bold">
-                      <Zap className="w-4 h-4" />
-                      <span>{reward.xpRequired} XP</span>
-                    </div>
-                    {reward.claimed ? (
-                      <Badge className="bg-green-500 text-white">
-                        <Award className="w-3 h-3 mr-1" />
-                        Claimed
-                      </Badge>
-                    ) : (
-                      <Button
-                        size="sm"
-                        className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg"
-                      >
-                        Claim
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      ))}
+      <ZapRewardTiersDisplay tiers={zapTiers} showEmptyState={true} />
     </motion.div>
   );
 };
