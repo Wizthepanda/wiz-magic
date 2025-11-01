@@ -126,12 +126,19 @@ export const useCommunityCreateStore = create<CommunityCreateState>()(
       setCategory: (category) => set({ category, subCategory: undefined }), // Reset subCategory when category changes
       setSubCategory: (subCategory) => set({ subCategory }),
       setDescription: (description) => set({ description }),
+      setVisibility: (visibility) => {
+        // Temporarily disable token-gated option, default to public
+        if (visibility === 'token-gated') {
+          set({ visibility: 'public' });
+        } else {
+          set({ visibility });
+        }
+      },
       setLongDescription: (longDescription) => set({ longDescription }),
       setProfileIcon: (profileIcon) => set({ profileIcon }),
       setBannerUrl: (bannerUrl) => set({ bannerUrl }),
       setCoverMedia: (coverMedia) => set({ coverMedia }),
       setTags: (tags) => set({ tags }),
-      setVisibility: (visibility) => set({ visibility }),
 
       // Step 2 Actions - Courses
       setLinkedCourses: (linkedCourses) => set({ linkedCourses }),

@@ -40,20 +40,24 @@ const visibilityOptions = [
     value: 'public',
     label: 'Public',
     description: 'Anyone can find and join',
-    icon: Globe
+    icon: Globe,
+    enabled: true
   },
   {
     value: 'private',
     label: 'Private',
     description: 'Invite-only, hidden from search',
-    icon: Lock
+    icon: Lock,
+    enabled: true
   },
-  {
-    value: 'token-gated',
-    label: 'Token Gated',
-    description: 'Requires wallet verification',
-    icon: Eye
-  }
+  // Token Gated temporarily disabled
+  // {
+  //   value: 'token-gated',
+  //   label: 'Token Gated',
+  //   description: 'Requires wallet verification',
+  //   icon: Eye,
+  //   enabled: false
+  // }
 ] as const;
 
 export const StepDetails: React.FC = () => {
@@ -376,32 +380,40 @@ export const StepDetails: React.FC = () => {
           <RadioGroup
             value={store.visibility}
             onValueChange={(value) => store.setVisibility(value as any)}
-            className="grid grid-cols-3 gap-2"
+            className="grid grid-cols-2 gap-3"
           >
             {visibilityOptions.map((option) => {
               const Icon = option.icon;
               return (
-                <label
+                <motion.label
                   key={option.value}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.2 }}
                   className={cn(
-                    "relative flex flex-col items-center justify-center p-3 rounded-lg border-2 cursor-pointer transition-all",
+                    "relative flex flex-col items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all duration-200",
                     store.visibility === option.value
-                      ? "border-purple-500 bg-purple-50"
-                      : "border-gray-200 hover:border-purple-300"
+                      ? "border-purple-500 bg-purple-50 shadow-lg shadow-purple-500/20"
+                      : "border-gray-200 bg-white hover:border-purple-300 hover:shadow-md"
                   )}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   <RadioGroupItem value={option.value} className="sr-only" />
                   <Icon className={cn(
-                    "w-5 h-5 mb-1",
+                    "w-6 h-6 mb-2",
                     store.visibility === option.value ? "text-purple-600" : "text-gray-500"
                   )} />
                   <span className={cn(
-                    "text-xs font-medium",
+                    "text-sm font-semibold mb-1",
                     store.visibility === option.value ? "text-purple-700" : "text-gray-700"
                   )}>
                     {option.label}
                   </span>
-                </label>
+                  <span className="text-xs text-gray-500 text-center">
+                    {option.description}
+                  </span>
+                </motion.label>
               );
             })}
           </RadioGroup>
