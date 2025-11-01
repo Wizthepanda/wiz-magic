@@ -26,7 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { ZapRewardTiersContainer } from './ZapRewardTiersContainer';
+import { ZapRewardTiersNextGen } from './ZapRewardTiersNextGen';
 
 interface CommunityProfilePageV4Props {
   communityId: string;
@@ -664,7 +664,7 @@ const RewardTab: React.FC<{ communityId: string }> = ({ communityId }) => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
     >
-      <ZapRewardTiersContainer communityId={communityId} />
+      <ZapRewardTiersNextGen communityId={communityId} />
     </motion.div>
   );
 };
