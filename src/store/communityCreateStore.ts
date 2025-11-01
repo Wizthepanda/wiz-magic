@@ -16,6 +16,7 @@ export interface CommunityCreateState {
   title: string;
   tagline: string;
   category: string;
+  subCategory?: string;
   description: string;
   longDescription?: string;
   profileIcon?: string;
@@ -49,6 +50,7 @@ export interface CommunityCreateState {
   setTitle: (title: string) => void;
   setTagline: (tagline: string) => void;
   setCategory: (category: string) => void;
+  setSubCategory: (subCategory: string) => void;
   setDescription: (description: string) => void;
   setLongDescription: (longDescription: string) => void;
   setProfileIcon: (profileIcon: string) => void;
@@ -86,6 +88,7 @@ const initialState = {
   title: '',
   tagline: '',
   category: '',
+  subCategory: undefined,
   description: '',
   longDescription: '',
   profileIcon: undefined,
@@ -120,7 +123,8 @@ export const useCommunityCreateStore = create<CommunityCreateState>()(
       // Step 1 Actions
       setTitle: (title) => set({ title }),
       setTagline: (tagline) => set({ tagline }),
-      setCategory: (category) => set({ category }),
+      setCategory: (category) => set({ category, subCategory: undefined }), // Reset subCategory when category changes
+      setSubCategory: (subCategory) => set({ subCategory }),
       setDescription: (description) => set({ description }),
       setLongDescription: (longDescription) => set({ longDescription }),
       setProfileIcon: (profileIcon) => set({ profileIcon }),

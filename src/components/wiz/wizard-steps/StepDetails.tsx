@@ -33,6 +33,7 @@ import { communityCategories } from '@/lib/schemas/community';
 import { toast } from 'sonner';
 import { uploadImage, generateUniqueFilename } from '@/lib/storage-utils';
 import { useAuth } from '@/hooks/useAuth';
+import { categoryOptions, getMainCategories, getSubCategories, type MainCategory } from '@/data/categories';
 
 const visibilityOptions = [
   {
@@ -310,29 +311,66 @@ export const StepDetails: React.FC = () => {
 
       {/* Category & Visibility Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Category */}
-        <div className="space-y-2">
-          <Label htmlFor="category" className="text-base font-semibold flex items-center space-x-2">
-            <span>Category</span>
-            <Badge variant="secondary" className="text-xs">Required</Badge>
-          </Label>
-          <Select value={store.category} onValueChange={store.setCategory}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select a category..." />
-            </SelectTrigger>
-            <SelectContent>
-              {communityCategories
-                .filter(cat => cat.value !== 'all')
-                .map((category) => (
-                  <SelectItem key={category.value} value={category.value}>
-                    {category.label}
+        {/* Left Column: Category & Sub Category */}
+        <div className="space-y-4">
+          {/* Main Category */}
+          <div className="space-y-2">
+            <Label htmlFor="category" className="text-base font-semibold flex items-center space-x-2">
+              <span>Category</span>
+              <Badge variant="secondary" className="text-xs">Required</Badge>
+            </Label>
+            <Select
+              value={store.category}
+              onValueChange={(value) => {
+                store.setCategory(value);
+                // Reset sub category when main category changes
+                store.setSubCategory('');
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a category..." />
+              </SelectTrigger>
+              <SelectContent>
+                {getMainCategories().map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
                   </SelectItem>
                 ))}
-            </SelectContent>
-          </Select>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Sub Category - Only show when main category is selected */}
+          <AnimatePresence>
+            {store.category && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-2"
+              >
+                <Label htmlFor="subCategory" className="text-base font-semibold">
+                  Sub Category
+                </Label>
+                <Select value={store.subCategory || ''} onValueChange={store.setSubCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a sub category..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getSubCategories(store.category as MainCategory).map((subCat) => (
+                      <SelectItem key={subCat} value={subCat}>
+                        {subCat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Visibility */}
+        {/* Right Column: Visibility */}
         <div className="space-y-2">
           <Label className="text-base font-semibold">Visibility</Label>
           <RadioGroup

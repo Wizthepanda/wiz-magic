@@ -4,6 +4,7 @@ export const createCommunitySchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(120, "Title must be less than 120 characters"),
   tagline: z.string().max(140, "Tagline must be less than 140 characters").optional(),
   category: z.string().min(1, "Please select a category"),
+  subCategory: z.string().optional(),
   profileIcon: z.string().url("Please upload a valid profile icon").optional(),
   coverMedia: z.array(z.object({
     type: z.enum(["image", "youtube"]),
@@ -76,6 +77,7 @@ export const step1Schema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(120, "Title must be less than 120 characters"),
   tagline: z.string().max(140, "Tagline must be less than 140 characters").optional(),
   category: z.string().min(1, "Please select a category"),
+  subCategory: z.string().optional(),
   profileIcon: z.string().url("Please upload a valid profile icon").optional(),
   coverMedia: z.array(z.object({
     type: z.enum(["image", "youtube"]),

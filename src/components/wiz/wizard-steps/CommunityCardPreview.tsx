@@ -255,8 +255,13 @@ export const CommunityCardPreview: React.FC<CommunityCardPreviewProps> = ({ curr
               {/* Category & Tags */}
               <div className="flex flex-wrap gap-1.5">
                 {store.category && (
-                  <Badge variant="outline" className="text-xs">
-                    {store.category.toUpperCase()}
+                  <Badge className="text-xs bg-purple-100 text-purple-600 hover:bg-purple-200">
+                    {store.category}
+                  </Badge>
+                )}
+                {store.subCategory && (
+                  <Badge className="text-xs bg-blue-100 text-blue-600 hover:bg-blue-200">
+                    {store.subCategory}
                   </Badge>
                 )}
                 {store.tags.slice(0, 2).map((tag, index) => (
