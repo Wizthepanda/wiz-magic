@@ -8,10 +8,10 @@ import { TipModal } from './creator/components/TipModal'
 import { useWatchTimeZAPs } from '@/hooks/useWatchTimeZAPs'
 import { useZAPSystem } from '@/hooks/useZAPSystem'
 import { motion, AnimatePresence } from "framer-motion"
-import { db } from '@/lib/firebase'
-import { collection, query, where, limit, getDocs } from 'firebase/firestore'
 import { cn } from '@/lib/utils'
 import { usePrefetchCreatorProfile } from '@/hooks/useCreatorProfile'
+import { useUpNextVideos } from '@/hooks/useVideos'
+import { Skeleton } from "@/components/ui/skeleton"
 
 // YouTube Player API type declarations
 declare global {
@@ -59,7 +59,6 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
   const [currentVideoTime, setCurrentVideoTime] = useState(0)
   const [isVideoPlaying, setIsVideoPlaying] = useState(false)
   const [isCommunityDialogOpen, setCommunityDialogOpen] = useState(false)
-  const [upNextVideos, setUpNextVideos] = useState<any[]>([])
   const [isPendingAccess, setIsPendingAccess] = useState(false)
   const [isInviteSent, setIsInviteSent] = useState(false)
 
@@ -80,7 +79,23 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
     xpReward: 250
   }
 
-  const currentVideo = video || defaultVideo
+  // Internal state to manage current video (allows seamless switching)
+  const [internalVideo, setInternalVideo] = useState(video || defaultVideo)
+
+  // Update internal video when prop changes
+  useEffect(() => {
+    if (video) {
+      setInternalVideo(video)
+    }
+  }, [video])
+
+  const currentVideo = internalVideo
+
+  // Fetch "Up Next" videos using React Query
+  const { data: upNextVideos = [], isLoading: isLoadingUpNext } = useUpNextVideos(
+    currentVideo.videoId,
+    4
+  )
   const { zapData, awardShareZAPs } = useZAPSystem()
 
   // Community settings (can be extended to come from creator profile)
@@ -166,105 +181,6 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
   });
 
   // Remove artificial progress estimation - let ZAPs system handle its own timing
-
-  // Load featured videos for "Up Next" section
-  useEffect(() => {
-    const loadFeaturedVideos = async () => {
-      try {
-        let snapshot;
-        try {
-          // First try to get featured videos
-          const featuredQuery = query(
-            collection(db, 'videos'),
-            where('isFeatured', '==', true),
-            limit(4)
-          );
-          snapshot = await getDocs(featuredQuery);
-        } catch (featuredError) {
-          snapshot = null;
-        }
-
-        // If no featured videos, get recent active videos
-        if (!snapshot || snapshot.empty) {
-          try {
-            const recentQuery = query(
-              collection(db, 'videos'),
-              where('status', '==', 'active'),
-              limit(4)
-            );
-            snapshot = await getDocs(recentQuery);
-          } catch (recentError) {
-            // Last resort: get any videos
-            const anyQuery = query(
-              collection(db, 'videos'),
-              limit(4)
-            );
-            snapshot = await getDocs(anyQuery);
-          }
-        }
-
-        if (snapshot && !snapshot.empty) {
-          const videos: any[] = [];
-          snapshot.forEach((doc) => {
-            const data = doc.data();
-
-            // Skip the currently playing video
-            if (doc.id === currentVideo.id || data.videoId === currentVideo.videoId) {
-              return;
-            }
-
-            // Properly format views with commas
-            const formatViews = (views: any): string => {
-              if (!views || isNaN(Number(views))) return '0 views';
-              const numViews = Number(views);
-              return `${numViews.toLocaleString()} views`;
-            };
-
-            // Ensure proper creator object structure
-            const creatorName = data.channelName || data.creatorName || data.creator?.name || 'Unknown Creator';
-            const creatorAvatar = data.channelAvatar || data.creatorAvatar || data.creator?.avatar ||
-              `https://api.dicebear.com/7.x/avataaars/svg?seed=${creatorName}`;
-
-            videos.push({
-              id: doc.id,
-              videoId: data.videoId || doc.id,
-              title: data.title || 'Untitled Video',
-              creator: {
-                name: creatorName,
-                avatar: creatorAvatar
-              },
-              views: formatViews(data.views),
-              duration: data.duration ? formatDuration(data.duration) : '0:00',
-              xpReward: calculateZAPsReward(data.duration || 0), // Changed from 'zaps' to 'xpReward'
-              thumbnail: data.thumbnail || `https://img.youtube.com/vi/${data.videoId}/maxresdefault.jpg`
-            });
-          });
-
-          // Limit to 4 videos and filter out any null/undefined entries
-          const filteredVideos = videos.filter(Boolean).slice(0, 4);
-          setUpNextVideos(filteredVideos);
-        }
-      } catch (error) {
-        console.error('Error loading featured videos:', error);
-      }
-    };
-
-    if (open) {
-      loadFeaturedVideos();
-    }
-  }, [open]);
-
-  // Helper function to format duration
-  const formatDuration = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  // Helper function to calculate ZAPs reward
-  const calculateZAPsReward = (duration: number): number => {
-    return Math.floor(duration * 0.5); // 0.5 ZAPs per second
-  };
 
   // YouTube Player API integration for real progress tracking
   useEffect(() => {
@@ -416,6 +332,36 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
     } catch (error) {
       console.error('Error awarding share ZAPs:', error);
     }
+  };
+
+  // Handle switching to a new video within the same popup
+  const handleSwitchVideo = (nextVideoCard: any) => {
+    console.log('🎬 Switching to video:', nextVideoCard.title);
+
+    // Convert VideoCardData to WatchPopupProps video format
+    const nextVideo = {
+      id: nextVideoCard.id,
+      videoId: nextVideoCard.videoId,
+      title: nextVideoCard.title,
+      description: '', // We don't have description in card data
+      creator: {
+        name: nextVideoCard.creatorName,
+        avatar: nextVideoCard.creatorAvatar,
+        subscribers: '0 subscribers', // We don't have this in card data
+        id: nextVideoCard.creatorId
+      },
+      creatorId: nextVideoCard.creatorId,
+      views: nextVideoCard.views,
+      duration: nextVideoCard.duration,
+      xpReward: nextVideoCard.zapReward
+    };
+
+    // Update internal video state to trigger re-render with new video
+    setInternalVideo(nextVideo);
+
+    // Reset video player state
+    setCurrentVideoTime(0);
+    setIsVideoPlaying(false);
   };
 
   return (
@@ -615,20 +561,38 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
             <div className="flex-1 overflow-y-auto border-b border-neutral-200/40 pb-4">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-semibold text-neutral-800">Up Next</h3>
-                <span className="text-xs text-neutral-500">{upNextVideos.length} videos</span>
+                <span className="text-xs text-neutral-500">
+                  {isLoadingUpNext ? '...' : `${upNextVideos.length} videos`}
+                </span>
               </div>
               <div className="flex flex-col gap-3 pr-2">
+                {/* Loading Skeletons */}
+                {isLoadingUpNext && (
+                  <>
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} className="flex items-center gap-3 p-3">
+                        <Skeleton className="w-20 h-14 rounded-md flex-shrink-0" />
+                        <div className="flex flex-col gap-2 flex-1">
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-3 w-2/3" />
+                          <Skeleton className="h-3 w-1/2" />
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+
                 {/* Featured Video Cards */}
-                {upNextVideos.map((relatedVideo) => (
-                  <div
+                {!isLoadingUpNext && upNextVideos.map((relatedVideo) => (
+                  <motion.div
                     key={relatedVideo.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
                     className="flex items-center gap-3 p-3 rounded-xl bg-white/60 backdrop-blur-sm shadow hover:shadow-md transition-all duration-200 cursor-pointer hover:bg-white/70"
                     onClick={() => {
-                      // Navigate to the new video by updating the URL
-                      // This will trigger the parent component to re-render with the new video
-                      if (relatedVideo.videoId) {
-                        window.location.href = `/watch?v=${relatedVideo.videoId}`;
-                      }
+                      // Seamlessly switch to the next video within the same popup
+                      handleSwitchVideo(relatedVideo);
                     }}
                   >
                     <div className="relative w-20 h-14 bg-gradient-to-br from-gray-200 to-gray-300 rounded-md overflow-hidden flex-shrink-0">
@@ -636,6 +600,7 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
                         src={relatedVideo.thumbnail}
                         alt={relatedVideo.title}
                         className="w-full h-full object-cover"
+                        loading="lazy"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
                           e.currentTarget.nextElementSibling?.classList.remove('hidden');
@@ -648,18 +613,29 @@ export function WatchPopupV5({ open, onClose, video }: WatchPopupProps) {
                         {relatedVideo.duration}
                       </div>
                     </div>
-                    <div className="flex flex-col flex-1">
+                    <div className="flex flex-col flex-1 min-w-0">
                       <span className="text-sm font-medium text-neutral-900 line-clamp-2 mb-1">
                         {relatedVideo.title}
                       </span>
-                      <span className="text-xs text-neutral-500 mb-1">{relatedVideo.creator?.name || relatedVideo.creator || 'Unknown Creator'}</span>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-neutral-500">{relatedVideo.views}</span>
-                        <span className="text-xs font-medium" style={{ color: '#A259FF' }}>+{relatedVideo.xpReward || relatedVideo.zaps || 0} ⚡</span>
+                      <span className="text-xs text-neutral-500 mb-1 truncate">
+                        {relatedVideo.creatorName}
+                      </span>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs text-neutral-500 truncate">{relatedVideo.views} views</span>
+                        <span className="text-xs font-medium flex-shrink-0" style={{ color: '#A259FF' }}>
+                          +{relatedVideo.zapReward} ⚡
+                        </span>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
+
+                {/* Empty State */}
+                {!isLoadingUpNext && upNextVideos.length === 0 && (
+                  <div className="text-center py-8 text-neutral-500 text-sm">
+                    No videos available
+                  </div>
+                )}
               </div>
             </div>
 
