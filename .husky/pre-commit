@@ -21,8 +21,8 @@ PATTERNS=(
   "firebase.*['\"]apiKey['\"]:\s*['\"][^'\"]+['\"]"  # Firebase config objects
 )
 
-# Files to check (staged files)
-FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx|js|jsx|json|env|yml|yaml|config)$' || true)
+# Files to check (staged files) - INCLUDING HTML FILES
+FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx|js|jsx|json|env|yml|yaml|config|html|htm)$' || true)
 
 if [ -z "$FILES" ]; then
   echo "${GREEN}✅ No relevant files to scan${NC}"
