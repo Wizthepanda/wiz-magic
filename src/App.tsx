@@ -25,6 +25,7 @@ import './lib/firebase'; // Initialize Firebase
 const Index = lazy(() => import("./pages/Index"));
 const About = lazy(() => import("./pages/About"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const CreatorProfile = lazy(() => import("./pages/CreatorProfile"));
 const Watch = lazy(() => import("./pages/Watch"));
 const Shorts = lazy(() => import("./pages/Shorts"));
@@ -148,6 +149,7 @@ const App = () => {
 
                   <Route path="/about" element={<About />} />
                   <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/terms" element={<TermsOfService />} />
                   <Route path="/watch/:videoId" element={<Watch />} />
                   <Route path="/shorts" element={<Shorts />} />
                   <Route path="/shorts/:shortId" element={<Shorts />} />
