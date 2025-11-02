@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { WizHomepage } from '@/components/wiz/wiz-homepage';
+import { Homepage } from '@/components/homepage/Homepage';
 import { useAuth } from '@/hooks/useAuth';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
@@ -75,7 +75,7 @@ const Index = () => {
       transition={{ duration: 0.3 }}
       className="min-h-screen"
     >
-      <WizHomepage onEnterPlatform={() => navigate('/discover')} />
+      <Homepage />
     </motion.div>
   );
 };
