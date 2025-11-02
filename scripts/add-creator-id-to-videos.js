@@ -10,16 +10,27 @@
 
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import dotenv from 'dotenv';
 
-// Firebase configuration
+// Load environment variables
+dotenv.config();
+
+// ⚠️ SECURITY: Never hardcode API keys! Always use environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyDaPOgfD10V1oKuVCQ26d7I4_sNKq6UyYI",
-  authDomain: "wiz-magic-platform.firebaseapp.com",
-  projectId: "wiz-magic-platform",
-  storageBucket: "wiz-magic-platform.firebasestorage.app",
-  messagingSenderId: "590452672993",
-  appId: "1:590452672993:web:62f1bde1f5ed73ef9e8ea6"
+  apiKey: process.env.VITE_FIREBASE_API_KEY,
+  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.VITE_FIREBASE_APP_ID,
 };
+
+// Validate required environment variables
+if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+  console.error('❌ Missing required Firebase environment variables!');
+  console.error('Please ensure .env file contains all Firebase configuration.');
+  process.exit(1);
+}
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);

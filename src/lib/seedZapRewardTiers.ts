@@ -10,14 +10,28 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
+// ⚠️ SECURITY: Never hardcode API keys! Always use environment variables
 const firebaseConfig = {
-  apiKey: 'AIzaSyCD6kuuaobXR1fCEbPwrwIy6FDwZtRmeV8',
-  authDomain: 'wiz-magic-platform.firebaseapp.com',
-  projectId: 'wiz-magic-platform',
-  storageBucket: 'wiz-magic-platform.firebasestorage.app',
-  messagingSenderId: '485151111726',
-  appId: '1:485151111726:web:9d65ec8a6accfa69e23dbf',
+  apiKey: process.env.VITE_FIREBASE_API_KEY,
+  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.VITE_FIREBASE_APP_ID,
 };
+
+// Validate required environment variables
+if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+  console.error('❌ Missing required Firebase environment variables!');
+  console.error('Please ensure .env file contains:');
+  console.error('  - VITE_FIREBASE_API_KEY');
+  console.error('  - VITE_FIREBASE_PROJECT_ID');
+  console.error('  - VITE_FIREBASE_AUTH_DOMAIN');
+  console.error('  - VITE_FIREBASE_STORAGE_BUCKET');
+  console.error('  - VITE_FIREBASE_MESSAGING_SENDER_ID');
+  console.error('  - VITE_FIREBASE_APP_ID');
+  process.exit(1);
+}
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
