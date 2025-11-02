@@ -23,6 +23,7 @@ import './lib/firebase'; // Initialize Firebase
 
 // Public pages (no sidebar)
 const Index = lazy(() => import("./pages/Index"));
+const HomepageV2 = lazy(() => import("./pages/HomepageV2"));
 const About = lazy(() => import("./pages/About"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
@@ -158,8 +159,11 @@ const App = () => {
                   <Route path="/demo/community-welcome" element={<CommunityWelcomeDemo />} />
                   <Route path="/demo/community-v4" element={<CommunityProfileDemoPage />} />
 
+                  {/* Homepage V2 - New Premium Design */}
+                  <Route path="/home-v2" element={<HomepageV2 />} />
+
                   {/* Homepage - No sidebar (handles auth state internally) */}
-                  <Route path="/" element={<Index />} />
+                  <Route path="/" element={<HomepageV2 />} />
 
                   {/* Creator Profile - Standalone */}
                   <Route path="/creator/:username" element={<CreatorProfile />} />
