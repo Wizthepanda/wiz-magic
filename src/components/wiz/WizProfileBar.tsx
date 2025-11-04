@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth, getUserDisplayName, getUserAvatar } from '@/hooks/useAuth';
 import { useZAPSystem } from '@/hooks/useZAPSystem';
 import { initProgressUI } from '@/lib/wiz-progress-ui';
 import { XPRewardsDropdown2 } from '@/components/ui/xp-rewards-dropdown-2';
@@ -175,9 +175,9 @@ export const WizProfileBar: React.FC = () => {
     currentZAPs: zapData?.totalZAPs || 0,
     level: zapProgress?.level || 1,
     dailyZAPsEarned: zapData?.dailyZAPs || 0,
-    displayName: user.displayName || 'WIZ User',
+    displayName: getUserDisplayName(user),
     email: user.email || '',
-    avatarUrl: user.photoURL || '',
+    avatarUrl: getUserAvatar(user),
     progressPercent: zapProgress?.progressPercent || 0,
     zapsForCurrentLevel: zapProgress?.zapsForCurrentLevel || 0,
     zapsForNextLevel: zapProgress?.zapsForNextLevel || 100,
@@ -269,7 +269,7 @@ export const WizProfileBar: React.FC = () => {
         {/* Avatar */}
         <div className="relative">
           <img
-            src={userZAPData.avatarUrl || user?.photoURL || '/default-avatar.png'}
+            src={userZAPData.avatarUrl || '/default-avatar.png'}
             alt={userZAPData.displayName}
             className="w-8 h-8 rounded-full object-cover ring-2 ring-white/20"
           />
@@ -332,7 +332,7 @@ export const WizProfileBar: React.FC = () => {
               <div className="flex items-start space-x-4">
                 <div className="w-14 h-14 rounded-full overflow-hidden bg-gradient-to-br from-purple-400 to-indigo-500 p-0.5 flex-shrink-0">
                   <img
-                    src={userZAPData.avatarUrl || user?.photoURL || '/default-avatar.png'}
+                    src={userZAPData.avatarUrl || '/default-avatar.png'}
                     alt={userZAPData.displayName}
                     className="w-full h-full rounded-full object-cover bg-white"
                   />

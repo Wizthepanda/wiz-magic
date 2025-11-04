@@ -21,7 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth, getUserDisplayName, getUserAvatar } from '@/hooks/useAuth';
 import { db } from '@/lib/firebase';
 import { collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, doc, deleteDoc, serverTimestamp, increment } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -149,8 +149,8 @@ export const CommunityFeedV3: React.FC<CommunityFeedV3Props> = ({ communityId, i
       await addDoc(collection(db, 'community_posts'), {
         communityId,
         authorId: user.uid,
-        authorName: user.displayName || 'Anonymous',
-        authorAvatar: user.photoURL || null,
+        authorName: getUserDisplayName(user),
+        authorAvatar: getUserAvatar(user) || null,
         authorLevel: 1, // TODO: Get from user profile
         content: newPostContent,
         upvotes: 0,
@@ -315,8 +315,8 @@ export const CommunityFeedV3: React.FC<CommunityFeedV3Props> = ({ communityId, i
       await addDoc(collection(db, 'community_comments'), {
         postId,
         authorId: user.uid,
-        authorName: user.displayName || 'Anonymous',
-        authorAvatar: user.photoURL || null,
+        authorName: getUserDisplayName(user),
+        authorAvatar: getUserAvatar(user) || null,
         content: newComment[postId],
         createdAt: serverTimestamp(),
       });

@@ -228,28 +228,87 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
     let creatorVideosUnsubscribe: (() => void) | null = null;
 
     const setupRealtimeListeners = () => {
-      // Real-time listener for videos collection (fetch all videos for filtering)
-      videosUnsubscribe = onSnapshot(
-        query(collection(db, 'videos'), limit(100)),
-        (videosSnapshot) => {
-          console.log('🔥 ApplePremiumDashboard: Videos collection changed');
+      // Real-time listener for DISCOVER collection (published videos)
+      const discoverQuery = query(
+        collection(db, 'discover'),
+        orderBy('publishedAt', 'desc'),
+        limit(100)
+      );
 
-          // Real-time listener for creatorVideos collection (fetch all creator videos)
-          creatorVideosUnsubscribe = onSnapshot(
-            query(collection(db, 'creatorVideos'), orderBy('addedToWiz', 'desc'), limit(100)),
-            (creatorVideosSnapshot) => {
-              console.log('🔥 ApplePremiumDashboard: CreatorVideos collection changed');
-              processVideoSnapshots(videosSnapshot, creatorVideosSnapshot);
-            },
-            (err) => {
-              console.warn('🔍 CreatorVideos real-time listener failed:', err);
-            }
-          );
+      videosUnsubscribe = onSnapshot(
+        discoverQuery,
+        (discoverSnapshot) => {
+          console.log('🔥 ApplePremiumDashboard: Discover collection changed');
+          processDiscoverVideos(discoverSnapshot);
         },
         (err) => {
-          console.warn('🔍 Videos real-time listener failed:', err);
+          console.warn('🔍 Discover real-time listener failed:', err);
+          console.warn('Falling back to videos + creatorVideos collections...');
+          
+          // Fallback to original collections if discover fails
+          videosUnsubscribe = onSnapshot(
+            query(collection(db, 'videos'), limit(100)),
+            (videosSnapshot) => {
+              creatorVideosUnsubscribe = onSnapshot(
+                query(collection(db, 'creatorVideos'), orderBy('addedToWiz', 'desc'), limit(100)),
+                (creatorVideosSnapshot) => {
+                  processVideoSnapshots(videosSnapshot, creatorVideosSnapshot);
+                }
+              );
+            }
+          );
         }
       );
+    };
+
+    const processDiscoverVideos = async (discoverSnapshot: any) => {
+      try {
+        console.log('🔍 ApplePremiumDashboard: Processing discover videos...');
+        console.log('🔍 Fetched', discoverSnapshot.docs.length, 'videos from /discover collection');
+
+        const processedVideos: WatchVideoData[] = [];
+        const processedIds = new Set<string>();
+
+        discoverSnapshot.forEach((doc: any) => {
+          const data = doc.data();
+          const videoId = data.videoId || doc.id;
+
+          if (!processedIds.has(videoId)) {
+            processedIds.add(videoId);
+
+            processedVideos.push({
+              id: doc.id,
+              videoId: data.videoId,
+              title: data.title || 'Untitled Video',
+              description: data.description || '',
+              thumbnail: data.thumbnail || `https://img.youtube.com/vi/${data.videoId}/maxresdefault.jpg`,
+              duration: data.duration || '0:00',
+              views: data.videoViews ? `${parseInt(data.videoViews).toLocaleString()} views` : data.views || '0 views',
+              xpReward: 150,
+              creator: {
+                id: data.creatorId || 'unknown',
+                name: data.creatorName || data.youtubeChannelTitle || 'Unknown Creator',
+                avatar: data.creatorAvatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default',
+                subscribers: '0 subscribers',
+                isVerified: true,
+                level: 1
+              },
+              tags: [data.category, data.subcategory, ...(data.tags || [])].filter(Boolean),
+              relatedVideos: [],
+              // Store category & subcategory for filtering
+              category: data.category,
+              subcategory: data.subcategory,
+            });
+          }
+        });
+
+        console.log('📺 ApplePremiumDashboard: Final loaded videos from /discover:', processedVideos.length);
+        setDynamicVideos(processedVideos);
+        setVideosLoading(false);
+      } catch (error) {
+        console.error('❌ Error processing discover videos:', error);
+        setVideosLoading(false);
+      }
     };
 
     const processVideoSnapshots = async (videosSnapshot: any, creatorVideosSnapshot: any) => {

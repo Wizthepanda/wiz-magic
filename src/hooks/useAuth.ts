@@ -28,6 +28,9 @@ export interface WizUser extends User {
   isAdmin?: boolean;
   permissions?: string[];
   testUserData?: any;
+  username?: string; // WIZUP username (preferred over Google displayName)
+  bio?: string; // User bio
+  bannerImage?: string; // Profile banner
   youtubeProfile?: {
     channelId: string;
     channelTitle: string;
@@ -39,6 +42,58 @@ export interface WizUser extends User {
     lastSynced?: Date;
   };
 }
+
+/**
+ * Get user's display name with priority:
+ * 1. WIZUP username (if set)
+ * 2. Google displayName
+ * 3. YouTube channel title (if connected)
+ * 4. Fallback to "User"
+ */
+export const getUserDisplayName = (user: WizUser | null): string => {
+  if (!user) return 'User';
+  
+  // Priority 1: WIZUP username (preferred)
+  if (user.username) {
+    return user.username;
+  }
+  
+  // Priority 2: Google displayName
+  if (user.displayName) {
+    return user.displayName;
+  }
+  
+  // Priority 3: YouTube channel name
+  if (user.youtubeProfile?.channelTitle) {
+    return user.youtubeProfile.channelTitle;
+  }
+  
+  // Fallback
+  return 'User';
+};
+
+/**
+ * Get user's avatar with priority:
+ * 1. YouTube profile picture (if connected)
+ * 2. User's photoURL
+ * 3. Fallback to empty string (component should handle avatar fallback)
+ */
+export const getUserAvatar = (user: WizUser | null): string => {
+  if (!user) return '';
+  
+  // Priority 1: YouTube avatar (preferred - always fresh)
+  if (user.youtubeProfile?.thumbnailUrl) {
+    return user.youtubeProfile.thumbnailUrl;
+  }
+  
+  // Priority 2: User's photoURL
+  if (user.photoURL) {
+    return user.photoURL;
+  }
+  
+  // Fallback - let component handle default avatar
+  return '';
+};
 
 // Helper function to get user data
 const getUserData = async (firebaseUser: User): Promise<WizUser> => {
@@ -82,6 +137,16 @@ const getUserData = async (firebaseUser: User): Promise<WizUser> => {
       isAdmin: userPermissions.isAdmin,
       permissions: userPermissions.permissions,
       testUserData: null, // Remove demo data
+      
+      // WIZUP-specific fields (preferred over Google data)
+      username: userData?.username, // WIZUP username
+      bio: userData?.bio,
+      bannerImage: userData?.bannerImage,
+      
+      // Override photoURL with YouTube avatar if available
+      photoURL: userData?.youtubeProfile?.thumbnailUrl || userData?.photoURL || firebaseUser.photoURL,
+      
+      // YouTube profile data
       youtubeProfile: userData?.youtubeProfile ? {
         ...userData.youtubeProfile,
         lastSynced: userData.youtubeProfile.lastSynced?.toDate()
@@ -102,6 +167,9 @@ const getUserData = async (firebaseUser: User): Promise<WizUser> => {
       isAdmin: userPermissions.isAdmin,
       permissions: userPermissions.permissions,
       testUserData: null,
+      username: undefined,
+      bio: undefined,
+      bannerImage: undefined,
       youtubeProfile: undefined,
     };
   }

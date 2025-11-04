@@ -1,172 +1,454 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terms of Service — WIZXP Platform</title>
-    <meta name="robots" content="noindex">
-    <style>
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #2B2B2B;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background: linear-gradient(135deg, #F6F0FF 0%, #FFFFFF 100%);
-            min-height: 100vh;
-        }
-        
-        h1 {
-            color: #7C3AED;
-            font-size: 2.5rem;
-            font-weight: 900;
-            margin-bottom: 1rem;
-            background: linear-gradient(135deg, #C29FFF 0%, #5A2D82 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        h2 {
-            color: #5A2D82;
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-        }
-        
-        .meta-info {
-            background: rgba(194, 159, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(194, 159, 255, 0.2);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 8px 32px rgba(194, 159, 255, 0.08);
-        }
-        
-        .meta-info p {
-            margin: 8px 0;
-            font-weight: 500;
-        }
-        
-        .contact-email {
-            color: #7C3AED;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        
-        .contact-email:hover {
-            text-decoration: underline;
-        }
-        
-        .section {
-            margin-bottom: 30px;
-        }
-        
-        .footer-contact {
-            background: rgba(194, 159, 255, 0.08);
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 30px;
-            text-align: center;
-            border: 1px solid rgba(194, 159, 255, 0.15);
-        }
-        
-        .footer-contact h2 {
-            margin-top: 0;
-            font-size: 1.3rem;
-        }
-        
-        .email-contact {
-            font-size: 1.1rem;
-            color: #7C3AED;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        
-        .email-contact:hover {
-            text-decoration: underline;
-        }
-        
-        a {
-            color: #7C3AED;
-            text-decoration: underline;
-        }
-        
-        a:hover {
-            color: #5A2D82;
-        }
-        
-        .highlight {
-            background: rgba(194, 159, 255, 0.15);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 600;
-            color: #5A2D82;
-        }
-        
-        p {
-            margin-bottom: 16px;
-        }
-        
-        .age-requirement {
-            background: rgba(194, 159, 255, 0.08);
-            border-left: 4px solid #7C3AED;
-            padding: 16px;
-            border-radius: 8px;
-            margin: 16px 0;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="WIZUP Terms of Service - Learn how we operate, reward creators and users, and maintain a safe, transparent platform.">
+  <meta name="keywords" content="WIZUP, terms of service, user agreement, platform rules, creator engagement">
+  <meta name="author" content="WIZUP">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Terms of Service - WIZUP">
+  <meta property="og:description" content="How we operate, reward, and protect creators and users">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://wizup.live/terms.html">
+  <meta property="og:image" content="https://wizup.live/og-image.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Terms of Service - WIZUP">
+  <meta name="twitter:description" content="How we operate, reward, and protect creators and users">
+  <meta name="twitter:image" content="https://wizup.live/og-image.png">
+
+  <title>Terms of Service - WIZUP</title>
+  <link rel="canonical" href="https://wizup.live/terms.html">
+  <link rel="icon" type="image/svg+xml" href="/vite.svg">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* Smooth Scroll and Ensure Scrollability */
+    html {
+      scroll-behavior: smooth;
+      overflow-y: auto !important;
+      height: 100%;
+    }
+
+    body {
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      min-height: 100vh;
+      height: auto;
+    }
+
+    /* Custom Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes orb1 {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 0.3;
+      }
+      50% {
+        transform: scale(1.2);
+        opacity: 0.5;
+      }
+    }
+
+    @keyframes orb2 {
+      0%, 100% {
+        transform: scale(1.2);
+        opacity: 0.5;
+      }
+      50% {
+        transform: scale(1);
+        opacity: 0.3;
+      }
+    }
+
+    .animate-fade-in-up {
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.6s ease-out forwards;
+    }
+
+    .animate-scale-in {
+      animation: scaleIn 0.5s ease-out forwards;
+    }
+
+    .animate-orb-1 {
+      animation: orb1 8s ease-in-out infinite;
+    }
+
+    .animate-orb-2 {
+      animation: orb2 8s ease-in-out infinite;
+    }
+
+    .delay-100 { animation-delay: 0.1s; }
+    .delay-200 { animation-delay: 0.2s; }
+    .delay-300 { animation-delay: 0.3s; }
+    .delay-400 { animation-delay: 0.4s; }
+
+    /* Glassmorphism */
+    .glass {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .glass-60 {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    /* Gradient Text */
+    .gradient-text {
+      background: linear-gradient(to right, #4f46e5, #7c3aed, #9333ea);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Scroll Reveal */
+    .scroll-reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+
+    .scroll-reveal.revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
 </head>
-<body>
-    <h1>Terms of Service — WIZXP Platform</h1>
-    
-    <div class="meta-info">
-        <p><strong>Effective Date:</strong> 12 August 2025</p>
-        <p><strong>Contact:</strong> <a href="mailto:wiztym@gmail.com" class="contact-email">wiztym@gmail.com</a></p>
-    </div>
-    
-    <div class="section">
-        <h2>1. Use of Service</h2>
-        <p>WIZXP is a questing platform where users earn XP for engaging with online content, including YouTube videos.</p>
-        <div class="age-requirement">
-            <p><strong>Age Requirements:</strong> You must be <span class="highlight">13+ to use WIZXP</span>. If under 18, you must have parental consent.</p>
+<body class="min-h-screen relative overflow-y-auto">
+
+  <!-- Liquid Glass Gradient Background -->
+  <div class="fixed inset-0 -z-10" style="background: radial-gradient(circle at 20% 30%, rgba(199, 210, 254, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(221, 214, 254, 0.15) 0%, transparent 50%), linear-gradient(135deg, #ffffff 0%, #f9fafb 50%, #f3f4f6 100%);"></div>
+
+  <!-- Animated Gradient Orbs -->
+  <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+    <div class="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-gradient-to-br from-indigo-200/30 to-violet-200/30 blur-3xl animate-orb-1"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-gradient-to-br from-violet-200/30 to-purple-200/30 blur-3xl animate-orb-2"></div>
+  </div>
+
+  <!-- Hero Section -->
+  <section class="relative pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto text-center">
+
+      <!-- Logo -->
+      <div class="inline-flex items-center justify-center mb-8 animate-scale-in delay-100">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-600 flex items-center justify-center shadow-2xl">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path>
+          </svg>
         </div>
+      </div>
+
+      <!-- Title -->
+      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 animate-fade-in-up delay-200">
+        <span class="gradient-text">Terms of Service</span>
+      </h1>
+
+      <!-- Subtitle -->
+      <p class="text-lg sm:text-xl text-gray-600 mb-6 animate-fade-in-up delay-300">
+        How we operate, reward, and protect creators and users
+      </p>
+
+      <!-- Effective Date -->
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-60 border border-white/20 shadow-lg animate-fade-in delay-400">
+        <svg class="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        <span class="text-sm font-medium text-gray-700">Effective Date: August 12, 2025</span>
+      </div>
     </div>
-    
-    <div class="section">
-        <h2>2. YouTube API Usage</h2>
-        <p>By signing in with Google, you grant WIZXP read-only access to verify engagement and award XP.</p>
-        <p>We <span class="highlight">do not post, edit, or delete</span> YouTube content.</p>
-        <p>We comply with YouTube Terms of Service and Google Privacy Policy.</p>
+  </section>
+
+  <!-- Content Sections -->
+  <section class="relative pb-24 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto space-y-8">
+
+      <!-- Section 1: Use of Service -->
+      <div class="scroll-reveal relative rounded-2xl glass border border-white/20 shadow-xl p-8">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+          </div>
+          <h2 class="text-2xl font-semibold gradient-text">1. Use of Service</h2>
+        </div>
+
+        <div class="space-y-6">
+          <div class="space-y-2">
+            <p class="text-base leading-relaxed text-gray-700">WIZUP is a creator and community engagement platform where users earn XP (ZAPs) for participating in quests, watching educational content, or engaging with creator challenges.</p>
+          </div>
+
+          <div class="space-y-3">
+            <h3 class="text-lg font-semibold text-gray-900">Age Requirements</h3>
+            <div class="space-y-2">
+              <p class="text-base leading-relaxed text-gray-700">✅ You must be 13 years or older to use WIZUP.</p>
+              <p class="text-base leading-relaxed text-gray-700">👨‍👩‍👧 If under 18, you must have parental or guardian consent before creating an account.</p>
+            </div>
+          </div>
+        </div>
+        <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-400/50 to-transparent"></div>
+      </div>
+
+      <!-- Section 2: YouTube API Usage -->
+      <div class="scroll-reveal relative rounded-2xl glass border border-white/20 shadow-xl p-8">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+            </svg>
+          </div>
+          <h2 class="text-2xl font-semibold gradient-text">2. YouTube API Usage</h2>
+        </div>
+
+        <div class="space-y-2">
+          <p class="text-base leading-relaxed text-gray-700">By signing in through Google OAuth, you grant WIZUP read-only access to verify your YouTube watch activity for XP and quest progression.</p>
+          <p class="text-base leading-relaxed text-gray-700">❌ We do not post, edit, or delete any of your YouTube content.</p>
+          <p class="text-base leading-relaxed text-gray-700">✅ We fully comply with the YouTube Terms of Service and Google Privacy Policy.</p>
+          <p class="text-base leading-relaxed text-gray-700">🎯 Your YouTube data is used strictly for engagement verification — never for marketing or resale.</p>
+        </div>
+        <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-400/50 to-transparent"></div>
+      </div>
+
+      <!-- Section 3: Rewards -->
+      <div class="scroll-reveal relative rounded-2xl glass border border-white/20 shadow-xl p-8">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <h2 class="text-2xl font-semibold gradient-text">3. Rewards</h2>
+        </div>
+
+        <div class="space-y-2">
+          <p class="text-base leading-relaxed text-gray-700">⚡ XP (ZAP Points) are earned based on verified activity and engagement within the platform.</p>
+          <p class="text-base leading-relaxed text-gray-700">🎁 XP may unlock in-platform rewards, achievements, or levels, but has no inherent monetary value or external convertibility unless explicitly stated by WIZUP.</p>
+        </div>
+        <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-400/50 to-transparent"></div>
+      </div>
+
+      <!-- Section 4: User Conduct -->
+      <div class="scroll-reveal relative rounded-2xl glass border border-white/20 shadow-xl p-8">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+            </svg>
+          </div>
+          <h2 class="text-2xl font-semibold gradient-text">4. User Conduct</h2>
+        </div>
+
+        <div class="space-y-6">
+          <div class="space-y-2">
+            <p class="text-base leading-relaxed text-gray-700">✅ You agree to use WIZUP responsibly and in good faith.</p>
+          </div>
+
+          <div class="space-y-3">
+            <h3 class="text-lg font-semibold text-gray-900">Prohibited Actions</h3>
+            <div class="space-y-2">
+              <p class="text-base leading-relaxed text-gray-700">🤖 Using bots or automation to simulate engagement</p>
+              <p class="text-base leading-relaxed text-gray-700">⚠️ Attempting to hack, exploit, or bypass reward systems</p>
+              <p class="text-base leading-relaxed text-gray-700">🚫 Posting or distributing harmful, offensive, or illegal content</p>
+              <p class="text-base leading-relaxed text-gray-700">⚖️ Any violation of these terms may result in account suspension or termination.</p>
+            </div>
+          </div>
+        </div>
+        <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-400/50 to-transparent"></div>
+      </div>
+
+      <!-- Section 5: Account Termination -->
+      <div class="scroll-reveal relative rounded-2xl glass border border-white/20 shadow-xl p-8">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <h2 class="text-2xl font-semibold gradient-text">5. Account Termination</h2>
+        </div>
+
+        <div class="space-y-6">
+          <div class="space-y-2">
+            <p class="text-base leading-relaxed text-gray-700">WIZUP reserves the right to suspend or permanently terminate any user account found in violation of:</p>
+          </div>
+
+          <div class="space-y-3">
+            <h3 class="text-lg font-semibold text-gray-900">Violation Reasons</h3>
+            <div class="space-y-2">
+              <p class="text-base leading-relaxed text-gray-700">📋 These Terms of Service</p>
+              <p class="text-base leading-relaxed text-gray-700">🔒 The Privacy Policy</p>
+              <p class="text-base leading-relaxed text-gray-700">⚖️ Applicable laws or ethical standards</p>
+              <p class="text-base leading-relaxed text-gray-700">⚠️ Termination may result in the loss of accumulated XP or rewards.</p>
+            </div>
+          </div>
+        </div>
+        <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-400/50 to-transparent"></div>
+      </div>
+
+      <!-- Section 6: Disclaimer -->
+      <div class="scroll-reveal relative rounded-2xl glass border border-white/20 shadow-xl p-8">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+          </div>
+          <h2 class="text-2xl font-semibold gradient-text">6. Disclaimer</h2>
+        </div>
+
+        <div class="space-y-2">
+          <p class="text-base leading-relaxed text-gray-700">WIZUP is provided "as is" and "as available" without any warranties of uninterrupted service, accuracy, or guaranteed monetary value of rewards.</p>
+          <p class="text-base leading-relaxed text-gray-700">⚠️ We are not responsible for data loss, service interruptions, or third-party outages (e.g., YouTube API downtime).</p>
+        </div>
+        <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-400/50 to-transparent"></div>
+      </div>
+
+      <!-- Section 7: Contact Us -->
+      <div class="scroll-reveal relative rounded-2xl glass border border-white/20 shadow-xl p-8">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+            </svg>
+          </div>
+          <h2 class="text-2xl font-semibold gradient-text">7. Contact Us</h2>
+        </div>
+
+        <div class="space-y-2">
+          <p class="text-base leading-relaxed text-gray-700">📧 Email: wizuplive@gmail.com</p>
+          <p class="text-base leading-relaxed text-gray-700">🌐 Website: https://wizup.live</p>
+        </div>
+        <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-400/50 to-transparent"></div>
+      </div>
+
+      <!-- Important Notice Card -->
+      <div class="scroll-reveal rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 p-8 text-center">
+        <svg class="w-12 h-12 text-white mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path>
+        </svg>
+        <h3 class="text-2xl font-bold text-white mb-2">Agreement to Terms</h3>
+        <p class="text-white/90 mb-6">
+          By using WIZUP, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a
+            href="/privacy.html"
+            class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-violet-600 font-semibold hover:bg-white/90 transition-all transform hover:scale-105 shadow-lg"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+            </svg>
+            View Privacy Policy
+          </a>
+          <a
+            href="mailto:wizuplive@gmail.com"
+            class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/20 backdrop-blur-sm text-white font-semibold hover:bg-white/30 transition-all transform hover:scale-105 border border-white/20"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+            </svg>
+            Contact Us
+          </a>
+        </div>
+      </div>
     </div>
-    
-    <div class="section">
-        <h2>3. Rewards</h2>
-        <p>XP is awarded based on verified engagement. XP may unlock rewards on our platform but has <span class="highlight">no guaranteed monetary value</span>.</p>
+  </section>
+
+  <!-- Footer -->
+  <footer class="relative border-t border-white/20 glass-60">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
+        <!-- Back to Home Button -->
+        <a
+          href="/"
+          class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-indigo-600 to-violet-500 text-white font-semibold shadow-lg hover:scale-105 transition-transform"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+          </svg>
+          Back to Home
+        </a>
+
+        <!-- Privacy Link -->
+        <a
+          href="/privacy.html"
+          class="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-medium"
+        >
+          View Privacy Policy
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </a>
+      </div>
+
+      <!-- Copyright -->
+      <div class="mt-8 pt-8 border-t border-gray-200 text-center">
+        <p class="text-sm text-gray-600">
+          © <span id="year"></span> WIZUP. All rights reserved.
+        </p>
+      </div>
     </div>
-    
-    <div class="section">
-        <h2>4. User Conduct</h2>
-        <p>You agree not to cheat, automate, or falsify engagement, or use WIZXP for illegal activities.</p>
-    </div>
-    
-    <div class="section">
-        <h2>5. Account Termination</h2>
-        <p>We may suspend or terminate accounts that violate these Terms or our Privacy Policy.</p>
-    </div>
-    
-    <div class="section">
-        <h2>6. Disclaimer</h2>
-        <p>WIZXP is provided <span class="highlight">"as is"</span> without guarantees of uninterrupted service or monetary reward value.</p>
-    </div>
-    
-    <div class="footer-contact">
-        <h2>7. Contact Us</h2>
-        <p>Questions? Contact us at:</p>
-        <p>📧 <a href="mailto:wiztym@gmail.com" class="email-contact">wiztym@gmail.com</a></p>
-    </div>
+  </footer>
+
+  <script>
+    // Set current year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Scroll reveal on load
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    });
+
+    document.querySelectorAll('.scroll-reveal').forEach((el) => {
+      observer.observe(el);
+    });
+
+    // Scroll to top on page load
+    window.scrollTo(0, 0);
+  </script>
 </body>
 </html>

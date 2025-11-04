@@ -6,6 +6,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useSearchParams } from 'react-router-dom';
 import { CreationHubV2 } from './CreationHubV2';
 import { PublishedCreationsManagerV2 } from './PublishedCreationsManagerV2';
+import { YoutubeStudio } from '../youtube/YoutubeStudio';
 
 type StudioTab = 'creation' | 'youtube' | 'published';
 
@@ -121,7 +122,7 @@ export const CreatorStudio: React.FC = () => {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
             >
-              <YouTubeSection />
+              <YoutubeStudio />
             </motion.div>
           )}
 
@@ -188,52 +189,6 @@ const NavigationPill: React.FC<NavigationPillProps> = ({
       />
       <span className="relative z-10">{label}</span>
     </motion.button>
-  );
-};
-
-// ========================================
-// YOUTUBE SECTION (PLACEHOLDER)
-// ========================================
-const YouTubeSection: React.FC = () => {
-  return (
-    <div className="space-y-8">
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 p-12 text-center border border-gray-200/50"
-      >
-        {/* Animated Background Blobs */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-red-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-
-        {/* Content */}
-        <div className="relative z-10 space-y-6">
-          <motion.div
-            animate={{
-              scale: [1, 1.1, 1],
-              rotate: [0, 5, -5, 0]
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="inline-flex w-24 h-24 rounded-3xl bg-gradient-to-br from-red-500 to-pink-500 items-center justify-center shadow-2xl"
-          >
-            <Youtube className="w-12 h-12 text-white" />
-          </motion.div>
-
-          <div>
-            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent mb-3">
-              Connect Your YouTube Channel
-            </h2>
-            <p className="text-gray-700 text-lg max-w-2xl mx-auto">
-              One click to connect. We'll auto-fetch your videos for easy publishing.
-            </p>
-          </div>
-        </div>
-      </motion.div>
-    </div>
   );
 };
 

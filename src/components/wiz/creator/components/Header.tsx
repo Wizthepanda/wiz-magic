@@ -8,6 +8,7 @@ import { useCreatorProfile } from '../hooks/useCreatorProfile';
 import { SyncButton } from './SyncButton';
 import { EditProfileDialog } from './EditProfileDialog';
 import { TipButton } from './TipButton';
+import { WizUser, getUserDisplayName, getUserAvatar } from '@/hooks/useAuth';
 import { 
   Edit3, 
   ExternalLink, 
@@ -17,15 +18,8 @@ import {
   Youtube
 } from 'lucide-react';
 
-interface User {
-  uid: string;
-  displayName?: string | null;
-  email?: string | null;
-  photoURL?: string | null;
-}
-
 interface CreatorHeaderProps {
-  user: User;
+  user: WizUser;
   totalXP: number;
   level: number;
   progressPercent: number;
@@ -180,9 +174,9 @@ export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
 
                 {/* Avatar */}
                 <Avatar className="relative w-16 h-16 border-4 border-white shadow-xl">
-                  <AvatarImage src={user.photoURL || ''} alt={user.displayName || ''} />
+                  <AvatarImage src={getUserAvatar(user)} alt={getUserDisplayName(user)} />
                   <AvatarFallback className="bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-xl">
-                    {user.displayName?.charAt(0) || 'C'}
+                    {getUserDisplayName(user).charAt(0)}
                   </AvatarFallback>
                 </Avatar>
               </div>
@@ -192,7 +186,7 @@ export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
             <div className={`${isMobile ? 'text-center' : ''}`}>
               <div className="flex items-center gap-2 mb-1">
                 <h1 className="text-2xl font-bold text-slate-900">
-                  {creatorProfile?.wizName || user.displayName || 'Creator'}
+                  {getUserDisplayName(user)}
                 </h1>
                 {/* Creator Tier Badge */}
                 <Badge className="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white border-0 px-2 py-0.5">

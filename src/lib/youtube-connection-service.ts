@@ -22,7 +22,8 @@ import {
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
-  OAuthCredential
+  OAuthCredential,
+  GoogleAuthProvider
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, youtubeAuthProvider, db } from './firebase';
@@ -127,11 +128,18 @@ export class YouTubeConnectionService {
     userId: string
   ): Promise<boolean> {
     try {
-      const credential = result.credential as OAuthCredential;
+      // Get credential using GoogleAuthProvider.credentialFromResult
+      const credential = GoogleAuthProvider.credentialFromResult(result);
       const accessToken = credential?.accessToken;
 
       if (!accessToken) {
         console.error('❌ No access token in YouTube auth result');
+        console.log('📋 Result structure:', {
+          hasCredential: !!credential,
+          hasUser: !!result.user,
+          credentialType: credential?.providerId,
+          scopes: credential ? Object.keys(credential) : []
+        });
         return false;
       }
 
@@ -145,8 +153,11 @@ export class YouTubeConnectionService {
         scope: credential.providerId || 'youtube.readonly'
       });
 
+      // Set access token on YouTube API instance before fetching channel data
+      youTubeAPI.setAccessToken(accessToken, undefined, Date.now() + 3600 * 1000);
+
       // Fetch and store YouTube channel data
-      const channelInfo = await youTubeAPI.getChannelInfo(accessToken);
+      const channelInfo = await youTubeAPI.getChannelInfo();
 
       if (channelInfo) {
         await this.storeYouTubeChannelData(userId, channelInfo, accessToken);
@@ -220,14 +231,19 @@ export class YouTubeConnectionService {
         lastSynced: new Date(),
       };
 
+      // Update YouTube profile data and avatar, but preserve WIZUP username
       await updateDoc(doc(db, 'users', userId), {
         youtubeConnected: true,
         youtubeProfile,
         youtubeAccessToken: accessToken,
-        lastYouTubeSync: new Date()
+        lastYouTubeSync: new Date(),
+        // Update photoURL with YouTube avatar (users want their YouTube profile pic shown)
+        photoURL: channelInfo.avatar || '',
+        // Note: We deliberately do NOT update displayName or username here
+        // to preserve the user's WIZUP identity
       });
 
-      console.log('💾 YouTube channel data stored');
+      console.log('💾 YouTube channel data stored (preserved WIZUP username)');
     } catch (error) {
       console.error('❌ Failed to store YouTube channel data:', error);
       throw error;

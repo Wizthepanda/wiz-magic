@@ -92,17 +92,14 @@ export class YouTubeProfileSyncService {
         youtubeProfile: newProfile,
       };
 
-      // Only update display name and photo if they haven't been manually changed by user
-      // (We'll consider them unchanged if they match the old YouTube data)
-      if (userData.displayName === existingProfile?.channelTitle || !userData.displayName) {
-        updateData.displayName = newProfile.channelTitle;
-        updatedFields.push('displayName');
-      }
-      
-      if (userData.photoURL === existingProfile?.thumbnailUrl || !userData.photoURL) {
-        updateData.photoURL = newProfile.thumbnailUrl;
-        updatedFields.push('photoURL');
-      }
+      // ALWAYS update photoURL with YouTube avatar (users want their YouTube profile pic)
+      updateData.photoURL = newProfile.thumbnailUrl;
+      updatedFields.push('photoURL');
+
+      // NEVER update displayName - keep WIZUP username if user has set one
+      // The UI will show: username (if set) || displayName || YouTube channel name
+      // This preserves user identity while showing YouTube avatar
+      console.log('✨ Preserving WIZUP username, updating YouTube avatar only');
 
       // Update user document
       await updateDoc(doc(db, 'users', userId), updateData);

@@ -80,6 +80,18 @@ service cloud.firestore {
       allow write: if request.auth != null; // Any authenticated user can write
     }
     
+    // Discover collection - for published YouTube videos
+    match /discover/{videoId} {
+      allow read: if true; // Public read for discovery feed
+      allow create: if request.auth != null &&
+                    request.auth.uid == request.resource.data.creatorId &&
+                    validateDiscoverVideo(request.resource.data);
+      allow update: if request.auth != null &&
+                    request.auth.uid == resource.data.creatorId;
+      allow delete: if request.auth != null &&
+                    request.auth.uid == resource.data.creatorId;
+    }
+    
     // Creator profiles and tokens - users can only access their own
     match /creators/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
@@ -482,4 +494,17 @@ function isReplyVotingUpdate(newData, existingData) {
 
   // Only allow changes to voting fields for replies
   return changedKeys.hasOnly(['upvotes', 'downvotes', 'updatedAt']);
+}
+
+// Validation function for discover videos
+function validateDiscoverVideo(videoData) {
+  return 'creatorId' in videoData && videoData.creatorId is string &&
+         'videoId' in videoData && videoData.videoId is string &&
+         'title' in videoData && videoData.title is string && videoData.title.size() > 0 &&
+         'thumbnail' in videoData && videoData.thumbnail is string &&
+         'category' in videoData && videoData.category is string &&
+         'subcategory' in videoData && videoData.subcategory is string &&
+         'type' in videoData && videoData.type == 'youtube_video' &&
+         'status' in videoData && videoData.status == 'published' &&
+         'visibility' in videoData && videoData.visibility in ['public', 'private', 'waitlist'];
 }
