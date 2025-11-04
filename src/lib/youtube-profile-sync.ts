@@ -93,8 +93,8 @@ export class YouTubeProfileSyncService {
       };
 
       // ALWAYS update photoURL with YouTube avatar (users want their YouTube profile pic)
-      updateData.photoURL = newProfile.thumbnailUrl;
-      updatedFields.push('photoURL');
+        updateData.photoURL = newProfile.thumbnailUrl;
+        updatedFields.push('photoURL');
 
       // NEVER update displayName - keep WIZUP username if user has set one
       // The UI will show: username (if set) || displayName || YouTube channel name

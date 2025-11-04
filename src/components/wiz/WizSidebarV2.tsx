@@ -213,14 +213,14 @@ export const WizSidebarV2 = ({ onNavigate }: WizSidebarV2Props) => {
   }
 
   return (
-    <motion.div
+    <motion.nav
+      initial={false}
       animate={{ width: isSidebarExpanded ? 280 : 80 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      transition={{ type: 'spring', stiffness: 120, damping: 20 }}
       className={cn(
-        "fixed left-0 top-0 h-screen",
-        "backdrop-blur-xl bg-white/10 border-r border-white/10",
-        "shadow-[0_0_30px_rgba(0,0,0,0.1)]",
-        "z-50 overflow-y-auto scrollbar-hide"
+        "h-full bg-white/70 dark:bg-[#121212]/70 backdrop-blur-xl border-r border-white/10 shadow-lg",
+        "transition-all duration-300 ease-in-out flex flex-col justify-between",
+        "sticky top-0 z-50 overflow-y-auto scrollbar-hide"
       )}
     >
       <div className="flex flex-col h-full p-4">
@@ -345,7 +345,7 @@ export const WizSidebarV2 = ({ onNavigate }: WizSidebarV2Props) => {
           ))}
         </div>
       </div>
-    </motion.div>
+    </motion.nav>
   );
 };
 

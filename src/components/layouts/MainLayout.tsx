@@ -72,24 +72,28 @@ export const MainLayout = () => {
     >
       <FloatingParticles />
 
-      <div className="flex h-full min-h-screen">
-        {/* Persistent Sidebar V2 - Never unmounts */}
-        <WizSidebarV2 onNavigate={handleSectionChange} />
+      <div className="flex h-screen overflow-hidden bg-[#fafafa] dark:bg-[#0e0e0e]">
+        {/* Sticky Sidebar Container - Desktop Only */}
+        {!isMobile && (
+          <aside
+            className="sticky top-0 left-0 h-screen flex-shrink-0 z-40"
+            style={{
+              position: "sticky",
+              alignSelf: "flex-start",
+              willChange: "transform",
+            }}
+          >
+            <WizSidebarV2 onNavigate={handleSectionChange} />
+          </aside>
+        )}
 
-        {/* Main Content Area - Routes render here */}
-        <motion.main
-          className="flex-1 min-w-0"
+        {/* Main Content Scroll Area */}
+        <main
+          className="flex-1 overflow-y-auto overflow-x-hidden"
           style={{
-            marginLeft: !isMobile ? `${sidebarWidth}px` : 0
-          }}
-          animate={{
-            marginLeft: !isMobile ? sidebarWidth : 0
-          }}
-          transition={{
-            type: 'spring',
-            stiffness: 300,
-            damping: 30,
-            duration: 0.4
+            scrollBehavior: "smooth",
+            height: "100vh",
+            marginLeft: !isMobile ? 0 : 0
           }}
         >
           <motion.div
@@ -101,10 +105,11 @@ export const MainLayout = () => {
           >
             <Outlet />
           </motion.div>
-        </motion.main>
+        </main>
       </div>
 
       {/* Mobile bottom nav is now handled by WizSidebarV2 */}
+      {isMobile && <WizSidebarV2 onNavigate={handleSectionChange} />}
     </motion.div>
   );
 };
