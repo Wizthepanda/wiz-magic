@@ -20,7 +20,7 @@ export function CommunityTabs({ community }: CommunityTabsProps) {
   return (
     <Tabs.Root value={activeTab} onValueChange={setActiveTab} className="bg-transparent">
       {/* Sticky glassy filter bar */}
-      <div className="sticky top-20 z-20 -mx-6 px-6 py-4 mb-6 backdrop-blur-xl bg-gradient-to-r from-white/80 via-white/70 to-white/80 border-b border-white/40">
+      <div className="sticky top-20 z-20 -mx-6 px-6 py-4 mb-6 bg-gradient-to-r from-white/80 via-white/70 to-white/80 bg-clip-padding backdrop-filter backdrop-blur-md will-change-transform border-b border-white/40">
         <Tabs.List className="flex gap-2 bg-white/40 backdrop-blur-md rounded-2xl p-1.5 shadow-lg border border-white/60" aria-label="Community sections">
           <TabTrigger value="community" isActive={activeTab === "community"}>
             Community

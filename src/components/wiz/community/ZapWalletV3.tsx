@@ -137,7 +137,7 @@ export const ZapWalletV3: React.FC<ZapWalletV3Props> = ({
                 "hidden md:block absolute right-0 top-full mt-2",
                 "w-[240px]",
                 // Glassmorphic styling
-                "backdrop-blur-2xl bg-gradient-to-br from-white/5 via-[#f7f9fb]/10 to-[#eef2f7]/20",
+                "bg-gradient-to-br from-white/5 via-[#f7f9fb]/10 to-[#eef2f7]/20 bg-clip-padding backdrop-filter backdrop-blur-md will-change-transform",
                 "border border-white/10 rounded-2xl",
                 "shadow-[0_0_20px_rgba(255,255,255,0.08)]",
                 "p-4",
@@ -229,7 +229,7 @@ export const ZapWalletV3: React.FC<ZapWalletV3Props> = ({
               ref={dropdownRef}
               className={cn(
                 "md:hidden fixed inset-x-0 bottom-0 z-50",
-                "backdrop-blur-2xl bg-gradient-to-b from-white/10 to-white/5",
+                "bg-gradient-to-b from-white/10 to-white/5 bg-clip-padding backdrop-filter backdrop-blur-md will-change-transform",
                 "border-t border-white/20",
                 "rounded-t-3xl",
                 "shadow-[0_-20px_60px_rgba(0,0,0,0.3)]",

@@ -884,20 +884,27 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
 
       {/* Main Dashboard Content - Scrollable */}
       <main className="flex-1 transition-all duration-300">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="w-full"
+        <motion.section
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          style={{ willChange: "opacity" }}
         >
-          {/* WIZUP Dashboard V12.5 - Premium Final Version */}
-          <WIZUPDashboardV12_5
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
             className="w-full"
-            onVideoSelect={handleWatchVideo}
-            videos={displayVideos}
-            loading={videosLoading}
-          />
-        </motion.div>
+          >
+            {/* WIZUP Dashboard V12.5 - Premium Final Version */}
+            <WIZUPDashboardV12_5
+              className="w-full"
+              onVideoSelect={handleWatchVideo}
+              videos={displayVideos}
+              loading={videosLoading}
+            />
+          </motion.div>
+        </motion.section>
       </main>
 
       {/* Hidden Gamification Drawers */}

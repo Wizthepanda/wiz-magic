@@ -59,7 +59,7 @@ export function CommunityTabsV2({ community, feedComponent }: CommunityTabsV2Pro
   return (
     <Tabs.Root value={activeTab} onValueChange={setActiveTab} className="bg-transparent">
       {/* Enhanced Tab Bar with Glassmorphism */}
-      <div className="sticky top-20 z-20 -mx-6 px-6 py-4 mb-6 backdrop-blur-2xl bg-gradient-to-r from-white/90 via-white/85 to-white/90 border-b border-white/60 shadow-lg">
+      <div className="sticky top-20 z-20 -mx-6 px-6 py-4 mb-6 bg-gradient-to-r from-white/90 via-white/85 to-white/90 bg-clip-padding backdrop-filter backdrop-blur-md will-change-transform border-b border-white/60 shadow-lg">
         <div className="relative">
           {/* Scroll buttons for mobile */}
           <AnimatePresence>
