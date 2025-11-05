@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "deploy": "npm run build && firebase deploy",
-    "deploy:hosting": "npm run build && firebase deploy --only hosting"
+    "deploy:hosting": "npm run build && firebase deploy --only hosting",
+    "seed": "node scripts/seedFirebase.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

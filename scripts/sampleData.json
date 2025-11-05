@@ -1,0 +1,84 @@
+{
+  "users": {
+    "creator-1": {
+      "uid": "creator-1",
+      "displayName": "TechMaster Alex",
+      "email": "alex@example.com",
+      "photoURL": "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex",
+      "creatorProfile": true,
+      "bio": "Teaching web development and coding best practices",
+      "category": "Technology",
+      "subscriberCount": 50000
+    },
+    "creator-2": {
+      "uid": "creator-2",
+      "displayName": "Design Guru Sarah",
+      "email": "sarah@example.com",
+      "photoURL": "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
+      "creatorProfile": true,
+      "bio": "UI/UX design principles and modern design trends",
+      "category": "Design",
+      "subscriberCount": 35000
+    },
+    "creator-3": {
+      "uid": "creator-3",
+      "displayName": "Science Pro Mike",
+      "email": "mike@example.com",
+      "photoURL": "https://api.dicebear.com/7.x/avataaars/svg?seed=Mike",
+      "creatorProfile": true,
+      "bio": "Making science fun and accessible for everyone",
+      "category": "Science",
+      "subscriberCount": 45000
+    },
+    "creator-4": {
+      "uid": "creator-4",
+      "displayName": "Business Insights Emma",
+      "email": "emma@example.com",
+      "photoURL": "https://api.dicebear.com/7.x/avataaars/svg?seed=Emma",
+      "creatorProfile": true,
+      "bio": "Entrepreneurship and business strategy for startups",
+      "category": "Business",
+      "subscriberCount": 40000
+    },
+    "creator-5": {
+      "uid": "creator-5",
+      "displayName": "Math Wizard David",
+      "email": "david@example.com",
+      "photoURL": "https://api.dicebear.com/7.x/avataaars/svg?seed=David",
+      "creatorProfile": true,
+      "bio": "Advanced mathematics made simple and engaging",
+      "category": "Mathematics",
+      "subscriberCount": 30000
+    },
+    "creator-6": {
+      "uid": "creator-6",
+      "displayName": "Language Learner Lisa",
+      "email": "lisa@example.com",
+      "photoURL": "https://api.dicebear.com/7.x/avataaars/svg?seed=Lisa",
+      "creatorProfile": true,
+      "bio": "Polyglot sharing language learning techniques",
+      "category": "Languages",
+      "subscriberCount": 25000
+    },
+    "creator-7": {
+      "uid": "creator-7",
+      "displayName": "AI Expert James",
+      "email": "james@example.com",
+      "photoURL": "https://api.dicebear.com/7.x/avataaars/svg?seed=James",
+      "creatorProfile": true,
+      "bio": "Artificial Intelligence and Machine Learning tutorials",
+      "category": "AI & ML",
+      "subscriberCount": 60000
+    },
+    "creator-8": {
+      "uid": "creator-8",
+      "displayName": "Creative Writer Sophia",
+      "email": "sophia@example.com",
+      "photoURL": "https://api.dicebear.com/7.x/avataaars/svg?seed=Sophia",
+      "creatorProfile": true,
+      "bio": "Creative writing and storytelling masterclasses",
+      "category": "Writing",
+      "subscriberCount": 20000
+    }
+  }
+}
