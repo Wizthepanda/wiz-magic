@@ -5,6 +5,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { SubtleBackground } from '@/components/ui/subtle-background';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
+import { FeaturedCreators } from '@/components/homepage/FeaturedCreators';
+import { RewardsShowcase } from '@/components/homepage/RewardsShowcase';
+import { DiscoverPreview } from '@/components/homepage/DiscoverPreview';
+import { CommunityHighlights } from '@/components/homepage/CommunityHighlights';
+import { Footer } from '@/components/homepage/Footer';
 
 interface WizHomepageProps {
   onEnterPlatform: () => void;
@@ -262,28 +267,20 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
         </div>
       </main>
 
-      {/* Enhanced Footer */}
-      <footer className="relative z-10 p-8 text-center mt-16">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 2.0 }}
-          className="inline-block"
-        >
-          <motion.div
-            whileHover={{ 
-              scale: 1.05,
-              y: -2,
-              transition: { duration: 0.3 }
-            }}
-            className="px-8 py-4 rounded-2xl bg-gradient-to-r from-pink-100 to-blue-100 border border-purple-200/50 shadow-lg backdrop-blur-sm"
-          >
-            <p className="text-lg font-medium bg-gradient-to-r from-pink-600 to-blue-600 bg-clip-text text-transparent">
-              ✨ Start your magical learning journey today
-            </p>
-          </motion.div>
-        </motion.div>
-      </footer>
+      {/* Featured Creators Section */}
+      <FeaturedCreators />
+
+      {/* Rewards Showcase Section */}
+      <RewardsShowcase />
+
+      {/* Discover Preview Section */}
+      <DiscoverPreview />
+
+      {/* Community Highlights Section */}
+      <CommunityHighlights />
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };
