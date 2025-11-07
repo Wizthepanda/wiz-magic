@@ -40,7 +40,7 @@ const creationCards: CreationCard[] = [
     gradient: 'from-blue-500 to-cyan-500',
     bgGradient: 'from-blue-50 to-cyan-50',
     zapBoost: '+15%',
-    route: '/create-course',
+    route: '/create/course',
   },
   {
     id: 'coaching',
@@ -94,8 +94,18 @@ export const CreationHubV2: React.FC = () => {
   }, [searchParams, setSearchParams]);
 
   const handleCreateClick = (type: CreationType) => {
-    setActiveCreationType(type);
-    setDraftId(undefined); // Clear draft ID when creating new
+    // For community, use local state-based wizard
+    if (type === 'community') {
+      setActiveCreationType(type);
+      setDraftId(undefined);
+      return;
+    }
+
+    // For other types (course, coaching, product), navigate to their routes
+    const card = creationCards.find(c => c.id === type);
+    if (card?.route) {
+      navigate(card.route);
+    }
   };
 
   const handleBackToGrid = () => {
