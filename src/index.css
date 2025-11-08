@@ -7,6 +7,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Z-Index Layer System for Consistent Stacking */
+:root {
+  --z-nav: 60;
+  --z-dropdown: 70;
+  --z-overlay: 90;
+}
+
 /* Custom scrollbar utilities */
 @layer utilities {
   .scrollbar-hide {
@@ -40,6 +47,20 @@
     100% {
       transform: translate(0px, 0px) scale(1);
     }
+  }
+
+  /* Subtle avatar border pulse animation for premium modal */
+  @keyframes pulse-border {
+    0%, 100% {
+      box-shadow: 0 0 30px -8px rgba(255, 255, 255, 0.8);
+    }
+    50% {
+      box-shadow: 0 0 40px -6px rgba(255, 255, 255, 1);
+    }
+  }
+
+  .animate-pulse-border {
+    animation: pulse-border 4s ease-in-out infinite;
   }
 
   .animate-blob {

@@ -4,139 +4,153 @@ import { db } from '@/lib/firebase';
 
 export interface FeaturedCreator {
   id: string;
-  name: string;
-  username: string;
-  avatar: string;
-  coverImage: string;
+  displayName: string;
   category: string;
-  followers: number;
-  videos: number;
-  zapsDistributed: number;
-  verified: boolean;
-  createdAt: Date;
+  profileImageURL?: string;
+  bannerImageURL?: string;
+  subscribersCount?: number;
+  videosCount?: number;
+  bio?: string;
+  username?: string;
+  isFeatured?: boolean;
 }
 
-// Mock fallback data for offline/error scenarios
-const mockFeaturedCreators: FeaturedCreator[] = [
+// Placeholder creators with friendly names and actual images from public folder
+const PLACEHOLDER_CREATORS: FeaturedCreator[] = [
   {
-    id: 'mock-1',
-    name: 'Sarah Chen',
-    username: '@sarahcodes',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
-    coverImage: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&h=400&fit=crop',
-    category: 'Web Development',
-    followers: 125000,
-    videos: 324,
-    zapsDistributed: 1250000,
-    verified: true,
-    createdAt: new Date(),
+    id: 'placeholder-1',
+    displayName: 'Amara Bloom',
+    category: 'Wellness & Balance',
+    subscribersCount: 4200,
+    profileImageURL: '/Amara Wellness Coach.png',
+    bannerImageURL: '/Amara Wellness Coach.png',
   },
   {
-    id: 'mock-2',
-    name: 'Michael Torres',
-    username: '@coachmikey',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Michael',
-    coverImage: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&h=400&fit=crop',
-    category: 'Career Coaching',
-    followers: 87000,
-    videos: 156,
-    zapsDistributed: 875000,
-    verified: true,
-    createdAt: new Date(),
+    id: 'placeholder-5',
+    displayName: 'Naya Orion',
+    category: 'Dating & Social Skills',
+    subscribersCount: 2200,
+    profileImageURL: '/Naya Orion Dating.png',
+    bannerImageURL: '/Naya Orion Dating.png',
   },
   {
-    id: 'mock-3',
-    name: 'Emma Wilson',
-    username: '@designemma',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma',
-    coverImage: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&h=400&fit=crop',
-    category: 'UI/UX Design',
-    followers: 203000,
-    videos: 445,
-    zapsDistributed: 2030000,
-    verified: true,
-    createdAt: new Date(),
+    id: 'placeholder-6',
+    displayName: 'Dan Crypto King',
+    category: 'Crypto & Finance',
+    subscribersCount: 5100,
+    profileImageURL: '/Dan Crypto King.png',
+    bannerImageURL: '/Dan Crypto King.png',
   },
   {
-    id: 'mock-4',
-    name: 'David Kim',
-    username: '@davidteaches',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=David',
-    coverImage: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=400&fit=crop',
-    category: 'Data Science',
-    followers: 156000,
-    videos: 267,
-    zapsDistributed: 1560000,
-    verified: true,
-    createdAt: new Date(),
+    id: 'placeholder-7',
+    displayName: 'Brandon Leaf',
+    category: 'E-commerce & Business',
+    subscribersCount: 4800,
+    profileImageURL: '/Brandon Leaf Ecommerce.jpg',
+    bannerImageURL: '/Brandon Leaf Ecommerce.jpg',
   },
   {
-    id: 'mock-5',
-    name: 'Lisa Anderson',
-    username: '@lisacreates',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Lisa',
-    coverImage: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=400&fit=crop',
-    category: 'Content Creation',
-    followers: 94000,
-    videos: 189,
-    zapsDistributed: 940000,
-    verified: true,
-    createdAt: new Date(),
+    id: 'placeholder-4',
+    displayName: 'Milo Edge',
+    category: 'Fitness',
+    subscribersCount: 3500,
+    profileImageURL: '/Milo Edge Fitness.jpg',
+    bannerImageURL: '/Milo Edge Fitness.jpg',
   },
   {
-    id: 'mock-6',
-    name: 'James Martinez',
-    username: '@jamescodes',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=James',
-    coverImage: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=400&fit=crop',
-    category: 'Mobile Development',
-    followers: 178000,
-    videos: 389,
-    zapsDistributed: 1780000,
-    verified: true,
-    createdAt: new Date(),
+    id: 'placeholder-3',
+    displayName: 'Lina Sol',
+    category: 'Design & Art',
+    subscribersCount: 2800,
+    profileImageURL: '/Lina Sol Art .jpg',
+    bannerImageURL: '/Lina Sol Art .jpg',
+  },
+  {
+    id: 'placeholder-2',
+    displayName: 'Kai Rivers',
+    category: 'Music & Sound',
+    subscribersCount: 3100,
+    profileImageURL: '/Kai Rivers Music.png',
+    bannerImageURL: '/Kai Rivers Music.png',
   },
 ];
 
+/**
+ * Fetch featured creators from Firestore
+ * Filters by isFeatured === true
+ * Returns real creators, or falls back to placeholders if < 5 exist
+ */
 async function fetchFeaturedCreators(): Promise<FeaturedCreator[]> {
   try {
+    console.log('🎨 Fetching featured creators from Firestore...');
+    
     const creatorsRef = collection(db, 'creators');
-    const q = query(
+    
+    // Query: Featured creators only, ordered by creation date
+    const creatorsQuery = query(
       creatorsRef,
-      where('featured', '==', true),
-      where('isActive', '==', true),
-      orderBy('followers', 'desc'),
-      limit(8)
+      where('isFeatured', '==', true),
+      orderBy('createdAt', 'desc'),
+      limit(10)
     );
-
-    const snapshot = await getDocs(q);
-
+    
+    const snapshot = await getDocs(creatorsQuery);
+    
     if (snapshot.empty) {
-      console.log('No featured creators found, using mock data');
-      return mockFeaturedCreators;
+      console.log('📭 No featured creators found, using placeholders');
+      return PLACEHOLDER_CREATORS;
     }
-
-    const creators = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate() || new Date(),
-    })) as FeaturedCreator[];
-
-    return creators;
+    
+    // Map Firestore docs to Creator objects
+    const creators: FeaturedCreator[] = snapshot.docs.map(doc => {
+      const data = doc.data();
+      
+      return {
+        id: doc.id,
+        displayName: data.displayName || data.name || 'Creator',
+        category: data.category || data.primaryCategory || 'Creator',
+        profileImageURL: data.profileImageURL || data.photoURL || data.avatar,
+        bannerImageURL: data.bannerImageURL || data.bannerImage || data.coverImage,
+        subscribersCount: data.subscribersCount || data.subscriberCount || 0,
+        videosCount: data.videosCount || data.videoCount || 0,
+        bio: data.bio || data.description || '',
+        username: data.username || '',
+        isFeatured: data.isFeatured,
+      };
+    });
+    
+    // Remove duplicates by ID
+    const uniqueCreators = creators.filter(
+      (v, i, a) => a.findIndex(t => t.id === v.id) === i
+    );
+    
+    console.log(`✅ Fetched ${uniqueCreators.length} featured creators`);
+    
+    // If we have fewer than 5 real creators, supplement with placeholders
+    if (uniqueCreators.length < 5) {
+      const needed = 5 - uniqueCreators.length;
+      const supplemental = PLACEHOLDER_CREATORS.slice(0, needed);
+      console.log(`📦 Adding ${needed} placeholder creators`);
+      return [...uniqueCreators, ...supplemental];
+    }
+    
+    return uniqueCreators;
+    
   } catch (error) {
-    console.error('Error fetching featured creators:', error);
-    // Return mock data on error
-    return mockFeaturedCreators;
+    console.error('❌ Error fetching featured creators:', error);
+    console.log('📦 Falling back to placeholder creators');
+    return PLACEHOLDER_CREATORS;
   }
 }
 
+/**
+ * React Query hook for fetching featured creators
+ */
 export function useFeaturedCreators() {
   return useQuery({
-    queryKey: ['featured-creators'],
+    queryKey: ['featuredCreators'],
     queryFn: fetchFeaturedCreators,
     staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes (formerly cacheTime)
-    retry: 1,
-    placeholderData: mockFeaturedCreators, // Show mock data while loading
+    refetchOnWindowFocus: false,
   });
 }

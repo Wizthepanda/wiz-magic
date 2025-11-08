@@ -13,10 +13,18 @@ const DropdownContext = createContext<DropdownContextType | undefined>(undefined
 export const DropdownProvider = ({ children }: { children: ReactNode }) => {
   const [activeDropdown, setActiveDropdown] = useState<DropdownType>(null);
 
-  const closeAllDropdowns = () => setActiveDropdown(null);
+  const setDropdown = (dropdown: DropdownType) => {
+    console.log('🔔 Dropdown Context: Setting active dropdown to:', dropdown);
+    setActiveDropdown(dropdown);
+  };
+
+  const closeAllDropdowns = () => {
+    console.log('🔔 Dropdown Context: Closing all dropdowns');
+    setActiveDropdown(null);
+  };
 
   return (
-    <DropdownContext.Provider value={{ activeDropdown, setActiveDropdown, closeAllDropdowns }}>
+    <DropdownContext.Provider value={{ activeDropdown, setActiveDropdown: setDropdown, closeAllDropdowns }}>
       {children}
     </DropdownContext.Provider>
   );

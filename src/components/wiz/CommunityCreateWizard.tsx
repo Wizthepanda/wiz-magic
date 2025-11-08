@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileText,
@@ -18,6 +18,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useAuth } from '@/hooks/useAuth';
+import { debounce } from 'lodash';
 
 // Import step components (we'll create these next)
 import { StepDetails } from './wizard-steps/StepDetails';
@@ -70,12 +72,66 @@ export const CommunityCreateWizard: React.FC<CommunityCreateWizardProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingDraft, setIsLoadingDraft] = useState(false);
   const isMobile = useIsMobile();
-
+  
+  const { user } = useAuth();
   const store = useCommunityCreateStore();
-
-  // Load draft data if draftId is provided
+  
+  // Load draft for current user on mount/auth change
   useEffect(() => {
-    const loadDraft = async () => {
+    if (user?.uid) {
+      console.log('👤 User authenticated, loading draft for:', user.uid);
+      store.loadDraftForUser(user.uid);
+    } else {
+      console.log('👤 No user, resetting to defaults');
+      store.loadDraftForUser(null);
+    }
+  }, [user?.uid, store.loadDraftForUser]);
+  
+  // Debounced persist to localStorage
+  const debouncedPersist = useMemo(
+    () => debounce(() => {
+      if (user?.uid) {
+        store.persistDraftToStorage();
+      }
+    }, 700),
+    [user?.uid, store.persistDraftToStorage]
+  );
+  
+  // Auto-save draft when store changes
+  useEffect(() => {
+    // Only persist if we have a user and at least a title
+    if (user?.uid && store.title) {
+      debouncedPersist();
+    }
+    
+    return () => {
+      debouncedPersist.cancel();
+    };
+  }, [
+    store.title,
+    store.tagline,
+    store.category,
+    store.description,
+    store.coverMedia,
+    store.tags,
+    store.profileIcon,
+    store.pricingModel,
+    debouncedPersist,
+    user?.uid
+  ]);
+  
+  // Persist on unmount
+  useEffect(() => {
+    return () => {
+      if (user?.uid) {
+        store.persistDraftToStorage();
+      }
+    };
+  }, [user?.uid, store.persistDraftToStorage]);
+
+  // Load draft data from Firestore if draftId is provided (for editing existing drafts)
+  useEffect(() => {
+    const loadFirestoreDraft = async () => {
       if (!draftId) return;
 
       setIsLoadingDraft(true);
@@ -144,7 +200,7 @@ export const CommunityCreateWizard: React.FC<CommunityCreateWizardProps> = ({
       }
     };
 
-    loadDraft();
+    loadFirestoreDraft();
   }, [draftId]);
 
   const handleNext = () => {

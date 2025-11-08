@@ -3,6 +3,8 @@ import { Hero } from './Hero';
 import { HowItWorks } from './HowItWorks';
 import { RewardsShowcase } from './RewardsShowcase';
 import { CreatorBenefits } from './CreatorBenefits';
+import { DiscoverPreview } from './DiscoverPreview';
+import { CommunityHighlights } from './CommunityHighlights';
 import { FeaturedCreators } from './FeaturedCreators';
 import { Footer } from './Footer';
 
@@ -43,8 +45,14 @@ export function Homepage() {
         {/* Rewards Showcase */}
         <RewardsShowcase />
 
+        {/* Discover Preview */}
+        <DiscoverPreview />
+
         {/* Creator Benefits */}
         <CreatorBenefits />
+
+        {/* Community Highlights */}
+        <CommunityHighlights />
 
         {/* Featured Creators/Communities */}
         <FeaturedCreators />

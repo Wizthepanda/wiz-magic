@@ -18,10 +18,24 @@ export const uploadImage = async (file: File, path: string): Promise<string> => 
     // Get the download URL
     const downloadURL = await getDownloadURL(snapshot.ref);
 
+    console.log('Image uploaded successfully:', downloadURL);
     return downloadURL;
   } catch (error) {
     console.error('Error uploading image:', error);
-    throw new Error('Failed to upload image');
+    
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      if (error.message.includes('unauthorized') || error.message.includes('permission')) {
+        throw new Error('Permission denied. Please check your storage rules.');
+      } else if (error.message.includes('quota') || error.message.includes('storage')) {
+        throw new Error('Storage quota exceeded. Please try again later.');
+      } else if (error.message.includes('network') || error.message.includes('fetch')) {
+        throw new Error('Network error. Please check your connection and try again.');
+      }
+      throw new Error(`Upload failed: ${error.message}`);
+    }
+    
+    throw new Error('Failed to upload image. Please try again.');
   }
 };
 

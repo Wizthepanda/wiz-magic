@@ -994,7 +994,7 @@ export const WizActivatePage = () => {
           
           <div className="flex items-center justify-center space-x-6 text-sm">
             <a 
-              href="https://wizxp.com/privacypolicy.html" 
+              href="https://wizxp.com/privacy" 
               target="_blank"
               rel="noopener noreferrer"
               className="text-purple-600 hover:text-purple-700 underline hover:no-underline transition-colors"
@@ -1003,7 +1003,7 @@ export const WizActivatePage = () => {
             </a>
             <span className="text-gray-400">•</span>
             <a 
-              href="https://wizxp.com/terms.html" 
+              href="https://wizxp.com/terms" 
               target="_blank"
               rel="noopener noreferrer"
               className="text-purple-600 hover:text-purple-700 underline hover:no-underline transition-colors"

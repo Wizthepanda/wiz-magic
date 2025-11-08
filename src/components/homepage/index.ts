@@ -3,6 +3,8 @@ export { Hero } from './Hero';
 export { HowItWorks } from './HowItWorks';
 export { RewardsShowcase } from './RewardsShowcase';
 export { CreatorBenefits } from './CreatorBenefits';
+export { DiscoverPreview } from './DiscoverPreview';
+export { CommunityHighlights } from './CommunityHighlights';
 export { FeaturedCreators } from './FeaturedCreators';
 export { Footer } from './Footer';
 export { Homepage } from './Homepage';

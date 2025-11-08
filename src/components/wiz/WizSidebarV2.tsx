@@ -186,12 +186,29 @@ export const WizSidebarV2 = ({ onNavigate }: WizSidebarV2Props) => {
     try {
       // Show logging out toast
       toast.loading('Logging out...', { id: 'logout' });
+      
+      // Get current user ID before signing out
+      const currentUserId = user?.uid;
 
       // Clear any local storage/session data
       localStorage.removeItem('youtube_access_token');
       localStorage.removeItem('wizxp_redirect_url');
       localStorage.removeItem('wizxp_youtube_connect');
       localStorage.removeItem('wizxp_youtube_reauth');
+      
+      // Clear user-specific community draft
+      if (currentUserId) {
+        const { useCommunityCreateStore } = await import('@/store/communityCreateStore');
+        useCommunityCreateStore.getState().clearDraftForUser(currentUserId);
+        console.log(`🗑️ Cleared community draft for user: ${currentUserId}`);
+      }
+      
+      // Clear user-specific course draft
+      if (currentUserId) {
+        const { useCourseCreateStore } = await import('@/store/courseCreateStore');
+        useCourseCreateStore.getState().clearDraftForUser(currentUserId);
+        console.log(`🗑️ Cleared course draft for user: ${currentUserId}`);
+      }
 
       // Sign out from Firebase
       await signOut();

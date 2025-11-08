@@ -134,15 +134,18 @@ class YouTubeAPIService {
    */
   private async loadGoogleIdentityServices(): Promise<void> {
     return new Promise((resolve, reject) => {
-      // Check if we're on wizxp.com - Google Identity Services has CORS restrictions for this domain
-      if (typeof window !== 'undefined' && window.location.hostname === 'wizxp.com') {
-        console.log('🚫 Skipping Google Identity Services on wizxp.com domain due to Google CORS policy');
-        // Resolve immediately to prevent blocking, but YouTube features won't work
+      // Check if we're on domains that may have CORS restrictions with Google Identity Services
+      const hostname = window?.location?.hostname || '';
+      const restrictedDomains = ['wizxp.com', 'wizup.live', 'www.wizxp.com', 'www.wizup.live'];
+
+      if (restrictedDomains.includes(hostname)) {
+        console.log(`🚫 Skipping Google Identity Services on ${hostname} domain - using Firebase Auth instead`);
+        // Resolve immediately to prevent blocking, YouTube features will use fallback
         resolve();
         return;
       }
 
-      console.log('🔄 Loading Google Identity Services for domain:', window.location.hostname);
+      console.log('🔄 Loading Google Identity Services for domain:', hostname);
 
       // Check if already loaded
       if (window.google?.accounts?.oauth2) {

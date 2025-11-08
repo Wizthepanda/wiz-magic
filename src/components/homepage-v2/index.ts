@@ -4,3 +4,7 @@ export { HowItWorks } from './HowItWorks';
 export { RewardsShowcase } from './RewardsShowcase';
 export { FeaturedCreators } from './FeaturedCreators';
 export { Footer } from './Footer';
+export { PremiumUnlockModal } from './PremiumUnlockModal';
+export { CreatorFullScreenView } from './CreatorFullScreenView';
+export { CreatorFullScreenViewDemo } from './CreatorFullScreenViewDemo';
+export { CreatorFullScreenViewExample } from './CreatorFullScreenViewExample';

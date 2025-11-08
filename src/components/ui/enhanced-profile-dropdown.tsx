@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EnhancedIconTrigger } from './enhanced-icon-trigger';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem, DropdownMenuSeparator } from './dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuPortal } from './dropdown-menu';
 
 interface User {
   id: string;
@@ -159,12 +159,13 @@ export const EnhancedProfileDropdown: React.FC<EnhancedProfileDropdownProps> = (
         </motion.button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent
-        variant="premium"
-        className="w-80 max-w-[90vw]"
-        align="end"
-        sideOffset={8}
-      >
+      <DropdownMenuPortal>
+        <DropdownMenuContent
+          variant="premium"
+          className="w-80 max-w-[90vw] z-[70]"
+          align="end"
+          sideOffset={8}
+        >
         <div className="space-y-1">
           {/* Hero Row */}
           <div className="px-1 py-4">
@@ -327,7 +328,8 @@ export const EnhancedProfileDropdown: React.FC<EnhancedProfileDropdownProps> = (
             </DropdownMenuItem>
           </div>
         </div>
-      </DropdownMenuContent>
+        </DropdownMenuContent>
+      </DropdownMenuPortal>
     </DropdownMenu>
   );
 };

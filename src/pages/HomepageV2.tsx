@@ -3,6 +3,7 @@ import { Header } from '@/components/homepage-v2/Header';
 import { Hero } from '@/components/homepage-v2/Hero';
 import { HowItWorks } from '@/components/homepage-v2/HowItWorks';
 import { RewardsShowcase } from '@/components/homepage-v2/RewardsShowcase';
+import { PlatformFeatures } from '@/components/homepage-v2/PlatformFeatures';
 import { FeaturedCreators } from '@/components/homepage-v2/FeaturedCreators';
 import { Footer } from '@/components/homepage-v2/Footer';
 
@@ -27,6 +28,9 @@ export default function HomepageV2() {
 
         {/* Rewards Showcase - Featured Deals */}
         <RewardsShowcase />
+
+        {/* Platform Features - "One Platform. All The Features." */}
+        <PlatformFeatures />
 
         {/* Featured Creators - Carousel */}
         <FeaturedCreators />

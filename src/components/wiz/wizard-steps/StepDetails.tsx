@@ -109,16 +109,37 @@ export const StepDetails: React.FC = () => {
     // Clear previous errors
     setUploadError('');
 
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!validTypes.includes(file.type)) {
-      setUploadError('Please upload JPG, PNG, or WEBP images only');
+    // Validate file type - accept all common image formats
+    const validTypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/webp',
+      'image/gif',
+      'image/bmp',
+      'image/svg+xml',
+      'image/tiff',
+      'image/x-icon',
+      'image/heic',
+      'image/heif'
+    ];
+    
+    // Also check by file extension as fallback (some browsers may not set MIME type correctly)
+    const fileExtension = file.name.split('.').pop()?.toLowerCase();
+    const validExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'svg', 'tiff', 'tif', 'ico', 'heic', 'heif'];
+    
+    if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension || '')) {
+      setUploadError('Please upload a valid image file (JPG, PNG, WEBP, GIF, BMP, SVG, TIFF, ICO, HEIC, or HEIF)');
+      // Reset input
+      event.target.value = '';
       return;
     }
 
     // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
       setUploadError('Image must be less than 5MB');
+      // Reset input
+      event.target.value = '';
       return;
     }
 
@@ -128,15 +149,25 @@ export const StepDetails: React.FC = () => {
       const filename = generateUniqueFilename(file.name);
       const storagePath = `communities/covers/${user?.uid || 'anonymous'}/${filename}`;
 
+      console.log('Uploading image:', { filename, storagePath, size: file.size, type: file.type });
+
       // Upload to Firebase Storage
       const downloadURL = await uploadImage(file, storagePath);
 
       // Set preview
       setUploadedImagePreview(downloadURL);
+      setUploadError(''); // Clear any previous errors
       toast.success('Image uploaded successfully');
+      
+      // Reset input to allow uploading the same file again if needed
+      event.target.value = '';
     } catch (error) {
       console.error('Error uploading cover image:', error);
-      setUploadError('Failed to upload image. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload image. Please try again.';
+      setUploadError(errorMessage);
+      toast.error(errorMessage);
+      // Reset input on error
+      event.target.value = '';
     } finally {
       setIsUploadingCover(false);
     }
@@ -639,6 +670,13 @@ export const StepDetails: React.FC = () => {
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-xl opacity-0 hover:opacity-100 transition-opacity">
                         <p className="text-white text-sm font-medium">Click to change image</p>
                       </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleCoverImageUpload}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        disabled={isUploadingCover}
+                      />
                     </div>
                   ) : (
                     <>
@@ -646,16 +684,16 @@ export const StepDetails: React.FC = () => {
                       <p className="text-sm text-gray-600 font-medium">
                         {isUploadingCover ? 'Uploading...' : 'Click or drag image to upload'}
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">JPG, PNG, or WEBP • Max 5MB</p>
+                      <p className="text-xs text-gray-500 mt-1">All image formats • Max 5MB</p>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleCoverImageUpload}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        disabled={isUploadingCover}
+                      />
                     </>
                   )}
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/jpg,image/png,image/webp"
-                    onChange={handleCoverImageUpload}
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                    disabled={isUploadingCover}
-                  />
                 </div>
                 {uploadError && (
                   <p className="text-xs text-red-500 mt-1">{uploadError}</p>

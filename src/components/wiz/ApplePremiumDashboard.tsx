@@ -124,7 +124,6 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
   const [videoProgress, setVideoProgress] = useState(0);
   const [showRewardCeremony, setShowRewardCeremony] = useState(false);
   const [earnedVideoXP, setEarnedVideoXP] = useState(0);
-  const [showXpProfileDropdown, setShowXpProfileDropdown] = useState(false);
   const [dynamicVideos, setDynamicVideos] = useState<WatchVideoData[]>([]);
   const [videosLoading, setVideosLoading] = useState(true);
 
@@ -489,7 +488,6 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
   }, [user]);
 
   // Refs
-  const xpRingRef = useRef<HTMLDivElement>(null);
 
   const userName = user?.displayName || 'Champion';
   const progressPercent = (userZAPS / nextLevelZAPS) * 100;
@@ -609,21 +607,22 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
       }}
     >
 
-      {/* Ultra-Premium Top Bar - Seamless Sticky */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
-        className="sticky top-0 z-50"
-        style={{
-          backgroundColor: isDarkMode ? '#0f172a' : '#f8fafc',
-          borderBottom: 'none',
-          boxShadow: 'none',
-          width: '100%',
-          overflowX: 'hidden'
-        }}
-      >
-        <div className="flex items-center justify-between gap-2 py-4 px-4 lg:px-6" style={{ width: '100%' }}>
+      {/* Ultra-Premium Top Bar - Seamless Sticky - Fixed z-index wrapper for dropdowns */}
+      <div className="relative z-[60] isolate">
+        <motion.header
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
+          className="sticky top-0"
+          style={{
+            backgroundColor: isDarkMode ? '#0f172a' : '#f8fafc',
+            borderBottom: 'none',
+            boxShadow: 'none',
+            width: '100%',
+            overflowX: 'hidden'
+          }}
+        >
+          <div className="flex items-center justify-between gap-2 py-4 px-4 lg:px-6" style={{ width: '100%' }}>
           {/* Search Bar - Flush Left with Content Wrapper */}
           <div className="search-row flex-1 max-w-md lg:max-w-lg">
             <motion.div
@@ -786,101 +785,98 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
               }}
             />
 
-            {/* Profile Avatar with Circular XP Progress */}
-            <motion.div
-              ref={xpRingRef}
-              whileHover={{ scale: 1.02 }}
-              className="relative cursor-pointer group"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setShowXpProfileDropdown(!showXpProfileDropdown);
-              }}
-            >
-              {/* Circular XP Progress Ring */}
-              <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
-                {/* Background Ring */}
-                <circle
-                  cx="32"
-                  cy="32"
-                  r="28"
-                  stroke={isDarkMode ? "#374151" : "#E5E7EB"}
-                  strokeWidth="3"
-                  fill="none"
-                  className="transition-colors duration-300"
-                />
-                {/* Dynamic XP Progress Ring */}
-                <motion.circle
-                  cx="32"
-                  cy="32"
-                  r="28"
-                  stroke="url(#dynamicXpGradient)"
-                  strokeWidth="3"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeDasharray={`${progressPercent * 1.76} 176`}
-                  initial={{ strokeDasharray: "0 176" }}
-                  animate={{ strokeDasharray: `${progressPercent * 1.76} 176` }}
-                  transition={{ duration: 2, ease: "easeOut" }}
-                  className="transition-all duration-500"
-                />
-                <defs>
-                  <linearGradient id="dynamicXpGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor={userLevel < 5 ? "#3B82F6" : userLevel < 10 ? "#8B5CF6" : "#F59E0B"} />
-                    <stop offset="50%" stopColor={userLevel < 5 ? "#8B5CF6" : userLevel < 10 ? "#EC4899" : "#F97316"} />
-                    <stop offset="100%" stopColor={userLevel < 5 ? "#EC4899" : userLevel < 10 ? "#F59E0B" : "#EF4444"} />
-                  </linearGradient>
-                </defs>
-              </svg>
-
-              {/* Avatar */}
-              <Avatar className="absolute inset-2 w-12 h-12 ring-2 ring-white/20 transition-transform duration-300 group-hover:scale-105">
-                <AvatarImage src={user?.photoURL || `https://ui-avatars.com/api/?name=${userName}&background=8B5CF6&color=ffffff&size=128`} />
-                <AvatarFallback className={cn(
-                  "bg-gradient-to-br from-blue-500 to-purple-500 text-white font-bold",
-                  "transition-all duration-300"
-                )}>
-                  {userName[0]}
-                </AvatarFallback>
-              </Avatar>
-
-              {/* Level Badge */}
-              <motion.div
-                className={cn(
-                  "absolute -bottom-1 -right-1 rounded-full px-2 py-1 text-xs font-bold transition-all duration-300",
-                  isDarkMode
-                    ? "bg-slate-800 text-white border border-slate-600"
-                    : "bg-white text-gray-900 border border-gray-200",
-                  "shadow-lg"
-                )}
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 3, repeat: Infinity }}
+            {/* Profile Avatar with Circular XP Progress - Wrapped in Radix Dropdown */}
+            <XPProfileDropdown userEmail={user?.email}>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                className="relative cursor-pointer group flex items-center justify-center"
               >
-                Lv.{userLevel}
-              </motion.div>
+                {/* Circular XP Progress Ring */}
+                <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
+                  {/* Background Ring */}
+                  <circle
+                    cx="32"
+                    cy="32"
+                    r="28"
+                    stroke={isDarkMode ? "#374151" : "#E5E7EB"}
+                    strokeWidth="3"
+                    fill="none"
+                    className="transition-colors duration-300"
+                  />
+                  {/* Dynamic XP Progress Ring */}
+                  <motion.circle
+                    cx="32"
+                    cy="32"
+                    r="28"
+                    stroke="url(#dynamicXpGradient)"
+                    strokeWidth="3"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeDasharray={`${progressPercent * 1.76} 176`}
+                    initial={{ strokeDasharray: "0 176" }}
+                    animate={{ strokeDasharray: `${progressPercent * 1.76} 176` }}
+                    transition={{ duration: 2, ease: "easeOut" }}
+                    className="transition-all duration-500"
+                  />
+                  <defs>
+                    <linearGradient id="dynamicXpGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor={userLevel < 5 ? "#3B82F6" : userLevel < 10 ? "#8B5CF6" : "#F59E0B"} />
+                      <stop offset="50%" stopColor={userLevel < 5 ? "#8B5CF6" : userLevel < 10 ? "#EC4899" : "#F97316"} />
+                      <stop offset="100%" stopColor={userLevel < 5 ? "#EC4899" : userLevel < 10 ? "#F59E0B" : "#EF4444"} />
+                    </linearGradient>
+                  </defs>
+                </svg>
 
-              {/* XP Tooltip on Hover */}
-              <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.8 }}
-                whileHover={{ opacity: 1, y: -5, scale: 1 }}
-                className={cn(
-                  "absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full mb-2 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap shadow-xl border transition-all duration-200",
-                  isDarkMode
-                    ? "bg-slate-800/95 text-white border-slate-700/50"
-                    : "bg-white/95 text-gray-900 border-gray-200/50",
-                  "backdrop-blur-lg pointer-events-none group-hover:pointer-events-auto opacity-0 group-hover:opacity-100"
-                )}
-              >
-                {userZAPS}/{nextLevelZAPS} ZAPs
-                <div className={cn(
-                  "absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 rotate-45",
-                  isDarkMode ? "bg-slate-800" : "bg-white"
-                )} />
-              </motion.div>
-            </motion.div>
+                {/* Avatar */}
+                <Avatar className="absolute inset-2 w-12 h-12 ring-2 ring-white/20 transition-transform duration-300 group-hover:scale-105">
+                  <AvatarImage src={user?.photoURL || `https://ui-avatars.com/api/?name=${userName}&background=8B5CF6&color=ffffff&size=128`} />
+                  <AvatarFallback className={cn(
+                    "bg-gradient-to-br from-blue-500 to-purple-500 text-white font-bold",
+                    "transition-all duration-300"
+                  )}>
+                    {userName[0]}
+                  </AvatarFallback>
+                </Avatar>
+
+                {/* Level Badge */}
+                <motion.div
+                  className={cn(
+                    "absolute -bottom-1 -right-1 rounded-full px-2 py-1 text-xs font-bold transition-all duration-300",
+                    isDarkMode
+                      ? "bg-slate-800 text-white border border-slate-600"
+                      : "bg-white text-gray-900 border border-gray-200",
+                    "shadow-lg"
+                  )}
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                >
+                  Lv.{userLevel}
+                </motion.div>
+
+                {/* XP Tooltip on Hover */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.8 }}
+                  whileHover={{ opacity: 1, y: -5, scale: 1 }}
+                  className={cn(
+                    "absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full mb-2 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap shadow-xl border transition-all duration-200",
+                    isDarkMode
+                      ? "bg-slate-800/95 text-white border-slate-700/50"
+                      : "bg-white/95 text-gray-900 border-gray-200/50",
+                    "backdrop-blur-lg pointer-events-none group-hover:pointer-events-auto opacity-0 group-hover:opacity-100"
+                  )}
+                >
+                  {userZAPS}/{nextLevelZAPS} ZAPs
+                  <div className={cn(
+                    "absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 rotate-45",
+                    isDarkMode ? "bg-slate-800" : "bg-white"
+                  )} />
+                </motion.div>
+              </motion.button>
+            </XPProfileDropdown>
           </div>
         </div>
-      </motion.header>
+        </motion.header>
+      </div>
 
       {/* Main Dashboard Content - Scrollable */}
       <main className="flex-1 transition-all duration-300">
@@ -1256,17 +1252,6 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
       </AnimatePresence>
 
 
-      {/* XP Profile Dropdown */}
-      <XPProfileDropdown
-        isOpen={showXpProfileDropdown}
-        onClose={() => setShowXpProfileDropdown(false)}
-        triggerRef={xpRingRef}
-        userZAPS={userZAPS}
-        nextLevelZAPS={nextLevelZAPS}
-        userLevel={userLevel}
-        streakDays={dailyStreak}
-        userName={userName}
-      />
 
       {/* Watch Popup V5 - Premium Watch Experience */}
       <WatchPopupV5

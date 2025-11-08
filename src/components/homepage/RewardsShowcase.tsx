@@ -1,83 +1,17 @@
-import { useState, useRef } from 'react';
-import { Zap, ChevronLeft, ChevronRight, Users, Clock } from 'lucide-react';
+import { useRef } from 'react';
+import { Zap } from 'lucide-react';
 import { motion, useInView } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-
-// Mock reward data
-const featuredRewards = [
-  {
-    id: 1,
-    title: 'Full Stack Web Development Masterclass',
-    creator: {
-      name: 'Alex Chen',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex',
-    },
-    zapsPrice: 2500,
-    images: [
-      'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format',
-      'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&auto=format',
-      'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&auto=format',
-    ],
-    enrolled: 1240,
-    duration: '42 hours',
-    soldOut: false,
-  },
-  {
-    id: 2,
-    title: 'Advanced React & TypeScript Course',
-    creator: {
-      name: 'Maria Garcia',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Maria',
-    },
-    zapsPrice: 1800,
-    images: [
-      'https://images.unsplash.com/photo-1633356122102-3fe601e05bd2?w=800&auto=format',
-      'https://images.unsplash.com/photo-1587620962725-abab7fe55159?w=800&auto=format',
-      'https://images.unsplash.com/photo-1619410283995-43d9134e7656?w=800&auto=format',
-    ],
-    enrolled: 890,
-    duration: '28 hours',
-    soldOut: false,
-  },
-  {
-    id: 3,
-    title: 'Machine Learning Fundamentals',
-    creator: {
-      name: 'Dr. James Wilson',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=James',
-    },
-    zapsPrice: 3200,
-    images: [
-      'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&auto=format',
-      'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&auto=format',
-      'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format',
-    ],
-    enrolled: 2150,
-    duration: '56 hours',
-    soldOut: true,
-  },
-];
+import { Skeleton } from '@/components/ui/skeleton';
+import { useRewards } from '@/hooks/useRewards';
 
 export function RewardsShowcase() {
-  const [currentImageIndex, setCurrentImageIndex] = useState<Record<number, number>>({});
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.1 });
-
-  const nextImage = (rewardId: number, maxIndex: number) => {
-    setCurrentImageIndex((prev) => ({
-      ...prev,
-      [rewardId]: ((prev[rewardId] || 0) + 1) % maxIndex,
-    }));
-  };
-
-  const prevImage = (rewardId: number, maxIndex: number) => {
-    setCurrentImageIndex((prev) => ({
-      ...prev,
-      [rewardId]: ((prev[rewardId] || 0) - 1 + maxIndex) % maxIndex,
-    }));
-  };
+  const navigate = useNavigate();
+  const { data: rewards = [], isLoading } = useRewards();
 
   return (
     <section
@@ -107,159 +41,106 @@ export function RewardsShowcase() {
         </motion.div>
 
         {/* Rewards Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {featuredRewards.map((reward, index) => {
-            const currentIndex = currentImageIndex[reward.id] || 0;
+        {isLoading ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} className="h-96 rounded-2xl" />
+            ))}
+          </div>
+        ) : rewards.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-600 dark:text-gray-400">
+              No rewards available yet. Check back soon!
+            </p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {rewards.map((reward, index) => {
 
-            return (
-              <motion.div
-                key={reward.id}
-                initial={{ opacity: 0, y: 50 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.6, delay: index * 0.15 }}
-                className="relative group"
-              >
-                {/* Card */}
-                <div className="relative rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
-                  {/* Image Carousel */}
-                  <div className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 overflow-hidden">
-                    {/* Images */}
-                    <div className="relative w-full h-full">
-                      {reward.images.map((image, imgIndex) => (
-                        <motion.img
-                          key={imgIndex}
-                          src={image}
-                          alt={`${reward.title} preview ${imgIndex + 1}`}
-                          className="absolute inset-0 w-full h-full object-cover"
-                          initial={{ opacity: 0 }}
-                          animate={{
-                            opacity: imgIndex === currentIndex ? 1 : 0,
-                          }}
-                          transition={{ duration: 0.3 }}
-                        />
-                      ))}
+              return (
+                <motion.div
+                  key={reward.id}
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={isInView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ duration: 0.6, delay: index * 0.15 }}
+                  className="relative group"
+                >
+                  {/* Card */}
+                  <div className="relative rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border border-transparent group-hover:border-indigo-200 dark:group-hover:border-indigo-800">
+                    {/* Gradient Background */}
+                    <div className="relative aspect-video bg-gradient-to-br from-indigo-100 via-violet-100 to-purple-100 dark:from-indigo-900 dark:via-violet-900 dark:to-purple-900 overflow-hidden">
+                      {/* Icon/Visual */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-2xl">
+                          <Zap className="w-12 h-12 text-white fill-white" />
+                        </div>
+                      </div>
+
+                      {/* Tier Badge */}
+                      {index === 0 && (
+                        <div className="absolute top-3 right-3">
+                          <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 font-bold">
+                            Premium
+                          </Badge>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Carousel Controls */}
-                    {reward.images.length > 1 && (
-                      <>
-                        <button
-                          onClick={() => prevImage(reward.id, reward.images.length)}
-                          className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center backdrop-blur-sm transition opacity-0 group-hover:opacity-100"
-                          aria-label="Previous image"
-                        >
-                          <ChevronLeft className="w-5 h-5 text-white" />
-                        </button>
-                        <button
-                          onClick={() => nextImage(reward.id, reward.images.length)}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center backdrop-blur-sm transition opacity-0 group-hover:opacity-100"
-                          aria-label="Next image"
-                        >
-                          <ChevronRight className="w-5 h-5 text-white" />
-                        </button>
+                    {/* Content */}
+                    <div className="p-6">
+                      {/* Tier Name */}
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                        {reward.tierName || `Tier ${index + 1}`}
+                      </h3>
 
-                        {/* Dots indicator */}
-                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-                          {reward.images.map((_, dotIndex) => (
-                            <div
-                              key={dotIndex}
-                              className={`w-1.5 h-1.5 rounded-full transition-all ${
-                                dotIndex === currentIndex
-                                  ? 'bg-white w-4'
-                                  : 'bg-white/50'
-                              }`}
-                            />
+                      {/* Required XP */}
+                      <div className="mb-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-bold text-sm">
+                            <Zap className="w-4 h-4 fill-current" />
+                            <span>{reward.requiredXP?.toLocaleString() || 0} ZAPs</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      {reward.description && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+                          {reward.description}
+                        </p>
+                      )}
+
+                      {/* Benefits List */}
+                      {reward.benefits && reward.benefits.length > 0 && (
+                        <ul className="space-y-2 mb-4">
+                          {reward.benefits.slice(0, 3).map((benefit: string, i: number) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+                              <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 mt-1.5 flex-shrink-0" />
+                              <span>{benefit}</span>
+                            </li>
                           ))}
-                        </div>
-                      </>
-                    )}
+                        </ul>
+                      )}
 
-                    {/* Sold Out Overlay */}
-                    {reward.soldOut && (
-                      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
-                        <Badge className="bg-red-600 text-white px-6 py-2 text-lg font-bold">
-                          SOLD OUT
-                        </Badge>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Content */}
-                  <div className="p-6">
-                    {/* Title */}
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 line-clamp-2 min-h-[3.5rem]">
-                      {reward.title}
-                    </h3>
-
-                    {/* Creator */}
-                    <div className="flex items-center gap-3 mb-4">
-                      <Avatar className="w-10 h-10">
-                        <AvatarImage src={reward.creator.avatar} alt={reward.creator.name} />
-                        <AvatarFallback>{reward.creator.name[0]}</AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {reward.creator.name}
-                      </span>
-                    </div>
-
-                    {/* Stats */}
-                    <div className="flex items-center gap-4 mb-4 text-sm text-gray-600 dark:text-gray-400">
-                      <div className="flex items-center gap-1">
-                        <Users className="w-4 h-4" />
-                        <span>{reward.enrolled.toLocaleString()}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        <span>{reward.duration}</span>
-                      </div>
-                    </div>
-
-                    {/* Price & CTA */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-bold">
-                          <Zap className="w-4 h-4 fill-current" />
-                          <span>{reward.zapsPrice.toLocaleString()}</span>
-                        </div>
-                      </div>
-
+                      {/* CTA */}
                       <Button
+                        onClick={() => navigate('/rewards')}
                         variant="outline"
                         size="sm"
-                        disabled={reward.soldOut}
-                        className="border-indigo-600 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950"
+                        className="w-full border-indigo-600 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950"
                       >
-                        {reward.soldOut ? 'Unavailable' : 'View'}
+                        Learn More
                       </Button>
                     </div>
 
-                    {/* Progress bar for availability */}
-                    {!reward.soldOut && (
-                      <div className="mt-4">
-                        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-                          <span>{Math.floor(Math.random() * 30 + 10)} spots left</span>
-                          <span>{Math.floor(Math.random() * 40 + 60)}% claimed</span>
-                        </div>
-                        <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                          <motion.div
-                            initial={{ width: '0%' }}
-                            animate={
-                              isInView
-                                ? { width: `${Math.floor(Math.random() * 40 + 60)}%` }
-                                : {}
-                            }
-                            transition={{ duration: 1, delay: 0.5 + index * 0.15 }}
-                            className="h-full bg-gradient-to-r from-indigo-500 to-violet-500"
-                          />
-                        </div>
-                      </div>
-                    )}
+                    {/* Hover border effect */}
+                    <div className="absolute inset-0 rounded-2xl ring-2 ring-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                   </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Bottom CTA */}
         <motion.div
@@ -269,6 +150,7 @@ export function RewardsShowcase() {
           className="mt-12 text-center"
         >
           <Button
+            onClick={() => navigate('/rewards')}
             variant="outline"
             size="lg"
             className="border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950"

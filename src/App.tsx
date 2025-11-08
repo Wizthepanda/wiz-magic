@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { LayoutProvider } from "@/contexts/LayoutContext";
 import { DropdownProvider } from "@/contexts/DropdownContext";
 import { ChatProvider } from "@/contexts/ChatContext";
+import { PlayerProvider } from "@/contexts/PlayerContext";
 import { ServiceBlockedAlert } from "@/components/ui/ServiceBlockedAlert";
 import { MainLayout } from "./components/layouts/MainLayout";
 import { lazy, Suspense, useEffect } from 'react';
@@ -27,9 +28,14 @@ import PageWrapper from './components/PageWrapper';
 const Index = lazy(() => import("./pages/Index"));
 const HomepageV2 = lazy(() => import("./pages/HomepageV2"));
 const About = lazy(() => import("./pages/About"));
+const Careers = lazy(() => import("./pages/Careers"));
+const Partners = lazy(() => import("./pages/Partners"));
+const CookiePolicy = lazy(() => import("./pages/CookiePolicy"));
+const GdprCompliance = lazy(() => import("./pages/GdprCompliance"));
+const Help = lazy(() => import("./pages/Help"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
-const CreatorProfile = lazy(() => import("./pages/CreatorProfile"));
+const CreatorFullScreen = lazy(() => import("./pages/CreatorFullScreen"));
 const Watch = lazy(() => import("./pages/Watch"));
 const Shorts = lazy(() => import("./pages/Shorts"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -52,6 +58,7 @@ const RewardsPage = lazy(() => import("./pages/rewards/RewardsPage").then(m => (
 
 // Create pages
 const CreatorStudio = lazy(() => import("./components/wiz/CreatorStudio").then(m => ({ default: m.CreatorStudio })));
+const CourseCreateWizard = lazy(() => import("./components/wiz/CourseCreateWizard").then(m => ({ default: m.CourseCreateWizard })));
 const WizCreatePageV3 = lazy(() => import("./components/wiz/WizCreatePageV3").then(m => ({ default: m.WizCreatePageV3 })));
 const WizCreatePageV2 = lazy(() => import("./components/wiz/WizCreatePageV2").then(m => ({ default: m.WizCreatePageV2 })));
 const WizCreatePage = lazy(() => import("./components/wiz/WizCreatePage").then(m => ({ default: m.WizCreatePage })));
@@ -138,8 +145,9 @@ const App = () => {
         <XpProvider>
           <LayoutProvider>
             <DropdownProvider>
-              <ChatProvider>
-                <TooltipProvider>
+              <PlayerProvider>
+                <ChatProvider>
+                  <TooltipProvider>
                 <AppLoader />
                 <ServiceBlockedAlert />
                 <Toaster />
@@ -152,8 +160,15 @@ const App = () => {
                       ======================================== */}
 
                   <Route path="/about" element={<PageWrapper><About /></PageWrapper>} />
+                  <Route path="/careers" element={<PageWrapper><Careers /></PageWrapper>} />
+                  <Route path="/partners" element={<PageWrapper><Partners /></PageWrapper>} />
+                  <Route path="/cookie-policy" element={<PageWrapper><CookiePolicy /></PageWrapper>} />
+                  <Route path="/gdpr-compliance" element={<PageWrapper><GdprCompliance /></PageWrapper>} />
+                  <Route path="/help" element={<PageWrapper><Help /></PageWrapper>} />
                   <Route path="/privacy" element={<PageWrapper><PrivacyPolicy /></PageWrapper>} />
+                  <Route path="/privacy.html" element={<PageWrapper><PrivacyPolicy /></PageWrapper>} />
                   <Route path="/terms" element={<PageWrapper><TermsOfService /></PageWrapper>} />
+                  <Route path="/terms.html" element={<PageWrapper><TermsOfService /></PageWrapper>} />
                   <Route path="/watch/:videoId" element={<PageWrapper><Watch /></PageWrapper>} />
                   <Route path="/shorts" element={<PageWrapper><Shorts /></PageWrapper>} />
                   <Route path="/shorts/:shortId" element={<PageWrapper><Shorts /></PageWrapper>} />
@@ -168,10 +183,11 @@ const App = () => {
                   {/* Homepage - No sidebar (handles auth state internally) */}
                   <Route path="/" element={<PageWrapper><HomepageV2 /></PageWrapper>} />
 
-                  {/* Creator Profile - Standalone */}
-                  <Route path="/creator/:username" element={<PageWrapper><CreatorProfile /></PageWrapper>} />
-                  <Route path="/c/:username" element={<PageWrapper><CreatorProfile /></PageWrapper>} />
-                  <Route path="/creator/id/:creatorId" element={<PageWrapper><CreatorProfile /></PageWrapper>} />
+                  {/* Creator Full Screen Profile - World Class */}
+                  <Route path="/creator/:username" element={<PageWrapper><CreatorFullScreen /></PageWrapper>} />
+                  <Route path="/c/:username" element={<PageWrapper><CreatorFullScreen /></PageWrapper>} />
+                  <Route path="/creator/id/:creatorId" element={<PageWrapper><CreatorFullScreen /></PageWrapper>} />
+                  <Route path="/creator-profile/:creatorId" element={<PageWrapper><CreatorFullScreen /></PageWrapper>} />
 
                   {/* ========================================
                       DASHBOARD ROUTES (Persistent Sidebar)
@@ -199,6 +215,7 @@ const App = () => {
 
                     {/* Create - Content creation hub */}
                     <Route path="/create" element={<PageWrapper><CreatorStudio /></PageWrapper>} />
+                    <Route path="/create/course" element={<PageWrapper><CourseCreateWizard onBack={() => window.history.back()} /></PageWrapper>} />
                     <Route path="/creator-studio" element={<PageWrapper><CreatorStudio /></PageWrapper>} />
                     <Route path="/create-v3" element={<PageWrapper><WizCreatePageV3 /></PageWrapper>} />
                     <Route path="/create-v2" element={<PageWrapper><WizCreatePageV2 /></PageWrapper>} />
@@ -218,8 +235,9 @@ const App = () => {
                 </Routes>
               </Suspense>
             </BrowserRouter>
-          </TooltipProvider>
-        </ChatProvider>
+            </TooltipProvider>
+          </ChatProvider>
+        </PlayerProvider>
       </DropdownProvider>
       </LayoutProvider>
     </XpProvider>

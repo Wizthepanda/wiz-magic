@@ -1,203 +1,64 @@
-import { useCallback } from 'react';
-import useEmblaCarousel from 'embla-carousel-react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Users, Video, Zap, TrendingUp } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { signInWithGoogleAndRedirect } from '@/lib/auth';
+import { useFeaturedCreators } from '@/hooks/useFeaturedCreators';
+import { Skeleton } from '@/components/ui/skeleton';
 
-interface Creator {
-  id: string;
-  name: string;
-  username: string;
-  avatar: string;
-  coverImage: string;
-  category: string;
-  followers: number;
-  videos: number;
-  zapsDistributed: number;
-  verified: boolean;
-}
-
-const featuredCreators: Creator[] = [
-  {
-    id: '1',
-    name: 'Sarah Chen',
-    username: '@sarahcodes',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
-    coverImage: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&h=400&fit=crop',
-    category: 'Web Development',
-    followers: 125000,
-    videos: 324,
-    zapsDistributed: 1250000,
-    verified: true,
-  },
-  {
-    id: '2',
-    name: 'Michael Torres',
-    username: '@coachmikey',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Michael',
-    coverImage: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&h=400&fit=crop',
-    category: 'Career Coaching',
-    followers: 87000,
-    videos: 156,
-    zapsDistributed: 875000,
-    verified: true,
-  },
-  {
-    id: '3',
-    name: 'Emma Wilson',
-    username: '@designemma',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma',
-    coverImage: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&h=400&fit=crop',
-    category: 'UI/UX Design',
-    followers: 203000,
-    videos: 445,
-    zapsDistributed: 2030000,
-    verified: true,
-  },
-  {
-    id: '4',
-    name: 'David Kim',
-    username: '@davidteaches',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=David',
-    coverImage: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=400&fit=crop',
-    category: 'Data Science',
-    followers: 156000,
-    videos: 267,
-    zapsDistributed: 1560000,
-    verified: true,
-  },
-  {
-    id: '5',
-    name: 'Lisa Anderson',
-    username: '@lisacreates',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Lisa',
-    coverImage: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=400&fit=crop',
-    category: 'Content Creation',
-    followers: 94000,
-    videos: 189,
-    zapsDistributed: 940000,
-    verified: true,
-  },
-  {
-    id: '6',
-    name: 'James Martinez',
-    username: '@jamescodes',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=James',
-    coverImage: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=400&fit=crop',
-    category: 'Mobile Development',
-    followers: 178000,
-    videos: 389,
-    zapsDistributed: 1780000,
-    verified: true,
-  },
-];
-
-function CreatorCard({ creator }: { creator: Creator }) {
-  return (
-    <div className="flex-[0_0_100%] min-w-0 sm:flex-[0_0_50%] lg:flex-[0_0_33.333%] px-3">
-      <div className="relative rounded-2xl bg-white/70 backdrop-blur-xl border border-white/20 shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300">
-        {/* Cover Image */}
-        <div className="relative h-32 overflow-hidden">
-          <img
-            src={creator.coverImage}
-            alt={creator.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-
-          {/* Category Badge */}
-          <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-white/90 backdrop-blur-lg text-xs font-semibold text-gray-900">
-            {creator.category}
-          </div>
-        </div>
-
-        {/* Avatar (overlapping cover) */}
-        <div className="relative px-6 -mt-12 mb-4">
-          <div className="relative inline-block">
-            <img
-              src={creator.avatar}
-              alt={creator.name}
-              className="w-24 h-24 rounded-full border-4 border-white shadow-xl bg-white"
-            />
-            {creator.verified && (
-              <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-blue-600 border-2 border-white flex items-center justify-center">
-                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="px-6 pb-6">
-          {/* Name & Username */}
-          <h3 className="text-lg font-bold text-gray-900 mb-0.5">{creator.name}</h3>
-          <p className="text-sm text-gray-600 mb-4">{creator.username}</p>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-3 gap-4 mb-4">
-            <div className="text-center">
-              <div className="flex items-center justify-center mb-1">
-                <Users className="w-4 h-4 text-indigo-600" />
-              </div>
-              <div className="text-lg font-bold text-gray-900">
-                {creator.followers >= 1000
-                  ? `${(creator.followers / 1000).toFixed(0)}K`
-                  : creator.followers}
-              </div>
-              <div className="text-xs text-gray-600">Followers</div>
-            </div>
-            <div className="text-center">
-              <div className="flex items-center justify-center mb-1">
-                <Video className="w-4 h-4 text-violet-600" />
-              </div>
-              <div className="text-lg font-bold text-gray-900">{creator.videos}</div>
-              <div className="text-xs text-gray-600">Videos</div>
-            </div>
-            <div className="text-center">
-              <div className="flex items-center justify-center mb-1">
-                <Zap className="w-4 h-4 text-purple-600 fill-purple-600" />
-              </div>
-              <div className="text-lg font-bold text-gray-900">
-                {creator.zapsDistributed >= 1000000
-                  ? `${(creator.zapsDistributed / 1000000).toFixed(1)}M`
-                  : `${(creator.zapsDistributed / 1000).toFixed(0)}K`}
-              </div>
-              <div className="text-xs text-gray-600">ZAPs</div>
-            </div>
-          </div>
-
-          {/* Follow Button */}
-          <Button className="w-full bg-gradient-to-r from-indigo-600 to-violet-500 text-white rounded-full font-semibold hover:scale-105 transition-transform">
-            Follow
-          </Button>
-        </div>
-
-        {/* Trending Badge (optional) */}
-        <div className="absolute top-40 left-3 px-2 py-1 rounded-full bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold shadow-lg flex items-center gap-1">
-          <TrendingUp className="w-3 h-3" />
-          Trending
-        </div>
-      </div>
-    </div>
-  );
-}
-
+/**
+ * Featured Creators Section - Soft Pastel Bloom Aesthetic
+ * 
+ * Design Philosophy:
+ * - Bright, breathable, non-cluttered layout
+ * - Soft gradient backgrounds (pastel bloom)
+ * - Rounded corners (24px)
+ * - Gentle hover elevation
+ * - Visual calm and friendly presence
+ * - Hero creator feels approachable and smiling
+ */
 export function FeaturedCreators() {
-  const [emblaRef, emblaApi] = useEmblaCarousel({
-    loop: true,
-    align: 'start',
-    slidesToScroll: 1,
-  });
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  
+  // Fetch featured creators (real + placeholder fallback)
+  const { data: creators = [], isLoading, error } = useFeaturedCreators();
 
-  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
-  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
+  const handleViewCreator = async (creatorId: string, username?: string) => {
+    if (!user) {
+      setIsAuthenticating(true);
+      try {
+        await signInWithGoogleAndRedirect(navigate);
+      } catch (err) {
+        console.error('Sign in failed:', err);
+      } finally {
+        setIsAuthenticating(false);
+      }
+    } else {
+      // Use username if available, otherwise use creatorId
+      if (username) {
+        navigate(`/creator/${username}`);
+      } else {
+        navigate(`/creator/id/${creatorId}`);
+      }
+    }
+  };
+
+  // Error state
+  if (error) {
+    console.error('❌ Error loading featured creators:', error);
+  }
 
   return (
-    <section id="creators" className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#eef1f7] via-white to-white" />
+    <section 
+      id="creators" 
+      className="relative py-20 sm:py-24 lg:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden"
+    >
+      {/* Background - Soft Lavender Bloom */}
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-white via-[#F8F6FF] to-white" />
 
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}
@@ -206,72 +67,395 @@ export function FeaturedCreators() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12"
+          className="text-center mb-12 sm:mb-16"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 backdrop-blur-lg border border-indigo-200 shadow-lg mb-6">
-            <Users className="w-4 h-4 text-indigo-600" />
-            <span className="text-sm font-semibold text-gray-700">
-              Featured Creators
-            </span>
-          </div>
-          <h2 className="text-4xl sm:text-5xl font-bold mb-4">
-            <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 bg-clip-text text-transparent">
-              Learn From The Best
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 tracking-tight">
+            <span className="bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              The Creators Shaping What's Next
             </span>
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Join communities led by expert creators who share their knowledge and reward your engagement
+          <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto font-normal leading-relaxed">
+            Building worlds. Sharing knowledge. Growing together.
           </p>
         </motion.div>
 
-        {/* Carousel Container */}
-        <div className="relative">
-          <div className="overflow-hidden" ref={emblaRef}>
-            <div className="flex -mx-3">
-              {featuredCreators.map((creator, index) => (
-                <motion.div
-                  key={creator.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <CreatorCard creator={creator} />
-                </motion.div>
-              ))}
+        {/* Grid Container - 2 rows × 3 columns */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
+            <Skeleton className="md:row-span-2 h-[480px] sm:h-[520px] rounded-3xl bg-gradient-to-b from-gray-100 to-gray-50" />
+            <Skeleton className="h-[240px] rounded-3xl bg-gradient-to-b from-gray-100 to-gray-50" />
+            <Skeleton className="h-[240px] rounded-3xl bg-gradient-to-b from-gray-100 to-gray-50" />
+            <Skeleton className="h-[240px] rounded-3xl bg-gradient-to-b from-gray-100 to-gray-50" />
+            <Skeleton className="h-[240px] rounded-3xl bg-gradient-to-b from-gray-100 to-gray-50" />
+            <Skeleton className="h-[240px] rounded-3xl bg-gradient-to-b from-gray-100 to-gray-50" />
+          </div>
+        ) : creators.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="max-w-md mx-auto p-10 rounded-3xl bg-gradient-to-b from-white to-[#F1ECFF] shadow-[0_8px_22px_rgba(0,0,0,0.06)] border border-gray-100">
+              <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                No Featured Creators Yet
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                Check back soon for inspiring creator profiles!
+              </p>
             </div>
           </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
+            {/* Hero Creator Card (Large, Row-Span-2) */}
+            {creators[0] && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="md:row-span-2 group cursor-pointer"
+                onClick={() => handleViewCreator(creators[0].id, creators[0].username)}
+              >
+                <div className="relative h-full min-h-[480px] sm:min-h-[520px] rounded-3xl overflow-hidden bg-gradient-to-b from-white to-[#F1ECFF] shadow-[0_8px_22px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.08)] transition-all duration-300 hover:-translate-y-1 border border-white/60">
+                  {/* Portrait Image */}
+                  {creators[0].bannerImageURL || creators[0].profileImageURL ? (
+                    <img
+                      src={creators[0].bannerImageURL || creators[0].profileImageURL}
+                      alt={creators[0].displayName}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      onError={(e) => {
+                        // Fallback to gradient if image fails to load
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#F8F6FF] via-[#F1ECFF] to-[#E8F6FF]" />
+                  )}
+                  
+                  {/* Soft Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-white/85" />
+                  
+                  {/* Content - Bottom */}
+                  <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
+                    {/* XP Badge (optional) */}
+                    {creators[0].subscribersCount && creators[0].subscribersCount > 0 && (
+                      <div className="mb-3 inline-block">
+                        <div className="px-3 py-1.5 rounded-xl bg-white/70 backdrop-blur-sm inline-block border border-white/60 shadow-sm">
+                          <span className="text-gray-700 font-semibold text-sm">
+                            {creators[0].subscribersCount.toLocaleString()} ZAPs
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Creator Name */}
+                    <h3 className="text-gray-900 font-bold text-2xl sm:text-3xl mb-2 leading-tight">
+                      {creators[0].displayName}
+                    </h3>
+                    
+                    {/* Category Tag */}
+                    <div className="inline-block">
+                      <div className="px-3 py-1.5 rounded-xl bg-white/70 backdrop-blur-sm border border-white/60 shadow-sm">
+                        <span className="text-gray-600 font-medium text-sm">
+                          {creators[0].category}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
-          {/* Navigation Buttons */}
-          <button
-            onClick={scrollPrev}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-12 h-12 rounded-full bg-white backdrop-blur-xl shadow-2xl flex items-center justify-center hover:scale-110 transition-transform z-10"
-            aria-label="Previous creators"
-          >
-            <ChevronLeft className="w-6 h-6 text-gray-900" />
-          </button>
-          <button
-            onClick={scrollNext}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-12 h-12 rounded-full bg-white backdrop-blur-xl shadow-2xl flex items-center justify-center hover:scale-110 transition-transform z-10"
-            aria-label="Next creators"
-          >
-            <ChevronRight className="w-6 h-6 text-gray-900" />
-          </button>
+            {/* Top Row - 2 Creator Cards */}
+            {creators.slice(1, 3).map((creator, idx) => (
+                <motion.div
+                  key={creator.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: (idx + 1) * 0.1 }}
+                className="group cursor-pointer"
+                onClick={() => handleViewCreator(creator.id, creator.username)}
+              >
+                <div className="relative h-full min-h-[240px] rounded-3xl overflow-hidden bg-gradient-to-b from-white to-[#F1ECFF] shadow-[0_8px_22px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.08)] transition-all duration-300 hover:-translate-y-1 border border-white/60">
+                  {/* Portrait Image */}
+                  {creator.bannerImageURL || creator.profileImageURL ? (
+                    <img
+                      src={creator.bannerImageURL || creator.profileImageURL}
+                      alt={creator.displayName}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#F8F6FF] via-[#F1ECFF] to-[#E8F6FF]" />
+                  )}
+                  
+                  {/* Soft Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-white/85" />
+                  
+                  {/* Content - Bottom */}
+                  <div className="absolute bottom-0 left-0 right-0 p-5">
+                    {/* XP Badge (optional, smaller) */}
+                    {creator.subscribersCount && creator.subscribersCount > 0 && (
+                      <div className="mb-2 inline-block">
+                        <div className="px-2.5 py-1 rounded-lg bg-white/70 backdrop-blur-sm inline-block border border-white/60 shadow-sm">
+                          <span className="text-gray-700 font-semibold text-xs">
+                            {creator.subscribersCount.toLocaleString()} ZAPs
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Creator Name */}
+                    <h3 className="text-gray-900 font-bold text-lg sm:text-xl mb-1.5 leading-tight line-clamp-2">
+                      {creator.displayName}
+                    </h3>
+                    
+                    {/* Category Tag */}
+                    <div className="inline-block">
+                      <div className="px-2.5 py-1 rounded-lg bg-white/70 backdrop-blur-sm border border-white/60 shadow-sm">
+                        <span className="text-gray-600 font-medium text-xs">
+                          {creator.category}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                </motion.div>
+              ))}
+
+            {/* Bottom Row: Creator + Stats Card + Creator */}
+            
+            {/* Bottom Left Creator */}
+            {creators[3] && (
+              <motion.div
+                key={creators[3].id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className="group cursor-pointer"
+                onClick={() => handleViewCreator(creators[3].id, creators[3].username)}
+              >
+                <div className="relative h-full min-h-[240px] rounded-3xl overflow-hidden bg-gradient-to-b from-white to-[#F1ECFF] shadow-[0_8px_22px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.08)] transition-all duration-300 hover:-translate-y-1 border border-white/60">
+                  {/* Portrait Image */}
+                  {creators[3].bannerImageURL || creators[3].profileImageURL ? (
+                    <img
+                      src={creators[3].bannerImageURL || creators[3].profileImageURL}
+                      alt={creators[3].displayName}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#F8F6FF] via-[#F1ECFF] to-[#E8F6FF]" />
+                  )}
+                  
+                  {/* Soft Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-white/85" />
+                  
+                  {/* Content - Bottom */}
+                  <div className="absolute bottom-0 left-0 right-0 p-5">
+                    {creators[3].subscribersCount && creators[3].subscribersCount > 0 && (
+                      <div className="mb-2 inline-block">
+                        <div className="px-2.5 py-1 rounded-lg bg-white/70 backdrop-blur-sm inline-block border border-white/60 shadow-sm">
+                          <span className="text-gray-700 font-semibold text-xs">
+                            {creators[3].subscribersCount.toLocaleString()} ZAPs
+                          </span>
+            </div>
+          </div>
+                    )}
+                    
+                    <h3 className="text-gray-900 font-bold text-lg sm:text-xl mb-1.5 leading-tight line-clamp-2">
+                      {creators[3].displayName}
+                    </h3>
+                    
+                    <div className="inline-block">
+                      <div className="px-2.5 py-1 rounded-lg bg-white/70 backdrop-blur-sm border border-white/60 shadow-sm">
+                        <span className="text-gray-600 font-medium text-xs">
+                          {creators[3].category}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Stats Card (Center Bottom) */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+            >
+              <div className="relative h-full min-h-[240px] rounded-3xl overflow-hidden bg-gradient-to-br from-[#E8F6FF] via-[#F3EDFF] to-[#F8F6FF] shadow-[0_8px_22px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.08)] transition-all duration-300 hover:-translate-y-1 border border-white/60">
+                <div className="absolute inset-0 flex items-center justify-center p-6 sm:p-8">
+                  <div className="text-center">
+                    <p className="text-gray-900 font-bold text-3xl sm:text-4xl mb-3 leading-tight">
+                      25,000+
+                    </p>
+                    <p className="text-gray-700 font-semibold text-sm sm:text-base leading-relaxed max-w-[200px]">
+                      People Are Learning Together On WIZUP
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Bottom Right Creator */}
+            {creators[4] && (
+              <motion.div
+                key={creators[4].id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.6 }}
+                className="group cursor-pointer"
+                onClick={() => handleViewCreator(creators[4].id, creators[4].username)}
+              >
+                <div className="relative h-full min-h-[240px] rounded-3xl overflow-hidden bg-gradient-to-b from-white to-[#F1ECFF] shadow-[0_8px_22px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.08)] transition-all duration-300 hover:-translate-y-1 border border-white/60">
+                  {/* Portrait Image */}
+                  {creators[4].bannerImageURL || creators[4].profileImageURL ? (
+                    <img
+                      src={creators[4].bannerImageURL || creators[4].profileImageURL}
+                      alt={creators[4].displayName}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#F8F6FF] via-[#F1ECFF] to-[#E8F6FF]" />
+                  )}
+                  
+                  {/* Soft Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-white/85" />
+                  
+                  {/* Content - Bottom */}
+                  <div className="absolute bottom-0 left-0 right-0 p-5">
+                    {creators[4].subscribersCount && creators[4].subscribersCount > 0 && (
+                      <div className="mb-2 inline-block">
+                        <div className="px-2.5 py-1 rounded-lg bg-white/70 backdrop-blur-sm inline-block border border-white/60 shadow-sm">
+                          <span className="text-gray-700 font-semibold text-xs">
+                            {creators[4].subscribersCount.toLocaleString()} ZAPs
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <h3 className="text-gray-900 font-bold text-lg sm:text-xl mb-1.5 leading-tight line-clamp-2">
+                      {creators[4].displayName}
+                    </h3>
+                    
+                    <div className="inline-block">
+                      <div className="px-2.5 py-1 rounded-lg bg-white/70 backdrop-blur-sm border border-white/60 shadow-sm">
+                        <span className="text-gray-600 font-medium text-xs">
+                          {creators[4].category}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Additional Row - 3 More Creators */}
+            {creators.slice(5, 8).map((creator, idx) => (
+              <motion.div
+                key={creator.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: (idx + 7) * 0.1 }}
+                className="group cursor-pointer"
+                onClick={() => handleViewCreator(creator.id, creator.username)}
+              >
+                <div className="relative h-full min-h-[240px] rounded-3xl overflow-hidden bg-gradient-to-b from-white to-[#F1ECFF] shadow-[0_8px_22px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.08)] transition-all duration-300 hover:-translate-y-1 border border-white/60">
+                  {/* Portrait Image */}
+                  {creator.bannerImageURL || creator.profileImageURL ? (
+                    <img
+                      src={creator.bannerImageURL || creator.profileImageURL}
+                      alt={creator.displayName}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#F8F6FF] via-[#F1ECFF] to-[#E8F6FF]" />
+                  )}
+                  
+                  {/* Soft Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-white/85" />
+                  
+                  {/* Content - Bottom */}
+                  <div className="absolute bottom-0 left-0 right-0 p-5">
+                    {creator.subscribersCount && creator.subscribersCount > 0 && (
+                      <div className="mb-2 inline-block">
+                        <div className="px-2.5 py-1 rounded-lg bg-white/70 backdrop-blur-sm inline-block border border-white/60 shadow-sm">
+                          <span className="text-gray-700 font-semibold text-xs">
+                            {creator.subscribersCount.toLocaleString()} ZAPs
+                          </span>
+                        </div>
         </div>
+                    )}
+                    
+                    <h3 className="text-gray-900 font-bold text-lg sm:text-xl mb-1.5 leading-tight line-clamp-2">
+                      {creator.displayName}
+                    </h3>
+                    
+                    <div className="inline-block">
+                      <div className="px-2.5 py-1 rounded-lg bg-white/70 backdrop-blur-sm border border-white/60 shadow-sm">
+                        <span className="text-gray-600 font-medium text-xs">
+                          {creator.category}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
 
         {/* Bottom CTA */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="text-center mt-12"
+          transition={{ duration: 0.6, delay: 0.7 }}
+          className="text-center mt-12 sm:mt-16"
         >
           <Button
+            onClick={async () => {
+              if (!user) {
+                setIsAuthenticating(true);
+                try {
+                  await signInWithGoogleAndRedirect(navigate);
+                } catch (err) {
+                  console.error('Sign in failed:', err);
+                } finally {
+                  setIsAuthenticating(false);
+                }
+              } else {
+                navigate('/discover');
+              }
+            }}
+            disabled={isAuthenticating}
             size="lg"
-            className="bg-gradient-to-r from-indigo-600 to-violet-500 text-white rounded-full px-8 py-6 text-lg font-semibold shadow-xl hover:scale-105 transition-transform"
+            className="bg-gradient-to-r from-[#E8F6FF] to-[#F3EDFF] hover:from-[#F3EDFF] hover:to-[#E8F6FF] text-gray-900 rounded-full px-8 sm:px-10 py-5 sm:py-6 text-base sm:text-lg font-bold shadow-[0_8px_22px_rgba(0,0,0,0.08)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.12)] hover:-translate-y-1 transition-all duration-300 border border-white/60"
           >
-            Explore All Creators
+            {isAuthenticating ? (
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />
+                <span>Loading...</span>
+              </div>
+            ) : user ? (
+              'Explore All Creators'
+            ) : (
+              'Join the Community'
+            )}
           </Button>
         </motion.div>
       </div>

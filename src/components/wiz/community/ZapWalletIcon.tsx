@@ -1,11 +1,12 @@
 /**
- * ZAP Wallet Icon - Dashboard Header Version
- * Compact glassmorphic icon button with full V8 wallet dropdown
+ * ZAP Wallet Icon - Premium Redesigned Version
+ * Luxury glassmorphic design with enhanced UX
  */
 
 import React, { useState, useEffect, useRef } from "react";
+import type { PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent, KeyboardEvent as ReactKeyboardEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Wallet, Send, Zap, Search, CheckCircle2, X, Link2, Users } from "lucide-react";
+import { Wallet, Send, Zap, Search, CheckCircle2, X, Link2, Users, TrendingUp, Copy, Check, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { collection, query, where, getDocs, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -39,8 +40,6 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
   className,
 }) => {
   const dropdownContext = useDropdown();
-
-  // Support both context-based and standalone state
   const [standaloneIsOpen, setStandaloneIsOpen] = useState(false);
   const isOpen = dropdownContext
     ? dropdownContext.activeDropdown === 'wallet'
@@ -52,42 +51,37 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
   const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const justOpenedRef = useRef(false);
+  const triggerPointerDownRef = useRef(false);
   const { toast } = useToast();
   const { user } = useAuth();
   const [position, setPosition] = useState({ top: 0, right: 0 });
 
-  // Generate referral link
   const referralLink = user ? `${window.location.origin}?ref=${user.uid}` : "";
 
-  // Handle escape key for send mode
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape" && isSendMode) {
         setIsSendMode(false);
       }
     };
-
     if (isOpen && isSendMode) {
       document.addEventListener("keydown", handleEscape);
     }
-
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-    };
+    return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, isSendMode]);
 
-  // Auto-focus search input when send mode opens
   useEffect(() => {
     if (isSendMode && searchInputRef.current) {
       setTimeout(() => searchInputRef.current?.focus(), 100);
     }
   }, [isSendMode]);
 
-  // Search users with debounce
   useEffect(() => {
     if (!searchQuery || searchQuery.length < 2) {
       setSearchResults([]);
@@ -104,10 +98,8 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
           where("username", "<=", searchQuery.toLowerCase() + "\uf8ff"),
           limit(5)
         );
-
         const snapshot = await getDocs(q);
         const results: UserProfile[] = [];
-
         snapshot.forEach((doc) => {
           const data = doc.data();
           results.push({
@@ -118,7 +110,6 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
             verified: data.verified || false,
           });
         });
-
         setSearchResults(results);
       } catch (error) {
         console.error("Error searching users:", error);
@@ -134,10 +125,12 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
   const handleCopyReferralLink = async () => {
     try {
       await navigator.clipboard.writeText(referralLink);
+      setLinkCopied(true);
       toast({
-        title: "Copied to clipboard! ⚡",
+        title: "Copied! ⚡",
         description: "Share with your friends",
       });
+      setTimeout(() => setLinkCopied(false), 2000);
     } catch (error) {
       toast({
         title: "Copy Failed",
@@ -168,17 +161,12 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
     }
 
     setIsSending(true);
-
     try {
       await onSendZaps?.(selectedUser.uid, amount);
-
-      // Success animation
       toast({
         title: "⚡ ZAP Sent!",
         description: `Successfully sent ${amount} ZAPs to ${selectedUser.displayName}`,
       });
-
-      // Reset form
       setSearchQuery("");
       setZapAmount("");
       setSelectedUser(null);
@@ -196,11 +184,47 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
 
   const handleToggle = () => {
     if (dropdownContext) {
-      // Context-based mode
+      const willOpen = !isOpen;
+      if (willOpen) {
+        justOpenedRef.current = true;
+      }
       dropdownContext.setActiveDropdown(isOpen ? null : 'wallet');
     } else {
-      // Standalone mode
+      const willOpen = !isOpen;
+      if (willOpen) {
+        justOpenedRef.current = true;
+      }
       setStandaloneIsOpen(!isOpen);
+    }
+  };
+
+  const handleTriggerPointerDown = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) {
+      return;
+    }
+    triggerPointerDownRef.current = true;
+    event.preventDefault();
+    event.stopPropagation();
+    handleToggle();
+  };
+
+  const handleTriggerClick = (event: ReactMouseEvent<HTMLButtonElement>) => {
+    if (triggerPointerDownRef.current) {
+      triggerPointerDownRef.current = false;
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    handleToggle();
+  };
+
+  const handleTriggerKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleToggle();
+    } else if (event.key === 'Escape' && isOpen) {
+      event.preventDefault();
+      handleClose();
     }
   };
 
@@ -212,20 +236,29 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
     }
   };
 
-  // Calculate dropdown position based on trigger
   useEffect(() => {
     if (isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
-      setPosition({
+      const calculatedPosition = {
         top: rect.bottom + 12,
         right: window.innerWidth - rect.right,
-      });
+      };
+      console.log('💰 WalletDropdown: Opening at position:', calculatedPosition);
+      console.log('💰 WalletDropdown: Button rect:', rect);
+      setPosition(calculatedPosition);
+    } else if (!isOpen) {
+      console.log('💰 WalletDropdown: Closing');
     }
   }, [isOpen]);
 
-  // Handle clicks outside dropdown and Esc key
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Ignore if we just opened
+      if (justOpenedRef.current) {
+        justOpenedRef.current = false;
+        return;
+      }
+
       if (
         dropdownRef.current &&
         !dropdownRef.current.contains(event.target as Node) &&
@@ -235,21 +268,20 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
         handleClose();
       }
     };
-
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        handleClose();
-      }
+      if (event.key === 'Escape') handleClose();
     };
-
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleKeyDown);
+      // Add listeners on next tick to avoid closing immediately
+      setTimeout(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleKeyDown);
+      }, 0);
     }
-
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
+      justOpenedRef.current = false;
     };
   }, [isOpen]);
 
@@ -257,28 +289,30 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
     <div className={cn("relative", className)}>
       <button
         ref={buttonRef}
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          handleToggle();
-        }}
+        type="button"
+        onPointerDown={handleTriggerPointerDown}
+        onClick={handleTriggerClick}
+        onKeyDown={handleTriggerKeyDown}
         aria-label="ZAP Wallet"
-        className="relative w-10 h-10 rounded-full bg-gradient-to-br from-[#6B4EFF] to-[#4BC0FF] hover:from-[#7C5FFF] hover:to-[#5DD1FF] transition-all duration-200 flex items-center justify-center group shadow-sm hover:shadow-md"
+        className="relative w-10 h-10 rounded-full bg-gradient-to-br from-[#6B4EFF] via-[#7C5FFF] to-[#4BC0FF] hover:from-[#7C5FFF] hover:via-[#8D6FFF] hover:to-[#5DD1FF] transition-all duration-300 flex items-center justify-center group shadow-lg hover:shadow-xl hover:scale-105"
       >
-        <Wallet size={20} strokeWidth={2} className="text-white" />
+        <Wallet size={20} strokeWidth={2.5} className="text-white" />
+        <motion.div
+          className="absolute inset-0 rounded-full bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+          animate={{ rotate: [0, 360] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+        />
       </button>
 
-      {/* Dropdown - Portal Rendered */}
       <Portal.Root>
         <AnimatePresence>
           {isOpen && (
             <>
-              {/* Pointer Triangle */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed w-3 h-3 bg-[#1E202E]/90 rotate-45 border-t border-l border-white/15"
+                className="fixed w-3 h-3 bg-gradient-to-br from-[#6B4EFF] to-[#4BC0FF] rotate-45 border-t border-l border-white/20 shadow-lg"
                 style={{
                   top: position.top - 6,
                   right: position.right + 12,
@@ -286,244 +320,307 @@ export const ZapWalletIcon: React.FC<ZapWalletIconProps> = ({
                 }}
               />
 
-              {/* Dropdown Content */}
               <motion.div
                 {...dropdownMotion}
-                className="fixed w-[320px] rounded-2xl p-0 border-0 overflow-hidden"
+                ref={dropdownRef}
+                className="fixed w-[380px] max-w-[calc(100vw-2rem)] rounded-2xl overflow-hidden"
                 style={{
-                  background: "rgba(30, 32, 46, 0.9)",
-                  backdropFilter: "blur(10px)",
+                  background: "linear-gradient(180deg, rgba(30, 32, 46, 0.98) 0%, rgba(20, 22, 36, 0.98) 100%)",
+                  backdropFilter: "blur(20px) saturate(180%)",
                   border: "1px solid rgba(255, 255, 255, 0.15)",
-                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+                  boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(107, 78, 255, 0.2)",
                   top: position.top,
                   right: position.right,
                   zIndex: 9999,
                 }}
               >
-            <div className="p-5" ref={dropdownRef}>
-              {/* Header */}
-              <div className="mb-4 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#7F5AF0] to-[#4CC9F0] flex items-center justify-center">
-                  <Wallet className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
-                </div>
-                <h3 className="text-white font-bold text-base" style={{ fontFamily: "Inter, -apple-system, BlinkMacSystemFont, sans-serif" }}>
-                  My Wallet
-                </h3>
-              </div>
-
-              {/* Divider */}
-              <div className="mb-4" style={{ borderTop: "1px solid rgba(255, 255, 255, 0.15)" }} />
-
-              {/* Balance Display */}
-              <div className="space-y-3 mb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#FFD84D] to-[#FFA834] flex items-center justify-center">
-                      <Zap className="w-3.5 h-3.5 text-[#1E202E]" strokeWidth={2.5} fill="#1E202E" />
-                    </div>
-                    <span className="text-white text-sm font-semibold">Balance</span>
-                  </div>
-                  <motion.span className="text-white font-bold text-sm" key={balance} initial={{ scale: 0.95 }} animate={{ scale: 1 }}>
-                    {balance.toLocaleString()}
-                  </motion.span>
-                </div>
-              </div>
-
-              <div className="mb-4" style={{ borderTop: "1px solid rgba(255, 255, 255, 0.15)" }} />
-
-              {/* ZAP Friends Section */}
-              <div className="mb-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Users className="w-4 h-4 text-white/85" strokeWidth={2} />
-                  <span className="text-white font-bold text-sm">ZAP Friends</span>
-                </div>
-                <p className="text-white/80 text-xs mb-3 leading-relaxed">
-                  Invite your friends and earn together
-                </p>
-                <motion.button
-                  onClick={handleCopyReferralLink}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full font-semibold text-sm text-white transition-all duration-300 relative overflow-hidden group"
-                  style={{
-                    background: "linear-gradient(135deg, #7F5AF0 0%, #4CC9F0 100%)",
-                    boxShadow: "0 4px 12px rgba(127, 90, 240, 0.3)",
-                  }}
-                  whileHover={{ boxShadow: "0 6px 20px rgba(127, 90, 240, 0.5)", scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Link2 className="w-4 h-4 relative z-10" strokeWidth={2.5} />
-                  <span className="relative z-10">Copy My Referral Link</span>
-                </motion.button>
-                <p className="text-white/60 text-xs mt-2.5 text-center">
-                  Friend joins → <span className="text-[#4CC9F0] font-semibold">+50 ZAPs</span> each!
-                </p>
-              </div>
-
-              <div className="mb-4" style={{ borderTop: "1px solid rgba(255, 255, 255, 0.1)" }} />
-
-              {/* Send ZAPs Section */}
-              <AnimatePresence>
-                {!isSendMode ? (
-                  <motion.button
-                    onClick={() => setIsSendMode(true)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-white/85 text-sm font-medium hover:bg-white/10 transition-all duration-200"
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                  >
-                    <Send className="w-4 h-4" strokeWidth={2} />
-                    <span>Send ZAPs</span>
-                  </motion.button>
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ type: "spring", damping: 20, stiffness: 280 }}
-                    className="space-y-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Send className="w-4 h-4 text-white/85" strokeWidth={2} />
-                        <span className="text-white/85 text-sm font-semibold">Send ZAPs</span>
+                {/* Premium Header with Gradient */}
+                <div className="relative p-6 bg-gradient-to-r from-[#6B4EFF]/20 via-[#7C5FFF]/10 to-[#4BC0FF]/20 border-b border-white/10">
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#6B4EFF]/5 to-transparent" />
+                  <div className="relative flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6B4EFF] to-[#4BC0FF] flex items-center justify-center shadow-lg shadow-[#6B4EFF]/30">
+                        <Wallet className="w-5 h-5 text-white" strokeWidth={2.5} />
                       </div>
-                      <motion.button
-                        onClick={() => {
-                          setIsSendMode(false);
-                          setSearchQuery("");
-                          setSelectedUser(null);
-                          setZapAmount("");
-                        }}
-                        className="p-1 hover:bg-white/10 rounded-lg transition-colors"
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        <X className="w-3.5 h-3.5 text-white/60" strokeWidth={2} />
-                      </motion.button>
+                      <div>
+                        <h3 className="text-white font-bold text-lg">My Wallet</h3>
+                        <p className="text-white/60 text-xs">Manage your ZAPs</p>
+                      </div>
                     </div>
+                  </div>
+                </div>
 
-                    <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.1)" }} />
-
-                    {selectedUser ? (
-                      <motion.div
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center gap-3 p-3 rounded-xl"
-                        style={{
-                          background: "rgba(127, 90, 240, 0.15)",
-                          border: "1px solid rgba(127, 90, 240, 0.3)",
-                        }}
-                      >
-                        <img src={selectedUser.photoURL} alt={selectedUser.displayName} className="w-9 h-9 rounded-full object-cover" />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-white text-sm font-semibold truncate">{selectedUser.displayName}</span>
-                            {selectedUser.verified && <CheckCircle2 className="w-3.5 h-3.5 text-[#4CC9F0] flex-shrink-0" fill="#4CC9F0" />}
+                {/* Balance Display - Premium Card */}
+                <div className="p-6">
+                  <div className="relative p-6 rounded-2xl bg-gradient-to-br from-[#FFD84D]/20 via-[#FFA834]/20 to-[#FF6B35]/20 border border-[#FFD84D]/30 backdrop-blur-sm overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent" />
+                    <div className="relative">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#FFD84D] to-[#FFA834] flex items-center justify-center shadow-lg">
+                            <Zap className="w-4 h-4 text-[#1E202E]" strokeWidth={3} fill="#1E202E" />
                           </div>
-                          <span className="text-white/60 text-xs">@{selectedUser.username}</span>
+                          <span className="text-white/80 text-sm font-medium">Total Balance</span>
                         </div>
-                        <motion.button onClick={() => setSelectedUser(null)} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                          <X className="w-3.5 h-3.5 text-white/60" strokeWidth={2} />
-                        </motion.button>
-                      </motion.div>
-                    ) : (
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" strokeWidth={2} />
-                        <input
-                          ref={searchInputRef}
-                          type="text"
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          placeholder="Search username..."
-                          className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-white placeholder-white/40 bg-white/5 border border-white/10 focus:border-[#7F5AF0] focus:bg-white/8 transition-all outline-none"
-                          style={{ backdropFilter: "blur(4px)" }}
-                        />
-                        {searchResults.length > 0 && (
-                          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-2 space-y-1 max-h-32 overflow-y-auto">
-                            {searchResults.map((user) => (
-                              <motion.button
-                                key={user.uid}
-                                onClick={() => {
-                                  setSelectedUser(user);
-                                  setSearchQuery("");
-                                  setSearchResults([]);
-                                }}
-                                className="w-full flex items-center gap-2.5 p-2 rounded-lg hover:bg-white/10 transition-colors"
-                                whileHover={{ x: 2 }}
-                                whileTap={{ scale: 0.98 }}
-                              >
-                                <img src={user.photoURL} alt={user.displayName} className="w-8 h-8 rounded-full object-cover" />
-                                <div className="flex-1 text-left min-w-0">
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-white text-xs font-medium truncate">{user.displayName}</span>
-                                    {user.verified && <CheckCircle2 className="w-3 h-3 text-[#4CC9F0]" fill="#4CC9F0" />}
-                                  </div>
-                                  <span className="text-white/50 text-xs">@{user.username}</span>
-                                </div>
-                              </motion.button>
-                            ))}
+                        {earned > 0 && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-green-500/20 border border-green-500/30"
+                          >
+                            <TrendingUp className="w-3 h-3 text-green-400" />
+                            <span className="text-green-400 text-xs font-semibold">+{earned}</span>
                           </motion.div>
                         )}
                       </div>
-                    )}
-
-                    {selectedUser && (
-                      <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-                        <div className="relative">
-                          <Zap className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#FFD84D]" strokeWidth={2} fill="#FFD84D" />
-                          <input
-                            type="number"
-                            value={zapAmount}
-                            onChange={(e) => setZapAmount(e.target.value)}
-                            placeholder="Amount"
-                            min="1"
-                            max={balance}
-                            className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-white placeholder-white/40 bg-white/5 border border-white/10 focus:border-[#4CC9F0] focus:bg-white/8 transition-all outline-none"
-                            style={{ backdropFilter: "blur(4px)" }}
-                          />
-                        </div>
-                        <div className="flex items-center justify-between mt-1.5 px-1">
-                          <span className="text-white/40 text-xs">Available: {balance} ZAPs</span>
-                          <motion.button onClick={() => setZapAmount(balance.toString())} className="text-[#4CC9F0] text-xs font-medium hover:text-[#58D1F4] transition-colors" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                            Max
-                          </motion.button>
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {selectedUser && zapAmount && (
-                      <motion.button
-                        onClick={handleSendZaps}
-                        disabled={isSending}
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.15 }}
-                        className={cn(
-                          "w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm text-white transition-all duration-300 relative overflow-hidden",
-                          isSending && "opacity-70 cursor-not-allowed"
-                        )}
-                        style={{
-                          background: "linear-gradient(135deg, #7F5AF0 0%, #4CC9F0 100%)",
-                          boxShadow: "0 4px 12px rgba(127, 90, 240, 0.3)",
-                        }}
-                        whileHover={!isSending ? { boxShadow: "0 6px 20px rgba(127, 90, 240, 0.5)", scale: 1.02 } : {}}
-                        whileTap={!isSending ? { scale: 0.98 } : {}}
+                      <motion.h2
+                        key={balance}
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="text-4xl font-bold bg-gradient-to-r from-[#FFD84D] via-[#FFA834] to-[#FF6B35] bg-clip-text text-transparent"
                       >
-                        {isSending && (
+                        {balance.toLocaleString()}
+                      </motion.h2>
+                      <p className="text-white/50 text-xs mt-1">ZAPs available</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="px-6 pb-6">
+                  <div className="grid grid-cols-2 gap-3">
+                    <motion.button
+                      onClick={() => setIsSendMode(true)}
+                      className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all duration-200 group"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Send className="w-4 h-4 text-white/70 group-hover:text-white transition-colors" />
+                      <span className="text-white/90 text-sm font-medium">Send</span>
+                    </motion.button>
+                    <motion.button
+                      onClick={handleCopyReferralLink}
+                      className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-[#6B4EFF]/20 to-[#4BC0FF]/20 hover:from-[#6B4EFF]/30 hover:to-[#4BC0FF]/30 border border-[#6B4EFF]/30 transition-all duration-200 group"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      {linkCopied ? (
+                        <Check className="w-4 h-4 text-green-400" />
+                      ) : (
+                        <Link2 className="w-4 h-4 text-white/70 group-hover:text-white transition-colors" />
+                      )}
+                      <span className="text-white/90 text-sm font-medium">
+                        {linkCopied ? "Copied!" : "Refer"}
+                      </span>
+                    </motion.button>
+                  </div>
+                </div>
+
+                {/* Send ZAPs Section */}
+                <AnimatePresence>
+                  {isSendMode && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                      className="border-t border-white/10 overflow-hidden"
+                    >
+                      <div className="p-6 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Send className="w-4 h-4 text-white/70" />
+                            <span className="text-white font-semibold text-sm">Send ZAPs</span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setIsSendMode(false);
+                              setSearchQuery("");
+                              setSelectedUser(null);
+                              setZapAmount("");
+                            }}
+                            className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+                          >
+                            <X className="w-4 h-4 text-white/60" />
+                          </button>
+                        </div>
+
+                        {selectedUser ? (
                           <motion.div
-                            className="absolute inset-0"
-                            initial={{ opacity: 0.3 }}
-                            animate={{ opacity: [0.3, 0.6, 0.3] }}
-                            transition={{ duration: 1.5, repeat: Infinity }}
-                            style={{ background: "radial-gradient(circle at center, rgba(255, 255, 255, 0.3) 0%, transparent 70%)" }}
-                          />
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="p-4 rounded-xl bg-gradient-to-r from-[#6B4EFF]/20 to-[#4BC0FF]/20 border border-[#6B4EFF]/30"
+                          >
+                            <div className="flex items-center gap-3 mb-4">
+                              <img
+                                src={selectedUser.photoURL}
+                                alt={selectedUser.displayName}
+                                className="w-12 h-12 rounded-full object-cover ring-2 ring-[#6B4EFF]/50"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-white font-semibold text-sm truncate">
+                                    {selectedUser.displayName}
+                                  </span>
+                                  {selectedUser.verified && (
+                                    <CheckCircle2 className="w-4 h-4 text-[#4BC0FF] flex-shrink-0" fill="#4BC0FF" />
+                                  )}
+                                </div>
+                                <span className="text-white/60 text-xs">@{selectedUser.username}</span>
+                              </div>
+                              <button
+                                onClick={() => setSelectedUser(null)}
+                                className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+                              >
+                                <X className="w-4 h-4 text-white/60" />
+                              </button>
+                            </div>
+
+                            <div className="relative">
+                              <Zap className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#FFD84D]" fill="#FFD84D" />
+                              <input
+                                type="number"
+                                value={zapAmount}
+                                onChange={(e) => setZapAmount(e.target.value)}
+                                placeholder="Enter amount"
+                                min="1"
+                                max={balance}
+                                className="w-full pl-12 pr-4 py-3 rounded-xl text-white placeholder-white/40 bg-white/5 border border-white/10 focus:border-[#4BC0FF] focus:bg-white/8 transition-all outline-none font-semibold"
+                              />
+                            </div>
+                            <div className="flex items-center justify-between mt-2 px-1">
+                              <span className="text-white/50 text-xs">Available: {balance.toLocaleString()} ZAPs</span>
+                              <button
+                                onClick={() => setZapAmount(balance.toString())}
+                                className="text-[#4BC0FF] text-xs font-semibold hover:text-[#5DD1FF] transition-colors"
+                              >
+                                Use Max
+                              </button>
+                            </div>
+
+                            {zapAmount && parseInt(zapAmount) > 0 && (
+                              <motion.button
+                                onClick={handleSendZaps}
+                                disabled={isSending}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="w-full mt-4 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-[#6B4EFF] to-[#4BC0FF] hover:shadow-lg hover:shadow-[#6B4EFF]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                              >
+                                {isSending ? (
+                                  <>
+                                    <motion.div
+                                      className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+                                      animate={{ rotate: 360 }}
+                                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                    />
+                                    <span>Sending...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Send className="w-4 h-4" />
+                                    <span>Send {parseInt(zapAmount).toLocaleString()} ZAPs</span>
+                                  </>
+                                )}
+                              </motion.button>
+                            )}
+                          </motion.div>
+                        ) : (
+                          <div className="relative">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                            <input
+                              ref={searchInputRef}
+                              type="text"
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              placeholder="Search by username..."
+                              className="w-full pl-11 pr-4 py-3 rounded-xl text-white placeholder-white/40 bg-white/5 border border-white/10 focus:border-[#6B4EFF] focus:bg-white/8 transition-all outline-none"
+                            />
+                            {isSearching && (
+                              <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                <motion.div
+                                  className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+                                  animate={{ rotate: 360 }}
+                                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                />
+                              </div>
+                            )}
+                            {searchResults.length > 0 && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mt-3 space-y-2 max-h-48 overflow-y-auto"
+                              >
+                                {searchResults.map((user) => (
+                                  <motion.button
+                                    key={user.uid}
+                                    onClick={() => {
+                                      setSelectedUser(user);
+                                      setSearchQuery("");
+                                      setSearchResults([]);
+                                    }}
+                                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 transition-colors"
+                                    whileHover={{ x: 4 }}
+                                    whileTap={{ scale: 0.98 }}
+                                  >
+                                    <img
+                                      src={user.photoURL}
+                                      alt={user.displayName}
+                                      className="w-10 h-10 rounded-full object-cover ring-2 ring-white/10"
+                                    />
+                                    <div className="flex-1 text-left min-w-0">
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="text-white text-sm font-medium truncate">
+                                          {user.displayName}
+                                        </span>
+                                        {user.verified && (
+                                          <CheckCircle2 className="w-3.5 h-3.5 text-[#4BC0FF]" fill="#4BC0FF" />
+                                        )}
+                                      </div>
+                                      <span className="text-white/50 text-xs">@{user.username}</span>
+                                    </div>
+                                  </motion.button>
+                                ))}
+                              </motion.div>
+                            )}
+                          </div>
                         )}
-                        <Send className="w-4 h-4 relative z-10" strokeWidth={2.5} />
-                        <span className="relative z-10">{isSending ? "Sending..." : "Send ZAPs"}</span>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Referral Section */}
+                {!isSendMode && (
+                  <div className="px-6 pb-6 border-t border-white/10 pt-6">
+                    <div className="p-4 rounded-xl bg-gradient-to-r from-[#6B4EFF]/10 to-[#4BC0FF]/10 border border-[#6B4EFF]/20">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Users className="w-4 h-4 text-[#4BC0FF]" />
+                        <span className="text-white font-semibold text-sm">Invite Friends</span>
+                      </div>
+                      <p className="text-white/70 text-xs mb-3 leading-relaxed">
+                        Share your referral link and earn <span className="text-[#4BC0FF] font-semibold">+50 ZAPs</span> for each friend who joins!
+                      </p>
+                      <motion.button
+                        onClick={handleCopyReferralLink}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-[#6B4EFF] to-[#4BC0FF] hover:shadow-lg hover:shadow-[#6B4EFF]/30 transition-all"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        {linkCopied ? (
+                          <>
+                            <Check className="w-4 h-4" />
+                            <span>Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-4 h-4" />
+                            <span>Copy Referral Link</span>
+                          </>
+                        )}
                       </motion.button>
-                    )}
-                  </motion.div>
+                    </div>
+                  </div>
                 )}
-              </AnimatePresence>
-            </div>
               </motion.div>
             </>
           )}

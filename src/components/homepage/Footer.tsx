@@ -1,6 +1,7 @@
 import { useRef } from 'react';
-import { Twitter, Github, Linkedin, Mail, Heart, Star } from 'lucide-react';
+import { Twitter, Youtube, Mail, Heart, Star, MessageCircle } from 'lucide-react';
 import { motion, useInView } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
   Accordion,
   AccordionContent,
@@ -53,35 +54,36 @@ const faqs = [
 ];
 
 const footerLinks = {
-  product: [
-    { label: 'Features', href: '#how-it-works' },
-    { label: 'Rewards', href: '#rewards' },
-    { label: 'Pricing', href: '#pricing' },
-    { label: 'Roadmap', href: '#' },
-  ],
-  resources: [
-    { label: 'Documentation', href: '#' },
-    { label: 'Help Center', href: '#' },
-    { label: 'Community', href: '#' },
-    { label: 'Blog', href: '#' },
-  ],
   company: [
     { label: 'About', href: '/about' },
-    { label: 'Careers', href: '#' },
-    { label: 'Contact', href: '#' },
-    { label: 'Partners', href: '#' },
+    { label: 'Careers', href: '/careers' },
+    { label: 'Partners', href: '/partners' },
+  ],
+  resources: [
+    { label: 'Discover', href: '/discover' },
+    { label: 'Communities', href: '/communities' },
+    { label: 'Leaderboard', href: '/leaderboard' },
+    { label: 'Rewards', href: '/rewards' },
+    { label: 'Help Center', href: '/help' },
   ],
   legal: [
-    { label: 'Privacy Policy', href: '/privacy' },
-    { label: 'Terms of Service', href: '/terms' },
-    { label: 'Cookie Policy', href: '#' },
-    { label: 'GDPR', href: '#' },
+    { label: 'Privacy Policy', href: '/privacy.html' },
+    { label: 'Terms of Service', href: '/terms.html' },
+    { label: 'Cookie Policy', href: '/cookie-policy' },
+    { label: 'GDPR Compliance', href: '/gdpr-compliance' },
+  ],
+  connect: [
+    { label: 'Contact', href: 'mailto:wizuplive@gmail.com', external: true },
+    { label: 'Twitter', href: 'https://twitter.com/wizup_live', external: true },
+    { label: 'Discord', href: 'https://discord.gg/wizup', external: true },
+    { label: 'YouTube', href: 'https://youtube.com/@wizup', external: true },
   ],
 };
 
 export function Footer() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.1 });
+  const navigate = useNavigate();
 
   return (
     <footer
@@ -180,14 +182,20 @@ export function Footer() {
       <div className="border-t border-gray-200 dark:border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-            {/* Product */}
+            {/* Company */}
             <div>
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Product</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">🪴 Company</h4>
               <ul className="space-y-3">
-                {footerLinks.product.map((link) => (
+                {footerLinks.company.map((link) => (
                   <li key={link.label}>
                     <a
                       href={link.href}
+                      onClick={(e) => {
+                        if (!link.external) {
+                          e.preventDefault();
+                          navigate(link.href);
+                        }
+                      }}
                       className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                     >
                       {link.label}
@@ -199,29 +207,18 @@ export function Footer() {
 
             {/* Resources */}
             <div>
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Resources</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">⚙️ Resources</h4>
               <ul className="space-y-3">
                 {footerLinks.resources.map((link) => (
                   <li key={link.label}>
                     <a
                       href={link.href}
-                      className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                    >
-                      {link.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Company */}
-            <div>
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Company</h4>
-              <ul className="space-y-3">
-                {footerLinks.company.map((link) => (
-                  <li key={link.label}>
-                    <a
-                      href={link.href}
+                      onClick={(e) => {
+                        if (!link.external) {
+                          e.preventDefault();
+                          navigate(link.href);
+                        }
+                      }}
                       className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                     >
                       {link.label}
@@ -233,12 +230,37 @@ export function Footer() {
 
             {/* Legal */}
             <div>
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Legal</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">⚖️ Legal</h4>
               <ul className="space-y-3">
                 {footerLinks.legal.map((link) => (
                   <li key={link.label}>
                     <a
                       href={link.href}
+                      onClick={(e) => {
+                        if (!link.external) {
+                          e.preventDefault();
+                          navigate(link.href);
+                        }
+                      }}
+                      className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Connect */}
+            <div>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">✉️ Connect</h4>
+              <ul className="space-y-3">
+                {footerLinks.connect.map((link) => (
+                  <li key={link.label}>
+                    <a
+                      href={link.href}
+                      target={link.external ? '_blank' : undefined}
+                      rel={link.external ? 'noopener noreferrer' : undefined}
                       className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                     >
                       {link.label}
@@ -266,28 +288,34 @@ export function Footer() {
               {/* Social Links */}
               <div className="flex items-center gap-4">
                 <a
-                  href="#"
+                  href="https://twitter.com/wizup_live"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                   aria-label="Twitter"
                 >
                   <Twitter className="w-5 h-5" />
                 </a>
                 <a
-                  href="#"
+                  href="https://youtube.com/@wizup"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                  aria-label="GitHub"
+                  aria-label="YouTube"
                 >
-                  <Github className="w-5 h-5" />
+                  <Youtube className="w-5 h-5" />
                 </a>
                 <a
-                  href="#"
+                  href="https://discord.gg/wizup"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                  aria-label="LinkedIn"
+                  aria-label="Discord"
                 >
-                  <Linkedin className="w-5 h-5" />
+                  <MessageCircle className="w-5 h-5" />
                 </a>
                 <a
-                  href="#"
+                  href="mailto:wizuplive@gmail.com"
                   className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                   aria-label="Email"
                 >

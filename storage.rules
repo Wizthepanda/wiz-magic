@@ -25,7 +25,11 @@ service firebase.storage {
     match /communities/{communityId}/{subfolder}/{fileName} {
       allow write: if request.auth != null
                    && request.resource.size < 10 * 1024 * 1024  // Max 10MB
-                   && request.resource.contentType.matches('image/.*');
+                   && (
+                     request.resource.contentType.matches('image/.*') ||
+                     request.resource.contentType == '' ||  // Allow empty content type as fallback
+                     fileName.matches('.*\\.(jpg|jpeg|png|webp|gif|bmp|svg|tiff|tif|ico|heic|heif)$')
+                   );
     }
 
     // Allow authenticated users to upload community post images

@@ -93,8 +93,15 @@ service cloud.firestore {
     }
     
     // Creator profiles and tokens - users can only access their own
-    match /creators/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    match /creators/{creatorId} {
+      allow read: if true; // Public read for creator discovery
+      allow write: if request.auth != null && request.auth.uid == creatorId;
+    }
+    
+    // Featured creators collection - public read for homepage
+    match /featuredCreators/{docId} {
+      allow read: if true; // Public read for homepage featured section
+      allow write: if false; // Only admins via console
     }
     
     // Creator profiles - public read for discovery features, authenticated write
