@@ -8,16 +8,22 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useCreatorProfile, useCreatorVideos } from '@/hooks/useCreatorProfile';
-import { useCreatorCommunity } from '@/hooks/useCreatorCommunity';
+import { useCreatorCommunities } from '@/hooks/useCreatorCommunities';
 import { usePlayer } from '@/contexts/PlayerContext';
 import { useUIStore } from '@/stores/uiStore';
 import { useAuth } from '@/hooks/useAuth';
-import { CreatorHeader } from '@/components/creator/CreatorHeader';
+import { CreatorHeaderMinimal } from '@/components/creator/CreatorHeaderMinimal';
+import { CreatorActionsBar } from '@/components/creator/CreatorActionsBar';
+import { SocialLinksRow } from '@/components/creator/SocialLinksRow';
 import { CreatorVideoGrid } from '@/components/creator/CreatorVideoGrid';
+import { CommunityList } from '@/components/creator/CommunityList';
+import { AboutSection } from '@/components/creator/AboutSection';
 import { TipModal } from '@/components/creator/TipModal';
+import { JoinCommunitiesModal } from '@/components/creator/JoinCommunitiesModal';
 import { FullscreenPlayer } from '@/components/creator/FullscreenPlayer';
 import { trackCreatorProfileView, trackVideoPlayFromProfile } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
+import * as Tabs from '@radix-ui/react-tabs';
 
 export default function CreatorFullScreen() {
   const { creatorId: paramCreatorId, username } = useParams<{ creatorId?: string; username?: string }>();
@@ -28,11 +34,13 @@ export default function CreatorFullScreen() {
 
   const { data: creatorProfile, isLoading: creatorLoading, error: creatorError } = useCreatorProfile(creatorIdentifier);
   const { data: videos = [], isLoading: videosLoading } = useCreatorVideos(creatorProfile?.id);
-  const { data: creatorCommunity, isLoading: communityLoading } = useCreatorCommunity(creatorProfile?.id);
+  const { data: creatorCommunities = [], isLoading: communitiesLoading } = useCreatorCommunities(creatorProfile?.id);
   const { currentVideo, play, setQueue } = usePlayer();
   const { closeAll } = useUIStore();
   const { user } = useAuth();
   const [showTipModal, setShowTipModal] = useState(false);
+  const [showCommunitiesModal, setShowCommunitiesModal] = useState(false);
+  const [activeTab, setActiveTab] = useState('videos');
 
   // Lock body scroll when on this page
   useEffect(() => {
@@ -107,32 +115,20 @@ export default function CreatorFullScreen() {
     );
   }
 
-  // Transform CreatorPublicProfile to CreatorProfile format for components
-  const creator = {
-    id: creatorProfile.id,
-    displayName: creatorProfile.displayName,
-    username: creatorProfile.username,
-    photoURL: creatorProfile.avatar,
-    bannerURL: creatorProfile.banner,
-    bio: creatorProfile.bio,
-    youtubeConnected: !!creatorProfile.creatorData?.channelId,
-    youtubeChannelId: creatorProfile.creatorData?.channelId,
-    verified: creatorProfile.verified,
-    subscriberCount: creatorProfile.stats.followers,
-    videoCount: creatorProfile.stats.totalVideos,
-    featuredCommunities: [],
-    socialLinks: creatorProfile.socials,
-    // Community data
-    hasCommunity: !!creatorCommunity,
-    communityId: creatorCommunity?.id,
-    hasCourse: false, // TODO: Add course detection when implemented
-    courseId: undefined,
+  const handleJoinCommunityClick = () => {
+    if (creatorCommunities.length === 1) {
+      // If only one community, auto-navigate to Communities tab
+      setActiveTab('communities');
+    } else {
+      // If multiple communities, open modal
+      setShowCommunitiesModal(true);
+    }
   };
 
   return (
     <>
       {/* Main Content */}
-      <div className="fixed inset-0 bg-gradient-to-b from-slate-50 via-white to-violet-50 dark:from-slate-900 dark:via-gray-900 dark:to-indigo-950 overflow-y-auto z-[90]">
+      <div className="fixed inset-0 bg-white dark:bg-neutral-900 overflow-y-auto z-[90]">
         {/* Back Button */}
         <motion.button
           initial={{ opacity: 0, x: -20 }}
@@ -142,7 +138,7 @@ export default function CreatorFullScreen() {
             'fixed top-4 left-4 z-[100]',
             'w-12 h-12 rounded-full',
             'bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl',
-            'border border-white/20',
+            'border border-zinc-200 dark:border-zinc-800',
             'shadow-lg hover:shadow-xl',
             'flex items-center justify-center',
             'transition-all duration-200 hover:scale-110',
@@ -150,31 +146,141 @@ export default function CreatorFullScreen() {
           )}
           aria-label="Go back"
         >
-          <ArrowLeft className="w-5 h-5 text-gray-700 dark:text-gray-300 group-hover:text-purple-500 transition-colors" />
+          <ArrowLeft className="w-5 h-5 text-gray-700 dark:text-gray-300 group-hover:text-indigo-600 transition-colors" />
         </motion.button>
 
-        {/* Creator Header */}
-        <CreatorHeader
-          creator={creator}
-          onTipClick={handleTipClick}
+        {/* Creator Header (Minimal) */}
+        <CreatorHeaderMinimal
+          displayName={creatorProfile.displayName}
+          username={creatorProfile.username}
+          photoURL={creatorProfile.avatar}
+          bannerURL={creatorProfile.banner}
+          verified={creatorProfile.verified}
+          subscriberCount={creatorProfile.stats.followers}
+          videoCount={creatorProfile.stats.totalVideos}
+          communityCount={creatorCommunities.length}
         />
 
-        {/* Videos Grid */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-            Videos
-          </h2>
-          {videosLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+        {/* Actions Bar + Social Links + Tabs */}
+        <div className="bg-white dark:bg-neutral-900">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Actions Row */}
+            <div className="py-6 border-b border-zinc-200 dark:border-zinc-800">
+              <CreatorActionsBar
+                creatorId={creatorProfile.id}
+                creatorName={creatorProfile.displayName}
+                hasCommunity={creatorCommunities.length > 0}
+                hasMultipleCommunities={creatorCommunities.length > 1}
+                onTipClick={handleTipClick}
+                onJoinCommunityClick={handleJoinCommunityClick}
+              />
             </div>
-          ) : videos.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-600 dark:text-gray-400">No videos yet</p>
-            </div>
-          ) : (
-            <CreatorVideoGrid videos={videos} onVideoClick={handleVideoClick} />
-          )}
+
+            {/* Social Links Row */}
+            {creatorProfile.socials && creatorProfile.socials.length > 0 && (
+              <div className="py-4 border-b border-zinc-200 dark:border-zinc-800">
+                <SocialLinksRow links={creatorProfile.socials} />
+              </div>
+            )}
+
+            {/* Tabs */}
+            <Tabs.Root value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <Tabs.List className="flex items-center gap-8 border-b border-zinc-200 dark:border-zinc-800">
+                <Tabs.Trigger
+                  value="videos"
+                  className={cn(
+                    'relative py-4 text-sm font-medium transition-colors',
+                    'data-[state=active]:text-indigo-600 dark:data-[state=active]:text-indigo-400',
+                    'data-[state=inactive]:text-zinc-600 dark:data-[state=inactive]:text-zinc-400',
+                    'hover:text-zinc-900 dark:hover:text-zinc-200',
+                    'after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5',
+                    'after:bg-indigo-600 dark:after:bg-indigo-400',
+                    'after:transition-transform after:duration-200',
+                    'data-[state=active]:after:scale-x-100 data-[state=inactive]:after:scale-x-0'
+                  )}
+                >
+                  Videos
+                </Tabs.Trigger>
+
+                {creatorCommunities.length > 0 && (
+                  <Tabs.Trigger
+                    value="communities"
+                    className={cn(
+                      'relative py-4 text-sm font-medium transition-colors',
+                      'data-[state=active]:text-indigo-600 dark:data-[state=active]:text-indigo-400',
+                      'data-[state=inactive]:text-zinc-600 dark:data-[state=inactive]:text-zinc-400',
+                      'hover:text-zinc-900 dark:hover:text-zinc-200',
+                      'after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5',
+                      'after:bg-indigo-600 dark:after:bg-indigo-400',
+                      'after:transition-transform after:duration-200',
+                      'data-[state=active]:after:scale-x-100 data-[state=inactive]:after:scale-x-0'
+                    )}
+                  >
+                    Communities
+                  </Tabs.Trigger>
+                )}
+
+                <Tabs.Trigger
+                  value="about"
+                  className={cn(
+                    'relative py-4 text-sm font-medium transition-colors',
+                    'data-[state=active]:text-indigo-600 dark:data-[state=active]:text-indigo-400',
+                    'data-[state=inactive]:text-zinc-600 dark:data-[state=inactive]:text-zinc-400',
+                    'hover:text-zinc-900 dark:hover:text-zinc-200',
+                    'after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5',
+                    'after:bg-indigo-600 dark:after:bg-indigo-400',
+                    'after:transition-transform after:duration-200',
+                    'data-[state=active]:after:scale-x-100 data-[state=inactive]:after:scale-x-0'
+                  )}
+                >
+                  About
+                </Tabs.Trigger>
+              </Tabs.List>
+
+              {/* Tab Content */}
+              <div className="py-8">
+                {/* Videos Tab */}
+                <Tabs.Content value="videos" className="focus:outline-none">
+                  {videosLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+                    </div>
+                  ) : videos.length === 0 ? (
+                    <div className="text-center py-12">
+                      <p className="text-gray-600 dark:text-gray-400">No videos yet</p>
+                    </div>
+                  ) : (
+                    <CreatorVideoGrid videos={videos} onVideoClick={handleVideoClick} />
+                  )}
+                </Tabs.Content>
+
+                {/* Communities Tab */}
+                <Tabs.Content value="communities" className="focus:outline-none">
+                  {communitiesLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+                    </div>
+                  ) : (
+                    <CommunityList
+                      communities={creatorCommunities}
+                      creatorId={creatorProfile.id}
+                      creatorName={creatorProfile.displayName}
+                      creatorAvatar={creatorProfile.avatar}
+                    />
+                  )}
+                </Tabs.Content>
+
+                {/* About Tab */}
+                <Tabs.Content value="about" className="focus:outline-none">
+                  <AboutSection
+                    bio={creatorProfile.bio}
+                    socialLinks={creatorProfile.socials}
+                    joinedDate={creatorProfile.createdAt}
+                  />
+                </Tabs.Content>
+              </div>
+            </Tabs.Root>
+          </div>
         </div>
       </div>
 
@@ -185,9 +291,19 @@ export default function CreatorFullScreen() {
       <TipModal
         isOpen={showTipModal}
         onClose={() => setShowTipModal(false)}
-        creatorId={creator.id}
-        creatorName={creator.displayName}
-        creatorAvatar={creator.photoURL}
+        creatorId={creatorProfile.id}
+        creatorName={creatorProfile.displayName}
+        creatorAvatar={creatorProfile.avatar}
+      />
+
+      {/* Join Communities Modal */}
+      <JoinCommunitiesModal
+        isOpen={showCommunitiesModal}
+        onClose={() => setShowCommunitiesModal(false)}
+        communities={creatorCommunities}
+        creatorId={creatorProfile.id}
+        creatorName={creatorProfile.displayName}
+        creatorAvatar={creatorProfile.avatar}
       />
     </>
   );
