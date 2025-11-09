@@ -8,6 +8,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useCreatorProfile, useCreatorVideos } from '@/hooks/useCreatorProfile';
+import { useCreatorCommunity } from '@/hooks/useCreatorCommunity';
 import { usePlayer } from '@/contexts/PlayerContext';
 import { useUIStore } from '@/stores/uiStore';
 import { useAuth } from '@/hooks/useAuth';
@@ -27,6 +28,7 @@ export default function CreatorFullScreen() {
 
   const { data: creatorProfile, isLoading: creatorLoading, error: creatorError } = useCreatorProfile(creatorIdentifier);
   const { data: videos = [], isLoading: videosLoading } = useCreatorVideos(creatorProfile?.id);
+  const { data: creatorCommunity, isLoading: communityLoading } = useCreatorCommunity(creatorProfile?.id);
   const { currentVideo, play, setQueue } = usePlayer();
   const { closeAll } = useUIStore();
   const { user } = useAuth();
@@ -120,6 +122,11 @@ export default function CreatorFullScreen() {
     videoCount: creatorProfile.stats.totalVideos,
     featuredCommunities: [],
     socialLinks: creatorProfile.socials,
+    // Community data
+    hasCommunity: !!creatorCommunity,
+    communityId: creatorCommunity?.id,
+    hasCourse: false, // TODO: Add course detection when implemented
+    courseId: undefined,
   };
 
   return (

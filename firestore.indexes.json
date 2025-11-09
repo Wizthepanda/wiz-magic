@@ -83,6 +83,15 @@
       "collectionGroup": "communities",
       "queryScope": "COLLECTION",
       "fields": [
+        { "fieldPath": "creatorId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "communities",
+      "queryScope": "COLLECTION",
+      "fields": [
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
