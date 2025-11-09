@@ -10,10 +10,12 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useCreatorProfile, useCreatorVideos } from '@/hooks/useCreatorProfile';
 import { usePlayer } from '@/contexts/PlayerContext';
 import { useUIStore } from '@/stores/uiStore';
+import { useAuth } from '@/hooks/useAuth';
 import { CreatorHeader } from '@/components/creator/CreatorHeader';
 import { CreatorVideoGrid } from '@/components/creator/CreatorVideoGrid';
 import { TipModal } from '@/components/creator/TipModal';
 import { FullscreenPlayer } from '@/components/creator/FullscreenPlayer';
+import { trackCreatorProfileView, trackVideoPlayFromProfile } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 
 export default function CreatorFullScreen() {
@@ -27,6 +29,7 @@ export default function CreatorFullScreen() {
   const { data: videos = [], isLoading: videosLoading } = useCreatorVideos(creatorProfile?.id);
   const { currentVideo, play, setQueue } = usePlayer();
   const { closeAll } = useUIStore();
+  const { user } = useAuth();
   const [showTipModal, setShowTipModal] = useState(false);
 
   // Lock body scroll when on this page
@@ -42,12 +45,24 @@ export default function CreatorFullScreen() {
     closeAll();
   }, [closeAll]);
 
+  // Track profile view when creator profile loads
+  useEffect(() => {
+    if (creatorProfile?.id) {
+      trackCreatorProfileView(user?.uid, creatorProfile.id);
+    }
+  }, [creatorProfile?.id, user?.uid]);
+
   const handleBack = () => {
     navigate(-1);
   };
 
   const handleVideoClick = (video: any, index: number) => {
     console.log('🎬 Playing video from creator profile:', video.title);
+
+    // Track video play analytics
+    if (creatorProfile?.id) {
+      trackVideoPlayFromProfile(user?.uid, creatorProfile.id, video.videoId);
+    }
 
     // Set queue to remaining videos
     const upNext = videos.slice(index + 1, index + 11); // Next 10 videos

@@ -1,17 +1,20 @@
 /**
  * FullscreenPlayer - Single global video player with Up Next rail
+ * Includes "Back to Profile" button for seamless creator navigation
  */
 
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Play, Pause, Volume2, VolumeX, Maximize, Minimize, SkipForward } from 'lucide-react';
+import { X, Play, Pause, Volume2, VolumeX, Maximize, Minimize, SkipForward, ArrowLeft } from 'lucide-react';
 import YouTube, { YouTubeProps } from 'react-youtube';
+import { useNavigate } from 'react-router-dom';
 import { usePlayer } from '@/contexts/PlayerContext';
 import { UpNextRail } from './UpNextRail';
 import { cn } from '@/lib/utils';
 
 export const FullscreenPlayer: React.FC = () => {
   const { currentVideo, queue, playNext, close } = usePlayer();
+  const navigate = useNavigate();
   const playerRef = useRef<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -93,6 +96,14 @@ export const FullscreenPlayer: React.FC = () => {
       className="fixed inset-0 bg-black z-[150]"
       onMouseMove={handleMouseMove}
     >
+      {/* Quick Close Button - Top Left (Always Visible) */}
+      <button
+        onClick={close}
+        className="absolute top-4 left-4 z-[3000] p-2 rounded-full bg-black/40 hover:bg-black/60 text-white transition-all"
+      >
+        <X className="h-5 w-5" />
+      </button>
+
       {/* Video Player */}
       <div className={cn('absolute inset-0', showUpNext ? 'right-96' : 'right-0')}>
         <YouTube
@@ -116,17 +127,31 @@ export const FullscreenPlayer: React.FC = () => {
           >
             {/* Top Bar */}
             <div className="absolute top-0 left-0 right-0 p-6 flex items-start justify-between pointer-events-auto">
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold text-white mb-2">{currentVideo.title}</h2>
+              {/* Back to Profile Button */}
+              <button
+                onClick={() => {
+                  close();
+                  navigate(`/creator/id/${currentVideo.creator.id}`);
+                }}
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-sm text-white transition-all ml-14"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span className="text-sm font-medium">Back to Profile</span>
+              </button>
+
+              <div className="flex-1 mx-6">
+                <h2 className="text-xl font-bold text-white mb-2 line-clamp-1">{currentVideo.title}</h2>
                 <div className="flex items-center gap-3">
                   <img
                     src={currentVideo.creator.avatar}
                     alt={currentVideo.creator.name}
-                    className="w-10 h-10 rounded-full"
+                    className="w-8 h-8 rounded-full"
                   />
                   <div>
-                    <p className="text-white font-semibold">{currentVideo.creator.name}</p>
-                    <p className="text-gray-300 text-sm">{currentVideo.creator.subscribers}</p>
+                    <p className="text-white font-semibold text-sm">{currentVideo.creator.name}</p>
+                    {currentVideo.creator.subscribers && (
+                      <p className="text-gray-300 text-xs">{currentVideo.creator.subscribers}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -134,9 +159,9 @@ export const FullscreenPlayer: React.FC = () => {
               {/* Close Button */}
               <button
                 onClick={close}
-                className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 flex items-center justify-center transition-all"
+                className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 flex items-center justify-center transition-all flex-shrink-0"
               >
-                <X className="w-6 h-6 text-white" />
+                <X className="w-5 h-5 text-white" />
               </button>
             </div>
 

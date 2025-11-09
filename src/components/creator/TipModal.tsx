@@ -1,9 +1,9 @@
 /**
  * TipModal - Portal-based modal for tipping creators
- * Uses Radix Dialog with proper z-index and positioning
+ * Uses Radix Dialog with proper z-index, scroll lock, and positioning
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, Zap, CreditCard, Wallet, CheckCircle2 } from 'lucide-react';
@@ -37,6 +37,19 @@ export const TipModal: React.FC<TipModalProps> = ({
   const { toast } = useToast();
 
   const amount = customAmount ? parseFloat(customAmount) : selectedAmount;
+
+  // Scroll lock effect when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   const handleTip = async () => {
     if (!amount || amount <= 0) {
@@ -97,7 +110,7 @@ export const TipModal: React.FC<TipModalProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[2000]"
           />
         </Dialog.Overlay>
 
@@ -110,11 +123,11 @@ export const TipModal: React.FC<TipModalProps> = ({
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className={cn(
               'fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
-              'w-full max-w-lg mx-4',
-              'bg-white/90 dark:bg-neutral-900/90 backdrop-blur-xl',
-              'rounded-3xl shadow-2xl border border-white/20',
-              'p-6 sm:p-8',
-              'z-[110]',
+              'w-full max-w-[480px] mx-4',
+              'bg-white dark:bg-neutral-900 backdrop-blur-xl',
+              'rounded-2xl shadow-2xl',
+              'p-6',
+              'z-[2001]',
               'focus:outline-none'
             )}
           >
