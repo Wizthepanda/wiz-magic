@@ -123,8 +123,9 @@ export const TipModal: React.FC<TipModalProps> = ({
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className={cn(
               'fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
-              'w-full max-w-[480px] mx-4',
-              'bg-white dark:bg-neutral-900 backdrop-blur-xl',
+              'w-[min(94vw,820px)] max-w-[820px]',
+              'max-h-[90vh] overflow-y-auto',
+              'bg-white dark:bg-neutral-900',
               'rounded-2xl shadow-2xl',
               'p-6',
               'z-[2001]',

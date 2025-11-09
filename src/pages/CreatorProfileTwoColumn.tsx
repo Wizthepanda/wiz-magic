@@ -1,5 +1,5 @@
 /**
- * CreatorFullScreen - Two-column creator workspace
+ * CreatorProfileTwoColumn - Two-column creator workspace
  * Left: Communities & Posts (30%)
  * Right: Vertical Video Panel (70%)
  */
@@ -20,7 +20,7 @@ import { FullscreenPlayer } from '@/components/creator/FullscreenPlayer';
 import { trackCreatorProfileView, trackVideoPlayFromProfile } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 
-export default function CreatorFullScreen() {
+export default function CreatorProfileTwoColumn() {
   const { creatorId: paramCreatorId, username } = useParams<{ creatorId?: string; username?: string }>();
   const navigate = useNavigate();
 
