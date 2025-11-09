@@ -197,10 +197,7 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
                 {/* MENU ITEMS */}
                 <div className="py-2">
                   <button
-                    onClick={() => {
-                      navigate('/profile');
-                      handleClose();
-                    }}
+                    onClick={() => navigate('/profile')}
                     className={cn(
                       "w-full flex items-center px-6 py-3 text-white",
                       dropdownItemHoverClasses
@@ -211,10 +208,7 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
                   </button>
 
                   <button
-                    onClick={() => {
-                      navigate('/rewards');
-                      handleClose();
-                    }}
+                    onClick={() => navigate('/rewards')}
                     className={cn(
                       "w-full flex items-center px-6 py-3 text-white",
                       dropdownItemHoverClasses
@@ -225,10 +219,7 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
                   </button>
 
                   <button
-                    onClick={() => {
-                      navigate('/leaderboard');
-                      handleClose();
-                    }}
+                    onClick={() => navigate('/leaderboard')}
                     className={cn(
                       "w-full flex items-center px-6 py-3 text-white",
                       dropdownItemHoverClasses
@@ -264,10 +255,7 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
                   <div className="h-px bg-gray-700/50 my-2" />
 
                   <button
-                    onClick={() => {
-                      navigate('/profile?tab=settings');
-                      handleClose();
-                    }}
+                    onClick={() => navigate('/profile?tab=settings')}
                     className={cn(
                       "w-full flex items-center px-6 py-3 text-white",
                       dropdownItemHoverClasses
