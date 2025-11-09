@@ -1,7 +1,7 @@
 /**
- * CreatorFullScreen - Two-column creator workspace
- * Left: Communities & Posts (30%)
- * Right: Vertical Video Panel (70%)
+ * CreatorFullScreen - Reddit 2.0 creator workspace
+ * Left: Community Discussion Feed (70-80%)
+ * Right: Video Rail Sidebar (20-30%)
  */
 
 import React, { useEffect, useState } from 'react';
@@ -13,8 +13,8 @@ import { usePlayer } from '@/contexts/PlayerContext';
 import { useUIStore } from '@/stores/uiStore';
 import { useAuth } from '@/hooks/useAuth';
 import { CreatorHeaderInline } from '@/components/creator/CreatorHeaderInline';
-import { CommunitiesColumn } from '@/components/creator/CommunitiesColumn';
-import { VerticalVideoList } from '@/components/creator/VerticalVideoList';
+import { CommunityFeed } from '@/components/creator/CommunityFeed';
+import { VideoRail } from '@/components/creator/VideoRail';
 import { TipModal } from '@/components/creator/TipModal';
 import { FullscreenPlayer } from '@/components/creator/FullscreenPlayer';
 import { trackCreatorProfileView, trackVideoPlayFromProfile } from '@/lib/analytics';
@@ -144,28 +144,28 @@ export default function CreatorFullScreen() {
           onTipClick={handleTipClick}
         />
 
-        {/* Two-Column Layout */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Left Column: Communities & Posts (30%) */}
-            <div className="lg:w-[30%] order-2 lg:order-1">
-              <div className="sticky top-4 bg-white dark:bg-neutral-800 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden h-[calc(100vh-200px)]">
-                <CommunitiesColumn creatorId={creatorProfile.id} />
-              </div>
+        {/* Reddit 2.0 Layout */}
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Left: Community Discussion Feed (70-80%) */}
+            <div className="lg:w-[75%] order-1">
+              <CommunityFeed creatorId={creatorProfile.id} />
             </div>
 
-            {/* Right Column: Vertical Video List (70%) */}
-            <div className="lg:w-[70%] order-1 lg:order-2">
-              {videosLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
-                </div>
-              ) : (
-                <VerticalVideoList
-                  videos={videos}
-                  onVideoClick={handleVideoClick}
-                />
-              )}
+            {/* Right: Video Rail Sidebar (20-30%) */}
+            <div className="lg:w-[25%] order-2">
+              <div className="lg:sticky lg:top-4">
+                {videosLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
+                  </div>
+                ) : (
+                  <VideoRail
+                    videos={videos}
+                    onVideoClick={handleVideoClick}
+                  />
+                )}
+              </div>
             </div>
           </div>
         </div>
