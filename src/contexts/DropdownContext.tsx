@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 
 type DropdownType = 'wallet' | 'profile' | 'notifications' | 'messages' | null;
 
@@ -12,6 +13,7 @@ const DropdownContext = createContext<DropdownContextType | undefined>(undefined
 
 export const DropdownProvider = ({ children }: { children: ReactNode }) => {
   const [activeDropdown, setActiveDropdown] = useState<DropdownType>(null);
+  const location = useLocation();
 
   const setDropdown = (dropdown: DropdownType) => {
     console.log('🔔 Dropdown Context: Setting active dropdown to:', dropdown, '(previous:', activeDropdown, ')');
@@ -23,8 +25,18 @@ export const DropdownProvider = ({ children }: { children: ReactNode }) => {
     setActiveDropdown(null);
   };
 
+  // Auto-close dropdowns on route change
+  useEffect(() => {
+    if (activeDropdown) {
+      console.log('🔔 Dropdown Context: Route changed, closing dropdown:', activeDropdown);
+      setActiveDropdown(null);
+    }
+  }, [location.pathname]);
+
   // Log when provider mounts
-  console.log('✅ DropdownProvider mounted - context available');
+  useEffect(() => {
+    console.log('✅ DropdownProvider mounted - context available');
+  }, []);
 
   return (
     <DropdownContext.Provider value={{ activeDropdown, setActiveDropdown: setDropdown, closeAllDropdowns }}>

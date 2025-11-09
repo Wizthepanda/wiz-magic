@@ -1,23 +1,17 @@
 /**
- * XP Profile Dropdown - Matches Wallet/Notifications/Messages Architecture
- * Uses Framer Motion + Portal + DropdownContext
+ * XP Profile Dropdown - Using HeaderDropdown with Floating UI
+ * Matches Wallet/Notifications/Messages Architecture
  */
 
-import React, { useState, useEffect, useRef } from 'react';
-import type { PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent, KeyboardEvent as ReactKeyboardEvent } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Flame, Share2, Settings, LogOut, Copy, Check, Zap, Youtube, User, Target, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useZAPSystem } from '@/hooks/useZAPSystem';
 import { useNavigate } from 'react-router-dom';
-import { useDropdown } from '@/contexts/DropdownContext';
-import * as Portal from '@radix-ui/react-portal';
-import {
-  dropdownMotion,
-  glassDropdownClasses,
-  dropdownItemHoverClasses,
-} from '@/lib/dropdown-animations';
+import { HeaderDropdown } from '@/components/ui/HeaderDropdown';
+import { dropdownItemHoverClasses } from '@/lib/dropdown-animations';
 
 interface XPProfileDropdownProps {
   children: React.ReactNode; // The trigger (avatar + XP ring)
@@ -30,23 +24,10 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
   userEmail,
   isYouTubeConnected = true,
 }) => {
-  const dropdownContext = useDropdown();
   const { user, signOut } = useAuth();
   const { zapData, zapProgress, loading } = useZAPSystem();
   const [linkCopied, setLinkCopied] = useState(false);
   const navigate = useNavigate();
-
-  // Support both context-based and standalone state
-  const [standaloneIsOpen, setStandaloneIsOpen] = useState(false);
-  const isOpen = dropdownContext
-    ? dropdownContext.activeDropdown === 'profile'
-    : standaloneIsOpen;
-
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ top: 0, right: 0 });
-  const justOpenedRef = useRef(false);
-  const triggerPointerDownRef = useRef(false);
 
   // Use ZAP system data with fallbacks
   const userData = {
@@ -79,62 +60,6 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
   // Generate invite link
   const inviteLink = `https://wizxp.com/invite/${userData.name.toLowerCase()}`;
 
-  const handleToggle = () => {
-    if (dropdownContext) {
-      // Context-based mode
-      const willOpen = !isOpen;
-      if (willOpen) {
-        justOpenedRef.current = true;
-      }
-      dropdownContext.setActiveDropdown(isOpen ? null : 'profile');
-    } else {
-      // Standalone mode
-      const willOpen = !isOpen;
-      if (willOpen) {
-        justOpenedRef.current = true;
-      }
-      setStandaloneIsOpen(!isOpen);
-    }
-  };
-
-  const handleTriggerPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === 'mouse' && event.button !== 0) {
-      return;
-    }
-    triggerPointerDownRef.current = true;
-    event.preventDefault();
-    event.stopPropagation();
-    handleToggle();
-  };
-
-  const handleTriggerClick = (event: ReactMouseEvent<HTMLDivElement>) => {
-    if (triggerPointerDownRef.current) {
-      triggerPointerDownRef.current = false;
-      return;
-    }
-    event.preventDefault();
-    event.stopPropagation();
-    handleToggle();
-  };
-
-  const handleTriggerKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      handleToggle();
-    } else if (event.key === 'Escape' && isOpen) {
-      event.preventDefault();
-      handleClose();
-    }
-  };
-
-  const handleClose = () => {
-    if (dropdownContext) {
-      dropdownContext.setActiveDropdown(null);
-    } else {
-      setStandaloneIsOpen(false);
-    }
-  };
-
   // Handle copy invite link
   const handleCopyLink = async () => {
     try {
@@ -149,128 +74,28 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
   const handleSignOut = async () => {
     try {
       await signOut();
-      handleClose();
     } catch (error) {
       console.error('Error signing out:', error);
     }
   };
 
-  // Calculate dropdown position based on trigger
-  useEffect(() => {
-    if (isOpen && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      const calculatedPosition = {
-        top: rect.bottom + 12,
-        right: window.innerWidth - rect.right,
-      };
-      console.log('👤 ProfileDropdown: Opening at position:', calculatedPosition);
-      console.log('👤 ProfileDropdown: Button rect:', rect);
-      console.log('👤 ProfileDropdown: isOpen state:', isOpen);
-      console.log('👤 ProfileDropdown: activeDropdown:', dropdownContext?.activeDropdown);
-      setPosition(calculatedPosition);
-    } else if (!isOpen) {
-      console.log('👤 ProfileDropdown: Closing');
-    }
-  }, [isOpen]);
-
-  // Handle clicks outside dropdown and Esc key
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      // Ignore if we just opened
-      if (justOpenedRef.current) {
-        justOpenedRef.current = false;
-        return;
-      }
-
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(event.target as Node)
-      ) {
-        handleClose();
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        handleClose();
-      }
-    };
-
-    if (isOpen) {
-      // Add listeners on next tick to avoid closing immediately
-      setTimeout(() => {
-        document.addEventListener('mousedown', handleClickOutside);
-        document.addEventListener('keydown', handleKeyDown);
-      }, 0);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
-      justOpenedRef.current = false;
-    };
-  }, [isOpen]);
-
   // Show loading state
   if (loading || !user) {
-    return <div className="relative" ref={buttonRef}>{children}</div>;
+    return <div className="relative">{children}</div>;
   }
 
-  return (
-    <div className="relative">
-      {/* Trigger */}
+  // Dropdown content
+  const dropdownContent = (
+    <div className="w-[380px] max-w-[calc(100vw-32px)]">
       <div
-        ref={buttonRef}
-        role="button"
-        tabIndex={0}
-        aria-haspopup="menu"
-        aria-expanded={isOpen}
-        onPointerDown={handleTriggerPointerDown}
-        onClick={handleTriggerClick}
-        onKeyDown={handleTriggerKeyDown}
-        className="cursor-pointer"
-        id="profile-dropdown-anchor"
+        style={{
+          background: 'linear-gradient(180deg, #2d3748 0%, #1a202c 100%)',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)',
+          border: "1px solid rgba(255, 255, 255, 0.15)",
+          backdropFilter: "blur(20px) saturate(180%)",
+        }}
+        className="rounded-2xl overflow-hidden"
       >
-        {children}
-      </div>
-
-      {/* Dropdown - Portal Rendered */}
-      <Portal.Root>
-        <AnimatePresence>
-          {isOpen && (
-            <>
-              {/* Pointer Triangle */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed w-3 h-3 bg-[#1E202E]/90 rotate-45 border-t border-l border-white/15"
-                style={{
-                  top: position.top - 6,
-                  right: position.right + 12,
-                  zIndex: 9998,
-                }}
-              />
-
-              {/* Dropdown Content */}
-              <motion.div
-                ref={dropdownRef}
-                {...dropdownMotion}
-                className={cn(
-                  "fixed w-[380px] max-w-[calc(100vw-32px)]",
-                  glassDropdownClasses.container
-                )}
-                style={{
-                  ...glassDropdownClasses.style,
-                  background: 'linear-gradient(180deg, #2d3748 0%, #1a202c 100%)',
-                  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)',
-                  top: position.top,
-                  right: position.right,
-                  zIndex: 9999,
-                }}
-              >
                 {/* HEADER with Purple Gradient */}
                 <div className="p-6">
                   <div className="flex items-center space-x-4">
@@ -476,11 +301,17 @@ export const XPProfileDropdown: React.FC<XPProfileDropdownProps> = ({
                     </div>
                   </div>
                 )}
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
-      </Portal.Root>
+      </div>
     </div>
+  );
+
+  return (
+    <HeaderDropdown
+      name="profile"
+      trigger={children}
+      pointerClassName="bg-[#1E202E]/90"
+    >
+      {dropdownContent}
+    </HeaderDropdown>
   );
 };
