@@ -27,7 +27,7 @@
         "headers": [
           {
             "key": "Content-Security-Policy",
-            "value": "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://www.googleapis.com https://ssl.gstatic.com https://gstatic.com https://www.youtube.com https://s.ytimg.com https://i.ytimg.com https://cdn.tailwindcss.com; worker-src 'self' blob:; object-src 'none'; frame-src 'self' https://accounts.google.com https://www.youtube.com https://youtube.com; connect-src 'self' https://accounts.google.com https://www.googleapis.com https://oauth2.googleapis.com https://firestore.googleapis.com https://firebasestorage.googleapis.com wss: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; media-src 'self' https: blob:; default-src 'self'"
+            "value": "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://www.googleapis.com https://ssl.gstatic.com https://gstatic.com https://www.youtube.com https://s.ytimg.com https://i.ytimg.com https://cdn.tailwindcss.com; worker-src 'self' blob:; object-src 'none'; frame-src 'self' https://accounts.google.com https://www.youtube.com https://youtube.com https://*.firebaseapp.com https://*.web.app; connect-src 'self' https://accounts.google.com https://www.googleapis.com https://oauth2.googleapis.com https://firestore.googleapis.com https://firebasestorage.googleapis.com wss: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; media-src 'self' https: blob:; default-src 'self'"
           }
         ]
       }
