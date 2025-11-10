@@ -3,6 +3,7 @@
  * Provides a single, reliable auth state management across the app
  */
 
+import React from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
 

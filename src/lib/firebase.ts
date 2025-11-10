@@ -9,8 +9,17 @@ import { getFunctions } from 'firebase/functions';
 // Ensures seamless OAuth flow for both wizup.live and wizxp.com
 const getAuthDomain = () => {
   const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+  
+  // CRITICAL FIX: Use Firebase project auth domain from env
+  // This ensures OAuth redirects work correctly
+  const firebaseAuthDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN;
+  
+  if (firebaseAuthDomain) {
+    console.log('🌐 Auth Domain: Using Firebase project domain:', firebaseAuthDomain);
+    return firebaseAuthDomain;
+  }
 
-  // Support both wizxp.com and wizup.live domains (with and without www)
+  // Fallback: Support both wizxp.com and wizup.live domains (with and without www)
   if (hostname === 'wizup.live' || hostname === 'www.wizup.live') {
     console.log('🌐 Auth Domain: Using wizup.live for OAuth flow');
     return 'wizup.live';
@@ -18,9 +27,9 @@ const getAuthDomain = () => {
     console.log('🌐 Auth Domain: Using wizxp.com for OAuth flow');
     return 'wizxp.com';
   } else {
-    // Fallback to environment variable for localhost/development
-    console.log('🌐 Auth Domain: Using localhost/dev environment');
-    return import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'wizxp.com';
+    // Final fallback
+    console.log('🌐 Auth Domain: Using default fallback');
+    return 'wiz-magic-platform.firebaseapp.com';
   }
 };
 
@@ -67,8 +76,15 @@ if (missing.length > 0) {
   throw new Error('Firebase config is incomplete.');
 }
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase with error handling
+let app;
+try {
+  app = initializeApp(firebaseConfig);
+  console.log('✅ Firebase app initialized successfully');
+} catch (error) {
+  console.error('❌ Failed to initialize Firebase app:', error);
+  throw new Error(`Firebase initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+}
 
 // Initialize Firebase services with enhanced error handling
 export const auth = getAuth(app);

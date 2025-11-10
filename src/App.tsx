@@ -144,7 +144,6 @@ const App = () => {
       <ThemeProvider>
         <XpProvider>
           <LayoutProvider>
-            <DropdownProvider>
               <PlayerProvider>
                 <ChatProvider>
                   <TooltipProvider>
@@ -153,6 +152,7 @@ const App = () => {
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>
+                  <DropdownProvider>
                 <Suspense fallback={<LoadingFallback />}>
                   <Routes>
                   {/* ========================================
@@ -234,11 +234,11 @@ const App = () => {
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
+                  </DropdownProvider>
             </BrowserRouter>
             </TooltipProvider>
           </ChatProvider>
         </PlayerProvider>
-      </DropdownProvider>
       </LayoutProvider>
     </XpProvider>
   </ThemeProvider>
