@@ -31,6 +31,7 @@ import PremiumDashboardV9 from './PremiumDashboardV9';
 import PremiumDashboardV10 from './PremiumDashboardV10';
 import PremiumDashboardV11 from './PremiumDashboardV11';
 import WIZUPDashboardV12_5 from './WIZUPDashboardV12_5';
+import WIZUPDashboardV13 from './WIZUPDashboardV13';
 import { WatchDialogV4, WatchVideoData } from './WatchDialogV4';
 import { WatchPopupV5 } from './WatchPopupV5';
 
@@ -892,8 +893,8 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
             transition={{ delay: 0.4 }}
             className="w-full"
           >
-            {/* WIZUP Dashboard V12.5 - Premium Final Version */}
-            <WIZUPDashboardV12_5
+            {/* WIZUP Dashboard V13 - Community-Weighted Feed + Grid View */}
+            <WIZUPDashboardV13
               className="w-full"
               onVideoSelect={handleWatchVideo}
               videos={displayVideos}
