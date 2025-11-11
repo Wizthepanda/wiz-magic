@@ -3,6 +3,7 @@ import { WizSidebar } from './wiz-sidebar';
 import { WizUserProfile } from './wiz-user-profile';
 import { WizDiscoverSection } from './wiz-discover-section';
 import { WizLeaderboard } from './wiz-leaderboard';
+import { CommunityFeedContainer } from '@/components/feed/CommunityFeedContainer';
 import { FloatingParticles } from '@/components/ui/floating-particles';
 
 export const WizDashboard = () => {
@@ -12,6 +13,12 @@ export const WizDashboard = () => {
     switch (activeSection) {
       case 'discover':
         return <WizDiscoverSection />;
+      case 'feed':
+        return (
+          <div className="p-6">
+            <CommunityFeedContainer sortBy="recent" limit={50} />
+          </div>
+        );
       case 'leaderboard':
         return <WizLeaderboard />;
       case 'activate':
@@ -64,7 +71,8 @@ export const WizDashboard = () => {
           <div className="flex justify-between items-center max-w-full">
             <div className="min-w-0 flex-1">
               <h1 className="text-2xl font-bold capitalize truncate">
-                {activeSection === 'discover' ? 'Discover Content' : 
+                {activeSection === 'discover' ? 'Discover Content' :
+                 activeSection === 'feed' ? 'Community Feed' :
                  activeSection === 'leaderboard' ? 'Leaderboard' :
                  activeSection === 'activate' ? 'Activate YouTube' :
                  activeSection === 'premiere' ? 'WIZ Premiere' :
@@ -73,6 +81,7 @@ export const WizDashboard = () => {
               </h1>
               <p className="text-muted-foreground text-sm">
                 {activeSection === 'discover' && 'Watch content and earn XP'}
+                {activeSection === 'feed' && 'See what the community is sharing'}
                 {activeSection === 'leaderboard' && 'Top creators and wizards'}
                 {activeSection === 'activate' && 'Connect your YouTube account'}
                 {activeSection === 'premiere' && 'Premium features for Level 5+ wizards'}

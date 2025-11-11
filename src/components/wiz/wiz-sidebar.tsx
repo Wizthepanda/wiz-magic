@@ -1,16 +1,17 @@
 import { useState } from 'react';
-import { 
-  Compass, 
-  Link2, 
-  Crown, 
-  Trophy, 
-  User, 
-  Settings, 
+import {
+  Compass,
+  Link2,
+  Crown,
+  Trophy,
+  User,
+  Settings,
   LogOut,
   Menu,
   X,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -27,6 +28,7 @@ export const WizSidebar = ({ activeSection, onSectionChange }: WizSidebarProps) 
 
   const navigation = [
     { id: 'discover', label: 'Discover', icon: Compass },
+    { id: 'feed', label: 'Community Feed', icon: MessageSquare },
     { id: 'activate', label: 'Activate', icon: Link2 },
     { id: 'premiere', label: 'WIZ Premiere', icon: Crown, level: 5 },
     { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
