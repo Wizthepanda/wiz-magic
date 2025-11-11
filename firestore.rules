@@ -29,5 +29,29 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == resource.data.userId;
     }
+
+    // Discover videos - public read access
+    match /discover/{videoId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Communities - public read access
+    match /communities/{communityId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+
+      // Community posts - nested collection
+      match /posts/{postId} {
+        allow read: if true;
+        allow write: if request.auth != null;
+      }
+    }
+
+    // Top-level posts collection (if exists)
+    match /posts/{postId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
   }
 }
