@@ -1,13 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, MessageCircle, Share2, Zap, Users, Sparkles, TrendingUp, Clock, Flame } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Zap, Users, Sparkles, TrendingUp, Clock, Flame, ChevronUp, ChevronDown } from 'lucide-react';
 import { getAllTopPosts, getPostsBySort, type Post } from '@/lib/firestore/queries';
 import { collection, getDocs, limit as fsLimit, orderBy, query as fsQuery, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { cn } from '@/lib/utils';
+import { WIZUPEngagementBar } from '../WIZUPEngagementBar';
 
 interface Props {
   onVideoPlay?: (post: Post) => void;
+  onCommentClick?: (post: Post) => void;
+  onZapEarned?: (amount: number) => void;
 }
 
 function formatTime(ts: any): string {
@@ -26,14 +29,69 @@ function formatTime(ts: any): string {
   return '';
 }
 
-// Enhanced Card Component with Featured Size Option
+// Reddit-Style Post Card with Upvote/Downvote and ZAP System
 const FeedCard: React.FC<{
   post: Post;
   onVideoPlay?: (p: Post) => void;
+  onCommentClick?: (p: Post) => void;
+  onZapEarned?: (amount: number) => void;
   isFeatured?: boolean;
   index: number;
-}> = ({ post, onVideoPlay, isFeatured = false, index }) => {
+}> = ({ post, onVideoPlay, onCommentClick, onZapEarned, isFeatured = false, index }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [userVote, setUserVote] = useState<'up' | 'down' | null>(null);
+  const [voteCount, setVoteCount] = useState(post.score || 0);
+  const [earnedZaps, setEarnedZaps] = useState(0);
+  const [showZapReward, setShowZapReward] = useState(false);
+  const [videoWatched, setVideoWatched] = useState(false);
+
+  // Voting functions
+  const handleUpvote = () => {
+    if (userVote === 'up') {
+      // Remove upvote
+      setUserVote(null);
+      setVoteCount(prev => prev - 1);
+      setEarnedZaps(prev => Math.max(0, prev - 1));
+    } else {
+      // Add upvote (remove downvote if exists)
+      const delta = userVote === 'down' ? 2 : 1;
+      setUserVote('up');
+      setVoteCount(prev => prev + delta);
+      const zapsEarned = userVote === 'down' ? 3 : 2;
+      setEarnedZaps(prev => prev + zapsEarned);
+      setShowZapReward(true);
+      setTimeout(() => setShowZapReward(false), 2000);
+      onZapEarned?.(zapsEarned);
+    }
+  };
+
+  const handleDownvote = () => {
+    if (userVote === 'down') {
+      // Remove downvote
+      setUserVote(null);
+      setVoteCount(prev => prev + 1);
+      setEarnedZaps(prev => Math.max(0, prev - 1));
+    } else {
+      // Add downvote (remove upvote if exists)
+      const delta = userVote === 'up' ? -2 : -1;
+      setUserVote('down');
+      setVoteCount(prev => prev + delta);
+      setEarnedZaps(prev => Math.max(0, prev - 1));
+    }
+  };
+
+  const handleVideoPlay = () => {
+    onVideoPlay?.(post);
+    // Simulate ZAP earning after watching
+    setTimeout(() => {
+      setVideoWatched(true);
+      const zapsEarned = post.zapsReward || 15;
+      setEarnedZaps(prev => prev + zapsEarned);
+      setShowZapReward(true);
+      setTimeout(() => setShowZapReward(false), 3000);
+      onZapEarned?.(zapsEarned);
+    }, 2000);
+  };
 
   return (
     <motion.div
@@ -45,188 +103,156 @@ const FeedCard: React.FC<{
         ease: [0.4, 0, 0.2, 1]
       }}
       whileHover={{
-        y: -8,
+        y: -4,
         transition: { duration: 0.3, ease: "easeOut" }
       }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
-      className={cn(
-        "group relative overflow-hidden rounded-3xl bg-white/90 backdrop-blur-xl border border-gray-100/50 shadow-lg transition-all duration-500",
-        isFeatured
-          ? "col-span-full md:col-span-2"
-          : "col-span-1",
-        isHovered && "shadow-2xl shadow-purple-500/20 border-purple-200/50"
-      )}
+      className="group relative overflow-hidden rounded-3xl bg-white/70 backdrop-blur-xl border border-gray-100/50 shadow-lg transition-all duration-500 hover:shadow-2xl"
       style={{
-        background: isHovered
-          ? 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%)'
-          : 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,252,0.9) 100%)'
+        boxShadow: isHovered
+          ? '0 8px 32px rgba(138, 77, 255, 0.08), 0 0 12px rgba(255,77,243,0.15)'
+          : '0 8px 32px rgba(138, 77, 255, 0.08)'
       }}
     >
       {/* Hover Glow Effect */}
       <motion.div
-        className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
         style={{
-          background: 'linear-gradient(135deg, rgba(138,77,255,0.03) 0%, rgba(255,77,243,0.03) 100%)',
-          boxShadow: 'inset 0 0 40px rgba(138,77,255,0.05)'
+          background: 'linear-gradient(135deg, rgba(138,77,255,0.02) 0%, rgba(255,77,243,0.02) 100%)',
+          boxShadow: 'inset 0 0 40px rgba(138,77,255,0.03)'
         }}
       />
 
       {/* Content */}
-      <div className={cn("relative p-6", isFeatured && "md:p-8")}>
-        {/* Community Badge */}
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="flex items-center gap-3 mb-4 cursor-pointer"
-        >
-          <div className="relative">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 p-0.5">
-              <div className="w-full h-full rounded-xl bg-white flex items-center justify-center">
-                <img
-                  src={post.communityAvatar || '/placeholder.svg'}
-                  alt={post.communityName}
-                  className="w-10 h-10 rounded-xl object-cover"
-                />
-              </div>
+      <div className="relative p-6">
+        {/* Post Header */}
+        <div className="flex items-center gap-3 mb-4">
+          <img
+            src={post.authorAvatar || '/avatar-fallback.png'}
+            alt={post.authorName}
+            className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-100"
+          />
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-gray-900">{post.authorName}</span>
+              <span className="text-gray-500">@{post.authorUsername || post.authorName}</span>
+              <span className="text-purple-600">Lv.{post.authorLevel}</span>
             </div>
-            <motion.div
-              animate={{ rotate: [0, 360] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center"
-            >
-              <Sparkles className="w-2.5 h-2.5 text-white" />
-            </motion.div>
-          </div>
-          <div>
-            <h3 className="font-semibold text-gray-900 text-sm">{post.communityName}</h3>
-            <div className="flex items-center gap-1 text-xs text-gray-500">
-              <Users className="w-3 h-3" />
-              <span>{post.communityMemberCount || 0} members</span>
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <span>posted in {post.communityName} ⚡</span>
+              <span>•</span>
+              <span>{formatTime(post.createdAt)}</span>
             </div>
           </div>
-        </motion.div>
-
-        {/* Content Type Badge */}
-        <div className="flex items-center gap-2 mb-3">
-          {post.media?.type === 'video' && (
-            <div className="px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-medium rounded-full flex items-center gap-1">
-              <Flame className="w-3 h-3" />
-              Video
-            </div>
-          )}
-          {post.score > 100 && (
-            <div className="px-3 py-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-medium rounded-full flex items-center gap-1">
-              <TrendingUp className="w-3 h-3" />
-              Hot
-            </div>
-          )}
-          {post.zapsReward > 100 && (
-            <div className="px-3 py-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-medium rounded-full flex items-center gap-1">
-              <Zap className="w-3 h-3" />
-              High XP
-            </div>
-          )}
+          <div className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold rounded-full">
+            <Zap className="w-3 h-3" />
+            {post.zapsReward || 0} ZAPs
+          </div>
         </div>
 
-        {/* Title */}
-        <h2 className={cn(
-          "font-semibold text-gray-900 mb-4 leading-tight",
-          isFeatured ? "text-xl md:text-2xl" : "text-lg"
-        )}>
+        {/* Divider */}
+        <div className="w-full h-px bg-gray-100 mb-4" />
+
+        {/* Post Title */}
+        <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4 leading-tight">
           {post.title}
         </h2>
+
+        {/* Post Description */}
+        {post.excerpt && (
+          <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+            {post.excerpt}
+          </p>
+        )}
 
         {/* Media */}
         {post.media?.thumbnail && (
           <motion.div
-            className={cn(
-              "rounded-2xl overflow-hidden mb-4 cursor-pointer relative group/media",
-              isFeatured ? "aspect-video" : "aspect-video"
-            )}
-            whileHover={{ scale: 1.02 }}
-            onClick={() => onVideoPlay?.(post)}
+            className="rounded-2xl overflow-hidden mb-4 cursor-pointer relative group/media"
+            whileHover={{ scale: 1.01 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            onClick={handleVideoPlay}
           >
             <img
               src={post.media.thumbnail}
               alt={post.title}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover/media:scale-105"
+              className="w-full object-cover aspect-video"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+            {/* Video Overlay */}
             {post.media?.type === 'video' && (
-              <div className="absolute bottom-4 left-4 px-3 py-1 bg-black/70 text-white text-sm font-medium rounded-full backdrop-blur-sm">
-                {post.media.duration || '0:00'}
-              </div>
+              <>
+                {/* Duration Badge */}
+                <div className="absolute bottom-3 left-3 px-2 py-1 bg-black/70 text-white text-xs font-medium rounded-lg backdrop-blur-sm">
+                  {post.media.duration || '0:00'}
+                </div>
+
+                {/* ZAP Reward Badge */}
+                <motion.div
+                  className="absolute bottom-3 right-3 px-2 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold rounded-lg shadow-lg flex items-center gap-1"
+                  animate={{ scale: videoWatched ? [1, 1.1, 1] : 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Zap className="w-3 h-3" />
+                  +{post.zapsReward || 15} ZAPs
+                </motion.div>
+
+                {/* Play Button */}
+                <motion.div
+                  className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/30">
+                    <div className="w-0 h-0 border-l-4 border-l-white border-t-2 border-t-transparent border-b-2 border-b-transparent ml-1" />
+                  </div>
+                </motion.div>
+
+                {/* Hover ZAP Preview */}
+                <motion.div
+                  initial={{ opacity: 0, y: 5 }}
+                  whileHover={{ opacity: 1, y: 0 }}
+                  className="absolute top-3 left-3 px-3 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-sm font-bold rounded-xl shadow-lg"
+                >
+                  Watch to Earn +{post.zapsReward || 15} ZAPs ⚡
+                </motion.div>
+              </>
             )}
           </motion.div>
         )}
 
-        {/* Author & Meta */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <img
-              src={post.authorAvatar || '/avatar-fallback.png'}
-              alt={post.authorName}
-              className="w-8 h-8 rounded-full object-cover ring-2 ring-gray-100"
-            />
-            <div>
-              <p className="text-sm font-medium text-gray-900">@{post.authorUsername || post.authorName}</p>
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <Clock className="w-3 h-3" />
-                <span>{formatTime(post.createdAt)}</span>
-              </div>
-            </div>
-          </div>
-          <motion.div
-            className="px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-semibold rounded-full flex items-center gap-1"
-            whileHover={{ scale: 1.1 }}
-            animate={{
-              scale: [1, 1.05, 1],
-              transition: { duration: 2, repeat: Infinity, ease: "easeInOut" }
-            }}
-          >
-            <Zap className="w-4 h-4" />
-            +{post.zapsReward || 0} XP
-          </motion.div>
-        </div>
+        {/* Unified Engagement Bar */}
+        <WIZUPEngagementBar
+          userVote={userVote}
+          voteCount={voteCount}
+          commentCount={post.commentsCount || 0}
+          zapsEarned={earnedZaps}
+          onUpvote={handleUpvote}
+          onDownvote={handleDownvote}
+          onComment={() => onCommentClick?.(post)}
+          onShare={() => console.log('Share post:', post.id)}
+          enableAnimations={true}
+        />
 
-        {/* Engagement Actions */}
-        <div className="flex items-center justify-between pt-4 border-t border-gray-100/50">
-          <div className="flex items-center gap-6">
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="flex items-center gap-2 text-gray-600 hover:text-red-500 transition-colors group"
+        {/* ZAP Reward Animation */}
+        <AnimatePresence>
+          {showZapReward && earnedZaps > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.8 }}
+              animate={{ opacity: 1, y: -20, scale: 1 }}
+              exit={{ opacity: 0, y: -40, scale: 0.8 }}
+              className="absolute top-4 right-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-sm font-bold px-3 py-2 rounded-xl shadow-lg z-10"
             >
-              <Heart className="w-5 h-5 group-hover:fill-current" />
-              <span className="text-sm font-medium">{post.score || 0}</span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="flex items-center gap-2 text-gray-600 hover:text-blue-500 transition-colors group"
-            >
-              <MessageCircle className="w-5 h-5" />
-              <span className="text-sm font-medium">{post.commentsCount || 0}</span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="flex items-center gap-2 text-gray-600 hover:text-green-500 transition-colors group"
-            >
-              <Share2 className="w-5 h-5" />
-              <span className="text-sm font-medium">Share</span>
-            </motion.button>
-          </div>
-          <div className="text-xs text-gray-400">
-            {post.votesCount || 0} votes
-          </div>
-        </div>
+              +{earnedZaps} ZAPs Earned! ⚡
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );
 };
 
-const PremiumMultiFeed: React.FC<Props> = ({ onVideoPlay }) => {
+const PremiumMultiFeed: React.FC<Props> = ({ onVideoPlay, onCommentClick, onZapEarned }) => {
   const [posts, setPosts] = useState<Post[]>([]);
 
   // Ensure posts is always an array
@@ -478,16 +504,18 @@ const PremiumMultiFeed: React.FC<Props> = ({ onVideoPlay }) => {
           </div>
         )}
 
-        {/* Feed Content */}
+        {/* Feed Content - Single Column Reddit Style */}
         {!loading && safePosts.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-6">
             <AnimatePresence mode="popLayout">
               {safePosts.filter(p => p && p.id).map((post, index) => (
                 <FeedCard
                   key={post.id}
                   post={post}
                   onVideoPlay={onVideoPlay}
-                  isFeatured={index === 0}
+                  onCommentClick={onCommentClick}
+                  onZapEarned={onZapEarned}
+                  isFeatured={false}
                   index={index}
                 />
               ))}
