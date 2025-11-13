@@ -80,7 +80,7 @@ export const NewChatDialog = ({ open, onOpenChange, onChatCreated }: NewChatDial
     };
 
     loadUsers();
-  }, [open, user]);
+  }, [open, user?.uid]);
 
   // Load communities
   useEffect(() => {
@@ -115,7 +115,7 @@ export const NewChatDialog = ({ open, onOpenChange, onChatCreated }: NewChatDial
     };
 
     loadCommunities();
-  }, [open, user, activeTab]);
+  }, [open, user?.uid, activeTab]);
 
   // Load courses
   useEffect(() => {
@@ -158,7 +158,7 @@ export const NewChatDialog = ({ open, onOpenChange, onChatCreated }: NewChatDial
     };
 
     loadCourses();
-  }, [open, user, activeTab]);
+  }, [open, user?.uid, activeTab]);
 
   // Handle creating a new DM chat
   const handleCreateDM = async (recipientId: string, recipientName: string) => {

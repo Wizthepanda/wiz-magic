@@ -52,7 +52,7 @@ export const LocalVideoPlayer: React.FC<LocalVideoPlayerProps> = ({
     };
     
     checkVideoCompletion();
-  }, [user, url]);
+  }, [user?.uid, url]);
 
   // Award XP for watching (only if video not completed)
   const awardXP = useCallback(async (amount: number, reason: string) => {
@@ -78,7 +78,7 @@ export const LocalVideoPlayer: React.FC<LocalVideoPlayerProps> = ({
     } catch (error) {
       console.error('Error awarding XP:', error);
     }
-  }, [user, addXp, onXpEarned, isVideoCompleted]);
+  }, [user?.uid, addXp, onXpEarned, isVideoCompleted]);
 
   // Track watch time and award XP
   useEffect(() => {

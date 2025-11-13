@@ -107,13 +107,22 @@ export const useXPSystem = () => {
 
     console.log('🎯 Setting up XP data listener for user:', user.uid);
 
-    const userRef = doc(db, 'users', user.uid);
-    const unsubscribe = onSnapshot(
-      userRef, 
-      (doc) => {
-        console.log('📡 Firebase listener callback triggered, doc exists:', doc.exists());
-        if (doc.exists()) {
-          const userData = doc.data();
+    const path = `users/${user.uid}`;
+    console.log('[xp] subscribing', { path });
+
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      const unsubscribe = onSnapshot(
+        userRef,
+        (snap) => {
+          const exists = snap.exists();
+          console.log('📡 Firebase listener callback triggered, doc exists:', exists);
+          if (!exists) {
+            setLoading(false);
+            return;
+          }
+
+          const userData = snap.data() as any;
           console.log('📊 Raw Firebase user data:', JSON.stringify({
             currentXP: userData.currentXP,
             totalXP: userData.totalXP,
@@ -121,58 +130,38 @@ export const useXPSystem = () => {
             dailyXpEarned: userData.dailyXpEarned,
             hasXpData: !!userData.xpData
           }, null, 2));
-          
-          // Check if using new structure (currentXP, level, etc.) or old structure (xpData)
-          let xpData: XPData;
-          
+
+          // Build next data
+          let next: XPData;
           if (userData.currentXP !== undefined || userData.totalXP !== undefined) {
-            // New Firebase Function structure
-            const currentXP = userData.currentXP || userData.totalXP || 0;
-            const level = userData.level || 1;
-            const dailyXP = userData.dailyXpEarned || userData.dailyXP || 0;
-            
-            // Calculate level progress using shared function for consistency
+            const currentXP = userData.currentXP ?? userData.totalXP ?? 0;
+            const level = userData.level ?? 1;
+            const dailyXP = userData.dailyXpEarned ?? userData.dailyXP ?? 0;
+
             let progressToNext = 0;
             try {
-              const levelData = calculateLevelData(currentXP);
-              progressToNext = levelData.progressToNext;
+              progressToNext = calculateLevelData(currentXP).progressToNext;
             } catch (error) {
               console.error('Error calculating progress in main listener:', error);
             }
-            
-            xpData = {
+
+            next = {
               totalXP: currentXP,
               currentLevel: level,
-              progressToNext: progressToNext,
-              dailyXP: dailyXP,
-              dailyCap: userData.dailyCap || 360,
-              streakCount: userData.streakCount || 0,
-              lastActiveDate: userData.lastActiveDate || '',
-              sharesToday: userData.sharesToday || userData.dailyShares || 0,
-              referralsCount: userData.referralsCount || 0,
-              boostedXP: userData.boostedXP || 0
+              progressToNext,
+              dailyXP,
+              dailyCap: userData.dailyCap ?? 360,
+              streakCount: userData.streakCount ?? 0,
+              lastActiveDate: userData.lastActiveDate ?? '',
+              sharesToday: userData.sharesToday ?? userData.dailyShares ?? 0,
+              referralsCount: userData.referralsCount ?? 0,
+              boostedXP: userData.boostedXP ?? 0
             };
-            
-            console.log('📊 XP data updated from Firebase Function structure:', JSON.stringify({
-              totalXP: xpData.totalXP,
-              currentLevel: xpData.currentLevel,
-              dailyXP: xpData.dailyXP,
-              progressToNext: xpData.progressToNext,
-              rawUserData: {
-                currentXP: userData.currentXP,
-                totalXP: userData.totalXP,
-                level: userData.level,
-                dailyXpEarned: userData.dailyXpEarned,
-                dailyXP: userData.dailyXP
-              }
-            }, null, 2));
           } else if (userData.xpData) {
-            // Legacy structure
-            xpData = userData.xpData;
-            console.log('📊 XP data updated from legacy structure:', xpData);
+            next = userData.xpData as XPData;
+            console.log('📊 XP data updated from legacy structure:', next);
           } else {
-            // Initialize XP data if missing
-            xpData = {
+            next = {
               totalXP: 0,
               currentLevel: 1,
               progressToNext: 0,
@@ -184,26 +173,44 @@ export const useXPSystem = () => {
               referralsCount: 0,
               boostedXP: 0
             };
-            console.log('📊 XP data initialized with defaults:', xpData);
+            console.log('📊 XP data initialized with defaults:', next);
           }
-          
-          setXpData(xpData);
-          
-          // Force a re-render to ensure UI updates
-          setLoading(true);
-          setTimeout(() => setLoading(false), 50);
-        }
-        setLoading(false);
-        setError(null);
-      },
-      (err) => {
-        console.error('❌ Error listening to XP data:', err);
-        setError(err.message);
-        setLoading(false);
-      }
-    );
 
-    return () => unsubscribe();
+          // Only update if changed to avoid render storms
+          setXpData((prev) => {
+            if (!prev) return next;
+            const same =
+              prev.totalXP === next.totalXP &&
+              prev.currentLevel === next.currentLevel &&
+              prev.dailyXP === next.dailyXP &&
+              prev.progressToNext === next.progressToNext &&
+              prev.dailyCap === next.dailyCap &&
+              prev.streakCount === next.streakCount &&
+              prev.sharesToday === next.sharesToday &&
+              prev.referralsCount === next.referralsCount &&
+              prev.boostedXP === next.boostedXP;
+            return same ? prev : next;
+          });
+
+          setLoading(false);
+          setError(null);
+        },
+        (err) => {
+          console.error('❌ Error listening to XP data:', err);
+          setError(err.message);
+          setLoading(false);
+        }
+      );
+
+      return () => {
+        console.log('[xp] unsubscribe', { path });
+        unsubscribe();
+      };
+    } catch (e: any) {
+      console.error('[xp] subscribe failed', { path, error: e?.message || e });
+      setLoading(false);
+      return () => {};
+    }
   }, [user?.uid]);
 
   // Listen for force refresh events to immediately update XP data

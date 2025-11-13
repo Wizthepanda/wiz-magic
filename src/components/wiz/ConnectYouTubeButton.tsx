@@ -57,7 +57,7 @@ export const ConnectYouTubeButton = ({
     if (user) {
       loadConnectionStatus();
     }
-  }, [user]);
+  }, [user?.uid]);
 
   const loadConnectionStatus = async () => {
     if (!user) return;

@@ -61,7 +61,7 @@ export const WaitlistModal: React.FC<WaitlistModalProps> = ({
       setEmail(user.email || '');
       setDisplayName(user.displayName || '');
     }
-  }, [user]);
+  }, [user?.uid]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

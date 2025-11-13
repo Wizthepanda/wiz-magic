@@ -73,6 +73,13 @@ service cloud.firestore {
       allow read: if true;
       allow write: if request.auth != null;
     }
+
+    // Root posts collection (global feed fallback)
+    match /posts/{postId} {
+      allow read: if true; // or gate on resource.data.visibility == 'public'
+      allow write: if request.auth != null && request.auth.uid == request.resource.data.authorId;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.authorId;
+    }
     
     // Creator videos - creators can manage their own videos
     match /creatorVideos/{videoId} {

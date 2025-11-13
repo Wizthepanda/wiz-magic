@@ -792,7 +792,7 @@ export const WizDiscoverSection = () => {
         creatorVideosUnsubscribe();
       }
     };
-  }, [user]);
+  }, [user?.uid]);
 
   // Combine dynamic videos with static videos, prioritizing dynamic videos
   // Only show static videos if no dynamic videos are loaded to prevent dummy content flash

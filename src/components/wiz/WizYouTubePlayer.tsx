@@ -58,7 +58,7 @@ export const WizYouTubePlayer: React.FC<WizYouTubePlayerProps> = ({
         }
       });
     }
-  }, [videoId, user]);
+  }, [videoId, user?.uid]);
 
   // Load YouTube API using our helper
   useEffect(() => {

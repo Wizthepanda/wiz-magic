@@ -1,11 +1,8 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Grid3x3, List } from 'lucide-react';
+import React from 'react';
 import { cn } from '@/lib/utils';
-import WIZUPDashboardV12_5 from './WIZUPDashboardV12_5';
-import { CommunityWeightedFeed } from './feed/CommunityWeightedFeed';
-import { CommunityFeedPost } from './feed/CommunityFeedCard';
-import { WatchVideoData } from './WatchDialogV4';
+import { Post } from '@/lib/firestore/queries';
+import PremiumMultiFeed from './feed/PremiumMultiFeed';
+import RightInsightsPanel from './feed/RightInsightsPanel';
 
 interface WIZUPDashboardV13Props {
   className?: string;
@@ -14,35 +11,36 @@ interface WIZUPDashboardV13Props {
   loading?: boolean;
 }
 
-type ViewMode = 'grid' | 'feed';
-
 const WIZUPDashboardV13: React.FC<WIZUPDashboardV13Props> = ({
   className,
   onVideoSelect,
   videos,
   loading
 }) => {
-  const [viewMode, setViewMode] = useState<ViewMode>('feed');
+  // Unified premium multi-feed — no view selector
 
-  const handleFeedVideoPlay = (post: CommunityFeedPost) => {
-    // Convert CommunityFeedPost to WatchVideoData format
-    if (post.type === 'video' && post.content.videoId) {
+  // Removed view mode persistence and toggle  unified feed only
+
+
+  const handleSingleFeedVideoPlay = (post: Post) => {
+    // Convert Post to WatchVideoData format
+    if (post.media.type === 'video' && post.media.videoId) {
       const videoData = {
         id: post.id,
-        videoId: post.content.videoId,
-        title: post.content.title,
-        thumbnail: post.content.videoThumbnail || '',
-        description: post.content.body || '',
-        duration: post.content.videoDuration || '',
-        views: `${post.meta.views} views`,
-        xpReward: post.meta.xpEarned || 0,
+        videoId: post.media.videoId,
+        title: post.title,
+        thumbnail: post.media.thumbnail || '',
+        description: post.excerpt || post.content || '',
+        duration: post.media.duration || '',
+        views: '0 views', // Can be added to Post schema if needed
+        xpReward: post.zapsReward || 0,
         creator: {
-          id: post.author.id,
-          name: post.author.username,
-          avatar: post.author.avatar,
-          subscribers: `${post.community.memberCount} members`,
-          isVerified: post.community.verified,
-          level: post.author.level || 1
+          id: post.authorId,
+          name: post.authorName,
+          avatar: post.authorAvatar,
+          subscribers: `${post.communityMemberCount} members`,
+          isVerified: post.communityVerified,
+          level: post.authorLevel
         },
         tags: [],
         relatedVideos: []
@@ -53,79 +51,20 @@ const WIZUPDashboardV13: React.FC<WIZUPDashboardV13Props> = ({
   };
 
   return (
-    <div className={cn("w-full", className)}>
-      {/* View Mode Toggle */}
-      <div className="flex justify-end mb-6 px-6">
-        <div className={cn(
-          "inline-flex items-center gap-1 p-1.5 rounded-[16px]",
-          "bg-gradient-to-br from-white/95 via-white/90 to-white/85",
-          "dark:from-gray-900/95 dark:via-gray-900/90 dark:to-gray-900/85",
-          "backdrop-blur-xl border border-gray-200/50 dark:border-gray-800/50",
-          "shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)]"
-        )}>
-          <motion.button
-            onClick={() => setViewMode('feed')}
-            className={cn(
-              "flex items-center gap-2 px-5 py-2.5 rounded-[12px] font-medium text-sm transition-all duration-300",
-              viewMode === 'feed'
-                ? "bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/30"
-                : "text-gray-600 dark:text-gray-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
-            )}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <List className="w-4 h-4" strokeWidth={2.5} />
-            <span>Community Feed</span>
-          </motion.button>
-
-          <motion.button
-            onClick={() => setViewMode('grid')}
-            className={cn(
-              "flex items-center gap-2 px-5 py-2.5 rounded-[12px] font-medium text-sm transition-all duration-300",
-              viewMode === 'grid'
-                ? "bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/30"
-                : "text-gray-600 dark:text-gray-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
-            )}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <Grid3x3 className="w-4 h-4" strokeWidth={2.5} />
-            <span>Video Grid</span>
-          </motion.button>
+    <div className={cn('w-full', className)}>
+      <main className="flex-1 overflow-y-auto bg-gradient-to-b from-slate-50 via-white to-violet-50">
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6 h-full">
+          {/* Left Feed Area - Redesigned Multi-Feed */}
+          <div className="overflow-y-auto">
+            <PremiumMultiFeed onVideoPlay={handleSingleFeedVideoPlay} />
+          </div>
+          
+          {/* Right Panel */}
+          <div className="hidden xl:block overflow-y-auto">
+            <RightInsightsPanel />
+          </div>
         </div>
-      </div>
-
-      {/* Content */}
-      <AnimatePresence mode="wait">
-        {viewMode === 'feed' ? (
-          <motion.div
-            key="feed"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <CommunityWeightedFeed
-              className="px-6"
-              onVideoPlay={handleFeedVideoPlay}
-            />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="grid"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <WIZUPDashboardV12_5
-              onVideoSelect={onVideoSelect}
-              videos={videos}
-              loading={loading}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      </main>
     </div>
   );
 };

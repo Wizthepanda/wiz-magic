@@ -268,7 +268,7 @@ export const WizCreatePage = () => {
     if (user) {
       checkYouTubeRedirect();
     }
-  }, [user, toast]);
+  }, [user?.uid, toast]);
 
   // Function to acquire YouTube access token if needed
   const acquireYouTubeAccessTokenIfNeeded = async () => {

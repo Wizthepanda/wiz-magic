@@ -10,6 +10,8 @@ import { Badge } from '@/components/ui/badge';
 interface CommunityWeightedFeedProps {
   className?: string;
   onVideoPlay?: (post: CommunityFeedPost) => void;
+  activeSort?: FeedSortOption;
+  onSortChange?: (sort: FeedSortOption) => void;
 }
 
 // Sample data for demonstration - replace with real data from Firestore
@@ -147,11 +149,17 @@ const TRENDING_COMMUNITIES = [
 
 export const CommunityWeightedFeed: React.FC<CommunityWeightedFeedProps> = ({
   className,
-  onVideoPlay
+  onVideoPlay,
+  activeSort: externalActiveSort,
+  onSortChange: externalOnSortChange
 }) => {
-  const [activeSort, setActiveSort] = useState<FeedSortOption>('hot');
+  const [internalActiveSort, setInternalActiveSort] = useState<FeedSortOption>('hot');
   const [posts, setPosts] = useState<CommunityFeedPost[]>(SAMPLE_POSTS);
   const [loading, setLoading] = useState(false);
+
+  // Use external or internal sort state
+  const activeSort = externalActiveSort ?? internalActiveSort;
+  const setActiveSort = externalOnSortChange ?? setInternalActiveSort;
 
   const handleSortChange = (sort: FeedSortOption) => {
     setActiveSort(sort);
@@ -231,18 +239,6 @@ export const CommunityWeightedFeed: React.FC<CommunityWeightedFeedProps> = ({
     <div className={cn("flex gap-6", className)}>
       {/* Main Feed Column (70%) */}
       <div className="flex-1 max-w-[70%] space-y-6">
-        {/* Sorting Filters */}
-        <div className={cn(
-          "sticky top-0 z-20 py-5 px-6 rounded-[24px]",
-          "bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl",
-          "border border-gray-200/50 dark:border-gray-800/50",
-          "shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_24px_-8px_rgba(0,0,0,0.5)]"
-        )}>
-          <FeedSortingFilters
-            activeSort={activeSort}
-            onSortChange={handleSortChange}
-          />
-        </div>
 
         {/* Feed Posts */}
         <div className="space-y-8">

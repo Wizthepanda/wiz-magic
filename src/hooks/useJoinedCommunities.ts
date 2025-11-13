@@ -25,13 +25,17 @@ export const useJoinedCommunities = () => {
 
   // Set up real-time listener for communities
   useEffect(() => {
-    if (!user) return;
+    if (!user?.uid) {
+      console.warn('[joinedCommunities] skip subscribe: missing user uid');
+      return;
+    }
 
-    console.log('🔄 Setting up real-time listener for joined communities');
+    const uid = user.uid;
+    console.log('🔄 Setting up real-time listener for joined communities', { uid, path: `communities (where members contains ${uid})` });
 
     const q = query(
       collection(db, 'communities'),
-      where('members', 'array-contains', user.uid)
+      where('members', 'array-contains', uid)
     );
 
     const unsubscribe = onSnapshot(
@@ -44,8 +48,8 @@ export const useJoinedCommunities = () => {
 
         console.log('✅ Communities updated via real-time listener:', communities.length);
 
-        // Update React Query cache
-        queryClient.setQueryData(['joinedCommunities', user.uid], communities);
+        // Update React Query cache with stable key
+        queryClient.setQueryData(['joinedCommunities', uid], communities);
       },
       (error) => {
         console.error('❌ Error in communities real-time listener:', error);
@@ -53,10 +57,10 @@ export const useJoinedCommunities = () => {
     );
 
     return () => {
-      console.log('🛑 Cleaning up real-time listener for communities');
+      console.log('🛑 Cleaning up real-time listener for communities', { uid });
       unsubscribe();
     };
-  }, [user, queryClient]);
+  }, [user?.uid, queryClient]);
 
   return useQuery<CommunityData[]>({
     queryKey: ['joinedCommunities', user?.uid],
@@ -66,7 +70,7 @@ export const useJoinedCommunities = () => {
       return [];
     },
     initialData: [],
-    enabled: !!user,
+    enabled: !!user?.uid,
     staleTime: Infinity, // Data stays fresh because we're using real-time updates
   });
 };

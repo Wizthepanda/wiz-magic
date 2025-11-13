@@ -162,7 +162,7 @@ export const ReferralLink: React.FC<ReferralLinkProps> = ({ className = '' }) =>
       const code = btoa(user.uid).substring(0, 8).toUpperCase().replace(/[^A-Z0-9]/g, '');
       setReferralCode(code);
     }
-  }, [user]);
+  }, [user?.uid]);
 
   // Check for referral on page load
   React.useEffect(() => {
@@ -174,7 +174,7 @@ export const ReferralLink: React.FC<ReferralLinkProps> = ({ className = '' }) =>
       // This would typically be handled server-side in a real app
       console.log('User signed up with referral code:', refCode);
     }
-  }, [user, awardReferralXP]);
+  }, [user?.uid, awardReferralXP]);
 
   const copyReferralLink = async () => {
     if (!referralCode) return;

@@ -15,7 +15,7 @@ const Index = () => {
       console.log('✅ User authenticated - redirecting to /discover');
       navigate('/discover', { replace: true });
     }
-  }, [user, loading, navigate]);
+  }, [user?.uid, loading, navigate]);
 
   // Loading state while checking auth
   if (loading) {

@@ -251,7 +251,7 @@ export const WizHomepage = ({ onEnterPlatform }: WizHomepageProps) => {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [user]);
+  }, [user?.uid]);
 
   // Animate stats numbers on load
   useEffect(() => {

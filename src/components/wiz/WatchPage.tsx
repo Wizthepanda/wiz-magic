@@ -121,7 +121,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
     };
     
     checkCompletion();
-  }, [user, videoId]);
+  }, [user?.uid, videoId]);
 
   // Reset rewarded state when video changes
   useEffect(() => {

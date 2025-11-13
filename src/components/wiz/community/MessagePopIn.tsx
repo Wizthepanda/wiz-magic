@@ -81,7 +81,7 @@ export const MessagePopIn: React.FC<MessagePopInProps> = ({
     });
 
     return () => unsubscribe();
-  }, [user, recipientId]);
+  }, [user?.uid, recipientId]);
 
   // Send message
   const handleSendMessage = async () => {

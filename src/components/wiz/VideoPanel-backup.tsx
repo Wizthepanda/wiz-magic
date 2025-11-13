@@ -93,7 +93,7 @@ export const VideoPanel: React.FC<VideoPanelProps> = ({
     };
     
     checkCompletion();
-  }, [user, videoId]);
+  }, [user?.uid, videoId]);
 
   // Reset rewarded state when video changes
   useEffect(() => {

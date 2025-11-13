@@ -213,7 +213,7 @@ export const PublishedCreationsManager: React.FC<PublishedCreationsManagerProps>
   // Fetch user's published creations on mount
   useEffect(() => {
     fetchCreations();
-  }, [user, toast]);
+  }, [user?.uid, toast]);
 
   const filteredCreations = creations.filter(creation =>
     activeFilter === 'all' || creation.type === activeFilter

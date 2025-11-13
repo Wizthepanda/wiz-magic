@@ -153,7 +153,7 @@ export const CreatorPublicProfileV2 = () => {
       }
     };
     checkFollowStatus();
-  }, [user, creatorProfile]);
+  }, [user?.uid, creatorProfile]);
 
   // Create mock offers when profile loads
   useEffect(() => {

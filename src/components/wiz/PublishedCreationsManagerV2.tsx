@@ -226,7 +226,7 @@ export const PublishedCreationsManagerV2: React.FC<PublishedCreationsManagerV2Pr
 
   useEffect(() => {
     fetchCreations();
-  }, [user]);
+  }, [user?.uid]);
 
   // Filter, search, and sort
   const processedCreations = useMemo(() => {

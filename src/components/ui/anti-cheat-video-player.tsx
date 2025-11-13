@@ -70,7 +70,7 @@ export const AntiCheatVideoPlayer: React.FC<AntiCheatVideoPlayerProps> = ({
       console.error('❌ Failed to start anti-cheat session');
       setSecurityStatus('warning');
     }
-  }, [user, videoId, actualDuration]);
+  }, [user?.uid, videoId, actualDuration]);
 
   // Cleanup session
   const cleanupSession = useCallback(async () => {

@@ -62,7 +62,7 @@ export const EditProfileTab = () => {
     };
 
     loadUserData();
-  }, [user]);
+  }, [user?.uid]);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

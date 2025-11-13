@@ -57,7 +57,7 @@ export const UltimateWalletWidget: React.FC<UltimateWalletWidgetProps> = ({
     if (isExpanded && user && transactions.length === 0) {
       fetchTransactions();
     }
-  }, [isExpanded, user]);
+  }, [isExpanded, user?.uid]);
 
   const fetchTransactions = async () => {
     if (!user) return;

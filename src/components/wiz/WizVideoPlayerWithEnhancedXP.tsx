@@ -89,7 +89,7 @@ export const WizVideoPlayerWithEnhancedXP: React.FC<WizVideoPlayerWithEnhancedXP
         console.error('Error sending XP heartbeat:', error);
       }
     }
-  }, [user, tabFocused, isPlaying, canEarnMoreXP, currentTime, duration, videoId, lastPingTime, awardWatchXP, sessionId]);
+  }, [user?.uid, tabFocused, isPlaying, canEarnMoreXP, currentTime, duration, videoId, lastPingTime, awardWatchXP, sessionId]);
 
   // Tab focus tracking
   useEffect(() => {
@@ -125,7 +125,7 @@ export const WizVideoPlayerWithEnhancedXP: React.FC<WizVideoPlayerWithEnhancedXP
         clearInterval(xpPingIntervalRef.current);
       }
     };
-  }, [isPlaying, tabFocused, user, canEarnMoreXP, sendXPHeartbeat]);
+  }, [isPlaying, tabFocused, user?.uid, canEarnMoreXP, sendXPHeartbeat]);
 
   // Video event handlers
   const handlePlay = () => {

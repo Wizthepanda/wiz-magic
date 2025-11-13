@@ -218,8 +218,8 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
     console.log('🚀 ApplePremiumDashboard: Setting up real-time video listeners...');
     console.log('🚀 Current user:', user?.uid || 'no user');
 
-    if (!user) {
-      console.log('❌ No user, skipping video loading');
+    if (!user?.uid) {
+      console.log('❌ No stable user UID, skipping video loading');
       setVideosLoading(false);
       return;
     }
@@ -235,6 +235,7 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
         limit(100)
       );
 
+      console.log('[discover] subscribing to collection', { path: 'discover', orderBy: 'publishedAt desc', limit: 100 });
       videosUnsubscribe = onSnapshot(
         discoverQuery,
         (discoverSnapshot) => {
@@ -246,11 +247,15 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
           console.warn('Falling back to videos + creatorVideos collections...');
           
           // Fallback to original collections if discover fails
+          const videosQ = query(collection(db, 'videos'), limit(100));
+          console.log('[videos] subscribing fallback', { path: 'videos', limit: 100 });
           videosUnsubscribe = onSnapshot(
-            query(collection(db, 'videos'), limit(100)),
+            videosQ,
             (videosSnapshot) => {
+              const creatorQ = query(collection(db, 'creatorVideos'), orderBy('addedToWiz', 'desc'), limit(100));
+              console.log('[creatorVideos] subscribing fallback', { path: 'creatorVideos', orderBy: 'addedToWiz desc', limit: 100 });
               creatorVideosUnsubscribe = onSnapshot(
-                query(collection(db, 'creatorVideos'), orderBy('addedToWiz', 'desc'), limit(100)),
+                creatorQ,
                 (creatorVideosSnapshot) => {
                   processVideoSnapshots(videosSnapshot, creatorVideosSnapshot);
                 }
@@ -486,7 +491,7 @@ export const ApplePremiumDashboard = ({ className, onSectionChange }: ApplePremi
         creatorVideosUnsubscribe();
       }
     };
-  }, [user]);
+  }, [user?.uid]); // Only depend on user ID to prevent infinite loops
 
   // Refs
 
