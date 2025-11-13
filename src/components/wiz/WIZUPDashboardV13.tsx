@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { Post } from '@/lib/firestore/queries';
 import PremiumMultiFeed from './feed/PremiumMultiFeed';
 import RightInsightsPanel from './feed/RightInsightsPanel';
-import { WIZUPPostEngagementView } from './WIZUPPostEngagementView';
+import { WIZUPCommunityPostView } from './WIZUPCommunityPostView';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap } from 'lucide-react';
 
@@ -20,18 +20,40 @@ const WIZUPDashboardV13: React.FC<WIZUPDashboardV13Props> = ({
   videos,
   loading
 }) => {
-  const [engagementPost, setEngagementPost] = useState<Post | null>(null);
-  const [isEngagementOpen, setIsEngagementOpen] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [isPostViewOpen, setIsPostViewOpen] = useState(false);
   const [zapToast, setZapToast] = useState<{ amount: number; show: boolean }>({ amount: 0, show: false });
 
-  const handleCommentClick = (post: Post) => {
-    setEngagementPost(post);
-    setIsEngagementOpen(true);
+  const handlePostClick = (post: Post) => {
+    setSelectedPost(post);
+    setIsPostViewOpen(true);
   };
 
-  const handleEngagementClose = () => {
-    setIsEngagementOpen(false);
-    setEngagementPost(null);
+  const handlePostViewClose = () => {
+    setIsPostViewOpen(false);
+    setSelectedPost(null);
+  };
+
+  const handleVote = (postId: string, voteType: 'up' | 'down') => {
+    console.log('Vote:', postId, voteType);
+    // Handle voting logic here
+    // Could trigger ZAP toast for upvotes
+    if (voteType === 'up') {
+      showZapToast(10); // Example ZAP reward for upvoting
+    }
+  };
+
+  const handleComment = (postId: string, content: string, parentId?: string) => {
+    console.log('Comment:', postId, content, parentId);
+    // Handle comment submission logic here
+    // Could trigger ZAP toast for commenting
+    showZapToast(5); // Example ZAP reward for commenting
+  };
+
+  const handleJoinCommunity = (communityId: string) => {
+    console.log('Joining community:', communityId);
+    // Handle community join logic here
+    showZapToast(25); // Example ZAP reward for joining community
   };
 
   const showZapToast = (amount: number) => {
@@ -80,7 +102,7 @@ const WIZUPDashboardV13: React.FC<WIZUPDashboardV13Props> = ({
           <div className="overflow-y-auto">
             <PremiumMultiFeed
               onVideoPlay={handleSingleFeedVideoPlay}
-              onCommentClick={handleCommentClick}
+              onPostClick={handlePostClick}
               onZapEarned={showZapToast}
             />
           </div>
@@ -92,20 +114,15 @@ const WIZUPDashboardV13: React.FC<WIZUPDashboardV13Props> = ({
         </div>
       </main>
 
-      {/* Post Engagement Overlay */}
-      {engagementPost && (
-        <WIZUPPostEngagementView
-          post={engagementPost}
-          isOpen={isEngagementOpen}
-          onClose={handleEngagementClose}
-          onVote={(postId, voteType) => {
-            console.log('Vote:', postId, voteType);
-            // Handle voting logic here
-          }}
-          onComment={(postId, content, parentId) => {
-            console.log('Comment:', postId, content, parentId);
-            // Handle comment submission logic here
-          }}
+      {/* Community Post View Overlay */}
+      {selectedPost && (
+        <WIZUPCommunityPostView
+          post={selectedPost}
+          isOpen={isPostViewOpen}
+          onClose={handlePostViewClose}
+          onVote={handleVote}
+          onComment={handleComment}
+          onJoinCommunity={handleJoinCommunity}
         />
       )}
 

@@ -9,7 +9,7 @@ import { WIZUPEngagementBar } from '../WIZUPEngagementBar';
 
 interface Props {
   onVideoPlay?: (post: Post) => void;
-  onCommentClick?: (post: Post) => void;
+  onPostClick?: (post: Post) => void;
   onZapEarned?: (amount: number) => void;
 }
 
@@ -33,11 +33,11 @@ function formatTime(ts: any): string {
 const FeedCard: React.FC<{
   post: Post;
   onVideoPlay?: (p: Post) => void;
-  onCommentClick?: (p: Post) => void;
+  onPostClick?: (p: Post) => void;
   onZapEarned?: (amount: number) => void;
   isFeatured?: boolean;
   index: number;
-}> = ({ post, onVideoPlay, onCommentClick, onZapEarned, isFeatured = false, index }) => {
+}> = ({ post, onVideoPlay, onPostClick, onZapEarned, isFeatured = false, index }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [userVote, setUserVote] = useState<'up' | 'down' | null>(null);
   const [voteCount, setVoteCount] = useState(post.score || 0);
@@ -229,7 +229,7 @@ const FeedCard: React.FC<{
           zapsEarned={earnedZaps}
           onUpvote={handleUpvote}
           onDownvote={handleDownvote}
-          onComment={() => onCommentClick?.(post)}
+          onComment={() => onPostClick?.(post)}
           onShare={() => console.log('Share post:', post.id)}
           enableAnimations={true}
         />
@@ -252,7 +252,7 @@ const FeedCard: React.FC<{
   );
 };
 
-const PremiumMultiFeed: React.FC<Props> = ({ onVideoPlay, onCommentClick, onZapEarned }) => {
+const PremiumMultiFeed: React.FC<Props> = ({ onVideoPlay, onPostClick, onZapEarned }) => {
   const [posts, setPosts] = useState<Post[]>([]);
 
   // Ensure posts is always an array
@@ -513,7 +513,7 @@ const PremiumMultiFeed: React.FC<Props> = ({ onVideoPlay, onCommentClick, onZapE
                   key={post.id}
                   post={post}
                   onVideoPlay={onVideoPlay}
-                  onCommentClick={onCommentClick}
+                  onPostClick={onPostClick}
                   onZapEarned={onZapEarned}
                   isFeatured={false}
                   index={index}
