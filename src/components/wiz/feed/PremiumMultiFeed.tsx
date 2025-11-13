@@ -6,6 +6,7 @@ import { collection, getDocs, limit as fsLimit, orderBy, query as fsQuery, where
 import { db } from '@/lib/firebase';
 import { cn } from '@/lib/utils';
 import { WIZUPEngagementBar } from '../WIZUPEngagementBar';
+import { usePostViewStore } from '@/store/postViewStore';
 
 interface Props {
   onVideoPlay?: (post: Post) => void;
@@ -38,12 +39,20 @@ const FeedCard: React.FC<{
   isFeatured?: boolean;
   index: number;
 }> = ({ post, onVideoPlay, onPostClick, onZapEarned, isFeatured = false, index }) => {
+  const postViewStore = usePostViewStore();
   const [isHovered, setIsHovered] = useState(false);
   const [userVote, setUserVote] = useState<'up' | 'down' | null>(null);
   const [voteCount, setVoteCount] = useState(post.score || 0);
   const [earnedZaps, setEarnedZaps] = useState(0);
   const [showZapReward, setShowZapReward] = useState(false);
   const [videoWatched, setVideoWatched] = useState(false);
+
+  const onClickOpen = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // open post screen view
+    postViewStore.openPost(post);
+  };
 
   // Voting functions
   const handleUpvote = () => {
@@ -80,7 +89,9 @@ const FeedCard: React.FC<{
     }
   };
 
-  const handleVideoPlay = () => {
+  const handleVideoPlay = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     onVideoPlay?.(post);
     // Simulate ZAP earning after watching
     setTimeout(() => {
@@ -125,7 +136,7 @@ const FeedCard: React.FC<{
       />
 
       {/* Content */}
-      <div className="relative p-6">
+      <div className="relative p-6 cursor-pointer" onClick={onClickOpen} role="button" tabIndex={0}>
         {/* Post Header */}
         <div className="flex items-center gap-3 mb-4">
           <img

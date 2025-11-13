@@ -3,7 +3,9 @@ import { cn } from '@/lib/utils';
 import { Post } from '@/lib/firestore/queries';
 import PremiumMultiFeed from './feed/PremiumMultiFeed';
 import RightInsightsPanel from './feed/RightInsightsPanel';
-import { WIZUPCommunityPostView } from './WIZUPCommunityPostView';
+import { CommunityPostViewScreen } from './feed/CommunityPostViewScreen';
+import { CommunityRightPanel } from './right/CommunityRightPanel';
+import { usePostViewStore } from '@/store/postViewStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap } from 'lucide-react';
 
@@ -20,19 +22,8 @@ const WIZUPDashboardV13: React.FC<WIZUPDashboardV13Props> = ({
   videos,
   loading
 }) => {
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-  const [isPostViewOpen, setIsPostViewOpen] = useState(false);
   const [zapToast, setZapToast] = useState<{ amount: number; show: boolean }>({ amount: 0, show: false });
-
-  const handlePostClick = (post: Post) => {
-    setSelectedPost(post);
-    setIsPostViewOpen(true);
-  };
-
-  const handlePostViewClose = () => {
-    setIsPostViewOpen(false);
-    setSelectedPost(null);
-  };
+  const { activePost } = usePostViewStore();
 
   const handleVote = (postId: string, voteType: 'up' | 'down') => {
     console.log('Vote:', postId, voteType);
@@ -41,19 +32,6 @@ const WIZUPDashboardV13: React.FC<WIZUPDashboardV13Props> = ({
     if (voteType === 'up') {
       showZapToast(10); // Example ZAP reward for upvoting
     }
-  };
-
-  const handleComment = (postId: string, content: string, parentId?: string) => {
-    console.log('Comment:', postId, content, parentId);
-    // Handle comment submission logic here
-    // Could trigger ZAP toast for commenting
-    showZapToast(5); // Example ZAP reward for commenting
-  };
-
-  const handleJoinCommunity = (communityId: string) => {
-    console.log('Joining community:', communityId);
-    // Handle community join logic here
-    showZapToast(25); // Example ZAP reward for joining community
   };
 
   const showZapToast = (amount: number) => {
@@ -95,36 +73,38 @@ const WIZUPDashboardV13: React.FC<WIZUPDashboardV13Props> = ({
   };
 
   return (
-    <div className={cn('w-full', className)}>
+    <div className={cn('w-full relative', className)}>
       <main className="flex-1 overflow-y-auto bg-gradient-to-b from-slate-50 via-white to-violet-50">
-        <div className="grid grid-cols-1 xl:grid-cols-[70%_30%] gap-8 h-full max-w-7xl mx-auto px-8">
+        <motion.div
+          animate={activePost ? { x: -20, opacity: 0.7 } : { x: 0, opacity: 1 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+          className="grid grid-cols-1 xl:grid-cols-[70%_30%] gap-8 h-full max-w-7xl mx-auto px-8"
+        >
           {/* Left Feed Area - Redesigned Multi-Feed */}
           <div className="overflow-y-auto">
             <PremiumMultiFeed
               onVideoPlay={handleSingleFeedVideoPlay}
-              onPostClick={handlePostClick}
               onZapEarned={showZapToast}
             />
           </div>
-          
+
           {/* Right Panel */}
           <div className="hidden xl:block overflow-y-auto">
-            <RightInsightsPanel />
+            {activePost ? (
+              <CommunityRightPanel community={activePost.community || {
+                name: activePost.communityName || 'Community',
+                description: 'Community description',
+                members: activePost.communityMemberCount || 0
+              }} />
+            ) : (
+              <RightInsightsPanel />
+            )}
           </div>
-        </div>
+        </motion.div>
       </main>
 
-      {/* Community Post View Overlay */}
-      {selectedPost && (
-        <WIZUPCommunityPostView
-          post={selectedPost}
-          isOpen={isPostViewOpen}
-          onClose={handlePostViewClose}
-          onVote={handleVote}
-          onComment={handleComment}
-          onJoinCommunity={handleJoinCommunity}
-        />
-      )}
+      {/* Seamless post screen */}
+      <CommunityPostViewScreen />
 
       {/* Floating ZAP Toast */}
       <AnimatePresence>
