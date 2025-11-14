@@ -48,7 +48,10 @@ export const WIZUPEngagementBar: React.FC<WIZUPEngagementBarProps> = ({
         {/* Upvote/Downvote/Vote Count Group */}
         <div className="flex items-center gap-2">
           <motion.button
-            onClick={onUpvote}
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent opening CommunityPostView
+              onUpvote();          // Existing voting logic
+            }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             className={cn(
@@ -73,7 +76,10 @@ export const WIZUPEngagementBar: React.FC<WIZUPEngagementBarProps> = ({
           </motion.span>
 
           <motion.button
-            onClick={onDownvote}
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent opening CommunityPostView
+              onDownvote();         // Existing voting logic
+            }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             className={cn(
