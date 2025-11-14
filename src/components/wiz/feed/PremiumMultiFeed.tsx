@@ -136,9 +136,9 @@ const FeedCard: React.FC<{
       />
 
       {/* Content */}
-      <div className="relative p-6 cursor-pointer" onClick={onClickOpen} role="button" tabIndex={0}>
+      <div className="relative p-6">
         {/* Post Header */}
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3 mb-4 cursor-pointer" onClick={onClickOpen}>
           <img
             src={post.authorAvatar || '/avatar-fallback.png'}
             alt={post.authorName}
@@ -166,13 +166,13 @@ const FeedCard: React.FC<{
         <div className="w-full h-px bg-gray-100 mb-4" />
 
         {/* Post Title */}
-        <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4 leading-tight">
+        <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4 leading-tight cursor-pointer hover:text-blue-600 transition-colors" onClick={onClickOpen}>
           {post.title}
         </h2>
 
         {/* Post Description */}
         {post.excerpt && (
-          <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+          <p className="text-gray-600 text-sm mb-4 leading-relaxed cursor-pointer" onClick={onClickOpen}>
             {post.excerpt}
           </p>
         )}
@@ -183,7 +183,10 @@ const FeedCard: React.FC<{
             className="rounded-2xl overflow-hidden mb-4 cursor-pointer relative group/media"
             whileHover={{ scale: 1.01 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            onClick={handleVideoPlay}
+            onClick={(e) => {
+              e.stopPropagation();
+              // Video plays inline - no popup
+            }}
           >
             <img
               src={post.media.thumbnail}
