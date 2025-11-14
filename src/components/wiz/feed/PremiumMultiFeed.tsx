@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase';
 import { cn } from '@/lib/utils';
 import { WIZUPEngagementBar } from '../WIZUPEngagementBar';
 import { usePostViewStore } from '@/store/postViewStore';
+import ReactPlayer from 'react-player/youtube';
 
 interface Props {
   onVideoPlay?: (post: Post) => void;
@@ -46,6 +47,7 @@ const FeedCard: React.FC<{
   const [earnedZaps, setEarnedZaps] = useState(0);
   const [showZapReward, setShowZapReward] = useState(false);
   const [videoWatched, setVideoWatched] = useState(false);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   const onClickOpen = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -180,22 +182,59 @@ const FeedCard: React.FC<{
         {/* Media */}
         {post.media?.thumbnail && (
           <motion.div
-            className="rounded-2xl overflow-hidden mb-4 cursor-pointer relative group/media"
+            className="rounded-2xl overflow-hidden mb-4 cursor-pointer relative group/media aspect-video"
             whileHover={{ scale: 1.01 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
             onClick={(e) => {
               e.stopPropagation();
-              // Video plays inline - no popup
+              if (post.media?.type === 'video' && post.media.videoId) {
+                setIsVideoPlaying(true);
+              }
             }}
           >
-            <img
-              src={post.media.thumbnail}
-              alt={post.title}
-              className="w-full object-cover aspect-video"
-            />
+            {isVideoPlaying && post.media?.videoId ? (
+              // Inline video player
+              <ReactPlayer
+                url={`https://www.youtube.com/watch?v=${post.media.videoId}`}
+                playing={true}
+                controls={true}
+                width="100%"
+                height="100%"
+                className="absolute top-0 left-0"
+                onPlay={() => {
+                  // Track video play for ZAP rewards
+                  if (!videoWatched) {
+                    setVideoWatched(true);
+                    const zapsEarned = post.zapsReward || 15;
+                    setEarnedZaps(prev => prev + zapsEarned);
+                    setShowZapReward(true);
+                    setTimeout(() => setShowZapReward(false), 3000);
+                    onZapEarned?.(zapsEarned);
+                  }
+                }}
+                config={{
+                  youtube: {
+                    playerVars: {
+                      autoplay: 1,
+                      modestbranding: 1,
+                      rel: 0,
+                      fs: 0, // Disable fullscreen
+                      iv_load_policy: 3, // Hide annotations
+                    }
+                  }
+                }}
+              />
+            ) : (
+              // Thumbnail with play button
+              <img
+                src={post.media.thumbnail}
+                alt={post.title}
+                className="w-full h-full object-cover"
+              />
+            )}
 
-            {/* Video Overlay */}
-            {post.media?.type === 'video' && (
+            {/* Video Overlay - only show when not playing */}
+            {post.media?.type === 'video' && !isVideoPlaying && (
               <>
                 {/* Duration Badge */}
                 <div className="absolute bottom-3 left-3 px-2 py-1 bg-black/70 text-white text-xs font-medium rounded-lg backdrop-blur-sm">
