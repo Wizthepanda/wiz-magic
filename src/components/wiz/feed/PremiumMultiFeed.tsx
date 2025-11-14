@@ -49,7 +49,7 @@ const FeedCard: React.FC<{
   const [videoWatched, setVideoWatched] = useState(false);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
-  const onClickOpen = (e: React.MouseEvent) => {
+  const onCardClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     // open post screen view
@@ -138,14 +138,26 @@ const FeedCard: React.FC<{
       />
 
       {/* Content */}
-      <div className="relative p-6">
+      <div className="relative p-6 cursor-pointer" onClick={onCardClick}>
         {/* Post Header */}
-        <div className="flex items-center gap-3 mb-4 cursor-pointer" onClick={onClickOpen}>
-          <img
-            src={post.authorAvatar || '/avatar-fallback.png'}
-            alt={post.authorName}
-            className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-100"
-          />
+        <div className="flex items-center gap-3 mb-4">
+          {(() => {
+            const avatarSrc =
+              post.author?.imageUrl ||
+              post.author?.profilePic ||
+              post.author?.avatar ||
+              post.avatar ||
+              '/images/default-avatar.png';
+
+            return (
+              <img
+                src={avatarSrc}
+                alt={post.authorName}
+                className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-100"
+                onError={(e) => (e.currentTarget.src = '/images/default-avatar.png')}
+              />
+            );
+          })()}
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <span className="font-bold text-gray-900">{post.authorName}</span>
@@ -168,13 +180,13 @@ const FeedCard: React.FC<{
         <div className="w-full h-px bg-gray-100 mb-4" />
 
         {/* Post Title */}
-        <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4 leading-tight cursor-pointer hover:text-blue-600 transition-colors" onClick={onClickOpen}>
+        <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4 leading-tight hover:text-blue-600 transition-colors">
           {post.title}
         </h2>
 
         {/* Post Description */}
         {post.excerpt && (
-          <p className="text-gray-600 text-sm mb-4 leading-relaxed cursor-pointer" onClick={onClickOpen}>
+          <p className="text-gray-600 text-sm mb-4 leading-relaxed">
             {post.excerpt}
           </p>
         )}
@@ -191,6 +203,7 @@ const FeedCard: React.FC<{
                 setIsVideoPlaying(true);
               }
             }}
+            style={{ pointerEvents: 'auto' }}
           >
             {isVideoPlaying && post.media?.videoId ? (
               // Inline video player
