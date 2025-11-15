@@ -119,7 +119,7 @@ export const WIZUPCommunityPostView: React.FC = () => {
 
       {open && openPostId && (
 
-        <motion.div
+      <motion.div
 
           initial="hidden"
 
@@ -193,7 +193,7 @@ export const WIZUPCommunityPostView: React.FC = () => {
 
                     <img src={post?.authorAvatar || '/placeholder-avatar.png'} alt="avatar" className="w-10 h-10 rounded-full shadow" />
 
-                    <div>
+                <div>
 
                       <div className="text-sm font-semibold text-slate-900">{post?.authorName ?? 'Unknown'}</div>
 
@@ -203,7 +203,7 @@ export const WIZUPCommunityPostView: React.FC = () => {
 
                         {post?.communityName ? <span className="ml-2 text-xs text-indigo-500">· {post.communityName}</span> : null}
 
-                      </div>
+                  </div>
 
                     </div>
 
@@ -230,7 +230,7 @@ export const WIZUPCommunityPostView: React.FC = () => {
                 </div>
 
               </div>
-
+              
 
 
               {/* content + engagement + comments */}
@@ -249,7 +249,7 @@ export const WIZUPCommunityPostView: React.FC = () => {
 
                     {post?.videoUrl ? (
 
-                      <video
+                    <video
 
                         src={post.videoUrl}
 
@@ -276,7 +276,7 @@ export const WIZUPCommunityPostView: React.FC = () => {
                   {/* title & description */}
 
                   <h2 className="text-2xl font-semibold text-slate-900 mb-2">{post?.title}</h2>
-
+                
                   {post?.description && <p className="text-sm text-slate-600 mb-4">{post.description}</p>}
 
 
@@ -305,7 +305,7 @@ export const WIZUPCommunityPostView: React.FC = () => {
 
                       <div className="px-3 py-1 rounded-full bg-gradient-to-r from-indigo-500 to-pink-400 text-white text-sm">⚡ Watch +{post?.zaps ?? 0}</div>
 
-                    </div>
+                      </div>
 
                   </div>
 
@@ -330,7 +330,7 @@ export const WIZUPCommunityPostView: React.FC = () => {
 
 
                 {/* right sidebar: community info */}
-
+              
                 <aside className="w-[320px] border-l border-gray-100 p-5 overflow-auto">
 
                   <div className="rounded-xl bg-white/70 p-4 shadow-sm">
@@ -348,7 +348,7 @@ export const WIZUPCommunityPostView: React.FC = () => {
                       </div>
 
                     </div>
-
+                    
 
 
                     <p className="mt-3 text-sm text-slate-600">{community?.about ?? 'No description yet.'}</p>
@@ -359,7 +359,7 @@ export const WIZUPCommunityPostView: React.FC = () => {
 
                       <button className="w-full py-2 rounded-full bg-gradient-to-r from-indigo-600 to-pink-400 text-white font-medium shadow">Join community</button>
 
-                    </div>
+              </div>
 
 
 
@@ -377,16 +377,16 @@ export const WIZUPCommunityPostView: React.FC = () => {
 
                             <div className="text-sm">{c.username}</div>
 
-                          </div>
+            </div>
 
                           <div className="text-sm text-indigo-500">{c.zaps} ZAPs</div>
 
-                        </div>
+              </div>
 
                       ))}
 
-                    </div>
-
+                  </div>
+                  
                   </div>
 
                 </aside>
@@ -395,7 +395,7 @@ export const WIZUPCommunityPostView: React.FC = () => {
 
             </motion.div>
 
-          </div>
+                </div>
 
         </motion.div>
 
@@ -447,7 +447,7 @@ const VoteControls: React.FC<{ postId: string; votes?: number; }> = ({ postId, v
 
       </button>
 
-    </div>
+              </div>
 
   );
 
@@ -479,9 +479,9 @@ const CommentComposer: React.FC<{ postId: string }> = ({ postId }) => {
 
         <button onClick={onPost} className="px-4 py-2 rounded-full bg-indigo-600 text-white">Comment</button>
 
-      </div>
+                      </div>
 
-    </div>
+              </div>
 
   );
 
@@ -499,7 +499,7 @@ const CommentCard: React.FC<{ comment: any }> = ({ comment }) => {
 
         <img src={comment.authorAvatar || '/placeholder-avatar.png'} className="w-9 h-9 rounded-full" alt="" />
 
-        <div>
+              <div>
 
           <div className="flex items-center gap-2">
 
@@ -507,7 +507,7 @@ const CommentCard: React.FC<{ comment: any }> = ({ comment }) => {
 
             <div className="text-xs text-slate-500">{comment.createdAgo}</div>
 
-          </div>
+                </div>
 
           <div className="text-sm text-slate-700 mt-1">{comment.text}</div>
 
@@ -519,7 +519,7 @@ const CommentCard: React.FC<{ comment: any }> = ({ comment }) => {
 
             <button>Share</button>
 
-          </div>
+              </div>
 
         </div>
 

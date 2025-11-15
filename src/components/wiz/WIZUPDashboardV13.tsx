@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { Post } from '@/lib/firestore/queries';
 import PremiumMultiFeed from './feed/PremiumMultiFeed';
 import RightInsightsPanel from './feed/RightInsightsPanel';
-import { CommunityPostViewScreen } from './feed/CommunityPostViewScreen';
+import CommunityPostViewScreenV9 from './feed/CommunityPostViewScreenV9';
 import { CommunityRightPanel } from './right/CommunityRightPanel';
 import { usePostViewStore } from '@/store/postViewStore';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -87,7 +87,7 @@ const WIZUPDashboardV13: React.FC<WIZUPDashboardV13Props> = ({
               onZapEarned={showZapToast}
             />
           </div>
-
+          
           {/* Right Panel */}
           <div className="hidden xl:block overflow-y-auto">
             {activePost ? (
@@ -97,14 +97,14 @@ const WIZUPDashboardV13: React.FC<WIZUPDashboardV13Props> = ({
                 members: activePost.communityMemberCount || 0
               }} />
             ) : (
-              <RightInsightsPanel />
+            <RightInsightsPanel />
             )}
           </div>
         </motion.div>
       </main>
 
       {/* Seamless post screen */}
-      <CommunityPostViewScreen />
+      <CommunityPostViewScreenV9 />
 
       {/* Floating ZAP Toast */}
       <AnimatePresence>

@@ -152,10 +152,10 @@ const FeedCard: React.FC<{
             return (
               <img
                 src={avatarSrc}
-                alt={post.authorName}
-                className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-100"
+            alt={post.authorName}
+            className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-100"
                 onError={(e) => (e.currentTarget.src = '/images/default-avatar.png')}
-              />
+          />
             );
           })()}
           <div className="flex-1">
@@ -239,11 +239,11 @@ const FeedCard: React.FC<{
               />
             ) : (
               // Thumbnail with play button
-              <img
-                src={post.media.thumbnail}
-                alt={post.title}
+            <img
+              src={post.media.thumbnail}
+              alt={post.title}
                 className="w-full h-full object-cover"
-              />
+            />
             )}
 
             {/* Video Overlay - only show when not playing */}
