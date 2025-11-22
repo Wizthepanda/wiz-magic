@@ -6,6 +6,11 @@ import { RewardsShowcase } from '@/components/homepage-v2/RewardsShowcase';
 import { PlatformFeatures } from '@/components/homepage-v2/PlatformFeatures';
 import { FeaturedCreators } from '@/components/homepage-v2/FeaturedCreators';
 import { Footer } from '@/components/homepage-v2/Footer';
+import { SpotlightSection } from '@/components/homepage-v2/SpotlightSection';
+import { SeriousLearnersSection } from '@/components/homepage-v2/SeriousLearnersSection';
+import { ZapRewardsGrid } from '@/components/homepage-v2/ZapRewardsGrid';
+import { GlobalReachSection } from '@/components/homepage-v2/GlobalReachSection';
+import { NewsletterSection } from '@/components/homepage-v2/NewsletterSection';
 
 export default function HomepageV2() {
   // Scroll to top on mount
@@ -20,20 +25,18 @@ export default function HomepageV2() {
 
       {/* Main Content */}
       <main>
-        {/* Hero Section - Above the fold */}
         <Hero />
+        <SpotlightSection />
+        <SeriousLearnersSection />
 
         {/* How It Works - 3 Step Process */}
-        <HowItWorks />
-
-        {/* Rewards Showcase - Featured Deals */}
-        <RewardsShowcase />
-
-        {/* Platform Features - "One Platform. All The Features." */}
         <PlatformFeatures />
-
-        {/* Featured Creators - Carousel */}
+        <HowItWorks />
+        <ZapRewardsGrid />
+        <RewardsShowcase />
         <FeaturedCreators />
+        <GlobalReachSection />
+        <NewsletterSection />
       </main>
 
       {/* Footer - CTA + Links */}

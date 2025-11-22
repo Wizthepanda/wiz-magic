@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { signInWithGoogleAndRedirect } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -59,7 +59,8 @@ export function Header() {
     { label: 'How It Works', href: '#how-it-works' },
     { label: 'Rewards', href: '#rewards' },
     { label: 'Creators', href: '#creators' },
-    { label: 'About', href: '/about' },
+    { label: 'Communities', href: '/communities' },
+    { label: 'FAQ', href: '/faq' },
   ];
 
   return (
@@ -67,30 +68,30 @@ export function Header() {
       className={cn(
         'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
         isScrolled
-          ? 'bg-white/70 backdrop-blur-xl shadow-lg'
+          ? 'bg-black/80 backdrop-blur-xl shadow-lg'
           : 'bg-transparent'
       )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
-          {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-            className="flex items-center gap-2 cursor-pointer"
+        <div className="flex items-center justify-between h-16 sm:h-20 gap-4">
+          <button
+            type="button"
             onClick={() => navigate('/')}
+            className="cursor-pointer"
+            aria-label="Navigate to homepage"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-600 flex items-center justify-center shadow-lg">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 bg-clip-text text-transparent">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center text-xl font-bold uppercase tracking-[0.2em] text-violet-200"
+            >
               WIZUP
-            </span>
-          </motion.div>
+            </motion.div>
+          </button>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden flex-1 md:flex items-center justify-center gap-6">
             {navLinks.map((link, index) => (
               <motion.a
                 key={link.label}
@@ -98,7 +99,7 @@ export function Header() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
+                className="text-white font-medium tracking-wide transition hover:text-white/80"
               >
                 {link.label}
               </motion.a>
@@ -106,17 +107,17 @@ export function Header() {
           </nav>
 
           {/* Desktop CTAs */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-3">
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <Button
-                variant="ghost"
+                variant="outline"
                 onClick={handleSignIn}
                 disabled={isAuthenticating}
-                className="font-semibold"
+                className="rounded-full border-white/40 bg-transparent px-6 py-2 font-semibold text-white hover:bg-white/10"
               >
                 {user ? 'Dashboard' : 'Sign In'}
               </Button>
@@ -129,7 +130,7 @@ export function Header() {
               <Button
                 onClick={handleGetStarted}
                 disabled={isAuthenticating}
-                className="bg-gradient-to-r from-indigo-600 to-violet-500 text-white rounded-full px-6 py-3 font-semibold shadow-lg hover:scale-105 transition-transform"
+                className="rounded-full bg-gradient-to-r from-indigo-600 to-violet-500 px-6 py-3 font-semibold text-white shadow-lg hover:scale-105 transition-transform"
               >
                 {isAuthenticating ? (
                   <div className="flex items-center gap-2">
@@ -168,7 +169,7 @@ export function Header() {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="md:hidden bg-white/95 backdrop-blur-xl border-t border-gray-200 shadow-lg"
+            className="md:hidden bg-black/90 backdrop-blur-xl border-t border-white/10 shadow-lg"
           >
             <div className="px-4 py-6 space-y-4">
               {/* Mobile Nav Links */}
@@ -176,7 +177,7 @@ export function Header() {
                 <a
                   key={link.label}
                   href={link.href}
-                  className="block py-2 text-gray-700 hover:text-indigo-600 font-medium transition-colors"
+                  className="block py-2 font-medium tracking-wide text-white hover:text-white/80 transition"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {link.label}
@@ -184,7 +185,7 @@ export function Header() {
               ))}
 
               {/* Mobile CTAs */}
-              <div className="pt-4 space-y-3 border-t border-gray-200">
+              <div className="pt-4 space-y-3 border-t border-white/20">
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -192,7 +193,7 @@ export function Header() {
                     setIsMobileMenuOpen(false);
                   }}
                   disabled={isAuthenticating}
-                  className="w-full font-semibold"
+                  className="w-full rounded-full border-white/40 bg-transparent font-semibold text-white hover:bg-white/10"
                 >
                   {user ? 'Dashboard' : 'Sign In'}
                 </Button>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, X, Check, Users, Video, Star, Sparkles, Lock, MessageCircle } from 'lucide-react';
+import { Zap, X, Check, Users, Video, Star, Sparkles, Lock, MessageCircle, Calendar, Flame, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PremiumUnlockModal, type PremiumItem, type Creator } from './PremiumUnlockModal';
 import { toast } from 'sonner';
@@ -169,8 +169,95 @@ const convertOfferToCreator = (offer: PremiumOffer): FullScreenCreator => {
   };
 };
 
-// Premium Offer Card - Editorial luxury magazine style
-function PremiumOfferCard({
+function HeroPremiumCard({
+  offer,
+  onViewDetails,
+}: {
+  offer: PremiumOffer;
+  onViewDetails: () => void;
+}) {
+  const [spotlight, setSpotlight] = useState({ x: 50, y: 50 });
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 14 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.45, ease: 'easeOut' }}
+      className="relative overflow-hidden rounded-[32px] bg-slate-900 text-white shadow-[0_25px_80px_rgba(0,0,0,0.2)]"
+      onMouseMove={(e) => {
+        const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        setSpotlight({ x, y });
+      }}
+    >
+      <div className="absolute inset-0">
+        <img
+          src={offer.image}
+          alt={offer.title}
+          className="h-full w-full object-cover"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/30 to-black/70" />
+        <div
+          className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-70"
+          style={{
+            background: `radial-gradient(480px at ${spotlight.x}% ${spotlight.y}%, rgba(255,255,255,0.12), transparent 55%)`,
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/25 via-transparent to-indigo-500/25 mix-blend-screen" />
+      </div>
+
+      <div className="relative p-8 sm:p-10 lg:p-12 flex flex-col gap-6">
+        <div className="flex items-center gap-4">
+          <div className="relative h-12 w-12 rounded-full overflow-hidden ring-2 ring-white/40">
+            <img src={offer.creatorAvatarUrl} alt={offer.creatorName} className="h-full w-full object-cover" />
+            <span className="absolute -inset-[2px] rounded-full bg-gradient-to-tr from-purple-500/30 to-indigo-500/30 blur-lg" />
+          </div>
+          <div className="flex flex-col">
+            <p className="text-sm uppercase tracking-[0.22em] text-white/70">Premium</p>
+            <p className="text-lg font-semibold text-white">{offer.creatorName}</p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <h3 className="text-3xl sm:text-4xl lg:text-[40px] font-semibold leading-tight">
+            {offer.title}
+          </h3>
+          <p className="text-base sm:text-lg text-white/80 max-w-3xl">
+            {offer.description || 'Discover a premium space crafted by the creator with cinematic sessions and hands-on mentorship.'}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-4">
+          <Button
+            type="button"
+            onClick={onViewDetails}
+            className="rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 text-base font-semibold shadow-[0_15px_50px_rgba(129,140,248,0.45)] hover:scale-[1.01] transition-transform"
+          >
+            Join Community
+          </Button>
+          <div
+            className="relative inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-semibold backdrop-blur-lg"
+            style={{ animation: 'pulse 8s ease-in-out infinite' }}
+          >
+            <span className="absolute inset-0 rounded-full blur-2xl bg-purple-400/30" />
+            <Zap className="h-4 w-4" />
+            <span>{offer.zapCost} ZAPs</span>
+            <span className="h-2 w-2 rounded-full bg-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.9)]" />
+          </div>
+          <div className="hidden sm:inline-flex items-center gap-3 rounded-full bg-white/10 px-4 py-2 text-sm text-white/80 backdrop-blur-lg">
+            <Sparkles className="h-4 w-4" />
+            <span>Includes live workshops + premium drops</span>
+          </div>
+        </div>
+      </div>
+    </motion.article>
+  );
+}
+
+function FeaturedPremiumCard({
   offer,
   index,
   onViewDetails,
@@ -179,90 +266,67 @@ function PremiumOfferCard({
   index: number;
   onViewDetails: () => void;
 }) {
-  const [isHovered, setIsHovered] = useState(false);
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12, scale: 0.98 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+    <motion.article
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.32, delay: index * 0.08, ease: 'easeOut' }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className="flex-shrink-0 w-[340px] sm:w-[380px] snap-start"
+      transition={{ duration: 0.35, delay: index * 0.06, ease: 'easeOut' }}
+      whileHover={{ y: -4 }}
+      className="group relative overflow-hidden rounded-2xl bg-white/80 shadow-[0_15px_55px_rgba(15,23,42,0.08)] backdrop-blur-xl border border-white"
     >
-      <motion.div
-        whileHover={{ y: -4 }}
-        transition={{ duration: 0.25, ease: 'easeOut' }}
-        className="h-full cursor-pointer"
-        onClick={onViewDetails}
-      >
-        <div className="relative h-full min-h-[520px] rounded-3xl overflow-hidden bg-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.08)] transition-shadow duration-500">
-          {/* Cover Image */}
-          <div className="relative h-[320px] overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
-            <img
-              src={offer.image}
-              alt={offer.title}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              loading="lazy"
-            />
-            {/* Subtle overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/60" />
-
-            {/* Creator name - top left, subtle */}
-            <div className="absolute top-6 left-6">
-              <p className="text-xs font-medium text-white/90 tracking-wide uppercase">
-                {offer.creatorName}
-              </p>
+      <div className="relative h-48 overflow-hidden">
+        <img
+          src={offer.image}
+          alt={offer.title}
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/60" />
+        <div className="absolute top-4 left-4 inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-900 shadow-sm">
+          <span className="h-2 w-2 rounded-full bg-emerald-400" />
+          Featured Creator
+        </div>
+        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-white">
+          <div className="flex items-center gap-3">
+            <div className="relative h-10 w-10 rounded-full overflow-hidden ring-2 ring-white/40 transition-transform duration-200 group-hover:scale-105">
+              <img src={offer.creatorAvatarUrl} alt={offer.creatorName} className="h-full w-full object-cover" />
+            </div>
+            <div>
+              <p className="text-xs text-white/70">Creator</p>
+              <p className="text-sm font-semibold">{offer.creatorName}</p>
             </div>
           </div>
-
-          {/* Content Area */}
-          <div className="p-8 flex flex-col h-[200px]">
-            {/* Title - Large, confident, breathing room */}
-            <h3 className="text-xl font-bold text-gray-900 mb-4 leading-tight tracking-tight line-clamp-2">
-              {offer.title}
-            </h3>
-
-            {/* Spacer */}
-            <div className="flex-1" />
-
-            {/* ZAP Cost Badge - Thin outline pill with soft gold hover */}
-            <div className="mb-5">
-              <div
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300"
-                style={{
-                  borderColor: isHovered ? '#D4AF37' : '#E5E7EB',
-                  backgroundColor: isHovered ? 'rgba(212, 175, 55, 0.05)' : 'transparent',
-                }}
-              >
-                <Zap
-                  className="w-4 h-4 transition-colors duration-300"
-                  style={{ color: isHovered ? '#D4AF37' : '#6B7280' }}
-                />
-                <span
-                  className="text-sm font-semibold transition-colors duration-300"
-                  style={{ color: isHovered ? '#D4AF37' : '#374151' }}
-                >
-                  {offer.zapCost} ZAPs
-                </span>
-              </div>
-            </div>
-
-            {/* Ghost Button CTA */}
-            <Button
-              variant="ghost"
-              className="w-full h-11 text-base font-semibold text-gray-700 hover:text-gray-900 hover:bg-gray-50/50 rounded-full border border-gray-200 hover:border-gray-300 transition-all duration-300 group/btn"
-            >
-              <span className="relative">
-                View Details
-                <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-gray-900 transition-all duration-300 group-hover/btn:w-full" />
-              </span>
-            </Button>
+          <div className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold">
+            {offer.zapCost} ZAPs
           </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+
+      <div className="p-5 flex flex-col gap-4">
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold text-slate-900 line-clamp-2">{offer.title}</h3>
+          <p className="text-sm text-slate-600 line-clamp-2">{offer.description}</p>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div
+            className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 border border-indigo-100"
+            style={{ animation: 'pulse 8s ease-in-out infinite' }}
+          >
+            <Zap className="h-4 w-4" />
+            {offer.zapCost} ZAPs
+          </div>
+          <button
+            type="button"
+            onClick={onViewDetails}
+            className="text-sm font-semibold text-indigo-700 hover:text-indigo-900 transition-colors"
+          >
+            View Community →
+          </button>
+        </div>
+      </div>
+    </motion.article>
   );
 }
 
@@ -317,7 +381,7 @@ export function RewardsShowcase() {
     setIsFullScreenOpen(true);
   };
 
-  const handleUnlock = () => {
+  const handleUnlock = async (offerId: string) => {
     console.log('🎉 Unlocking content:', selectedOffer?.title);
     // TODO: Implement actual unlock logic
     // - Deduct ZAPs from user balance
@@ -325,10 +389,13 @@ export function RewardsShowcase() {
     // - Navigate to content page
   };
 
-  const handlePreview = () => {
+  const handlePreview = (offerId: string) => {
     console.log('👀 Opening preview for:', selectedOffer?.title);
     // TODO: Implement preview logic
   };
+
+  const heroOffer = premiumOffers[0];
+  const featuredOffers = premiumOffers.slice(1, 5);
 
   return (
     <>
@@ -338,6 +405,7 @@ export function RewardsShowcase() {
       >
         {/* Background - Soft, Elevated */}
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-white via-[#FAFAFA] to-white" />
+        <div className="absolute inset-x-0 top-12 -z-10 h-[520px] bg-[radial-gradient(circle_at_top,rgba(129,140,248,0.14),transparent_48%)]" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Header - Matches homepage typography */}
@@ -351,23 +419,29 @@ export function RewardsShowcase() {
             {/* Title - Matches "How It Works" section */}
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 tracking-tight">
               <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 bg-clip-text text-transparent">
-                Unlock Premium Content
+                Unlock Premium Communities
               </span>
             </h2>
 
             {/* Subtitle - Calm, reduced opacity for hierarchy */}
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 opacity-75 max-w-2xl mx-auto font-normal leading-relaxed">
-              Use your ZAPs to claim courses, coaching sessions, and exclusive community access
+            <p className="text-base sm:text-lg lg:text-xl text-gray-600 opacity-75 max-w-3xl mx-auto font-normal leading-relaxed">
+              Discover creator-led communities where you can deepen your skills, connect with others, and unlock exclusive experiences — using the ZAPs you earn simply by showing up.
             </p>
           </motion.div>
         </div>
 
-        {/* Horizontally Scrollable Premium Offers */}
-        <div className="relative">
-          <div className="overflow-x-auto scroll-smooth scrollbar-hide px-4 sm:px-6 lg:px-8">
-            <div className="flex gap-6 pb-4 max-w-7xl mx-auto">
-              {premiumOffers.map((offer, index) => (
-                <PremiumOfferCard
+        {/* Modern Grid Layout */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-6 lg:grid-cols-12 items-start">
+            {heroOffer && (
+              <div className="lg:col-span-7">
+                <HeroPremiumCard offer={heroOffer} onViewDetails={() => handleViewDetails(heroOffer)} />
+              </div>
+            )}
+
+            <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 gap-5">
+              {featuredOffers.map((offer, index) => (
+                <FeaturedPremiumCard
                   key={offer.id}
                   offer={offer}
                   index={index}
@@ -376,6 +450,29 @@ export function RewardsShowcase() {
               ))}
             </div>
           </div>
+
+          {/* Micro Callouts */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.35, delay: 0.2 }}
+            className="mt-10 grid gap-4 md:grid-cols-3 text-sm font-semibold text-slate-800"
+          >
+            {[
+              { icon: '🔥', text: 'Top Communities This Week' },
+              { icon: '🎥', text: '10,000+ hours of premium creator content' },
+              { icon: '⚡', text: 'Earn ZAPs as you learn — no credit card needed' },
+            ].map((item, i) => (
+              <div
+                key={item.text}
+                className="flex items-center gap-3 rounded-xl border border-slate-100 bg-white/80 px-4 py-3 shadow-[0_10px_35px_rgba(15,23,42,0.06)] backdrop-blur"
+              >
+                <span className="text-lg">{item.icon}</span>
+                <span>{item.text}</span>
+              </div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
@@ -480,180 +577,277 @@ function CreatorFullScreenOverlay({
   const unlockPerks = [
     {
       icon: <Video className="w-6 h-6" />,
-      title: 'Premium Course Library',
-      description: 'Access 12+ deep-dive masterclasses and exclusive tutorials',
-    },
-    {
-      icon: <Users className="w-6 h-6" />,
-      title: 'Private Community',
-      description: 'Focused, positive, growth-driven culture with like-minded members',
-    },
-    {
-      icon: <Star className="w-6 h-6" />,
-      title: 'Live Coaching Calls',
-      description: 'Real-time support sessions and Q&A with the creator each week',
+      title: 'Premium Video Lessons',
+      description: 'Cinematic lessons produced by the creator.',
     },
     {
       icon: <MessageCircle className="w-6 h-6" />,
-      title: 'Direct Creator Access',
-      description: 'Priority messaging and personalized feedback on your work',
+      title: 'Member-Only Conversations',
+      description: 'Threaded discussions with no noise.',
+    },
+    {
+      icon: <Star className="w-6 h-6" />,
+      title: 'Live Workshops',
+      description: 'Weekly sessions and Q&As.',
     },
     {
       icon: <Sparkles className="w-6 h-6" />,
-      title: 'Exclusive Resources',
-      description: 'Downloadable templates, guides, and tools to accelerate your journey',
+      title: 'Progression System',
+      description: 'Earn XP, unlock ranks, and gain access to advanced rooms.',
     },
-    {
-      icon: <Lock className="w-6 h-6" />,
-      title: 'Early Access',
-      description: 'Be the first to see new content, features, and special announcements',
-    },
+  ];
+
+  const members = [
+    { name: 'Aria', tag: 'Active now', color: 'from-indigo-500 via-purple-500 to-fuchsia-500' },
+    { name: 'Milo', tag: 'Top learner', color: 'from-emerald-400 via-cyan-400 to-blue-500' },
+    { name: 'Sia', tag: 'Level 12', color: 'from-amber-400 via-orange-400 to-rose-500' },
+    { name: 'Nova', tag: 'Mentor', color: 'from-sky-400 via-blue-500 to-indigo-600' },
+  ];
+
+  const events = [
+    { name: 'Creator AMA + Deep Dive', status: 'Live now', time: 'Happening now' },
+    { name: 'Cinematic Editing Masterclass', status: 'Upcoming', time: 'Starts in 3h' },
+    { name: 'Community Challenge Kickoff', status: 'Upcoming', time: 'Tomorrow 10am' },
   ];
 
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.97 }}
-      animate={{ opacity: 1, scale: 1 }}
+      animate={{ opacity: 1, scale: 1.03 }}
       exit={{ opacity: 0, scale: 0.97 }}
-      transition={{ duration: 0.25, ease: 'easeOut' }}
-      className="fixed inset-0 z-[9999] overflow-y-auto bg-[radial-gradient(circle_at_top,#ffffff_0%,#f6f4ff_55%,#ece6ff_100%)] text-gray-800"
+      transition={{ type: 'spring', stiffness: 110, damping: 18 }}
+      className="fixed inset-0 z-[9999] overflow-y-auto bg-slate-900/50 backdrop-blur-2xl text-gray-800"
     >
       {/* Close Button */}
       <button
         onClick={onClose}
-        className="fixed right-6 top-6 z-50 rounded-full bg-white/60 p-2.5 shadow-lg backdrop-blur-xl hover:bg-white transition-all duration-200"
+        className="fixed right-6 top-6 z-50 rounded-full bg-white/70 p-2.5 shadow-xl backdrop-blur-xl hover:bg-white transition-all duration-200"
         aria-label="Close"
       >
         <X className="h-5 w-5 text-gray-700" />
       </button>
 
-      {/* Hero Section - Large Creator Profile */}
-      <div className="flex flex-col items-center pt-28 pb-16 px-6 text-center">
+      <div className="max-w-6xl mx-auto py-16 px-4 sm:px-6 lg:px-8 space-y-12">
+        {/* Hero Section */}
+        <div className="relative overflow-hidden rounded-[28px] shadow-[0_25px_80px_rgba(0,0,0,0.25)]">
+          <img src={offer.image} alt={offer.title} className="h-[360px] w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/70" />
+          <div className="absolute inset-0 bg-gradient-to-tr from-white/5 via-purple-400/10 to-indigo-300/15 mix-blend-screen" />
+
+          <div className="absolute inset-0 flex flex-col justify-end p-8 sm:p-10 lg:p-12 gap-4 text-white">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="relative inline-flex items-center gap-3 rounded-full bg-white/15 px-3 py-2 backdrop-blur-lg border border-white/20 hover:scale-[1.02] transition-transform">
+                <div className="h-10 w-10 rounded-full overflow-hidden ring-2 ring-white/40">
+                  <img src={offer.creatorAvatarUrl} alt={offer.creatorName} className="h-full w-full object-cover" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[11px] uppercase tracking-[0.2em] text-white/70">Creator</span>
+                  <span className="text-sm font-semibold">{offer.creatorName}</span>
+                </div>
+              </div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-2 text-sm font-semibold border border-white/20 backdrop-blur-lg">
+                <Zap className="h-4 w-4" />
+                {offer.zapCost} ZAPs
+              </div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-2 text-sm font-semibold border border-white/20 backdrop-blur-lg">
+                <Calendar className="h-4 w-4" />
+                Weekly drops
+              </div>
+            </div>
+
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold leading-tight">
+              {offer.title}
+            </h1>
+            <p className="max-w-3xl text-base sm:text-lg text-white/80">
+              {offer.description || 'A premium creator-led space with live sessions, cinematic courses, and a progression system built for people who want to level up together.'}
+            </p>
+
+            <div className="flex flex-wrap items-center gap-3">
+              {[
+                { label: 'ZAP Cost', value: `${offer.zapCost} ZAPs`, icon: <Zap className="h-4 w-4" /> },
+                { label: 'Members', value: '12,480', icon: <Users className="h-4 w-4" /> },
+                { label: 'Upcoming events', value: '5 next', icon: <Calendar className="h-4 w-4" /> },
+                { label: 'Avg rating', value: '4.9', icon: <Star className="h-4 w-4" /> },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className="inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-2 text-xs font-semibold backdrop-blur-lg border border-white/15"
+                >
+                  {stat.icon}
+                  <span className="text-white/70">{stat.label}</span>
+                  <span className="text-white">{stat.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* About + Modules */}
+        <div className="grid gap-8 lg:grid-cols-5">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.1 }}
+            className="lg:col-span-2 rounded-2xl bg-white/70 backdrop-blur-xl border border-slate-100/80 shadow-[0_20px_70px_rgba(15,23,42,0.08)] p-6 sm:p-8"
+          >
+            <h2 className="text-xl font-semibold text-slate-900 mb-3">What You Get Inside</h2>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              A premium creator-led space where you can:
+            </p>
+            <ul className="mt-5 space-y-3 text-sm text-slate-700">
+              {[
+                'Join live sessions',
+                'Access premium courses',
+                'Participate in weekly discussions',
+                'Unlock creator challenges',
+                'Level up your profile with XP',
+                'Connect with learners just like you',
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-3">
+                  <span className="mt-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
+                    <Check className="h-3 w-3" />
+                  </span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.18 }}
+            className="lg:col-span-3 grid gap-4 sm:grid-cols-2"
+          >
+            {unlockPerks.map((perk, i) => (
+              <motion.div
+                key={perk.title}
+                whileHover={{ y: -3, scale: 1.01 }}
+                className="rounded-2xl border border-slate-100 bg-white/80 p-5 shadow-[0_10px_45px_rgba(15,23,42,0.06)] backdrop-blur"
+                transition={{ duration: 0.2 }}
+              >
+                <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-700">
+                  {perk.icon}
+                </div>
+                <h3 className="text-base font-semibold text-slate-900">{perk.title}</h3>
+                <p className="mt-2 text-sm text-slate-600">{perk.description}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* Members + Events */}
+        <div className="grid gap-8 lg:grid-cols-5">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.2 }}
+            className="lg:col-span-3 rounded-2xl bg-white/80 p-6 sm:p-8 border border-slate-100 shadow-[0_15px_55px_rgba(15,23,42,0.07)] backdrop-blur"
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-semibold text-slate-900">Members</h3>
+              <span className="text-xs font-semibold rounded-full bg-indigo-50 text-indigo-700 px-3 py-1">
+                Live now
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {members.map((member) => (
+                <div
+                  key={member.name}
+                  className="group flex flex-col items-center gap-2 rounded-xl border border-slate-100 bg-gradient-to-br from-white to-slate-50/70 p-3 shadow-[0_8px_30px_rgba(15,23,42,0.05)] transition-all duration-200 hover:-translate-y-1"
+                >
+                  <div className="relative">
+                    <div className={`absolute inset-0 rounded-full bg-gradient-to-tr ${member.color} blur-md opacity-80 transition duration-300 group-hover:scale-110 group-hover:opacity-100`} />
+                    <div className={`p-[2px] rounded-full bg-gradient-to-tr ${member.color}`}>
+                      <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center text-sm font-semibold text-slate-800">
+                        {member.name[0]}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-sm font-semibold text-slate-900">{member.name}</p>
+                  <p className="text-[11px] font-medium text-indigo-700 bg-indigo-50 rounded-full px-2 py-1">
+                    {member.tag}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.24 }}
+            className="lg:col-span-2 rounded-2xl border border-slate-100 bg-slate-900 text-white p-6 sm:p-8 shadow-[0_18px_65px_rgba(0,0,0,0.25)]"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-sm text-white/70">Upcoming Events</p>
+                <h3 className="text-xl font-semibold">Stay in sync</h3>
+              </div>
+              <div className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold border border-white/15">
+                Add to calendar
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {events.map((event, i) => (
+                <motion.div
+                  key={event.name}
+                  whileHover={{ y: -2 }}
+                  className="flex items-center justify-between rounded-xl bg-white/5 px-4 py-3 border border-white/10"
+                  transition={{ duration: 0.15 }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center border border-white/15">
+                      {event.status === 'Live now' ? <Flame className="h-5 w-5 text-amber-300" /> : <Calendar className="h-5 w-5 text-white/80" />}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold">{event.name}</p>
+                      <p className="text-xs text-white/70">{event.time}</p>
+                    </div>
+                  </div>
+                  <div className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${event.status === 'Live now' ? 'bg-emerald-400/20 text-emerald-100 border-emerald-200/40' : 'bg-white/10 text-white border-white/20'}`}>
+                    {event.status}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* CTA Footer */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-          className="relative"
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.28 }}
+          className="rounded-[24px] border border-slate-100 bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 text-white p-8 sm:p-10 shadow-[0_25px_80px_rgba(129,140,248,0.45)]"
         >
-          <div className="w-40 h-40 rounded-2xl overflow-hidden shadow-xl ring-4 ring-white/50">
-            <img
-              src={offer.image}
-              alt={offer.creatorName}
-              className="w-full h-full object-cover"
-            />
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="space-y-2">
+              <p className="text-sm uppercase tracking-[0.24em] text-white/80">Premium Access</p>
+              <h3 className="text-2xl sm:text-3xl font-semibold">Ready to Join This Community?</h3>
+              <p className="text-white/85 max-w-2xl">
+                Use your earned ZAPs to unlock immediate access — no credit card required.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={handleUnlock}
+                className="inline-flex items-center gap-2 rounded-full bg-white text-slate-900 px-5 py-3 text-sm font-semibold shadow-lg hover:scale-[1.02] transition-transform"
+              >
+                <Zap className="h-4 w-4 text-indigo-600" />
+                Join Now
+              </button>
+              <button
+                onClick={() => onPreview(offer.id)}
+                className="inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/15 px-5 py-3 text-sm font-semibold text-white hover:bg-white/20 transition-colors"
+              >
+                <Play className="h-4 w-4" />
+                Preview Community
+              </button>
+            </div>
           </div>
-          {/* Subtle glow effect */}
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 blur-2xl -z-10" />
         </motion.div>
-
-        <motion.h1
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className="mt-8 text-4xl md:text-5xl font-semibold text-gray-900"
-        >
-          {offer.creatorName}
-        </motion.h1>
-
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.3 }}
-          className="mt-3 text-lg md:text-xl max-w-2xl text-gray-600 leading-relaxed"
-        >
-          {offer.title}
-        </motion.p>
-      </div>
-
-      {/* About Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.4 }}
-        className="max-w-3xl mx-auto px-6 text-center pb-20"
-      >
-        <h2 className="text-xl font-medium mb-4 text-gray-900">About</h2>
-        <p className="text-base md:text-lg leading-relaxed text-gray-600">
-          {offer.description ||
-            'A calm, world-class creator crafting educational experiences that feel like exploring a new universe. Learn storytelling, world-building & lore that captivates billions.'}
-        </p>
-      </motion.div>
-
-      {/* What You Can Unlock */}
-      <div className="max-w-6xl mx-auto px-6 pb-24">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.5 }}
-          className="text-2xl md:text-3xl font-semibold mb-12 text-center text-gray-900"
-        >
-          What You Can Unlock
-        </motion.h2>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {unlockPerks.map((perk, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.6 + i * 0.1 }}
-              className="rounded-2xl p-6 border border-black/5 bg-white/60 backdrop-blur-lg shadow-sm hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
-            >
-              <div className="mb-4 text-indigo-600">{perk.icon}</div>
-              <h3 className="font-semibold text-gray-900 mb-2">{perk.title}</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">{perk.description}</p>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      {/* Claim CTA Panel */}
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 1 }}
-        className="max-w-xl mx-auto px-6 pb-24"
-      >
-        <div className="rounded-3xl p-8 md:p-10 bg-white/70 backdrop-blur-xl border border-black/5 shadow-2xl text-center">
-          <h3 className="text-2xl md:text-3xl font-semibold text-gray-900">Claim Access</h3>
-          <p className="text-gray-600 mt-3 text-sm md:text-base leading-relaxed">
-            Use your ZAPs to unlock exclusive access instantly and join an elite community.
-          </p>
-
-          {/* ZAP Balance Display */}
-          <div className="mt-6 inline-flex items-center gap-2 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 px-4 py-2 rounded-full">
-            <Zap size={16} className="text-indigo-600" fill="currentColor" />
-            <span className="text-sm text-gray-600">You have</span>
-            <span className="text-base font-semibold text-indigo-600">
-              {userZapBalance.toLocaleString()} ZAPs
-            </span>
-          </div>
-
-          {/* Unlock Button */}
-          <button
-            onClick={handleUnlock}
-            className="mt-8 w-full py-4 rounded-2xl text-white text-lg font-medium bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.02]"
-          >
-            <Zap className="h-5 w-5" fill="currentColor" />
-            Unlock with {offer.zapCost.toLocaleString()} ZAPs
-          </button>
-
-          {/* Preview Link */}
-          <button
-            onClick={() => onPreview(offer.id)}
-            className="mt-4 text-sm text-gray-500 hover:text-gray-700 transition-colors underline"
-          >
-            Preview content first
-          </button>
-        </div>
-      </motion.div>
-
-      {/* Footer Note */}
-      <div className="max-w-2xl mx-auto px-6 pb-16 text-center">
-        <p className="text-xs text-gray-500 leading-relaxed">
-          By unlocking you agree to the community rules and terms. You may revoke access from
-          your account settings at any time. All transactions are processed securely.
-        </p>
       </div>
     </motion.div>
   );

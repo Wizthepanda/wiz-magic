@@ -1,39 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { signInWithGoogleAndRedirect } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
-import { Play, Zap, TrendingUp, Users, Award, CheckCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
+
+const HERO_BACKGROUND = '/W4.png';
 
 export function Hero() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const [zapCount, setZapCount] = useState(0);
-
-  // Animated ZAP counter (odometer effect)
-  useEffect(() => {
-    const targetZaps = 25750;
-    const duration = 2000; // 2 seconds
-    const steps = 60;
-    const increment = targetZaps / steps;
-    let current = 0;
-    let step = 0;
-
-    const timer = setInterval(() => {
-      if (step < steps) {
-        current += increment;
-        setZapCount(Math.floor(current));
-        step++;
-      } else {
-        setZapCount(targetZaps);
-        clearInterval(timer);
-      }
-    }, duration / steps);
-
-    return () => clearInterval(timer);
-  }, []);
 
   const handleGetStarted = async () => {
     if (user) {
@@ -44,263 +21,154 @@ export function Hero() {
     setIsAuthenticating(true);
     try {
       await signInWithGoogleAndRedirect(navigate);
-    } catch (err) {
-      console.error('Get started failed:', err);
+    } catch (error) {
+      console.error('Get started failed:', error);
     } finally {
       setIsAuthenticating(false);
     }
   };
 
-  const handleWatchDemo = () => {
-    // Scroll to how it works section
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const parallaxX = useSpring(useTransform(mouseX, [-1, 1], [-20, 20]), {
+    damping: 30,
+    stiffness: 150,
+    mass: 0.2,
+  });
+  const parallaxY = useSpring(useTransform(mouseY, [-1, 1], [-20, 20]), {
+    damping: 30,
+    stiffness: 150,
+    mass: 0.2,
+  });
+  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const relativeX = (event.clientX - rect.left) / rect.width;
+    const relativeY = (event.clientY - rect.top) / rect.height;
+    mouseX.set(relativeX * 2 - 1);
+    mouseY.set(relativeY * 2 - 1);
+  };
+  const handleScrollToHowItWorks = () => {
     document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
-    <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
-      {/* Background Gradient as per spec */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-white via-[#f7f9fc] to-[#eef1f7]" />
-
-      {/* Animated Background Orbs */}
-      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+    <section
+      ref={containerRef}
+      onMouseMove={handleMouseMove}
+      className="relative flex min-h-[90vh] items-center overflow-hidden"
+    >
+      <motion.div
+        className="absolute inset-0"
+        style={{ x: parallaxX, y: parallaxY }}
+      >
         <motion.div
-          className="absolute top-20 right-1/4 w-96 h-96 rounded-full bg-gradient-to-br from-indigo-200/30 to-violet-200/30 blur-3xl"
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: 'easeInOut',
+          className="absolute inset-0"
+          initial={{ scale: 1.02 }}
+          animate={{ scale: 1.08 }}
+          transition={{ duration: 20, repeat: Infinity, repeatType: 'reverse' }}
+          style={{
+            backgroundImage: `url(${HERO_BACKGROUND})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
           }}
         />
+      </motion.div>
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/70 via-black/70 to-black/30" />
+      <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black to-transparent" />
+      <div
+        className="pointer-events-none absolute inset-0 opacity-10"
+        style={{
+          backgroundImage:
+            'radial-gradient(circle at 20% 20%, rgba(255,255,255,0.6) 0, transparent 40%), radial-gradient(circle at 80% 0%, rgba(255,255,255,0.4) 0, transparent 35%)',
+        }}
+      />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(130deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 60%)' }} />
+      <div className="pointer-events-none absolute inset-0 mix-blend-soft-light opacity-[0.08]" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px)', backgroundSize: '4px 4px' }} />
+      {[...Array(12)].map((_, index) => (
         <motion.div
-          className="absolute bottom-20 left-1/4 w-96 h-96 rounded-full bg-gradient-to-br from-violet-200/30 to-purple-200/30 blur-3xl"
+          key={`shape-${index}`}
+          className="pointer-events-none absolute h-32 w-16 rounded-full bg-white/10 blur-3xl"
+          style={{
+            top: `${(index * 70) % 100}%`,
+            left: `${(index * 120) % 100}%`,
+          }}
           animate={{
-            scale: [1.2, 1, 1.2],
-            opacity: [0.5, 0.3, 0.5],
+            y: ['0%', '-40%'],
+            opacity: [0.1, 0.2, 0.1],
           }}
           transition={{
-            duration: 8,
+            duration: 20 + index,
             repeat: Infinity,
-            ease: 'easeInOut',
           }}
         />
-      </div>
+      ))}
 
-      <div className="max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left Column: Content */}
-          <div className="space-y-8">
-            {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 backdrop-blur-lg border border-indigo-200 shadow-lg"
-            >
-              <Zap className="w-4 h-4 text-indigo-600 fill-indigo-600" />
-              <span className="text-sm font-semibold text-gray-700">
-                10,000+ creators already earning
-              </span>
-            </motion.div>
-
-            {/* Headline */}
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight"
-            >
-              <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 bg-clip-text text-transparent">
-                Watch. Earn. Unlock.
-              </span>
-            </motion.h1>
-
-            {/* Subheadline */}
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-xl sm:text-2xl text-gray-600 leading-relaxed"
-            >
-              Turn your attention into rewards. Watch educational content, earn ZAPs,
-              and unlock premium courses, coaching, and communities — all for free.
-            </motion.p>
-
-            {/* CTAs */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-col sm:flex-row items-center gap-4"
-            >
-              <Button
-                onClick={handleGetStarted}
-                disabled={isAuthenticating}
-                size="lg"
-                className="w-full sm:w-auto bg-gradient-to-r from-indigo-600 to-violet-500 text-white rounded-full px-8 py-6 text-lg font-semibold shadow-xl hover:scale-105 transition-transform"
-              >
-                {isAuthenticating ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Loading...</span>
-                  </div>
-                ) : user ? (
-                  'Go to Dashboard'
-                ) : (
-                  'Start Earning Free'
-                )}
-              </Button>
-              <Button
-                onClick={handleWatchDemo}
-                variant="outline"
-                size="lg"
-                className="w-full sm:w-auto rounded-full px-8 py-6 text-lg font-semibold border-2 hover:bg-gray-50"
-              >
-                <Play className="w-5 h-5 mr-2" />
-                See How It Works
-              </Button>
-            </motion.div>
-
-            {/* Trust Indicators */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="flex flex-wrap items-center gap-6 pt-6"
-            >
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <span className="text-sm text-gray-600">Free forever</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <span className="text-sm text-gray-600">No credit card</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <span className="text-sm text-gray-600">Start in 30 seconds</span>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Right Column: Mock Player + ZAP Orb */}
-          <div className="relative">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              className="relative"
-            >
-              {/* Glassmorphic Mock Player */}
-              <div className="relative rounded-2xl bg-white/70 backdrop-blur-xl p-8 shadow-2xl border border-white/20">
-                {/* Video Thumbnail */}
-                <div className="relative aspect-video rounded-xl bg-gradient-to-br from-indigo-100 to-violet-100 overflow-hidden mb-6">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="w-20 h-20 rounded-full bg-white/90 backdrop-blur-lg shadow-2xl flex items-center justify-center"
-                    >
-                      <Play className="w-10 h-10 text-indigo-600 fill-indigo-600 ml-1" />
-                    </motion.button>
-                  </div>
-                  {/* Shimmer effect */}
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                    animate={{
-                      x: ['-100%', '100%'],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: 'linear',
-                    }}
-                  />
-                </div>
-
-                {/* Mini Leaderboard */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-indigo-50 to-violet-50">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-violet-400 flex items-center justify-center text-white font-bold text-sm">
-                        1
-                      </div>
-                      <div>
-                        <div className="font-semibold text-sm text-gray-900">Top Learner</div>
-                        <div className="text-xs text-gray-600">+1,250 ZAPs today</div>
-                      </div>
-                    </div>
-                    <TrendingUp className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
-                    <div className="flex items-center gap-3">
-                      <Award className="w-5 h-5 text-yellow-600" />
-                      <span className="text-sm text-gray-700">Level 5 Unlocked</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Floating ZAP Orb */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.6, type: 'spring' }}
-                className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-500 shadow-2xl flex flex-col items-center justify-center"
-              >
-                <Zap className="w-10 h-10 text-white fill-white mb-1" />
-                <div className="text-2xl font-bold text-white">
-                  {zapCount.toLocaleString()}
-                </div>
-                <div className="text-xs text-white/90">ZAPs Earned</div>
-                {/* Pulse ring */}
-                <motion.div
-                  className="absolute inset-0 rounded-full border-4 border-white/30"
-                  animate={{
-                    scale: [1, 1.2, 1],
-                    opacity: [0.5, 0, 0.5],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                  }}
-                />
-              </motion.div>
-            </motion.div>
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 gap-4 mt-6">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.8 }}
-                className="p-4 rounded-xl bg-white/70 backdrop-blur-lg border border-white/20 shadow-lg"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <Users className="w-5 h-5 text-indigo-600" />
-                  <span className="text-sm font-semibold text-gray-700">Active Users</span>
-                </div>
-                <div className="text-2xl font-bold text-gray-900">50K+</div>
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.9 }}
-                className="p-4 rounded-xl bg-white/70 backdrop-blur-lg border border-white/20 shadow-lg"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <Award className="w-5 h-5 text-violet-600" />
-                  <span className="text-sm font-semibold text-gray-700">Rewards</span>
-                </div>
-                <div className="text-2xl font-bold text-gray-900">1,000+</div>
-              </motion.div>
+      <div className="relative z-10 w-full px-6 py-28 sm:px-10 lg:px-16">
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: { opacity: 0, y: 30 },
+            visible: { opacity: 1, y: 0, transition: { staggerChildren: 0.08 } },
+          }}
+          className="max-w-3xl space-y-6 text-white"
+        >
+          <motion.span
+            variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 0.9, y: 0 } }}
+            className="text-sm font-semibold uppercase tracking-[0.4em] text-white/60"
+          >
+            LEARN LIKE IT MATTERS.
+          </motion.span>
+          <motion.h1
+            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 0.96, y: 0 } }}
+            className="text-5xl font-extrabold leading-tight text-white/95 drop-shadow-[0_0_35px_rgba(255,255,255,0.35)] sm:text-6xl lg:text-7xl"
+          >
+            Redefining communities.
+          </motion.h1>
+          <motion.p
+            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 0.85, y: 0 } }}
+            className="text-lg text-white/80 sm:text-xl"
+          >
+            WIZUP turns every minute you spend engaging into ZAP points you can use for courses,
+            coaching, and community access — all without paying a cent.
+          </motion.p>
+          <motion.div
+            variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }}
+            className="relative flex flex-col gap-5 sm:flex-row"
+          >
+            <div className="pointer-events-none absolute inset-0 blur-3xl">
+              <div className="mx-auto h-20 w-64 rounded-full bg-gradient-to-r from-indigo-500/40 to-violet-500/40" />
             </div>
-          </div>
-        </div>
+            <Button
+              onClick={handleGetStarted}
+              disabled={isAuthenticating}
+              size="lg"
+              className="relative z-10 rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-12 py-6 text-lg font-semibold shadow-[0_20px_40px_rgba(99,102,241,0.5)] transition duration-500 hover:scale-[1.02] hover:shadow-[0_25px_45px_rgba(99,102,241,0.6)] focus-visible:ring-white"
+            >
+              <span className="absolute inset-0 rounded-full border border-white/20" />
+              {isAuthenticating ? 'Loading...' : user ? 'Go to Dashboard' : 'Start Earning Free'}
+            </Button>
+            <Button
+              onClick={handleScrollToHowItWorks}
+              variant="secondary"
+              size="lg"
+              className="relative z-10 w-full rounded-full border border-white/30 bg-white/10 px-12 py-6 text-lg font-semibold text-white backdrop-blur-lg transition duration-500 hover:bg-white/20 sm:w-auto"
+            >
+              See How It Works
+            </Button>
+          </motion.div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 0.7, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.5 }}
+          className="mt-16 text-xs font-semibold uppercase tracking-[0.4em] text-white/60"
+        >
+          ⚡ 50,000+ MEMBERS · 10,000+ REWARDS CLAIMED · 1M+ ZAPS DISTRIBUTED
+        </motion.div>
       </div>
     </section>
   );
